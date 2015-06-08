@@ -1,0 +1,17 @@
+{
+  "name": "bobril-build",
+  "version": "0.0.1",
+  "description": "Builds Bobril Programs",
+  "main": "index.js",
+  "dependencies": {
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "jasmine": "latest"
+  },
+  "scripts": {
+    "test": "jasmine"
+  },
+  "author": "Boris Letocha",
+  "license": "MIT"
+}

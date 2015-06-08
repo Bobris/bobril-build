@@ -1,0 +1,25 @@
+{
+    "version": "1.5.0-alpha",
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": false,
+        "noLib": false,
+        "preserveConstEnums": false,
+        "suppressImplicitAnyIndexErrors": true
+    },
+    "filesGlob": [
+        "./*.ts",
+        "!./node_modules/**/*.ts",
+        "../typings/**/*.d.ts",
+        "../node_modules/typescript/bin/typescript.d.ts"
+    ],
+    "files": [
+        "./evalNodeSpec.ts",
+        "../typings/jasmine/jasmine.d.ts",
+        "../typings/node/node.d.ts",
+        "../node_modules/typescript/bin/typescript.d.ts"
+    ]
+}
