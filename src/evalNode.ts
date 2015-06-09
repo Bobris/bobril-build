@@ -6,16 +6,48 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
             let nn = <ts.StringLiteral>n;
             return nn.text;
         }
+        case ts.SyntaxKind.NumericLiteral: {
+            let nn = <ts.LiteralExpression>n;
+            return parseFloat(nn.text);
+        }
+        case ts.SyntaxKind.TrueKeyword: return true;
+        case ts.SyntaxKind.FalseKeyword: return false;
         case ts.SyntaxKind.BinaryExpression: {
             let nn = <ts.BinaryExpression>n;
             let left = evalNode(nn.left, tc);
             let right = evalNode(nn.right, tc);
-            if (nn.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-                if (left !== undefined && right !== undefined) {
-                    if (typeof left === "string" && typeof right === "string") {
-                        return left + right;
-                    }
+            if (left !== undefined && right !== undefined) {
+                let op = null;
+                switch (nn.operatorToken.kind) {
+                    case ts.SyntaxKind.BarBarToken:
+                    case ts.SyntaxKind.AmpersandAmpersandToken:
+                    case ts.SyntaxKind.BarToken:
+                    case ts.SyntaxKind.CaretToken:
+                    case ts.SyntaxKind.AmpersandToken:
+                    case ts.SyntaxKind.EqualsEqualsToken:
+                    case ts.SyntaxKind.ExclamationEqualsToken:
+                    case ts.SyntaxKind.EqualsEqualsEqualsToken:
+                    case ts.SyntaxKind.ExclamationEqualsEqualsToken:
+                    case ts.SyntaxKind.LessThanToken:
+                    case ts.SyntaxKind.GreaterThanToken:
+                    case ts.SyntaxKind.LessThanEqualsToken:
+                    case ts.SyntaxKind.GreaterThanEqualsToken:
+                    case ts.SyntaxKind.InstanceOfKeyword:
+                    case ts.SyntaxKind.InKeyword:
+                    case ts.SyntaxKind.LessThanLessThanToken:
+                    case ts.SyntaxKind.GreaterThanGreaterThanToken:
+                    case ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken:
+                    case ts.SyntaxKind.PlusToken:
+                    case ts.SyntaxKind.MinusToken:
+                    case ts.SyntaxKind.AsteriskToken:
+                    case ts.SyntaxKind.SlashToken:
+                    case ts.SyntaxKind.PercentToken:
+                        op = nn.operatorToken.getText();
+                        break;
+                    default: return undefined;
                 }
+                var f = new Function("a", "b", "return a " + op + " b");
+                return f(left, right);
             }
             return undefined;
         }
