@@ -19,7 +19,8 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
             }
             return undefined;
         }
-        case ts.SyntaxKind.Identifier: {
+        case ts.SyntaxKind.Identifier:
+        case ts.SyntaxKind.PropertyAccessExpression: {
             let s = tc.getSymbolAtLocation(n);
             if (s.flags & ts.SymbolFlags.Variable) {
                 if (s.valueDeclaration.parent.flags & ts.NodeFlags.Const) {

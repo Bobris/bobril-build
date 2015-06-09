@@ -86,7 +86,7 @@ describe("evalNode", function () {
             return;
         it(n, function () {
             var full = path.join(testpath, n);
-            var program = ts.createProgram(["main.ts"], {}, createCompilerHost(full));
+            var program = ts.createProgram(["main.ts"], { module: 1 /* CommonJS */ }, createCompilerHost(full));
             var diagnostics = program.getSyntacticDiagnostics();
             reportDiagnostics(diagnostics);
             if (diagnostics.length === 0) {

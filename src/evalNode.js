@@ -18,7 +18,8 @@ function evalNode(n, tc) {
             }
             return undefined;
         }
-        case 65 /* Identifier */: {
+        case 65 /* Identifier */:
+        case 155 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
             if (s.flags & 3 /* Variable */) {
                 if (s.valueDeclaration.parent.flags & 8192 /* Const */) {
