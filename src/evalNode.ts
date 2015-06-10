@@ -12,6 +12,7 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
         }
         case ts.SyntaxKind.TrueKeyword: return true;
         case ts.SyntaxKind.FalseKeyword: return false;
+        case ts.SyntaxKind.NullKeyword: return null;
         case ts.SyntaxKind.PrefixUnaryExpression: {
             let nn = <ts.PrefixUnaryExpression>n;
             let operand = evalNode(nn.operand, tc);

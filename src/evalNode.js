@@ -11,6 +11,7 @@ function evalNode(n, tc) {
         }
         case 95 /* TrueKeyword */: return true;
         case 80 /* FalseKeyword */: return false;
+        case 89 /* NullKeyword */: return null;
         case 167 /* PrefixUnaryExpression */: {
             var nn = n;
             var operand = evalNode(nn.operand, tc);
