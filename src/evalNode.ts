@@ -86,6 +86,10 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
             }
             return undefined;
         }
+        case ts.SyntaxKind.TypeAssertionExpression: {
+            let nn = <ts.TypeAssertion>n;
+            return evalNode(nn.expression, tc);
+        }
         default: return undefined;
     }
 }

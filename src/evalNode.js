@@ -94,6 +94,10 @@ function evalNode(n, tc) {
             }
             return undefined;
         }
+        case 160 /* TypeAssertionExpression */: {
+            var nn = n;
+            return evalNode(nn.expression, tc);
+        }
         default: return undefined;
     }
 }
