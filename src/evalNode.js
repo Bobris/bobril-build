@@ -75,6 +75,14 @@ function evalNode(n, tc) {
             }
             return undefined;
         }
+        case 170 /* ConditionalExpression */: {
+            var nn = n;
+            var cond = evalNode(nn.condition, tc);
+            if (cond === undefined)
+                return undefined;
+            var e = cond ? nn.whenTrue : nn.whenFalse;
+            return evalNode(e, tc);
+        }
         case 65 /* Identifier */:
         case 155 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);

@@ -68,6 +68,13 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
             }
             return undefined;
         }
+        case ts.SyntaxKind.ConditionalExpression: {
+            let nn = <ts.ConditionalExpression>n;
+            var cond = evalNode(nn.condition, tc);
+            if (cond === undefined) return undefined;
+            let e = cond ? nn.whenTrue : nn.whenFalse;
+            return evalNode(e, tc);
+        }
         case ts.SyntaxKind.Identifier:
         case ts.SyntaxKind.PropertyAccessExpression: {
             let s = tc.getSymbolAtLocation(n);
