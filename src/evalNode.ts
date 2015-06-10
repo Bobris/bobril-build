@@ -12,6 +12,23 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
         }
         case ts.SyntaxKind.TrueKeyword: return true;
         case ts.SyntaxKind.FalseKeyword: return false;
+        case ts.SyntaxKind.PrefixUnaryExpression: {
+            let nn = <ts.PrefixUnaryExpression>n;
+            let operand = evalNode(nn.operand, tc);
+            if (operand !== undefined) {
+                let op = null;
+                switch (nn.operator) {
+                    case ts.SyntaxKind.PlusToken: op = "+"; break;
+                    case ts.SyntaxKind.MinusToken: op = "-"; break;
+                    case ts.SyntaxKind.TildeToken: op = "~"; break;
+                    case ts.SyntaxKind.ExclamationToken: op = "!"; break;
+                    default: return undefined;
+                }
+                var f = new Function("a", "return " + op + "a");
+                return f(operand);
+            }
+            return undefined;
+        }
         case ts.SyntaxKind.BinaryExpression: {
             let nn = <ts.BinaryExpression>n;
             let left = evalNode(nn.left, tc);
@@ -59,6 +76,7 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
                     return evalNode((<ts.VariableDeclaration>s.valueDeclaration).initializer, tc);
                 }
             }
+            return undefined;
         }
         default: return undefined;
     }

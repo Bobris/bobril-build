@@ -11,6 +11,31 @@ function evalNode(n, tc) {
         }
         case 95 /* TrueKeyword */: return true;
         case 80 /* FalseKeyword */: return false;
+        case 167 /* PrefixUnaryExpression */: {
+            var nn = n;
+            var operand = evalNode(nn.operand, tc);
+            if (operand !== undefined) {
+                var op = null;
+                switch (nn.operator) {
+                    case 33 /* PlusToken */:
+                        op = "+";
+                        break;
+                    case 34 /* MinusToken */:
+                        op = "-";
+                        break;
+                    case 47 /* TildeToken */:
+                        op = "~";
+                        break;
+                    case 46 /* ExclamationToken */:
+                        op = "!";
+                        break;
+                    default: return undefined;
+                }
+                var f = new Function("a", "return " + op + "a");
+                return f(operand);
+            }
+            return undefined;
+        }
         case 169 /* BinaryExpression */: {
             var nn = n;
             var left = evalNode(nn.left, tc);
@@ -58,6 +83,7 @@ function evalNode(n, tc) {
                     return evalNode(s.valueDeclaration.initializer, tc);
                 }
             }
+            return undefined;
         }
         default: return undefined;
     }
