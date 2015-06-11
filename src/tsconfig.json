@@ -14,12 +14,15 @@
         "./**/*.ts",
         "!./node_modules/**/*.ts",
         "../typings/node/**/*.d.ts",
+        "../typings/png-async/**/*.d.ts",
         "!./test/*.ts",
         "../node_modules/typescript/bin/typescript.d.ts"
     ],
     "files": [
         "./evalNode.ts",
+        "./imagehelpers.ts",
         "../typings/node/node.d.ts",
+        "../typings/png-async/png-async.d.ts",
         "../node_modules/typescript/bin/typescript.d.ts"
     ]
 }

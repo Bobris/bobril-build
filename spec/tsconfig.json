@@ -18,8 +18,10 @@
     ],
     "files": [
         "./evalNodeSpec.ts",
+        "./replaceColorSpec.ts",
         "../typings/jasmine/jasmine.d.ts",
         "../typings/node/node.d.ts",
+        "../typings/png-async/png-async.d.ts",
         "../node_modules/typescript/bin/typescript.d.ts"
     ]
 }
