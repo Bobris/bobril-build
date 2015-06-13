@@ -18,7 +18,9 @@
     ],
     "files": [
         "./evalNodeSpec.ts",
-        "./replaceColorSpec.ts",
+        "./imageOpsSpec.ts",
+        "./spriterSpec.ts",
+        "../typings/bluebird/bluebird.d.ts",
         "../typings/jasmine/jasmine.d.ts",
         "../typings/node/node.d.ts",
         "../typings/png-async/png-async.d.ts",
