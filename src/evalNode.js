@@ -1,8 +1,12 @@
 var ts = require("typescript");
-function evalNode(n, tc) {
+var path_1 = require("path");
+function evalNode(n, tc, pathConst) {
     switch (n.kind) {
         case 8 /* StringLiteral */: {
             var nn = n;
+            if (pathConst) {
+                return path_1.posix.join(path_1.posix.dirname(nn.getSourceFile().fileName), nn.text);
+            }
             return nn.text;
         }
         case 7 /* NumericLiteral */: {
@@ -14,7 +18,7 @@ function evalNode(n, tc) {
         case 89 /* NullKeyword */: return null;
         case 167 /* PrefixUnaryExpression */: {
             var nn = n;
-            var operand = evalNode(nn.operand, tc);
+            var operand = evalNode(nn.operand, tc, pathConst);
             if (operand !== undefined) {
                 var op = null;
                 switch (nn.operator) {
@@ -39,8 +43,8 @@ function evalNode(n, tc) {
         }
         case 169 /* BinaryExpression */: {
             var nn = n;
-            var left = evalNode(nn.left, tc);
-            var right = evalNode(nn.right, tc);
+            var left = evalNode(nn.left, tc, pathConst);
+            var right = evalNode(nn.right, tc, pathConst);
             if (left !== undefined && right !== undefined) {
                 var op = null;
                 switch (nn.operatorToken.kind) {
@@ -78,25 +82,25 @@ function evalNode(n, tc) {
         }
         case 170 /* ConditionalExpression */: {
             var nn = n;
-            var cond = evalNode(nn.condition, tc);
+            var cond = evalNode(nn.condition, tc, false);
             if (cond === undefined)
                 return undefined;
             var e = cond ? nn.whenTrue : nn.whenFalse;
-            return evalNode(e, tc);
+            return evalNode(e, tc, pathConst);
         }
         case 65 /* Identifier */:
         case 155 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
             if (s.flags & 3 /* Variable */) {
                 if (s.valueDeclaration.parent.flags & 8192 /* Const */) {
-                    return evalNode(s.valueDeclaration.initializer, tc);
+                    return evalNode(s.valueDeclaration.initializer, tc, pathConst);
                 }
             }
             return undefined;
         }
         case 160 /* TypeAssertionExpression */: {
             var nn = n;
-            return evalNode(nn.expression, tc);
+            return evalNode(nn.expression, tc, pathConst);
         }
         default: return undefined;
     }

@@ -1,9 +1,13 @@
 import * as ts from "typescript";
+import { posix as path } from "path";
 
-export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
+export function evalNode(n: ts.Node, tc: ts.TypeChecker, pathConst: boolean): any {
     switch (n.kind) {
         case ts.SyntaxKind.StringLiteral: {
             let nn = <ts.StringLiteral>n;
+            if (pathConst) {
+                return path.join(path.dirname(nn.getSourceFile().fileName), nn.text);
+            }
             return nn.text;
         }
         case ts.SyntaxKind.NumericLiteral: {
@@ -15,7 +19,7 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
         case ts.SyntaxKind.NullKeyword: return null;
         case ts.SyntaxKind.PrefixUnaryExpression: {
             let nn = <ts.PrefixUnaryExpression>n;
-            let operand = evalNode(nn.operand, tc);
+            let operand = evalNode(nn.operand, tc, pathConst);
             if (operand !== undefined) {
                 let op = null;
                 switch (nn.operator) {
@@ -32,8 +36,8 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
         }
         case ts.SyntaxKind.BinaryExpression: {
             let nn = <ts.BinaryExpression>n;
-            let left = evalNode(nn.left, tc);
-            let right = evalNode(nn.right, tc);
+            let left = evalNode(nn.left, tc, pathConst);
+            let right = evalNode(nn.right, tc, pathConst);
             if (left !== undefined && right !== undefined) {
                 let op = null;
                 switch (nn.operatorToken.kind) {
@@ -71,24 +75,24 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker): any {
         }
         case ts.SyntaxKind.ConditionalExpression: {
             let nn = <ts.ConditionalExpression>n;
-            var cond = evalNode(nn.condition, tc);
+            var cond = evalNode(nn.condition, tc, false);
             if (cond === undefined) return undefined;
             let e = cond ? nn.whenTrue : nn.whenFalse;
-            return evalNode(e, tc);
+            return evalNode(e, tc, pathConst);
         }
         case ts.SyntaxKind.Identifier:
         case ts.SyntaxKind.PropertyAccessExpression: {
             let s = tc.getSymbolAtLocation(n);
             if (s.flags & ts.SymbolFlags.Variable) {
                 if (s.valueDeclaration.parent.flags & ts.NodeFlags.Const) {
-                    return evalNode((<ts.VariableDeclaration>s.valueDeclaration).initializer, tc);
+                    return evalNode((<ts.VariableDeclaration>s.valueDeclaration).initializer, tc, pathConst);
                 }
             }
             return undefined;
         }
         case ts.SyntaxKind.TypeAssertionExpression: {
             let nn = <ts.TypeAssertion>n;
-            return evalNode(nn.expression, tc);
+            return evalNode(nn.expression, tc, pathConst);
         }
         default: return undefined;
     }

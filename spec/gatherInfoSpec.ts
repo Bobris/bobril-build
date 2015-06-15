@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
-import { evalNode } from "../src/evalNode";
+import * as buildHelpers from "../src/buildHelpers";
 
 var defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve("typescript"))), "lib.es6.d.ts");
 var defaultLibFilenameNorm = defaultLibFilename.replace(/\\/g, "/");
@@ -24,6 +24,7 @@ function createCompilerHost(currentDirectory) {
         return ts.createSourceFile(filename, text, languageVersion, true);
     }
     function writeFile(fileName, data, writeByteOrderMark, onError) {
+        fileName = path.join(currentDirectory, fileName);
         try {
             var text = ts.sys.readFile(fileName, 'utf-8');
         } catch (e) {
@@ -34,7 +35,6 @@ function createCompilerHost(currentDirectory) {
             return;
         }
         try {
-            console.log("Writing " + fileName);
             ts.sys.writeFile(fileName, data, false);
         } catch (e) {
             if (onError) {
@@ -70,53 +70,37 @@ function reportDiagnostics(diagnostics) {
     }
 }
 
-describe("evalNode", () => {
-    let testpath = path.join(__dirname, "evalNode");
-    let di = fs.readdirSync(testpath).sort();
-    try { fs.mkdirSync(path.join(testpath, "_accept")); } catch (err) { };
-    try { fs.mkdirSync(path.join(testpath, "_expected")); } catch (err) { };
-    di.forEach(n=> {
-        if (n[0] === ".") return;
-        if (n[0] === "_") return;
-        it(n, () => {
-            var full = path.join(testpath, n);
-            var program = ts.createProgram(["main.ts"], { module: ts.ModuleKind.CommonJS }, createCompilerHost(full));
-            var diagnostics = program.getSyntacticDiagnostics();
+describe("gatherInfoComplex", () => {
+    it("works", () => {
+        let testpath = path.join(__dirname, "complexGatherInfo");
+        var full = testpath;
+        var program = ts.createProgram(["main.ts"], { module: ts.ModuleKind.CommonJS }, createCompilerHost(full));
+        var diagnostics = program.getSyntacticDiagnostics();
+        reportDiagnostics(diagnostics);
+        if (diagnostics.length === 0) {
+            var diagnostics = program.getGlobalDiagnostics();
             reportDiagnostics(diagnostics);
             if (diagnostics.length === 0) {
-                var diagnostics = program.getGlobalDiagnostics();
+                var diagnostics = program.getSemanticDiagnostics();
                 reportDiagnostics(diagnostics);
-                if (diagnostics.length === 0) {
-                    var diagnostics = program.getSemanticDiagnostics();
-                    reportDiagnostics(diagnostics);
+            }
+        }
+        var tc = program.getTypeChecker();
+        var sourceFiles = program.getSourceFiles();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            var src = sourceFiles[i];
+            if (src.hasNoDefaultLib) continue; // skip searching default lib
+            var srcInfo = buildHelpers.gatherSourceInfo(src, tc);
+            //console.log(src.fileName);
+            //console.log(srcInfo);
+            if (srcInfo.sprites.length > 0) {
+                for (let i = 0; i < srcInfo.sprites.length; i++) {
+                    var si = srcInfo.sprites[i];
+                    buildHelpers.setArgument(si.callExpression, 0, si.name || "Error");
+                    buildHelpers.setArgument(si.callExpression, 1, i);
                 }
+                program.emit(src);
             }
-            let accc = "";
-            var tc = program.getTypeChecker();
-            var mainsource = program.getSourceFile("main.ts");
-            function visit(n: ts.Node) {
-                if (n.kind === ts.SyntaxKind.CallExpression) {
-                    var ce = <ts.CallExpression>n;
-                    if (ce.expression.getText() === "console.log") {
-                        if (ce.arguments.length === 1) {
-                            let res = evalNode(ce.arguments[0], tc, false);
-                            if (res === undefined) res = "undefined";
-                            accc += res + "\n";
-                        }
-                    }
-                }
-                //console.log((<any>ts).SyntaxKind[n.kind] + " -> " + n.getText());
-                ts.forEachChild(n, visit);
-            }
-            visit(mainsource);
-            fs.writeFileSync(path.join(testpath, "_accept", n + ".txt"), accc);
-            let expc = "";
-            try {
-                expc = fs.readFileSync(path.join(testpath, "_expected", n + ".txt")).toString();
-            } catch (err) {
-                expc = "New Test";
-            }
-            expect(accc).toEqual(expc);
-        });
+        }
     });
 });

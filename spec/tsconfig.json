@@ -18,6 +18,7 @@
     ],
     "files": [
         "./evalNodeSpec.ts",
+        "./gatherInfoSpec.ts",
         "./imageOpsSpec.ts",
         "./spriterSpec.ts",
         "../typings/bluebird/bluebird.d.ts",
