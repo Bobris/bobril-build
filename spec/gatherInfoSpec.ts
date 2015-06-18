@@ -103,4 +103,7 @@ describe("gatherInfoComplex", () => {
             }
         }
     });
+    it("wip", (done) => {
+        buildHelpers.compile(done);
+    });
 });

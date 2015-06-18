@@ -100,4 +100,7 @@ describe("gatherInfoComplex", function () {
             }
         }
     });
+    it("wip", function (done) {
+        buildHelpers.compile(done);
+    });
 });
