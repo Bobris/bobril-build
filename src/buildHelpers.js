@@ -2,8 +2,8 @@ var ts = require("typescript");
 var fs = require("fs");
 var path = require("path");
 var evalNode = require("./evalNode");
-var spriter = require("./spriter");
 var imageOps = require("./imageOps");
+var imgCache = require("./imgCache");
 function gatherSourceInfo(source, tc) {
     var result = { sprites: [] };
     function visit(n) {
@@ -79,8 +79,19 @@ function createNodeFromValue(value) {
         result.text = "" + value;
         return result;
     }
+    debugger;
     throw new Error("Don't know how to create node for " + value);
 }
+function setMethod(callExpression, name) {
+    var ex = callExpression.expression;
+    var result = ts.createNode(65 /* Identifier */);
+    result.pos = -1;
+    result.flags = ex.name.flags;
+    result.text = name;
+    ex.name = result;
+    ex.pos = -1;
+}
+exports.setMethod = setMethod;
 function setArgument(callExpression, index, value) {
     while (callExpression.arguments.length < index) {
         callExpression.arguments.push(createNodeFromValue(null));
@@ -93,6 +104,16 @@ function setArgument(callExpression, index, value) {
     }
 }
 exports.setArgument = setArgument;
+function setArgumentCount(callExpression, count) {
+    var a = callExpression.arguments;
+    while (a.length < count) {
+        a.push(createNodeFromValue(null));
+    }
+    while (count < a.length) {
+        a.pop();
+    }
+}
+exports.setArgumentCount = setArgumentCount;
 var defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve("typescript"))), "lib.es6.d.ts");
 var defaultLibFilenameNorm = defaultLibFilename.replace(/\\/g, "/");
 var lastLibPrecompiled;
@@ -173,8 +194,7 @@ function compile(done) {
     }
     var tc = program.getTypeChecker();
     var sourceFiles = program.getSourceFiles();
-    var prom = Promise.resolve(null);
-    var spriteMap = Object.create(null);
+    var bundleCache = new imgCache.ImgBundleCache(new imgCache.ImgCache());
     for (var i = 0; i < sourceFiles.length; i++) {
         var src = sourceFiles[i];
         if (src.hasNoDefaultLib)
@@ -185,18 +205,14 @@ function compile(done) {
         if (srcInfo.sprites.length > 0) {
             for (var i_1 = 0; i_1 < srcInfo.sprites.length; i_1++) {
                 var si = srcInfo.sprites[i_1];
-                (function (name) {
-                    prom = prom.then(function () {
-                        return imageOps.loadPNG(path.join(full, name)).then(function (img) {
-                            spriteMap[name] = img;
-                        });
-                    });
-                })(si.name);
+                bundleCache.add(path.join(full, si.name), si.color, si.width, si.height, si.x, si.y);
             }
         }
     }
-    prom = prom.then(function () {
-        var spList = [];
+    bundleCache.wasChange();
+    var prom = bundleCache.build().then(function (bi) {
+        return imageOps.savePNG(bi, path.join(full, "bundle.png"));
+    }).then(function () {
         for (var i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib)
@@ -205,42 +221,26 @@ function compile(done) {
             if (srcInfo.sprites.length > 0) {
                 for (var i_2 = 0; i_2 < srcInfo.sprites.length; i_2++) {
                     var si = srcInfo.sprites[i_2];
-                    spList.push({
-                        width: spriteMap[si.name].width,
-                        height: spriteMap[si.name].height, x: 0, y: 0, img: spriteMap[si.name], name: si.name
-                    });
+                    var bundlePos = bundleCache.query(path.join(full, si.name), si.color, si.width, si.height, si.x, si.y);
+                    setMethod(si.callExpression, "spriteb");
+                    setArgument(si.callExpression, 0, bundlePos.width);
+                    setArgument(si.callExpression, 1, bundlePos.height);
+                    setArgument(si.callExpression, 2, bundlePos.x);
+                    setArgument(si.callExpression, 3, bundlePos.y);
+                    setArgumentCount(si.callExpression, 4);
                 }
             }
         }
-        var dim = spriter.spritePlace(spList);
-        var bundleImage = imageOps.createImage(dim[0], dim[1]);
-        for (var i = 0; i < spList.length; i++) {
-            var sp = spList[i];
-            imageOps.drawImage(sp.img, bundleImage, sp.x, sp.y);
-        }
-        imageOps.savePNG(bundleImage, path.join(full, "bundle.png"));
+    });
+    prom = prom.then(function () {
         for (var i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib)
                 continue; // skip searching default lib
-            var srcInfo = gatherSourceInfo(src, tc);
-            if (srcInfo.sprites.length > 0) {
-                for (var i_3 = 0; i_3 < srcInfo.sprites.length; i_3++) {
-                    var si = srcInfo.sprites[i_3];
-                    for (var j = 0; j < spList.length; j++) {
-                        if (spList[j].name === si.name) {
-                            setArgument(si.callExpression, 0, "bundle.png");
-                            setArgument(si.callExpression, 1, null);
-                            setArgument(si.callExpression, 2, spList[j].width);
-                            setArgument(si.callExpression, 3, spList[j].height);
-                            setArgument(si.callExpression, 4, spList[j].x);
-                            setArgument(si.callExpression, 5, spList[j].y);
-                        }
-                    }
-                }
-            }
             program.emit(src);
         }
-    }).then(done);
+    }).then(done, function (err) {
+        console.log(err);
+    });
 }
 exports.compile = compile;

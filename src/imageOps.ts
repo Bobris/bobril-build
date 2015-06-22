@@ -47,10 +47,10 @@ export function savePNG(img: Image, filename: string): Promise<any> {
     });
 }
 
-export function createImage(width:number, height:number): Image {
-    return pnglib.createImage({ width, height, fill:true });
+export function createImage(width: number, height: number): Image {
+    return pnglib.createImage({ width, height, fill: true });
 }
 
-export function drawImage(src: Image, dst: Image, dx: number, dy: number) {
-    src.bitblt(dst, 0, 0, src.width, src.height, dx, dy);
+export function drawImage(src: Image, dst: Image, dx: number, dy: number, sx?: number, sy?: number, width?: number, height?: number) {
+    src.bitblt(dst, sx || 0, sy || 0, width || src.width, height || src.height, dx, dy);
 }

@@ -23,6 +23,7 @@
         "./buildHelpers.ts",
         "./evalNode.ts",
         "./imageOps.ts",
+        "./imgCache.ts",
         "./spriter.ts",
         "../typings/node/node.d.ts",
         "../typings/bluebird/bluebird.d.ts",

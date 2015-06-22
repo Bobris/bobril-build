@@ -5,7 +5,7 @@ export interface SpritePlace {
     y: number;
 }
 
-export function spritePlace(sprites: SpritePlace[]): [number, number] {
+export function spritePlace<T extends SpritePlace>(sprites: T[]): [number, number] {
     var a = new D2Array();
     sprites.sort((l, r) => r.height - l.height);
     for (let i = 0; i < sprites.length; i++) {

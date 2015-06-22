@@ -50,7 +50,7 @@ function createImage(width, height) {
     return pnglib.createImage({ width: width, height: height, fill: true });
 }
 exports.createImage = createImage;
-function drawImage(src, dst, dx, dy) {
-    src.bitblt(dst, 0, 0, src.width, src.height, dx, dy);
+function drawImage(src, dst, dx, dy, sx, sy, width, height) {
+    src.bitblt(dst, sx || 0, sy || 0, width || src.width, height || src.height, dx, dy);
 }
 exports.drawImage = drawImage;

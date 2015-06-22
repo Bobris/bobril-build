@@ -4,6 +4,8 @@ import * as path from "path";
 import * as evalNode from "./evalNode";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
+import * as imgCache from "./imgCache";
+import * as Promise from "bluebird";
 
 export interface SourceInfo {
     sprites: SpriteInfo[];
@@ -87,7 +89,18 @@ function createNodeFromValue(value: string|number|boolean): ts.Node {
         result.text = "" + value;
         return result;
     }
+    debugger;
     throw new Error("Don't know how to create node for " + value);
+}
+
+export function setMethod(callExpression: ts.CallExpression, name: string) {
+    var ex = <ts.PropertyAccessExpression>callExpression.expression;
+    let result = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
+    result.pos = -1;
+    result.flags = ex.name.flags;
+    result.text = name;
+    ex.name = result;
+    ex.pos = -1;
 }
 
 export function setArgument(callExpression: ts.CallExpression, index: number, value: string|number|boolean): void {
@@ -98,6 +111,16 @@ export function setArgument(callExpression: ts.CallExpression, index: number, va
         callExpression.arguments.push(<ts.Expression>createNodeFromValue(value));
     } else {
         callExpression.arguments[index] = <ts.Expression>createNodeFromValue(value);
+    }
+}
+
+export function setArgumentCount(callExpression: ts.CallExpression, count: number) {
+    var a = callExpression.arguments;
+    while (a.length < count) {
+        a.push(<ts.Expression>createNodeFromValue(null));
+    }
+    while (count < a.length) {
+        a.pop();
     }
 }
 
@@ -123,7 +146,7 @@ function createCompilerHost(currentDirectory) {
     }
     function writeFile(fileName, data, writeByteOrderMark, onError) {
         fileName = path.join(currentDirectory, fileName);
-        console.log("Writing "+fileName);
+        console.log("Writing " + fileName);
         try {
             var text = ts.sys.readFile(fileName, 'utf-8');
         } catch (e) {
@@ -169,7 +192,7 @@ function reportDiagnostics(diagnostics) {
     }
 }
 
-export function compile(done: ()=>void) {
+export function compile(done: () => void) {
     var full = "c:/Research/bobrilapp";
     var program = ts.createProgram(["app.ts"], { module: ts.ModuleKind.CommonJS }, createCompilerHost(full));
     var diagnostics = program.getSyntacticDiagnostics();
@@ -184,9 +207,7 @@ export function compile(done: ()=>void) {
     }
     var tc = program.getTypeChecker();
     var sourceFiles = program.getSourceFiles();
-    var prom = Promise.resolve<any>(null);
-    var spriteMap = Object.create(null);
-
+    var bundleCache = new imgCache.ImgBundleCache(new imgCache.ImgCache());
     for (let i = 0; i < sourceFiles.length; i++) {
         var src = sourceFiles[i];
         if (src.hasNoDefaultLib) continue; // skip searching default lib
@@ -196,60 +217,41 @@ export function compile(done: ()=>void) {
         if (srcInfo.sprites.length > 0) {
             for (let i = 0; i < srcInfo.sprites.length; i++) {
                 var si = srcInfo.sprites[i];
-                (function(name) {
-                    prom = prom.then(() => {
-                        return imageOps.loadPNG(path.join(full, name)).then(img=> {
-                            spriteMap[name] = img;
-                        })
-                    })
-                })(si.name);
+                bundleCache.add(path.join(full, si.name), si.color, si.width, si.height, si.x, si.y);
             }
         }
     }
 
+    bundleCache.wasChange();
+    let prom = bundleCache.build().then((bi) => {
+        return imageOps.savePNG(bi, path.join(full, "bundle.png"));
+    }).then(() => {
+        for (let i = 0; i < sourceFiles.length; i++) {
+            var src = sourceFiles[i];
+            if (src.hasNoDefaultLib) continue; // skip searching default lib
+            var srcInfo = gatherSourceInfo(src, tc);
+            if (srcInfo.sprites.length > 0) {
+                for (let i = 0; i < srcInfo.sprites.length; i++) {
+                    var si = srcInfo.sprites[i];
+                    var bundlePos = bundleCache.query(path.join(full, si.name), si.color, si.width, si.height, si.x, si.y);
+                    setMethod(si.callExpression, "spriteb");
+                    setArgument(si.callExpression, 0, bundlePos.width);
+                    setArgument(si.callExpression, 1, bundlePos.height);
+                    setArgument(si.callExpression, 2, bundlePos.x);
+                    setArgument(si.callExpression, 3, bundlePos.y);
+                    setArgumentCount(si.callExpression, 4);
+                }
+            }
+        }
+    });
+
     prom = prom.then(() => {
-        let spList = <spriter.SpritePlace[]>[];
         for (let i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib) continue; // skip searching default lib
-            var srcInfo = gatherSourceInfo(src, tc);
-            if (srcInfo.sprites.length > 0) {
-                for (let i = 0; i < srcInfo.sprites.length; i++) {
-                    var si = srcInfo.sprites[i];
-                    spList.push({
-                        width: (<imageOps.Image>spriteMap[si.name]).width,
-                        height: (<imageOps.Image>spriteMap[si.name]).height, x: 0, y: 0, img: spriteMap[si.name], name: si.name
-                    });
-                }
-            }
-        }
-        let dim = spriter.spritePlace(spList);
-        let bundleImage = imageOps.createImage(dim[0], dim[1]);
-        for (let i = 0; i < spList.length; i++) {
-            let sp = spList[i];
-            imageOps.drawImage(<imageOps.Image>(<any>sp).img, bundleImage, sp.x, sp.y);
-        }
-        imageOps.savePNG(bundleImage, path.join(full, "bundle.png"))
-        for (let i = 0; i < sourceFiles.length; i++) {
-            var src = sourceFiles[i];
-            if (src.hasNoDefaultLib) continue; // skip searching default lib
-            var srcInfo = gatherSourceInfo(src, tc);
-            if (srcInfo.sprites.length > 0) {
-                for (let i = 0; i < srcInfo.sprites.length; i++) {
-                    var si = srcInfo.sprites[i];
-                    for (let j = 0; j < spList.length; j++) {
-                        if ((<any>spList[j]).name === si.name) {
-                            setArgument(si.callExpression, 0, "bundle.png");
-                            setArgument(si.callExpression, 1, null);
-                            setArgument(si.callExpression, 2, spList[j].width);
-                            setArgument(si.callExpression, 3, spList[j].height);
-                            setArgument(si.callExpression, 4, spList[j].x);
-                            setArgument(si.callExpression, 5, spList[j].y);
-                        }
-                    }
-                }
-            }
             program.emit(src);
         }
-    }).then(done);
+    }).then(done, (err) => {
+        console.log(err);
+    });
 }
