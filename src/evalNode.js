@@ -1,11 +1,10 @@
 var ts = require("typescript");
-var path_1 = require("path");
-function evalNode(n, tc, pathConst) {
+function evalNode(n, tc, resolveStringLiteral) {
     switch (n.kind) {
         case 8 /* StringLiteral */: {
             var nn = n;
-            if (pathConst) {
-                return path_1.posix.join(path_1.posix.dirname(nn.getSourceFile().fileName), nn.text);
+            if (resolveStringLiteral) {
+                return resolveStringLiteral(nn);
             }
             return nn.text;
         }
@@ -18,7 +17,7 @@ function evalNode(n, tc, pathConst) {
         case 89 /* NullKeyword */: return null;
         case 167 /* PrefixUnaryExpression */: {
             var nn = n;
-            var operand = evalNode(nn.operand, tc, pathConst);
+            var operand = evalNode(nn.operand, tc, resolveStringLiteral);
             if (operand !== undefined) {
                 var op = null;
                 switch (nn.operator) {
@@ -43,8 +42,8 @@ function evalNode(n, tc, pathConst) {
         }
         case 169 /* BinaryExpression */: {
             var nn = n;
-            var left = evalNode(nn.left, tc, pathConst);
-            var right = evalNode(nn.right, tc, pathConst);
+            var left = evalNode(nn.left, tc, resolveStringLiteral);
+            var right = evalNode(nn.right, tc, null);
             if (left !== undefined && right !== undefined) {
                 var op = null;
                 switch (nn.operatorToken.kind) {
@@ -82,25 +81,25 @@ function evalNode(n, tc, pathConst) {
         }
         case 170 /* ConditionalExpression */: {
             var nn = n;
-            var cond = evalNode(nn.condition, tc, false);
+            var cond = evalNode(nn.condition, tc, null);
             if (cond === undefined)
                 return undefined;
             var e = cond ? nn.whenTrue : nn.whenFalse;
-            return evalNode(e, tc, pathConst);
+            return evalNode(e, tc, resolveStringLiteral);
         }
         case 65 /* Identifier */:
         case 155 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
             if (s.flags & 3 /* Variable */) {
                 if (s.valueDeclaration.parent.flags & 8192 /* Const */) {
-                    return evalNode(s.valueDeclaration.initializer, tc, pathConst);
+                    return evalNode(s.valueDeclaration.initializer, tc, resolveStringLiteral);
                 }
             }
             return undefined;
         }
         case 160 /* TypeAssertionExpression */: {
             var nn = n;
-            return evalNode(nn.expression, tc, pathConst);
+            return evalNode(nn.expression, tc, resolveStringLiteral);
         }
         default: return undefined;
     }

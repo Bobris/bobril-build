@@ -99,7 +99,7 @@ describe("evalNode", () => {
                     var ce = <ts.CallExpression>n;
                     if (ce.expression.getText() === "console.log") {
                         if (ce.arguments.length === 1) {
-                            let res = evalNode(ce.arguments[0], tc, false);
+                            let res = evalNode(ce.arguments[0], tc, null);
                             if (res === undefined) res = "undefined";
                             accc += res + "\n";
                         }

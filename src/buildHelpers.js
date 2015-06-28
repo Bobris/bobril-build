@@ -5,14 +5,32 @@ var evalNode = require("./evalNode");
 var imageOps = require("./imageOps");
 var imgCache = require("./imgCache");
 function gatherSourceInfo(source, tc) {
-    var result = { sprites: [] };
+    var result = { sourceDeps: [], bobrilNamespace: null, sprites: [] };
     function visit(n) {
-        if (n.kind === 157 /* CallExpression */) {
+        if (n.kind === 209 /* ImportDeclaration */) {
+            var id = n;
+            var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
+            var sf = moduleSymbol.valueDeclaration.getSourceFile();
+            var fn = sf.fileName;
+            // bobril import is detected that filename contains bobril and content contains sprite export
+            if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === 211 /* NamespaceImport */ && /bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
+                result.bobrilNamespace = id.importClause.namedBindings.name.text;
+            }
+            result.sourceDeps.push(fn);
+        }
+        else if (n.kind === 215 /* ExportDeclaration */) {
+            var ed = n;
+            if (ed.moduleSpecifier) {
+                var moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
+                result.sourceDeps.push(moduleSymbol.valueDeclaration.getSourceFile().fileName);
+            }
+        }
+        else if (n.kind === 157 /* CallExpression */) {
             var ce = n;
-            if (ce.expression.getText() === "b.sprite") {
+            if (ce.expression.getText() === result.bobrilNamespace + ".sprite") {
                 var si = { callExpression: ce };
                 for (var i = 0; i < ce.arguments.length; i++) {
-                    var res = evalNode.evalNode(ce.arguments[i], tc, i === 0); // first argument is path
+                    var res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); } : null); // first argument is path
                     if (res !== undefined)
                         switch (i) {
                             case 0:
@@ -89,7 +107,7 @@ function setMethod(callExpression, name) {
     result.flags = ex.name.flags;
     result.text = name;
     ex.name = result;
-    ex.pos = -1;
+    ex.pos = -1; // This is for correcty not wrap line after "b."
 }
 exports.setMethod = setMethod;
 function setArgument(callExpression, index, value) {

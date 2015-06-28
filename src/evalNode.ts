@@ -1,12 +1,12 @@
 import * as ts from "typescript";
 import { posix as path } from "path";
 
-export function evalNode(n: ts.Node, tc: ts.TypeChecker, pathConst: boolean): any {
+export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral:(sl:ts.StringLiteral)=>string): any {
     switch (n.kind) {
         case ts.SyntaxKind.StringLiteral: {
             let nn = <ts.StringLiteral>n;
-            if (pathConst) {
-                return path.join(path.dirname(nn.getSourceFile().fileName), nn.text);
+            if (resolveStringLiteral) {
+                return resolveStringLiteral(nn);
             }
             return nn.text;
         }
@@ -19,7 +19,7 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, pathConst: boolean): an
         case ts.SyntaxKind.NullKeyword: return null;
         case ts.SyntaxKind.PrefixUnaryExpression: {
             let nn = <ts.PrefixUnaryExpression>n;
-            let operand = evalNode(nn.operand, tc, pathConst);
+            let operand = evalNode(nn.operand, tc, resolveStringLiteral);
             if (operand !== undefined) {
                 let op = null;
                 switch (nn.operator) {
@@ -36,8 +36,8 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, pathConst: boolean): an
         }
         case ts.SyntaxKind.BinaryExpression: {
             let nn = <ts.BinaryExpression>n;
-            let left = evalNode(nn.left, tc, pathConst);
-            let right = evalNode(nn.right, tc, pathConst);
+            let left = evalNode(nn.left, tc, resolveStringLiteral);
+            let right = evalNode(nn.right, tc, null);
             if (left !== undefined && right !== undefined) {
                 let op = null;
                 switch (nn.operatorToken.kind) {
@@ -75,24 +75,24 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, pathConst: boolean): an
         }
         case ts.SyntaxKind.ConditionalExpression: {
             let nn = <ts.ConditionalExpression>n;
-            var cond = evalNode(nn.condition, tc, false);
+            var cond = evalNode(nn.condition, tc, null);
             if (cond === undefined) return undefined;
             let e = cond ? nn.whenTrue : nn.whenFalse;
-            return evalNode(e, tc, pathConst);
+            return evalNode(e, tc, resolveStringLiteral);
         }
         case ts.SyntaxKind.Identifier:
         case ts.SyntaxKind.PropertyAccessExpression: {
             let s = tc.getSymbolAtLocation(n);
             if (s.flags & ts.SymbolFlags.Variable) {
                 if (s.valueDeclaration.parent.flags & ts.NodeFlags.Const) {
-                    return evalNode((<ts.VariableDeclaration>s.valueDeclaration).initializer, tc, pathConst);
+                    return evalNode((<ts.VariableDeclaration>s.valueDeclaration).initializer, tc, resolveStringLiteral);
                 }
             }
             return undefined;
         }
         case ts.SyntaxKind.TypeAssertionExpression: {
             let nn = <ts.TypeAssertion>n;
-            return evalNode(nn.expression, tc, pathConst);
+            return evalNode(nn.expression, tc, resolveStringLiteral);
         }
         default: return undefined;
     }

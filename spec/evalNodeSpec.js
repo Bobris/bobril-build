@@ -105,7 +105,7 @@ describe("evalNode", function () {
                     var ce = n;
                     if (ce.expression.getText() === "console.log") {
                         if (ce.arguments.length === 1) {
-                            var res = evalNode_1.evalNode(ce.arguments[0], tc, false);
+                            var res = evalNode_1.evalNode(ce.arguments[0], tc, null);
                             if (res === undefined)
                                 res = "undefined";
                             accc += res + "\n";

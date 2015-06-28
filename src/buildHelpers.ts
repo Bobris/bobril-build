@@ -8,6 +8,8 @@ import * as imgCache from "./imgCache";
 import * as Promise from "bluebird";
 
 export interface SourceInfo {
+    sourceDeps: string[];
+    bobrilNamespace: string;
     sprites: SpriteInfo[];
 }
 
@@ -22,14 +24,32 @@ export interface SpriteInfo {
 }
 
 export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker): SourceInfo {
-    let result: SourceInfo = { sprites: [] };
+    let result: SourceInfo = { sourceDeps: [], bobrilNamespace: null, sprites: [] };
     function visit(n: ts.Node) {
-        if (n.kind === ts.SyntaxKind.CallExpression) {
+        if (n.kind === ts.SyntaxKind.ImportDeclaration) {
+            let id = <ts.ImportDeclaration>n;
+            let moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
+            let sf = moduleSymbol.valueDeclaration.getSourceFile();
+            let fn = sf.fileName;
+            // bobril import is detected that filename contains bobril and content contains sprite export
+            if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport && /bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
+                result.bobrilNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
+            }
+            result.sourceDeps.push(fn);
+        }
+        else if (n.kind === ts.SyntaxKind.ExportDeclaration) {
+            let ed = <ts.ExportDeclaration>n;
+            if (ed.moduleSpecifier) {
+                let moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
+                result.sourceDeps.push(moduleSymbol.valueDeclaration.getSourceFile().fileName);
+            }
+        }
+        else if (n.kind === ts.SyntaxKind.CallExpression) {
             let ce = <ts.CallExpression>n;
-            if (ce.expression.getText() === "b.sprite") {
+            if (ce.expression.getText() === result.bobrilNamespace + ".sprite") {
                 let si: SpriteInfo = { callExpression: ce };
                 for (let i = 0; i < ce.arguments.length; i++) {
-                    let res = evalNode.evalNode(ce.arguments[i], tc, i === 0); // first argument is path
+                    let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? (nn) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text) : null); // first argument is path
                     if (res !== undefined) switch (i) {
                         case 0:
                             if (typeof res === "string") si.name = res;
@@ -100,7 +120,7 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
     result.flags = ex.name.flags;
     result.text = name;
     ex.name = result;
-    ex.pos = -1;
+    ex.pos = -1; // This is for correcty not wrap line after "b."
 }
 
 export function setArgument(callExpression: ts.CallExpression, index: number, value: string|number|boolean): void {
