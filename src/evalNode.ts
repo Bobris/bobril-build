@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import { posix as path } from "path";
 
-export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral:(sl:ts.StringLiteral)=>string): any {
+export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral: (sl: ts.StringLiteral) => string): any {
     switch (n.kind) {
         case ts.SyntaxKind.StringLiteral: {
             let nn = <ts.StringLiteral>n;
@@ -93,6 +93,18 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral:(s
         case ts.SyntaxKind.TypeAssertionExpression: {
             let nn = <ts.TypeAssertion>n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
+        }
+        case ts.SyntaxKind.ObjectLiteralExpression: {
+            let ole = <ts.ObjectLiteralExpression>n;
+            let res = {};
+            for (let i = 0; i < ole.properties.length; i++) {
+                let prop = ole.properties[i];
+                if (prop.kind === ts.SyntaxKind.PropertyAssignment && (prop.name.kind === ts.SyntaxKind.Identifier || prop.name.kind === ts.SyntaxKind.StringLiteral)) {
+                    let name = prop.name.kind === ts.SyntaxKind.Identifier ? (<ts.Identifier>prop.name).text : (<ts.StringLiteral>prop.name).text;
+                    res[name] = evalNode((<ts.PropertyAssignment>prop).initializer, tc, resolveStringLiteral);
+                }
+            }
+            return res;
         }
         default: return undefined;
     }

@@ -1,3 +1,3 @@
-export { IBobrilStyleDef } from "../bobril.fake";
+export { IBobrilStyleDef } from "../bobril";
 
 export const addIcon = "add";

@@ -4,8 +4,11 @@ var path = require("path");
 var evalNode = require("./evalNode");
 var imageOps = require("./imageOps");
 var imgCache = require("./imgCache");
+function isBobrilFunction(name, callExpression, sourceInfo) {
+    return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
+}
 function gatherSourceInfo(source, tc) {
-    var result = { sourceDeps: [], bobrilNamespace: null, sprites: [] };
+    var result = { sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
     function visit(n) {
         if (n.kind === 209 /* ImportDeclaration */) {
             var id = n;
@@ -27,40 +30,71 @@ function gatherSourceInfo(source, tc) {
         }
         else if (n.kind === 157 /* CallExpression */) {
             var ce = n;
-            if (ce.expression.getText() === result.bobrilNamespace + ".sprite") {
+            if (isBobrilFunction('sprite', ce, result)) {
                 var si = { callExpression: ce };
                 for (var i = 0; i < ce.arguments.length; i++) {
                     var res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); } : null); // first argument is path
                     if (res !== undefined)
                         switch (i) {
                             case 0:
-                                if (typeof res === "string")
+                                if (typeof res === 'string')
                                     si.name = res;
                                 break;
                             case 1:
-                                if (typeof res === "string")
+                                if (typeof res === 'string')
                                     si.color = res;
                                 break;
                             case 2:
-                                if (typeof res === "number")
+                                if (typeof res === 'number')
                                     si.width = res;
                                 break;
                             case 3:
-                                if (typeof res === "number")
+                                if (typeof res === 'number')
                                     si.height = res;
                                 break;
                             case 4:
-                                if (typeof res === "number")
+                                if (typeof res === 'number')
                                     si.x = res;
                                 break;
                             case 5:
-                                if (typeof res === "number")
+                                if (typeof res === 'number')
                                     si.y = res;
                                 break;
-                            default: throw new Error("b.sprite cannot have more than 6 parameters");
+                            default: throw new Error('b.sprite cannot have more than 6 parameters');
                         }
                 }
                 result.sprites.push(si);
+            }
+            else if (isBobrilFunction('styleDef', ce, result) || isBobrilFunction('styleDefEx', ce, result)) {
+                var item = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result) };
+                if (ce.arguments.length == 3 + (item.isEx ? 1 : 0)) {
+                    item.name = evalNode.evalNode(ce.arguments[ce.arguments.length - 1], tc, null);
+                }
+                else {
+                    if (ce.parent.kind === 198 /* VariableDeclaration */) {
+                        var vd = ce.parent;
+                        item.name = vd.name.text;
+                    }
+                    else if (ce.parent.kind === 169 /* BinaryExpression */) {
+                        var be = ce.parent;
+                        if (be.operatorToken.kind === 53 /* FirstAssignment */ && be.left.kind === 65 /* Identifier */) {
+                            item.name = be.left.text;
+                        }
+                    }
+                }
+                result.styleDefs.push(item);
+            }
+            else if (isBobrilFunction('t', ce, result)) {
+                var item = { callExpression: ce, message: undefined, knownParams: undefined, hint: undefined };
+                item.message = evalNode.evalNode(ce.arguments[0], tc, null);
+                if (ce.arguments.length >= 2) {
+                    var params = evalNode.evalNode(ce.arguments[1], tc, null);
+                    item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
+                }
+                if (ce.arguments.length >= 3) {
+                    item.hint = evalNode.evalNode(ce.arguments[2], tc, null);
+                }
+                result.trs.push(item);
             }
         }
         ts.forEachChild(n, visit);
@@ -97,8 +131,7 @@ function createNodeFromValue(value) {
         result.text = "" + value;
         return result;
     }
-    debugger;
-    throw new Error("Don't know how to create node for " + value);
+    throw new Error('Don\'t know how to create node for ' + value);
 }
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;

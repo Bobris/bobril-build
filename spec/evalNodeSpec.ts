@@ -101,6 +101,7 @@ describe("evalNode", () => {
                         if (ce.arguments.length === 1) {
                             let res = evalNode(ce.arguments[0], tc, null);
                             if (res === undefined) res = "undefined";
+                            if (typeof res === "object") res = JSON.stringify(res);
                             accc += res + "\n";
                         }
                     }

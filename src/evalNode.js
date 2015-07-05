@@ -101,6 +101,18 @@ function evalNode(n, tc, resolveStringLiteral) {
             var nn = n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
         }
+        case 154 /* ObjectLiteralExpression */: {
+            var ole = n;
+            var res = {};
+            for (var i = 0; i < ole.properties.length; i++) {
+                var prop = ole.properties[i];
+                if (prop.kind === 224 /* PropertyAssignment */ && (prop.name.kind === 65 /* Identifier */ || prop.name.kind === 8 /* StringLiteral */)) {
+                    var name_1 = prop.name.kind === 65 /* Identifier */ ? prop.name.text : prop.name.text;
+                    res[name_1] = evalNode(prop.initializer, tc, resolveStringLiteral);
+                }
+            }
+            return res;
+        }
         default: return undefined;
     }
 }

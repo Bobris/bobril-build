@@ -10,7 +10,15 @@ import * as Promise from "bluebird";
 export interface SourceInfo {
     sourceDeps: string[];
     bobrilNamespace: string;
+    styleDefs: StyleDefInfo[];
     sprites: SpriteInfo[];
+    trs: TranslationMessage[];
+}
+
+export interface StyleDefInfo {
+    callExpression: ts.CallExpression;
+    isEx: boolean;
+    name?: string;
 }
 
 export interface SpriteInfo {
@@ -23,8 +31,19 @@ export interface SpriteInfo {
     height?: number;
 }
 
+export interface TranslationMessage {
+    callExpression: ts.CallExpression;
+    message: string | number;
+    knownParams?: string[];
+    hint?: string;
+}
+
+function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
+    return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
+}
+
 export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker): SourceInfo {
-    let result: SourceInfo = { sourceDeps: [], bobrilNamespace: null, sprites: [] };
+    let result: SourceInfo = { sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
     function visit(n: ts.Node) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             let id = <ts.ImportDeclaration>n;
@@ -46,33 +65,60 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker): Sou
         }
         else if (n.kind === ts.SyntaxKind.CallExpression) {
             let ce = <ts.CallExpression>n;
-            if (ce.expression.getText() === result.bobrilNamespace + ".sprite") {
+            if (isBobrilFunction('sprite', ce, result)) {
                 let si: SpriteInfo = { callExpression: ce };
                 for (let i = 0; i < ce.arguments.length; i++) {
                     let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? (nn) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text) : null); // first argument is path
                     if (res !== undefined) switch (i) {
                         case 0:
-                            if (typeof res === "string") si.name = res;
+                            if (typeof res === 'string') si.name = res;
                             break;
                         case 1:
-                            if (typeof res === "string") si.color = res;
+                            if (typeof res === 'string') si.color = res;
                             break;
                         case 2:
-                            if (typeof res === "number") si.width = res;
+                            if (typeof res === 'number') si.width = res;
                             break;
                         case 3:
-                            if (typeof res === "number") si.height = res;
+                            if (typeof res === 'number') si.height = res;
                             break;
                         case 4:
-                            if (typeof res === "number") si.x = res;
+                            if (typeof res === 'number') si.x = res;
                             break;
                         case 5:
-                            if (typeof res === "number") si.y = res;
+                            if (typeof res === 'number') si.y = res;
                             break;
-                        default: throw new Error("b.sprite cannot have more than 6 parameters");
+                        default: throw new Error('b.sprite cannot have more than 6 parameters');
                     }
                 }
                 result.sprites.push(si);
+            } else if (isBobrilFunction('styleDef', ce, result) || isBobrilFunction('styleDefEx', ce, result)) {
+                let item: StyleDefInfo = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result) };
+                if (ce.arguments.length == 3 + (item.isEx ? 1 : 0)) {
+                    item.name = evalNode.evalNode(ce.arguments[ce.arguments.length - 1], tc, null);
+                } else {
+                    if (ce.parent.kind === ts.SyntaxKind.VariableDeclaration) {
+                        let vd = <ts.VariableDeclaration>ce.parent;
+                        item.name = (<ts.Identifier>vd.name).text;
+                    } else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
+                        let be = <ts.BinaryExpression>ce.parent;
+                        if (be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                            item.name = (<ts.Identifier>be.left).text;
+                        }
+                    }
+                }
+                result.styleDefs.push(item);
+            } else if (isBobrilFunction('t', ce, result)) {
+                let item: TranslationMessage = { callExpression: ce, message: undefined, knownParams: undefined, hint: undefined };
+                item.message = evalNode.evalNode(ce.arguments[0], tc, null);
+                if (ce.arguments.length >= 2) {
+                    let params = evalNode.evalNode(ce.arguments[1], tc, null);
+                    item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
+                }
+                if (ce.arguments.length >= 3) {
+                    item.hint = evalNode.evalNode(ce.arguments[2], tc, null);
+                }
+                result.trs.push(item);
             }
         }
         ts.forEachChild(n, visit);
@@ -109,8 +155,7 @@ function createNodeFromValue(value: string|number|boolean): ts.Node {
         result.text = "" + value;
         return result;
     }
-    debugger;
-    throw new Error("Don't know how to create node for " + value);
+    throw new Error('Don\'t know how to create node for ' + value);
 }
 
 export function setMethod(callExpression: ts.CallExpression, name: string) {
