@@ -21,6 +21,7 @@
     ],
     "files": [
         "./buildHelpers.ts",
+        "./compilationCache.ts",
         "./evalNode.ts",
         "./imageOps.ts",
         "./imgCache.ts",

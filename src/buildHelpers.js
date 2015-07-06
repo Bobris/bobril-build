@@ -8,7 +8,7 @@ function isBobrilFunction(name, callExpression, sourceInfo) {
     return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
 }
 function gatherSourceInfo(source, tc) {
-    var result = { sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
+    var result = { sourceFile: source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
     function visit(n) {
         if (n.kind === 209 /* ImportDeclaration */) {
             var id = n;

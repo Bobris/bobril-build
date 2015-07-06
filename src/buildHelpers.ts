@@ -8,6 +8,7 @@ import * as imgCache from "./imgCache";
 import * as Promise from "bluebird";
 
 export interface SourceInfo {
+    sourceFile: ts.SourceFile;
     sourceDeps: string[];
     bobrilNamespace: string;
     styleDefs: StyleDefInfo[];
@@ -43,7 +44,7 @@ function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourc
 }
 
 export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker): SourceInfo {
-    let result: SourceInfo = { sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
+    let result: SourceInfo = { sourceFile:source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
     function visit(n: ts.Node) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             let id = <ts.ImportDeclaration>n;
