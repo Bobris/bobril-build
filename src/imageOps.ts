@@ -47,6 +47,19 @@ export function savePNG(img: Image, filename: string): Promise<any> {
     });
 }
 
+export function savePNG2Buffer(img): Promise<Buffer> {
+    return new Promise<Buffer>((r: (r: Buffer) => void, e) => {
+        var buffers = [];
+        img.on('data', function(chunk) {
+            buffers.push(chunk);
+        });
+        img.on('end', function() {
+            r(Buffer.concat(buffers));
+        });
+        img.pack();
+    });
+}
+
 export function createImage(width: number, height: number): Image {
     return pnglib.createImage({ width, height, fill: true });
 }

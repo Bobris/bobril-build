@@ -17,6 +17,7 @@
         "../node_modules/typescript/bin/typescript.d.ts"
     ],
     "files": [
+        "./compilationCacheSpec.ts",
         "./evalNodeSpec.ts",
         "./gatherInfoSpec.ts",
         "./imageOpsSpec.ts",

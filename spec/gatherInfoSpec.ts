@@ -90,7 +90,7 @@ describe("gatherInfoComplex", () => {
         for (let i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib) continue; // skip searching default lib
-            var srcInfo = buildHelpers.gatherSourceInfo(src, tc);
+            var srcInfo = buildHelpers.gatherSourceInfo(src, tc, (nn: ts.StringLiteral) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text));
             //console.log(src.fileName);
             //console.log(srcInfo);
             if (srcInfo.sprites.length > 0) {

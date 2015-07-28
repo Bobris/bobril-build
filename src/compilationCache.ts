@@ -38,23 +38,89 @@ interface ICacheFile {
 
 interface IResFile {
     fullName: string;
-    lastTime: number;
+    lastTime?: number;
     curTime?: number;
 }
 
-class CompilationCache {
-    constructor() {
+interface IProject {
+    main: string;
+    dir: string;
+    options: ts.CompilerOptions;
+    debugStyleDefs: boolean;
+    releaseStyleDefs: boolean;
+}
+
+export class CompilationCache {
+    constructor(resolvePathStringLiteral?: (sl: ts.StringLiteral) => string) {
+        this.resolvePathStringLiteral = resolvePathStringLiteral || ((nn: ts.StringLiteral) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text));
         this.defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve('typescript'))), 'lib.es6.d.ts');
         this.defaultLibFilenameNorm = this.defaultLibFilename.replace(/\\/g, '/');
         this.cacheFiles = Object.create(null);
     }
 
+    resolvePathStringLiteral: (sl: ts.StringLiteral) => string;
     cacheFiles: { [name: string]: ICacheFile };
     defaultLibFilename: string;
     defaultLibFilenameNorm: string;
     defLibPrecompiled: ts.SourceFile;
 
-    createCompilerHost(cc: CompilationCache, currentDirectory: string): ts.CompilerHost {
+    compile(project: IProject) {
+        // TODO quick check if nothing changed
+        let program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir));
+        let diagnostics = program.getSyntacticDiagnostics();
+        reportDiagnostics(diagnostics);
+        if (diagnostics.length === 0) {
+            let diagnostics = program.getGlobalDiagnostics();
+            reportDiagnostics(diagnostics);
+            if (diagnostics.length === 0) {
+                let diagnostics = program.getSemanticDiagnostics();
+                reportDiagnostics(diagnostics);
+            }
+        }
+        let tc = program.getTypeChecker();
+        let sourceFiles = program.getSourceFiles();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            let src = sourceFiles[i];
+            if (src.hasNoDefaultLib) continue; // skip searching default lib
+            let resolvedName = path.resolve(project.dir, src.fileName);
+            let cached = this.cacheFiles[resolvedName.toLowerCase()];
+            if (cached.sourceTime !== cached.infoTime) {
+                cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
+                cached.infoTime = cached.sourceTime;
+            }
+        }
+        for (let i = 0; i < sourceFiles.length; i++) {
+            let src = sourceFiles[i];
+            if (src.hasNoDefaultLib) continue; // skip searching default lib
+            let restorationMemory = <(() => void)[]>[];
+            let resolvedName = path.resolve(project.dir, src.fileName);
+            let info = this.cacheFiles[resolvedName.toLowerCase()].info;
+            for (let j = 0; j < info.styleDefs.length; j++) {
+                let sd = info.styleDefs[j];
+                if (project.debugStyleDefs) {
+                    let name = sd.name;
+                    if (sd.callExpression.arguments.length === 3 + (sd.isEx ? 1 : 0))
+                        continue;
+                    if (!name)
+                        continue;
+                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                    BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
+                    BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name);
+                } else if (project.releaseStyleDefs) {
+                    if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                        continue;
+                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                    BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                }
+            }
+            program.emit(src);
+            for (let j = restorationMemory.length - 1; j >= 0; j--) {
+                restorationMemory[j]();
+            }
+        }
+    }
+
+    private createCompilerHost(cc: CompilationCache, currentDirectory: string): ts.CompilerHost {
         function getCanonicalFileName(fileName: string): string {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }

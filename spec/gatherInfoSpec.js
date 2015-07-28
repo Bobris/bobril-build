@@ -87,7 +87,7 @@ describe("gatherInfoComplex", function () {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib)
                 continue; // skip searching default lib
-            var srcInfo = buildHelpers.gatherSourceInfo(src, tc);
+            var srcInfo = buildHelpers.gatherSourceInfo(src, tc, function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); });
             //console.log(src.fileName);
             //console.log(srcInfo);
             if (srcInfo.sprites.length > 0) {

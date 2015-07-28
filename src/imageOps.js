@@ -46,6 +46,19 @@ function savePNG(img, filename) {
     });
 }
 exports.savePNG = savePNG;
+function savePNG2Buffer(img) {
+    return new Promise(function (r, e) {
+        var buffers = [];
+        img.on('data', function (chunk) {
+            buffers.push(chunk);
+        });
+        img.on('end', function () {
+            r(Buffer.concat(buffers));
+        });
+        img.pack();
+    });
+}
+exports.savePNG2Buffer = savePNG2Buffer;
 function createImage(width, height) {
     return pnglib.createImage({ width: width, height: height, fill: true });
 }

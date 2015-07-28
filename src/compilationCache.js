@@ -1,6 +1,7 @@
 var ts = require("typescript");
 var fs = require("fs");
 var path = require("path");
+var BuildHelpers = require('./buildHelpers');
 function reportDiagnostic(diagnostic) {
     var output = '';
     if (diagnostic.file) {
@@ -17,11 +18,70 @@ function reportDiagnostics(diagnostics) {
     }
 }
 var CompilationCache = (function () {
-    function CompilationCache() {
+    function CompilationCache(resolvePathStringLiteral) {
+        this.resolvePathStringLiteral = resolvePathStringLiteral || (function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); });
         this.defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve('typescript'))), 'lib.es6.d.ts');
         this.defaultLibFilenameNorm = this.defaultLibFilename.replace(/\\/g, '/');
         this.cacheFiles = Object.create(null);
     }
+    CompilationCache.prototype.compile = function (project) {
+        // TODO quick check if nothing changed
+        var program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir));
+        var diagnostics = program.getSyntacticDiagnostics();
+        reportDiagnostics(diagnostics);
+        if (diagnostics.length === 0) {
+            var diagnostics_1 = program.getGlobalDiagnostics();
+            reportDiagnostics(diagnostics_1);
+            if (diagnostics_1.length === 0) {
+                var diagnostics_2 = program.getSemanticDiagnostics();
+                reportDiagnostics(diagnostics_2);
+            }
+        }
+        var tc = program.getTypeChecker();
+        var sourceFiles = program.getSourceFiles();
+        for (var i = 0; i < sourceFiles.length; i++) {
+            var src = sourceFiles[i];
+            if (src.hasNoDefaultLib)
+                continue; // skip searching default lib
+            var resolvedName = path.resolve(project.dir, src.fileName);
+            var cached = this.cacheFiles[resolvedName.toLowerCase()];
+            if (cached.sourceTime !== cached.infoTime) {
+                cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
+                cached.infoTime = cached.sourceTime;
+            }
+        }
+        for (var i = 0; i < sourceFiles.length; i++) {
+            var src = sourceFiles[i];
+            if (src.hasNoDefaultLib)
+                continue; // skip searching default lib
+            var restorationMemory = [];
+            var resolvedName = path.resolve(project.dir, src.fileName);
+            var info = this.cacheFiles[resolvedName.toLowerCase()].info;
+            for (var j = 0; j < info.styleDefs.length; j++) {
+                var sd = info.styleDefs[j];
+                if (project.debugStyleDefs) {
+                    var name_1 = sd.name;
+                    if (sd.callExpression.arguments.length === 3 + (sd.isEx ? 1 : 0))
+                        continue;
+                    if (!name_1)
+                        continue;
+                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                    BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
+                    BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name_1);
+                }
+                else if (project.releaseStyleDefs) {
+                    if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                        continue;
+                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                    BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                }
+            }
+            program.emit(src);
+            for (var j = restorationMemory.length - 1; j >= 0; j--) {
+                restorationMemory[j]();
+            }
+        }
+    };
     CompilationCache.prototype.createCompilerHost = function (cc, currentDirectory) {
         function getCanonicalFileName(fileName) {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
@@ -115,3 +175,4 @@ var CompilationCache = (function () {
     };
     return CompilationCache;
 })();
+exports.CompilationCache = CompilationCache;

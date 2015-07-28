@@ -4,6 +4,7 @@
   "description": "Builds Bobril Programs",
   "main": "index.js",
   "dependencies": {
+    "bobril": "^3.9.2",
     "png-async": "^0.9.0",
     "promise": "^7.0.1",
     "typescript": "latest"

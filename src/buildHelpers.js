@@ -7,7 +7,7 @@ var imgCache = require("./imgCache");
 function isBobrilFunction(name, callExpression, sourceInfo) {
     return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
 }
-function gatherSourceInfo(source, tc) {
+function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
     var result = { sourceFile: source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
     function visit(n) {
         if (n.kind === 209 /* ImportDeclaration */) {
@@ -33,7 +33,7 @@ function gatherSourceInfo(source, tc) {
             if (isBobrilFunction('sprite', ce, result)) {
                 var si = { callExpression: ce };
                 for (var i = 0; i < ce.arguments.length; i++) {
-                    var res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); } : null); // first argument is path
+                    var res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? resolvePathStringLiteral : null); // first argument is path
                     if (res !== undefined)
                         switch (i) {
                             case 0:
@@ -140,7 +140,7 @@ function setMethod(callExpression, name) {
     result.flags = ex.name.flags;
     result.text = name;
     ex.name = result;
-    ex.pos = -1; // This is for correcty not wrap line after "b."
+    ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 exports.setMethod = setMethod;
 function setArgument(callExpression, index, value) {
@@ -165,6 +165,38 @@ function setArgumentCount(callExpression, count) {
     }
 }
 exports.setArgumentCount = setArgumentCount;
+function assign(target) {
+    var sources = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        sources[_i - 1] = arguments[_i];
+    }
+    var totalArgs = arguments.length;
+    for (var i = 1; i < totalArgs; i++) {
+        var source = arguments[i];
+        if (source == null)
+            continue;
+        var keys = Object.keys(source);
+        var totalKeys = keys.length;
+        for (var j = 0; j < totalKeys; j++) {
+            var key = keys[j];
+            target[key] = source[key];
+        }
+    }
+    return target;
+}
+function rememberCallExpression(callExpression) {
+    var argumentsOriginal = callExpression.arguments;
+    callExpression.arguments = assign(argumentsOriginal.slice(0), argumentsOriginal);
+    var ex = callExpression.expression;
+    var expressionName = ex.name;
+    var expressionPos = ex.pos;
+    return function () {
+        callExpression.arguments = argumentsOriginal;
+        ex.name = expressionName;
+        ex.pos = expressionPos;
+    };
+}
+exports.rememberCallExpression = rememberCallExpression;
 var defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve("typescript"))), "lib.es6.d.ts");
 var defaultLibFilenameNorm = defaultLibFilename.replace(/\\/g, "/");
 var lastLibPrecompiled;
@@ -250,7 +282,7 @@ function compile(done) {
         var src = sourceFiles[i];
         if (src.hasNoDefaultLib)
             continue; // skip searching default lib
-        var srcInfo = gatherSourceInfo(src, tc);
+        var srcInfo = gatherSourceInfo(src, tc, function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); });
         //console.log(src.fileName);
         //console.log(srcInfo);
         if (srcInfo.sprites.length > 0) {
@@ -268,7 +300,7 @@ function compile(done) {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib)
                 continue; // skip searching default lib
-            var srcInfo = gatherSourceInfo(src, tc);
+            var srcInfo = gatherSourceInfo(src, tc, function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); });
             if (srcInfo.sprites.length > 0) {
                 for (var i_2 = 0; i_2 < srcInfo.sprites.length; i_2++) {
                     var si = srcInfo.sprites[i_2];

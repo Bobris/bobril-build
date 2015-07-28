@@ -43,8 +43,8 @@ function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourc
     return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
 }
 
-export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker): SourceInfo {
-    let result: SourceInfo = { sourceFile:source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
+export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, resolvePathStringLiteral: (sl: ts.StringLiteral) => string): SourceInfo {
+    let result: SourceInfo = { sourceFile: source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
     function visit(n: ts.Node) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             let id = <ts.ImportDeclaration>n;
@@ -69,7 +69,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker): Sou
             if (isBobrilFunction('sprite', ce, result)) {
                 let si: SpriteInfo = { callExpression: ce };
                 for (let i = 0; i < ce.arguments.length; i++) {
-                    let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? (nn) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text) : null); // first argument is path
+                    let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? resolvePathStringLiteral : null); // first argument is path
                     if (res !== undefined) switch (i) {
                         case 0:
                             if (typeof res === 'string') si.name = res;
@@ -166,7 +166,7 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
     result.flags = ex.name.flags;
     result.text = name;
     ex.name = result;
-    ex.pos = -1; // This is for correcty not wrap line after "b."
+    ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 
 export function setArgument(callExpression: ts.CallExpression, index: number, value: string|number|boolean): void {
@@ -188,6 +188,34 @@ export function setArgumentCount(callExpression: ts.CallExpression, count: numbe
     while (count < a.length) {
         a.pop();
     }
+}
+
+function assign(target: Object, ...sources: Object[]): Object {
+    let totalArgs = arguments.length;
+    for (let i = 1; i < totalArgs; i++) {
+        let source = arguments[i];
+        if (source == null) continue;
+        let keys = Object.keys(source);
+        let totalKeys = keys.length;
+        for (let j = 0; j < totalKeys; j++) {
+            let key = keys[j];
+            (<any>target)[key] = (<any>source)[key];
+        }
+    }
+    return target;
+}
+
+export function rememberCallExpression(callExpression: ts.CallExpression): () => void {
+    let argumentsOriginal = callExpression.arguments;
+    callExpression.arguments = <any>assign(argumentsOriginal.slice(0), argumentsOriginal);
+    var ex = <ts.PropertyAccessExpression>callExpression.expression;
+    let expressionName = ex.name;
+    let expressionPos = ex.pos;
+    return () => {
+        callExpression.arguments = argumentsOriginal;
+        ex.name = expressionName;
+        ex.pos = expressionPos;
+    };
 }
 
 var defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve("typescript"))), "lib.es6.d.ts");
@@ -277,7 +305,7 @@ export function compile(done: () => void) {
     for (let i = 0; i < sourceFiles.length; i++) {
         var src = sourceFiles[i];
         if (src.hasNoDefaultLib) continue; // skip searching default lib
-        var srcInfo = gatherSourceInfo(src, tc);
+        var srcInfo = gatherSourceInfo(src, tc, (nn: ts.StringLiteral) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text));
         //console.log(src.fileName);
         //console.log(srcInfo);
         if (srcInfo.sprites.length > 0) {
@@ -295,7 +323,7 @@ export function compile(done: () => void) {
         for (let i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib) continue; // skip searching default lib
-            var srcInfo = gatherSourceInfo(src, tc);
+            var srcInfo = gatherSourceInfo(src, tc, (nn: ts.StringLiteral) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text));
             if (srcInfo.sprites.length > 0) {
                 for (let i = 0; i < srcInfo.sprites.length; i++) {
                     var si = srcInfo.sprites[i];
