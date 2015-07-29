@@ -1,8 +1,11 @@
 var ts = require("typescript");
 var fs = require("fs");
 var path = require("path");
+var imageOps = require("./imageOps");
+var imgCache = require("./imgCache");
+var Promise = require("bluebird");
 var BuildHelpers = require('./buildHelpers');
-function reportDiagnostic(diagnostic) {
+function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
         var loc = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
@@ -10,11 +13,11 @@ function reportDiagnostic(diagnostic) {
     }
     var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
     output += category + " TS" + diagnostic.code + ": " + diagnostic.messageText + ts.sys.newLine;
-    ts.sys.write(output);
+    logcb(output);
 }
-function reportDiagnostics(diagnostics) {
+function reportDiagnostics(diagnostics, logcb) {
     for (var i = 0; i < diagnostics.length; i++) {
-        reportDiagnostic(diagnostics[i]);
+        reportDiagnostic(diagnostics[i], logcb);
     }
 }
 var CompilationCache = (function () {
@@ -23,19 +26,34 @@ var CompilationCache = (function () {
         this.defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve('typescript'))), 'lib.es6.d.ts');
         this.defaultLibFilenameNorm = this.defaultLibFilename.replace(/\\/g, '/');
         this.cacheFiles = Object.create(null);
+        this.imageCache = new imgCache.ImgCache();
     }
     CompilationCache.prototype.compile = function (project) {
+        var _this = this;
+        project.logCallback = project.logCallback || (function (text) { return console.log(text); });
+        project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
         // TODO quick check if nothing changed
-        var program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir));
+        var program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir, project.writeFileCallback));
         var diagnostics = program.getSyntacticDiagnostics();
-        reportDiagnostics(diagnostics);
+        reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
             var diagnostics_1 = program.getGlobalDiagnostics();
-            reportDiagnostics(diagnostics_1);
+            reportDiagnostics(diagnostics_1, project.logCallback);
             if (diagnostics_1.length === 0) {
                 var diagnostics_2 = program.getSemanticDiagnostics();
-                reportDiagnostics(diagnostics_2);
+                reportDiagnostics(diagnostics_2, project.logCallback);
             }
+        }
+        var bundleCache = null;
+        if (project.spriteMerge) {
+            if (project.imgBundleCache) {
+                bundleCache = project.imgBundleCache;
+            }
+            else {
+                bundleCache = new imgCache.ImgBundleCache(this.imageCache);
+                project.imgBundleCache = bundleCache;
+            }
+            bundleCache.clear(false);
         }
         var tc = program.getTypeChecker();
         var sourceFiles = program.getSourceFiles();
@@ -49,40 +67,114 @@ var CompilationCache = (function () {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
             }
-        }
-        for (var i = 0; i < sourceFiles.length; i++) {
-            var src = sourceFiles[i];
-            if (src.hasNoDefaultLib)
-                continue; // skip searching default lib
-            var restorationMemory = [];
-            var resolvedName = path.resolve(project.dir, src.fileName);
-            var info = this.cacheFiles[resolvedName.toLowerCase()].info;
-            for (var j = 0; j < info.styleDefs.length; j++) {
-                var sd = info.styleDefs[j];
-                if (project.debugStyleDefs) {
-                    var name_1 = sd.name;
-                    if (sd.callExpression.arguments.length === 3 + (sd.isEx ? 1 : 0))
-                        continue;
-                    if (!name_1)
-                        continue;
-                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                    BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
-                    BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name_1);
-                }
-                else if (project.releaseStyleDefs) {
-                    if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
-                        continue;
-                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                    BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+            if (project.spriteMerge) {
+                var info = cached.info;
+                for (var j = 0; j < info.sprites.length; j++) {
+                    var si = info.sprites[j];
+                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
-            program.emit(src);
-            for (var j = restorationMemory.length - 1; j >= 0; j--) {
-                restorationMemory[j]();
+            if (project.textForTranslationReporter) {
+                var trs = cached.info.trs;
+                for (var j = 0; j < trs.length; j++) {
+                    var message = trs[j].message;
+                    if (typeof message === 'string')
+                        project.textForTranslationReporter(message, trs[j].hint);
+                }
             }
         }
+        var prom = Promise.resolve(null);
+        if (project.spriteMerge) {
+            if (bundleCache.wasChange()) {
+                prom = prom.then(function () { return bundleCache.build(); });
+                prom = prom.then(function (bi) {
+                    console.log(bi.width, bi.height);
+                    return imageOps.savePNG2Buffer(bi);
+                });
+                prom = prom.then(function (b) {
+                    project.writeFileCallback('bundle.png', b);
+                    return null;
+                });
+            }
+        }
+        prom = prom.then(function () {
+            for (var i = 0; i < sourceFiles.length; i++) {
+                var src = sourceFiles[i];
+                if (src.hasNoDefaultLib)
+                    continue; // skip searching default lib
+                var restorationMemory = [];
+                var resolvedName = path.resolve(project.dir, src.fileName);
+                var info = _this.cacheFiles[resolvedName.toLowerCase()].info;
+                if (project.remapImages && !project.spriteMerge) {
+                    for (var j = 0; j < info.sprites.length; j++) {
+                        var si = info.sprites[j];
+                        var newname = project.remapImages(si.name);
+                        if (newname != si.name) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
+                            BuildHelpers.setArgument(si.callExpression, 0, newname);
+                        }
+                    }
+                }
+                if (project.spriteMerge) {
+                    for (var j = 0; j < info.sprites.length; j++) {
+                        var si = info.sprites[j];
+                        var bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
+                        BuildHelpers.setMethod(si.callExpression, "spriteb");
+                        BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
+                        BuildHelpers.setArgument(si.callExpression, 1, bundlePos.height);
+                        BuildHelpers.setArgument(si.callExpression, 2, bundlePos.x);
+                        BuildHelpers.setArgument(si.callExpression, 3, bundlePos.y);
+                        BuildHelpers.setArgumentCount(si.callExpression, 4);
+                    }
+                }
+                if (project.textForTranslationReplacer) {
+                    var trs = info.trs;
+                    for (var j = 0; j < trs.length; j++) {
+                        var message = trs[j].message;
+                        if (typeof message === 'string') {
+                            var id = project.textForTranslationReplacer(message, trs[j].hint);
+                            var ce = trs[j].callExpression;
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
+                            BuildHelpers.setArgument(ce, 0, id);
+                            if (ce.arguments.length > 2) {
+                                BuildHelpers.setArgumentCount(ce, 2);
+                            }
+                        }
+                    }
+                }
+                for (var j = 0; j < info.styleDefs.length; j++) {
+                    var sd = info.styleDefs[j];
+                    if (project.debugStyleDefs) {
+                        var name_1 = sd.name;
+                        if (sd.callExpression.arguments.length === 3 + (sd.isEx ? 1 : 0))
+                            continue;
+                        if (!name_1)
+                            continue;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
+                        BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name_1);
+                    }
+                    else if (project.releaseStyleDefs) {
+                        if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                            continue;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                    }
+                }
+                program.emit(src);
+                for (var j = restorationMemory.length - 1; j >= 0; j--) {
+                    restorationMemory[j]();
+                }
+            }
+            if (project.spriteMerge) {
+                bundleCache.clear(true);
+            }
+            return null;
+        });
+        return prom;
     };
-    CompilationCache.prototype.createCompilerHost = function (cc, currentDirectory) {
+    CompilationCache.prototype.createCompilerHost = function (cc, currentDirectory, writeFileCallback) {
         function getCanonicalFileName(fileName) {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
@@ -143,19 +235,8 @@ var CompilationCache = (function () {
             return cached.sourceFile;
         }
         function writeFile(fileName, data, writeByteOrderMark, onError) {
-            fileName = path.join(currentDirectory, fileName);
             try {
-                var text = ts.sys.readFile(fileName, 'utf-8');
-            }
-            catch (e) {
-                text = "";
-            }
-            if (text === data) {
-                fs.utimesSync(fileName, new Date(), new Date());
-                return;
-            }
-            try {
-                ts.sys.writeFile(fileName, data, false);
+                writeFileCallback(fileName, new Buffer(data));
             }
             catch (e) {
                 if (onError) {

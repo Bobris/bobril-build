@@ -36,17 +36,13 @@ var D2Array = (function () {
             this.covs.push(false);
         }
     };
-    D2Array.prototype.splitCol = function (pos, v) {
+    D2Array.prototype.splitCol = function (idxpos, v) {
         var oldwidth = this.widths.length;
         var idx = 0;
         var x = 0;
-        for (; idx < this.widths.length; idx++) {
-            if (x === pos)
-                break;
+        for (; idx < idxpos; idx++) {
             x += this.widths[idx];
         }
-        if (pos === this.widths.length)
-            throw new Error("pos is not start of any column");
         this.widths.splice(idx, 0, v);
         this.widths[idx + 1] -= v;
         var newcovs = [];
@@ -62,18 +58,14 @@ var D2Array = (function () {
         }
         this.covs = newcovs;
     };
-    D2Array.prototype.splitRow = function (pos, v) {
+    D2Array.prototype.splitRow = function (idxpos, v) {
         var width = this.widths.length;
         var oldheight = this.heights.length;
         var idx = 0;
         var x = 0;
-        for (; idx < this.heights.length; idx++) {
-            if (x === pos)
-                break;
+        for (; idx < idxpos; idx++) {
             x += this.heights[idx];
         }
-        if (pos === this.heights.length)
-            throw new Error("pos is not start of any row");
         this.heights.splice(idx, 0, v);
         this.heights[idx + 1] -= v;
         var newcovs = [];
@@ -128,6 +120,8 @@ var D2Array = (function () {
             if (width < 0) {
                 width += this.widths[idxx + w - 1];
                 this.splitCol(idxx + w - 1, width);
+                width = 0;
+                break;
             }
         }
         if (width > 0) {
@@ -140,7 +134,9 @@ var D2Array = (function () {
             h++;
             if (height < 0) {
                 height += this.heights[idxy + h - 1];
-                this.splitCol(idxy + h - 1, height);
+                this.splitRow(idxy + h - 1, height);
+                height = 0;
+                break;
             }
         }
         if (height > 0) {

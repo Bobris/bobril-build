@@ -46,15 +46,13 @@ class D2Array {
             this.covs.push(false);
         }
     }
-    splitCol(pos: number, v: number) {
+    splitCol(idxpos: number, v: number) {
         const oldwidth = this.widths.length;
         let idx = 0;
         let x = 0;
-        for (; idx < this.widths.length; idx++) {
-            if (x === pos) break;
+        for (; idx < idxpos; idx++) {
             x += this.widths[idx];
         }
-        if (pos === this.widths.length) throw new Error("pos is not start of any column");
         this.widths.splice(idx, 0, v);
         this.widths[idx + 1] -= v;
         let newcovs = [];
@@ -70,16 +68,14 @@ class D2Array {
         }
         this.covs = newcovs;
     }
-    splitRow(pos: number, v: number) {
+    splitRow(idxpos: number, v: number) {
         const width = this.widths.length;
         const oldheight = this.heights.length;
         let idx = 0;
         let x = 0;
-        for (; idx < this.heights.length; idx++) {
-            if (x === pos) break;
+        for (; idx < idxpos; idx++) {
             x += this.heights[idx];
         }
-        if (pos === this.heights.length) throw new Error("pos is not start of any row");
         this.heights.splice(idx, 0, v);
         this.heights[idx + 1] -= v;
         let newcovs = [];
@@ -130,6 +126,8 @@ class D2Array {
             if (width < 0) {
                 width += this.widths[idxx + w - 1];
                 this.splitCol(idxx + w - 1, width);
+                width = 0;
+                break;
             }
         }
         if (width > 0) {
@@ -142,7 +140,9 @@ class D2Array {
             h++;
             if (height < 0) {
                 height += this.heights[idxy + h - 1];
-                this.splitCol(idxy + h - 1, height);
+                this.splitRow(idxy + h - 1, height);
+                height = 0;
+                break;
             }
         }
         if (height > 0) {
