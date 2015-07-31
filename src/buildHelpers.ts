@@ -35,6 +35,7 @@ export interface SpriteInfo {
 export interface TranslationMessage {
     callExpression: ts.CallExpression;
     message: string | number;
+    withParams: boolean;
     knownParams?: string[];
     hint?: string;
 }
@@ -110,9 +111,10 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                 }
                 result.styleDefs.push(item);
             } else if (isBobrilFunction('t', ce, result)) {
-                let item: TranslationMessage = { callExpression: ce, message: undefined, knownParams: undefined, hint: undefined };
+                let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
+                    item.withParams = true;
                     let params = evalNode.evalNode(ce.arguments[1], tc, null);
                     item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
                 }

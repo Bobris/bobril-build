@@ -79,7 +79,7 @@ var CompilationCache = (function () {
                 for (var j = 0; j < trs.length; j++) {
                     var message = trs[j].message;
                     if (typeof message === 'string')
-                        project.textForTranslationReporter(message, trs[j].hint);
+                        project.textForTranslationReporter(trs[j]);
                 }
             }
         }
@@ -133,7 +133,7 @@ var CompilationCache = (function () {
                     for (var j = 0; j < trs.length; j++) {
                         var message = trs[j].message;
                         if (typeof message === 'string') {
-                            var id = project.textForTranslationReplacer(message, trs[j].hint);
+                            var id = project.textForTranslationReplacer(trs[j]);
                             var ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
                             BuildHelpers.setArgument(ce, 0, id);

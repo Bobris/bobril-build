@@ -26,6 +26,7 @@
         "./imageOps.ts",
         "./imgCache.ts",
         "./spriter.ts",
+        "./translationCache.ts",
         "../typings/node/node.d.ts",
         "../typings/bluebird/bluebird.d.ts",
         "../typings/png-async/png-async.d.ts",

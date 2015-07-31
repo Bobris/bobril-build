@@ -52,8 +52,8 @@ interface IProject {
     releaseStyleDefs?: boolean;
     spriteMerge?: boolean;
     remapImages?: (filename: string) => string;
-    textForTranslationReporter?: (message: string, hint?: string) => void;
-    textForTranslationReplacer?: (message: string, hint?: string) => number;
+    textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
+    textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
 
     imgBundleCache?: imgCache.ImgBundleCache;
 }
@@ -124,7 +124,7 @@ export class CompilationCache {
                 for (let j = 0; j < trs.length; j++) {
                     let message = trs[j].message;
                     if (typeof message === 'string')
-                        project.textForTranslationReporter(message, trs[j].hint);
+                        project.textForTranslationReporter(trs[j]);
                 }
             }
         }
@@ -179,7 +179,7 @@ export class CompilationCache {
                     for (let j = 0; j < trs.length; j++) {
                         let message = trs[j].message;
                         if (typeof message === 'string') {
-                            let id = project.textForTranslationReplacer(message, trs[j].hint);
+                            let id = project.textForTranslationReplacer(trs[j]);
                             let ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
                             BuildHelpers.setArgument(ce, 0, id);

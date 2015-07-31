@@ -85,9 +85,10 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                 result.styleDefs.push(item);
             }
             else if (isBobrilFunction('t', ce, result)) {
-                var item = { callExpression: ce, message: undefined, knownParams: undefined, hint: undefined };
+                var item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
+                    item.withParams = true;
                     var params = evalNode.evalNode(ce.arguments[1], tc, null);
                     item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
                 }
