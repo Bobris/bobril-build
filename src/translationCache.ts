@@ -10,6 +10,8 @@ class TranslationDb {
     // 3 - message id
     // 4+ - message in langs[idx-4]
     db: { [messsageAndHint: string]: (string|number)[] };
+    usedKeyList: string[];
+    temporaryKeyList: string[];
     langs: string[];
 
     constructor() {
@@ -19,6 +21,8 @@ class TranslationDb {
     clear() {
         this.db = Object.create(null);
         this.langs = [];
+        this.usedKeyList = [];
+        this.temporaryKeyList = [];
     }
 
     addLang(name: string): number {
@@ -95,7 +99,44 @@ class TranslationDb {
         fs.writeFileSync(filename, JSON.stringify(items));
     }
 
-    addUsageOfMessage(info: BuildHelpers.TranslationMessage) {
-        
+    addUsageOfMessage(info: BuildHelpers.TranslationMessage): number {
+        let key = this.buildKey(<string>info.message, info.hint, info.withParams);
+        let item = this.db[key];
+        if (item === undefined) {
+            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2 | 4, this.usedKeyList.length]; // add as temporary and as used
+            this.db[key] = item;
+            this.usedKeyList.push(key);
+            this.temporaryKeyList.push(key);
+        } else {
+            if (((<number>item[2]) & 4) === 0) {
+                item[2] = (<number>item[2]) | 4; // add used flag
+                item[3] = this.usedKeyList.length;
+                this.usedKeyList.push(key);
+            }
+        }
+        return <number>item[3];
+    }
+
+    clearUsedFlags() {
+        let list = this.usedKeyList;
+        let db = this.db;
+        for (let i = 0; i < list.length; i++) {
+            let item = db[list[i]];
+            item[2] = (<number>item[2]) & ~4;
+        }
+        list.length = 0;
+    }
+
+    pruneDbOfTemporaryUnused() {
+        let list = this.temporaryKeyList;
+        let db = this.db;
+        for (let i = 0; i < list.length; i++) {
+            let key = list[i];
+            let item = db[key];
+            if ((<number>item[2] & 4) === 0) { // not used
+                delete db[key];
+                list.splice(i, 1); i--;
+            }
+        }
     }
 }

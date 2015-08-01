@@ -7,6 +7,8 @@ var TranslationDb = (function () {
     TranslationDb.prototype.clear = function () {
         this.db = Object.create(null);
         this.langs = [];
+        this.usedKeyList = [];
+        this.temporaryKeyList = [];
     };
     TranslationDb.prototype.addLang = function (name) {
         var pos = this.langs.indexOf(name);
@@ -88,6 +90,44 @@ var TranslationDb = (function () {
         fs.writeFileSync(filename, JSON.stringify(items));
     };
     TranslationDb.prototype.addUsageOfMessage = function (info) {
+        var key = this.buildKey(info.message, info.hint, info.withParams);
+        var item = this.db[key];
+        if (item === undefined) {
+            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2 | 4, this.usedKeyList.length]; // add as temporary and as used
+            this.db[key] = item;
+            this.usedKeyList.push(key);
+            this.temporaryKeyList.push(key);
+        }
+        else {
+            if ((item[2] & 4) === 0) {
+                item[2] = item[2] | 4; // add used flag
+                item[3] = this.usedKeyList.length;
+                this.usedKeyList.push(key);
+            }
+        }
+        return item[3];
+    };
+    TranslationDb.prototype.clearUsedFlags = function () {
+        var list = this.usedKeyList;
+        var db = this.db;
+        for (var i = 0; i < list.length; i++) {
+            var item = db[list[i]];
+            item[2] = item[2] & ~4;
+        }
+        list.length = 0;
+    };
+    TranslationDb.prototype.pruneDbOfTemporaryUnused = function () {
+        var list = this.temporaryKeyList;
+        var db = this.db;
+        for (var i = 0; i < list.length; i++) {
+            var key = list[i];
+            var item = db[key];
+            if ((item[2] & 4) === 0) {
+                delete db[key];
+                list.splice(i, 1);
+                i--;
+            }
+        }
     };
     return TranslationDb;
 })();
