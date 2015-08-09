@@ -20,6 +20,7 @@
         "../node_modules/typescript/bin/typescript.d.ts"
     ],
     "files": [
+        "./bobrilDepsHelpers.ts",
         "./buildHelpers.ts",
         "./compilationCache.ts",
         "./evalNode.ts",

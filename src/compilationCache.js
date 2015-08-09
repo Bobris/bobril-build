@@ -147,7 +147,7 @@ var CompilationCache = (function () {
                     var sd = info.styleDefs[j];
                     if (project.debugStyleDefs) {
                         var name_1 = sd.name;
-                        if (sd.callExpression.arguments.length === 3 + (sd.isEx ? 1 : 0))
+                        if (sd.userNamed)
                             continue;
                         if (!name_1)
                             continue;
@@ -194,6 +194,11 @@ var CompilationCache = (function () {
                 }
                 cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
                 return cc.defLibPrecompiled;
+            }
+            // Workaround for buggy TypeScript module path resolver
+            var indexOfNodeModules = fileName.lastIndexOf('/node_modules/');
+            if (indexOfNodeModules >= 0) {
+                fileName = fileName.substr(indexOfNodeModules + 1);
             }
             var resolvedName = path.resolve(currentDirectory, fileName);
             var cached = cc.cacheFiles[resolvedName.toLowerCase()];

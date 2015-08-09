@@ -134,7 +134,7 @@ export class CompilationCache {
             if (bundleCache.wasChange()) {
                 prom = prom.then(() => bundleCache.build());
                 prom = prom.then((bi: imageOps.Image) => {
-                    console.log(bi.width,bi.height);
+                    console.log(bi.width, bi.height);
                     return imageOps.savePNG2Buffer(bi);
                 });
                 prom = prom.then((b: Buffer) => {
@@ -193,8 +193,7 @@ export class CompilationCache {
                     let sd = info.styleDefs[j];
                     if (project.debugStyleDefs) {
                         let name = sd.name;
-                        if (sd.callExpression.arguments.length === 3 + (sd.isEx ? 1 : 0))
-                            continue;
+                        if (sd.userNamed) continue;
                         if (!name)
                             continue;
                         restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
@@ -237,6 +236,11 @@ export class CompilationCache {
                 }
                 cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
                 return cc.defLibPrecompiled;
+            }
+            // Workaround for buggy TypeScript module path resolver
+            let indexOfNodeModules = fileName.lastIndexOf('/node_modules/');
+            if (indexOfNodeModules >= 0) {
+                fileName = fileName.substr(indexOfNodeModules + 1);
             }
             let resolvedName = path.resolve(currentDirectory, fileName);
             let cached = cc.cacheFiles[resolvedName.toLowerCase()];
@@ -292,5 +296,4 @@ export class CompilationCache {
             getNewLine: function() { return '\n'; }
         };
     }
-
 }

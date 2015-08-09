@@ -1,4 +1,7 @@
-import * as b from 'node_modules/bobril/index';
+import * as b from './node_modules/bobril/index';
+import * as g from './node_modules/bobril-g11n/index';
+
+g.initGlobalization({});
 
 const bobrilLogo = b.styleDef([{ display: 'inline-block' }, b.sprite('logo.png')]);
 
@@ -34,11 +37,12 @@ const warnHeader = b.createDerivedComponent<IWarnHeaderData>(header, {
 	}
 });
 
-const lightSprite = b.sprite('light.png');
-const lightSpriteGreen = b.sprite('light.png','#40ff80');
+setInterval(1000, ()=> {
+	b.invalidate();
+});
 
 b.init(() => [
-    header({ fontSize: 20 }, 'Hello'),
+    header({ fontSize: 20 }, g.t('Hello')),
 	warnHeader({ fontSize: 25, isWarning: true }, 'World'),
-	b.styledDiv('', lightSprite), b.styledDiv('', lightSpriteGreen)
+	header({ fontSize: 15 }, g.t('Right now is {now, date, LLLL}', { now: b.now() }))
 ]);

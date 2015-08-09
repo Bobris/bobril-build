@@ -7,28 +7,49 @@ var imgCache = require("./imgCache");
 function isBobrilFunction(name, callExpression, sourceInfo) {
     return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
 }
+function isBobrilG11NFunction(name, callExpression, sourceInfo) {
+    return callExpression.expression.getText() === sourceInfo.bobrilG11NNamespace + '.' + name;
+}
 function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
-    var result = { sourceFile: source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
+    var result = {
+        sourceFile: source,
+        sourceDeps: [],
+        bobrilNamespace: null,
+        bobrilImports: Object.create(null),
+        bobrilG11NNamespace: null,
+        bobrilG11NImports: Object.create(null),
+        sprites: [],
+        styleDefs: [],
+        trs: []
+    };
     function visit(n) {
-        if (n.kind === 209 /* ImportDeclaration */) {
+        if (n.kind === 210 /* ImportDeclaration */) {
             var id = n;
             var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
             var sf = moduleSymbol.valueDeclaration.getSourceFile();
             var fn = sf.fileName;
             // bobril import is detected that filename contains bobril and content contains sprite export
-            if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === 211 /* NamespaceImport */ && /bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
-                result.bobrilNamespace = id.importClause.namedBindings.name.text;
+            if (/bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
+                if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === 212 /* NamespaceImport */) {
+                    result.bobrilNamespace = id.importClause.namedBindings.name.text;
+                }
+            }
+            // bobril-g11n import is detected that filename contains bobril and content contains registerTranslations and t export
+            if (/bobril/i.test(fn) && moduleSymbol.exports["registerTranslations"] != null && moduleSymbol.exports["t"] != null) {
+                if (result.bobrilG11NNamespace == null && id.importClause.namedBindings.kind === 212 /* NamespaceImport */) {
+                    result.bobrilG11NNamespace = id.importClause.namedBindings.name.text;
+                }
             }
             result.sourceDeps.push(fn);
         }
-        else if (n.kind === 215 /* ExportDeclaration */) {
+        else if (n.kind === 216 /* ExportDeclaration */) {
             var ed = n;
             if (ed.moduleSpecifier) {
                 var moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
                 result.sourceDeps.push(moduleSymbol.valueDeclaration.getSourceFile().fileName);
             }
         }
-        else if (n.kind === 157 /* CallExpression */) {
+        else if (n.kind === 158 /* CallExpression */) {
             var ce = n;
             if (isBobrilFunction('sprite', ce, result)) {
                 var si = { callExpression: ce };
@@ -66,16 +87,17 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                 result.sprites.push(si);
             }
             else if (isBobrilFunction('styleDef', ce, result) || isBobrilFunction('styleDefEx', ce, result)) {
-                var item = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result) };
+                var item = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result), userNamed: false };
                 if (ce.arguments.length == 3 + (item.isEx ? 1 : 0)) {
                     item.name = evalNode.evalNode(ce.arguments[ce.arguments.length - 1], tc, null);
+                    item.userNamed = true;
                 }
                 else {
-                    if (ce.parent.kind === 198 /* VariableDeclaration */) {
+                    if (ce.parent.kind === 199 /* VariableDeclaration */) {
                         var vd = ce.parent;
                         item.name = vd.name.text;
                     }
-                    else if (ce.parent.kind === 169 /* BinaryExpression */) {
+                    else if (ce.parent.kind === 170 /* BinaryExpression */) {
                         var be = ce.parent;
                         if (be.operatorToken.kind === 53 /* FirstAssignment */ && be.left.kind === 65 /* Identifier */) {
                             item.name = be.left.text;
@@ -84,7 +106,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                 }
                 result.styleDefs.push(item);
             }
-            else if (isBobrilFunction('t', ce, result)) {
+            else if (isBobrilG11NFunction('t', ce, result)) {
                 var item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {

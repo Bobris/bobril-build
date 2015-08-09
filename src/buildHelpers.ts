@@ -11,6 +11,9 @@ export interface SourceInfo {
     sourceFile: ts.SourceFile;
     sourceDeps: string[];
     bobrilNamespace: string;
+    bobrilImports: { [name:string]:string };
+    bobrilG11NNamespace: string;
+    bobrilG11NImports: { [name:string]:string };
     styleDefs: StyleDefInfo[];
     sprites: SpriteInfo[];
     trs: TranslationMessage[];
@@ -20,6 +23,7 @@ export interface StyleDefInfo {
     callExpression: ts.CallExpression;
     isEx: boolean;
     name?: string;
+    userNamed: boolean;
 }
 
 export interface SpriteInfo {
@@ -44,8 +48,22 @@ function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourc
     return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
 }
 
+function isBobrilG11NFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
+    return callExpression.expression.getText() === sourceInfo.bobrilG11NNamespace + '.' + name;
+}
+
 export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, resolvePathStringLiteral: (sl: ts.StringLiteral) => string): SourceInfo {
-    let result: SourceInfo = { sourceFile: source, sourceDeps: [], bobrilNamespace: null, sprites: [], styleDefs: [], trs: [] };
+    let result: SourceInfo = {
+        sourceFile: source,
+        sourceDeps: [],
+        bobrilNamespace: null,
+        bobrilImports: Object.create(null),
+        bobrilG11NNamespace: null,
+        bobrilG11NImports: Object.create(null),
+        sprites: [],
+        styleDefs: [],
+        trs: []
+    };
     function visit(n: ts.Node) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             let id = <ts.ImportDeclaration>n;
@@ -53,8 +71,16 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
             let sf = moduleSymbol.valueDeclaration.getSourceFile();
             let fn = sf.fileName;
             // bobril import is detected that filename contains bobril and content contains sprite export
-            if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport && /bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
-                result.bobrilNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
+            if (/bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
+                if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
+                    result.bobrilNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
+                }
+            }
+            // bobril-g11n import is detected that filename contains bobril and content contains registerTranslations and t export
+            if (/bobril/i.test(fn) && moduleSymbol.exports["registerTranslations"] != null && moduleSymbol.exports["t"] != null) {
+                if (result.bobrilG11NNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
+                    result.bobrilG11NNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
+                }
             }
             result.sourceDeps.push(fn);
         }
@@ -95,9 +121,10 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                 }
                 result.sprites.push(si);
             } else if (isBobrilFunction('styleDef', ce, result) || isBobrilFunction('styleDefEx', ce, result)) {
-                let item: StyleDefInfo = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result) };
+                let item: StyleDefInfo = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result), userNamed: false };
                 if (ce.arguments.length == 3 + (item.isEx ? 1 : 0)) {
                     item.name = evalNode.evalNode(ce.arguments[ce.arguments.length - 1], tc, null);
+                    item.userNamed = true;
                 } else {
                     if (ce.parent.kind === ts.SyntaxKind.VariableDeclaration) {
                         let vd = <ts.VariableDeclaration>ce.parent;
@@ -110,7 +137,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                     }
                 }
                 result.styleDefs.push(item);
-            } else if (isBobrilFunction('t', ce, result)) {
+            } else if (isBobrilG11NFunction('t', ce, result)) {
                 let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {

@@ -15,7 +15,7 @@ function evalNode(n, tc, resolveStringLiteral) {
         case 95 /* TrueKeyword */: return true;
         case 80 /* FalseKeyword */: return false;
         case 89 /* NullKeyword */: return null;
-        case 167 /* PrefixUnaryExpression */: {
+        case 168 /* PrefixUnaryExpression */: {
             var nn = n;
             var operand = evalNode(nn.operand, tc, resolveStringLiteral);
             if (operand !== undefined) {
@@ -40,7 +40,7 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 169 /* BinaryExpression */: {
+        case 170 /* BinaryExpression */: {
             var nn = n;
             var left = evalNode(nn.left, tc, resolveStringLiteral);
             var right = evalNode(nn.right, tc, null);
@@ -79,7 +79,7 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 170 /* ConditionalExpression */: {
+        case 171 /* ConditionalExpression */: {
             var nn = n;
             var cond = evalNode(nn.condition, tc, null);
             if (cond === undefined)
@@ -88,7 +88,7 @@ function evalNode(n, tc, resolveStringLiteral) {
             return evalNode(e, tc, resolveStringLiteral);
         }
         case 65 /* Identifier */:
-        case 155 /* PropertyAccessExpression */: {
+        case 156 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
             if (s.flags & 3 /* Variable */) {
                 if (s.valueDeclaration.parent.flags & 8192 /* Const */) {
@@ -97,16 +97,16 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 160 /* TypeAssertionExpression */: {
+        case 161 /* TypeAssertionExpression */: {
             var nn = n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
         }
-        case 154 /* ObjectLiteralExpression */: {
+        case 155 /* ObjectLiteralExpression */: {
             var ole = n;
             var res = {};
             for (var i = 0; i < ole.properties.length; i++) {
                 var prop = ole.properties[i];
-                if (prop.kind === 224 /* PropertyAssignment */ && (prop.name.kind === 65 /* Identifier */ || prop.name.kind === 8 /* StringLiteral */)) {
+                if (prop.kind === 225 /* PropertyAssignment */ && (prop.name.kind === 65 /* Identifier */ || prop.name.kind === 8 /* StringLiteral */)) {
                     var name_1 = prop.name.kind === 65 /* Identifier */ ? prop.name.text : prop.name.text;
                     res[name_1] = evalNode(prop.initializer, tc, resolveStringLiteral);
                 }

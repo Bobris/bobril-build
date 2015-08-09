@@ -1,4 +1,5 @@
-var CompilationCache = require('../src/compilationCache');
+var compilationCache = require('../src/compilationCache');
+var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
 var ts = require("typescript");
 var path = require("path");
 var fs = require("fs");
@@ -22,7 +23,7 @@ function mkpathsync(dirpath) {
 ;
 describe("compilationCache", function () {
     it("works", function (done) {
-        var cc = new CompilationCache.CompilationCache();
+        var cc = new compilationCache.CompilationCache();
         function write(fn, b) {
             var dir = path.dirname(path.join(__dirname, 'ccout', fn));
             mkpathsync(dir);
@@ -36,6 +37,8 @@ describe("compilationCache", function () {
             releaseStyleDefs: false,
             spriteMerge: true,
             writeFileCallback: write
+        }).then(function () {
+            bobrilDepsHelpers.writeSystemJsBasedDist(write, 'app.js');
         }).then(done);
     });
 });
