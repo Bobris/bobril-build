@@ -63,3 +63,49 @@ export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, m
     writeDir(write, momentJsPath(), momentJsFiles());
     return prom;
 }
+
+function findLocaleFile(filePath: string, locale: string, ext: string): string {
+    while (true) {
+        if (fs.existsSync(path.join(filePath, locale + ext))) {
+            return path.join(filePath, locale + ext);
+        }
+        let dashPos = locale.lastIndexOf('-');
+        if (dashPos < 0)
+            return null;
+        locale = locale.substr(dashPos);
+    }
+}
+
+const pluralFns = require('make-plural');
+
+function getLanguageFromLocale(locale: string): string {
+    let idx = locale.indexOf('-');
+    if (idx >= 0)
+        return locale.substr(0, idx);
+    return locale;
+}
+
+export function writeTranslationFile(locale: string, translationMessages: string[], filename: string, write: (fn: string, b: Buffer) => void) {
+    let resbufs: Buffer[] = [];
+    let fn = findLocaleFile(path.join(numeralJsPath(), 'min', 'languages'), locale, '.min.js');
+    if (fn) {
+        resbufs.push(fs.readFileSync(fn));
+        resbufs.push(new Buffer('\n', 'utf-8'));
+    }
+    fn = findLocaleFile(path.join(momentJsPath(), 'locale'), locale, '.js');
+    if (fn) {
+        resbufs.push(fs.readFileSync(fn));
+        resbufs.push(new Buffer('\n', 'utf-8'));
+    }
+    resbufs.push(new Buffer('bobrilRegisterTranslations(' + locale + ',', 'utf-8'));
+    let pluralFn = pluralFns[getLanguageFromLocale(locale)];
+    if (pluralFn) {
+        resbufs.push(new Buffer(pluralFn.toString(), 'utf-8'));
+    } else {
+        resbufs.push(new Buffer('function(){return"other";}', 'utf-8'));
+    }
+    resbufs.push(new Buffer(',', 'utf-8'));
+    resbufs.push(new Buffer(JSON.stringify(translationMessages), 'utf-8'));
+    resbufs.push(new Buffer(')', 'utf-8'));
+    write(filename, Buffer.concat(resbufs));
+}
