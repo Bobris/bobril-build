@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as Promise from "bluebird";
+require('bluebird');
 
 export function systemJsPath(): string {
     return path.join(path.dirname(require.resolve('systemjs')), 'dist');

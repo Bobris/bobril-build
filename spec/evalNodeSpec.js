@@ -13,7 +13,12 @@ function createCompilerHost(currentDirectory) {
         if (filename === defaultLibFilenameNorm && lastLibPrecompiled) {
             return lastLibPrecompiled;
         }
-        var text = fs.readFileSync(filename === defaultLibFilenameNorm ? defaultLibFilename : path.resolve(currentDirectory, filename)).toString();
+        try {
+            var text = fs.readFileSync(filename === defaultLibFilenameNorm ? defaultLibFilename : path.resolve(currentDirectory, filename)).toString();
+        }
+        catch (e) {
+            return null;
+        }
         if (filename === defaultLibFilenameNorm) {
             lastLibPrecompiled = ts.createSourceFile(filename, text, languageVersion, true);
             return lastLibPrecompiled;
@@ -101,7 +106,7 @@ describe("evalNode", function () {
             var tc = program.getTypeChecker();
             var mainsource = program.getSourceFile("main.ts");
             function visit(n) {
-                if (n.kind === 158 /* CallExpression */) {
+                if (n.kind === 166 /* CallExpression */) {
                     var ce = n;
                     if (ce.expression.getText() === "console.log") {
                         if (ce.arguments.length === 1) {

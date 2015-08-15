@@ -1,6 +1,6 @@
 var path = require('path');
 var fs = require('fs');
-var Promise = require("bluebird");
+require('bluebird');
 function systemJsPath() {
     return path.join(path.dirname(require.resolve('systemjs')), 'dist');
 }

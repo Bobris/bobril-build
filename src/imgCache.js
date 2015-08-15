@@ -1,7 +1,7 @@
 var fs = require("fs");
 var spriter = require("./spriter");
 var imageOps = require("./imageOps");
-var Promise = require("bluebird");
+require('bluebird');
 function normalizeFileName(fn) {
     return fn.replace(/\\/g, "/").toLowerCase();
 }

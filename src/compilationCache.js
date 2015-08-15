@@ -3,7 +3,7 @@ var fs = require("fs");
 var path = require("path");
 var imageOps = require("./imageOps");
 var imgCache = require("./imgCache");
-var Promise = require("bluebird");
+require('bluebird');
 var BuildHelpers = require('./buildHelpers');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
@@ -12,7 +12,7 @@ function reportDiagnostic(diagnostic, logcb) {
         output += diagnostic.file.fileName + "(" + (loc.line + 1) + "," + (loc.character + 1) + "): ";
     }
     var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
-    output += category + " TS" + diagnostic.code + ": " + diagnostic.messageText + ts.sys.newLine;
+    output += category + " TS" + diagnostic.code + ": " + ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine) + ts.sys.newLine;
     logcb(output);
 }
 function reportDiagnostics(diagnostics, logcb) {
@@ -88,7 +88,6 @@ var CompilationCache = (function () {
             if (bundleCache.wasChange()) {
                 prom = prom.then(function () { return bundleCache.build(); });
                 prom = prom.then(function (bi) {
-                    console.log(bi.width, bi.height);
                     return imageOps.savePNG2Buffer(bi);
                 });
                 prom = prom.then(function (b) {
@@ -197,7 +196,8 @@ var CompilationCache = (function () {
             }
             // Workaround for buggy TypeScript module path resolver
             var indexOfNodeModules = fileName.lastIndexOf('/node_modules/');
-            if (indexOfNodeModules >= 0) {
+            var indexOfNodeModules2 = fileName.indexOf('/node_modules/');
+            if (indexOfNodeModules >= 0 && indexOfNodeModules2 >= 0 && indexOfNodeModules != indexOfNodeModules2) {
                 fileName = fileName.substr(indexOfNodeModules + 1);
             }
             var resolvedName = path.resolve(currentDirectory, fileName);
@@ -207,7 +207,7 @@ var CompilationCache = (function () {
                 cc.cacheFiles[resolvedName.toLowerCase()] = cached;
             }
             if (cached.curTime == null) {
-                if (cached.curTime === null && !onError) {
+                if (cached.curTime === null) {
                     return null;
                 }
                 try {
@@ -215,8 +215,6 @@ var CompilationCache = (function () {
                 }
                 catch (er) {
                     cached.curTime == null;
-                    if (onError)
-                        onError('Checking modification time of ' + resolvedName + " failed with " + er);
                     return null;
                 }
             }

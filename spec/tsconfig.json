@@ -1,7 +1,7 @@
 {
     "version": "1.5.0-alpha",
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
@@ -12,20 +12,20 @@
     },
     "filesGlob": [
         "./*.ts",
+        "../node_modules/typescript/lib/typescript.d.ts",
         "!./node_modules/**/*.ts",
-        "../typings/**/*.d.ts",
-        "../node_modules/typescript/bin/typescript.d.ts"
+        "../typings/jasmine/jasmine.d.ts",
+        "../typings/node/node.d.ts",
+        "../typings/png-async/png-async.d.ts"
     ],
     "files": [
         "./compilationCacheSpec.ts",
         "./evalNodeSpec.ts",
-        "./gatherInfoSpec.ts",
         "./imageOpsSpec.ts",
         "./spriterSpec.ts",
-        "../typings/bluebird/bluebird.d.ts",
+        "../node_modules/typescript/lib/typescript.d.ts",
         "../typings/jasmine/jasmine.d.ts",
         "../typings/node/node.d.ts",
-        "../typings/png-async/png-async.d.ts",
-        "../node_modules/typescript/bin/typescript.d.ts"
+        "../typings/png-async/png-async.d.ts"
     ]
 }

@@ -62,7 +62,7 @@ var TranslationDb = (function () {
         }
     };
     TranslationDb.prototype.removeLang = function (lang) {
-        var pos = this.langs.indexOf(name);
+        var pos = this.langs.indexOf(lang);
         if (pos < 0)
             return;
         pos += indexOfLangsMessages;
@@ -72,7 +72,7 @@ var TranslationDb = (function () {
         }
     };
     TranslationDb.prototype.saveLangDb = function (filename, lang) {
-        var pos = this.langs.indexOf(name);
+        var pos = this.langs.indexOf(lang);
         if (pos < 0)
             pos = this.langs.length;
         pos += indexOfLangsMessages;
@@ -128,6 +128,26 @@ var TranslationDb = (function () {
                 i--;
             }
         }
+    };
+    TranslationDb.prototype.getMessageArrayInLang = function (lang) {
+        var pos = this.langs.indexOf(lang);
+        if (pos < 0)
+            pos = this.langs.length;
+        pos += indexOfLangsMessages;
+        var result = [];
+        var list = this.usedKeyList;
+        var db = this.db;
+        for (var i = 0; i < list.length; i++) {
+            var item = db[list[i]];
+            if (item[pos] != null) {
+                result.push(item[pos]);
+            }
+            else {
+                result.push(item[0]); // English as fallback
+            }
+            item[2] = item[2] & ~4;
+        }
+        return result;
     };
     return TranslationDb;
 })();

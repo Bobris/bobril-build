@@ -1,7 +1,7 @@
 {
     "version": "1.5.0-alpha",
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
@@ -12,12 +12,11 @@
     },
     "filesGlob": [
         "./**/*.ts",
+        "../node_modules/typescript/lib/typescript.d.ts",
         "!./node_modules/**/*.ts",
         "../typings/node/**/*.d.ts",
-        "../typings/bluebird/**/*.d.ts",
         "../typings/png-async/**/*.d.ts",
-        "!./test/*.ts",
-        "../node_modules/typescript/bin/typescript.d.ts"
+        "!./test/*.ts"
     ],
     "files": [
         "./bobrilDepsHelpers.ts",
@@ -28,9 +27,8 @@
         "./imgCache.ts",
         "./spriter.ts",
         "./translationCache.ts",
+        "../node_modules/typescript/lib/typescript.d.ts",
         "../typings/node/node.d.ts",
-        "../typings/bluebird/bluebird.d.ts",
-        "../typings/png-async/png-async.d.ts",
-        "../node_modules/typescript/bin/typescript.d.ts"
+        "../typings/png-async/png-async.d.ts"
     ]
 }

@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
-import * as Promise from "bluebird";
+require('bluebird');
 
 function normalizeFileName(fn: string): string {
     return fn.replace(/\\/g, "/").toLowerCase();

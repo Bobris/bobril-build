@@ -1,36 +1,36 @@
 var ts = require("typescript");
 function evalNode(n, tc, resolveStringLiteral) {
     switch (n.kind) {
-        case 8 /* StringLiteral */: {
+        case 9 /* StringLiteral */: {
             var nn = n;
             if (resolveStringLiteral) {
                 return resolveStringLiteral(nn);
             }
             return nn.text;
         }
-        case 7 /* NumericLiteral */: {
+        case 8 /* NumericLiteral */: {
             var nn = n;
             return parseFloat(nn.text);
         }
-        case 95 /* TrueKeyword */: return true;
-        case 80 /* FalseKeyword */: return false;
-        case 89 /* NullKeyword */: return null;
-        case 168 /* PrefixUnaryExpression */: {
+        case 97 /* TrueKeyword */: return true;
+        case 82 /* FalseKeyword */: return false;
+        case 91 /* NullKeyword */: return null;
+        case 177 /* PrefixUnaryExpression */: {
             var nn = n;
             var operand = evalNode(nn.operand, tc, resolveStringLiteral);
             if (operand !== undefined) {
                 var op = null;
                 switch (nn.operator) {
-                    case 33 /* PlusToken */:
+                    case 35 /* PlusToken */:
                         op = "+";
                         break;
-                    case 34 /* MinusToken */:
+                    case 36 /* MinusToken */:
                         op = "-";
                         break;
-                    case 47 /* TildeToken */:
+                    case 49 /* TildeToken */:
                         op = "~";
                         break;
-                    case 46 /* ExclamationToken */:
+                    case 48 /* ExclamationToken */:
                         op = "!";
                         break;
                     default: return undefined;
@@ -40,36 +40,36 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 170 /* BinaryExpression */: {
+        case 179 /* BinaryExpression */: {
             var nn = n;
             var left = evalNode(nn.left, tc, resolveStringLiteral);
             var right = evalNode(nn.right, tc, null);
             if (left !== undefined && right !== undefined) {
                 var op = null;
                 switch (nn.operatorToken.kind) {
-                    case 49 /* BarBarToken */:
-                    case 48 /* AmpersandAmpersandToken */:
-                    case 44 /* BarToken */:
-                    case 45 /* CaretToken */:
-                    case 43 /* AmpersandToken */:
-                    case 28 /* EqualsEqualsToken */:
-                    case 29 /* ExclamationEqualsToken */:
-                    case 30 /* EqualsEqualsEqualsToken */:
-                    case 31 /* ExclamationEqualsEqualsToken */:
-                    case 24 /* LessThanToken */:
-                    case 25 /* GreaterThanToken */:
-                    case 26 /* LessThanEqualsToken */:
-                    case 27 /* GreaterThanEqualsToken */:
-                    case 87 /* InstanceOfKeyword */:
-                    case 86 /* InKeyword */:
-                    case 40 /* LessThanLessThanToken */:
-                    case 41 /* GreaterThanGreaterThanToken */:
-                    case 42 /* GreaterThanGreaterThanGreaterThanToken */:
-                    case 33 /* PlusToken */:
-                    case 34 /* MinusToken */:
-                    case 35 /* AsteriskToken */:
-                    case 36 /* SlashToken */:
-                    case 37 /* PercentToken */:
+                    case 51 /* BarBarToken */:
+                    case 50 /* AmpersandAmpersandToken */:
+                    case 46 /* BarToken */:
+                    case 47 /* CaretToken */:
+                    case 45 /* AmpersandToken */:
+                    case 30 /* EqualsEqualsToken */:
+                    case 31 /* ExclamationEqualsToken */:
+                    case 32 /* EqualsEqualsEqualsToken */:
+                    case 33 /* ExclamationEqualsEqualsToken */:
+                    case 25 /* LessThanToken */:
+                    case 27 /* GreaterThanToken */:
+                    case 28 /* LessThanEqualsToken */:
+                    case 29 /* GreaterThanEqualsToken */:
+                    case 89 /* InstanceOfKeyword */:
+                    case 88 /* InKeyword */:
+                    case 42 /* LessThanLessThanToken */:
+                    case 43 /* GreaterThanGreaterThanToken */:
+                    case 44 /* GreaterThanGreaterThanGreaterThanToken */:
+                    case 35 /* PlusToken */:
+                    case 36 /* MinusToken */:
+                    case 37 /* AsteriskToken */:
+                    case 38 /* SlashToken */:
+                    case 39 /* PercentToken */:
                         op = nn.operatorToken.getText();
                         break;
                     default: return undefined;
@@ -79,7 +79,7 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 171 /* ConditionalExpression */: {
+        case 180 /* ConditionalExpression */: {
             var nn = n;
             var cond = evalNode(nn.condition, tc, null);
             if (cond === undefined)
@@ -87,27 +87,27 @@ function evalNode(n, tc, resolveStringLiteral) {
             var e = cond ? nn.whenTrue : nn.whenFalse;
             return evalNode(e, tc, resolveStringLiteral);
         }
-        case 65 /* Identifier */:
-        case 156 /* PropertyAccessExpression */: {
+        case 67 /* Identifier */:
+        case 164 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
             if (s.flags & 3 /* Variable */) {
-                if (s.valueDeclaration.parent.flags & 8192 /* Const */) {
+                if (s.valueDeclaration.parent.flags & 32768 /* Const */) {
                     return evalNode(s.valueDeclaration.initializer, tc, resolveStringLiteral);
                 }
             }
             return undefined;
         }
-        case 161 /* TypeAssertionExpression */: {
+        case 169 /* TypeAssertionExpression */: {
             var nn = n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
         }
-        case 155 /* ObjectLiteralExpression */: {
+        case 163 /* ObjectLiteralExpression */: {
             var ole = n;
             var res = {};
             for (var i = 0; i < ole.properties.length; i++) {
                 var prop = ole.properties[i];
-                if (prop.kind === 225 /* PropertyAssignment */ && (prop.name.kind === 65 /* Identifier */ || prop.name.kind === 8 /* StringLiteral */)) {
-                    var name_1 = prop.name.kind === 65 /* Identifier */ ? prop.name.text : prop.name.text;
+                if (prop.kind === 243 /* PropertyAssignment */ && (prop.name.kind === 67 /* Identifier */ || prop.name.kind === 9 /* StringLiteral */)) {
+                    var name_1 = prop.name.kind === 67 /* Identifier */ ? prop.name.text : prop.name.text;
                     res[name_1] = evalNode(prop.initializer, tc, resolveStringLiteral);
                 }
             }

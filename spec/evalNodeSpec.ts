@@ -16,7 +16,11 @@ function createCompilerHost(currentDirectory) {
         if (filename === defaultLibFilenameNorm && lastLibPrecompiled) {
             return lastLibPrecompiled;
         }
-        var text = fs.readFileSync(filename === defaultLibFilenameNorm ? defaultLibFilename : path.resolve(currentDirectory, filename)).toString();
+        try {
+            var text = fs.readFileSync(filename === defaultLibFilenameNorm ? defaultLibFilename : path.resolve(currentDirectory, filename)).toString();
+        } catch (e) {
+            return null;
+        }
         if (filename === defaultLibFilenameNorm) {
             lastLibPrecompiled = ts.createSourceFile(filename, text, languageVersion, true);
             return lastLibPrecompiled;

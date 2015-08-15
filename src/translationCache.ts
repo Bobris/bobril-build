@@ -73,7 +73,7 @@ class TranslationDb {
     }
 
     removeLang(lang: string) {
-        let pos = this.langs.indexOf(name);
+        let pos = this.langs.indexOf(lang);
         if (pos < 0) return;
         pos += indexOfLangsMessages;
         for (let key in this.db) {
@@ -83,7 +83,7 @@ class TranslationDb {
     }
 
     saveLangDb(filename: string, lang: string) {
-        let pos = this.langs.indexOf(name);
+        let pos = this.langs.indexOf(lang);
         if (pos < 0) pos = this.langs.length;
         pos += indexOfLangsMessages;
         let items = <any[]>[lang];
@@ -138,5 +138,24 @@ class TranslationDb {
                 list.splice(i, 1); i--;
             }
         }
+    }
+
+    getMessageArrayInLang(lang: string): string[] {
+        let pos = this.langs.indexOf(lang);
+        if (pos < 0) pos = this.langs.length;
+        pos += indexOfLangsMessages;
+        let result = [];
+        let list = this.usedKeyList;
+        let db = this.db;
+        for (let i = 0; i < list.length; i++) {
+            let item = db[list[i]];
+            if (item[pos] != null) {
+                result.push(item[pos]);
+            } else {
+                result.push(item[0]); // English as fallback
+            }
+            item[2] = (<number>item[2]) & ~4;
+        }
+        return result;
     }
 }

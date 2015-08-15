@@ -5,7 +5,7 @@ import * as evalNode from "./evalNode";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
 import * as imgCache from "./imgCache";
-import * as Promise from "bluebird";
+require('bluebird');
 import * as BuildHelpers from './buildHelpers';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
@@ -15,7 +15,7 @@ function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
         output += `${diagnostic.file.fileName}(${loc.line + 1},${loc.character + 1}): `;
     }
     var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
-    output += `${category} TS${diagnostic.code}: ${diagnostic.messageText}${ts.sys.newLine}`;
+    output += `${category} TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine) }${ts.sys.newLine}`;
     logcb(output);
 }
 
@@ -134,7 +134,6 @@ export class CompilationCache {
             if (bundleCache.wasChange()) {
                 prom = prom.then(() => bundleCache.build());
                 prom = prom.then((bi: imageOps.Image) => {
-                    console.log(bi.width, bi.height);
                     return imageOps.savePNG2Buffer(bi);
                 });
                 prom = prom.then((b: Buffer) => {
@@ -239,7 +238,8 @@ export class CompilationCache {
             }
             // Workaround for buggy TypeScript module path resolver
             let indexOfNodeModules = fileName.lastIndexOf('/node_modules/');
-            if (indexOfNodeModules >= 0) {
+            let indexOfNodeModules2 = fileName.indexOf('/node_modules/');
+            if (indexOfNodeModules >= 0 && indexOfNodeModules2 >= 0 && indexOfNodeModules != indexOfNodeModules2) {
                 fileName = fileName.substr(indexOfNodeModules + 1);
             }
             let resolvedName = path.resolve(currentDirectory, fileName);
@@ -249,14 +249,13 @@ export class CompilationCache {
                 cc.cacheFiles[resolvedName.toLowerCase()] = cached;
             }
             if (cached.curTime == null) {
-                if (cached.curTime === null && !onError) {
+                if (cached.curTime === null) {
                     return null;
                 }
                 try {
                     cached.curTime = fs.statSync(resolvedName).mtime.getTime();
                 } catch (er) {
                     cached.curTime == null;
-                    if (onError) onError('Checking modification time of ' + resolvedName + " failed with " + er);
                     return null;
                 }
             }

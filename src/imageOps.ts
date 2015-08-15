@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as pnglib from "png-async";
-import * as Promise from "bluebird";
+require('bluebird');
 
 export type Image = pnglib.Image;
 

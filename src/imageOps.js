@@ -1,6 +1,6 @@
 var fs = require("fs");
 var pnglib = require("png-async");
-var Promise = require("bluebird");
+require('bluebird');
 function cloneImage(img) {
     var res = pnglib.createImage({ width: img.width, height: img.height, fill: false });
     img.bitblt(res, 0, 0, img.width, img.height, 0, 0);

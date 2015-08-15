@@ -6,7 +6,7 @@
 /// <reference path="../node/node.d.ts" />
 
 declare module 'png-async' {
-    import stream = require('stream');
+    import * as stream from 'stream';
 
     export interface IImageOptions {
         width?: number;
