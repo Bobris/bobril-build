@@ -11,9 +11,9 @@ export interface SourceInfo {
     sourceFile: ts.SourceFile;
     sourceDeps: string[];
     bobrilNamespace: string;
-    bobrilImports: { [name:string]:string };
+    bobrilImports: { [name: string]: string };
     bobrilG11NNamespace: string;
-    bobrilG11NImports: { [name:string]:string };
+    bobrilG11NImports: { [name: string]: string };
     styleDefs: StyleDefInfo[];
     sprites: SpriteInfo[];
     trs: TranslationMessage[];
@@ -70,14 +70,11 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
             let moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
             let sf = moduleSymbol.valueDeclaration.getSourceFile();
             let fn = sf.fileName;
-            // bobril import is detected that filename contains bobril and content contains sprite export
-            if (/bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
+            if (/bobril\/index\.ts/i.test(fn)) {
                 if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
                     result.bobrilNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
                 }
-            }
-            // bobril-g11n import is detected that filename contains bobril and content contains registerTranslations and t export
-            if (/bobril/i.test(fn) && moduleSymbol.exports["registerTranslations"] != null && moduleSymbol.exports["t"] != null) {
+            } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
                 if (result.bobrilG11NNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
                     result.bobrilG11NNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
                 }

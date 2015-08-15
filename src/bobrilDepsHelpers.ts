@@ -65,14 +65,18 @@ export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, m
 }
 
 function findLocaleFile(filePath: string, locale: string, ext: string): string {
+    let improved = false;
     while (true) {
+        console.log(locale);
         if (fs.existsSync(path.join(filePath, locale + ext))) {
             return path.join(filePath, locale + ext);
         }
+        if (improved)
+            throw new Error('Improvement to ' + locale + ' failed');
         let dashPos = locale.lastIndexOf('-');
         if (dashPos < 0)
             return null;
-        locale = locale.substr(dashPos);
+        locale = locale.substr(0, dashPos);
     }
 }
 
@@ -87,22 +91,26 @@ function getLanguageFromLocale(locale: string): string {
 
 export function writeTranslationFile(locale: string, translationMessages: string[], filename: string, write: (fn: string, b: Buffer) => void) {
     let resbufs: Buffer[] = [];
-    let fn = findLocaleFile(path.join(numeralJsPath(), 'min', 'languages'), locale, '.min.js');
-    if (fn) {
-        resbufs.push(fs.readFileSync(fn));
-        resbufs.push(new Buffer('\n', 'utf-8'));
+    if (locale === 'en' || /^en-us/i.test(locale)) {
+        // English is always included
+    } else {
+        let fn = findLocaleFile(path.join(numeralJsPath(), 'min', 'languages'), locale, '.min.js');
+        if (fn) {
+            resbufs.push(fs.readFileSync(fn));
+            resbufs.push(new Buffer('\n', 'utf-8'));
+        }
+        fn = findLocaleFile(path.join(momentJsPath(), 'locale'), locale, '.js');
+        if (fn) {
+            resbufs.push(fs.readFileSync(fn));
+            resbufs.push(new Buffer('\n', 'utf-8'));
+        }
     }
-    fn = findLocaleFile(path.join(momentJsPath(), 'locale'), locale, '.js');
-    if (fn) {
-        resbufs.push(fs.readFileSync(fn));
-        resbufs.push(new Buffer('\n', 'utf-8'));
-    }
-    resbufs.push(new Buffer('bobrilRegisterTranslations(' + locale + ',', 'utf-8'));
+    resbufs.push(new Buffer('bobrilRegisterTranslations(\'' + locale + '\',', 'utf-8'));
     let pluralFn = pluralFns[getLanguageFromLocale(locale)];
     if (pluralFn) {
         resbufs.push(new Buffer(pluralFn.toString(), 'utf-8'));
     } else {
-        resbufs.push(new Buffer('function(){return"other";}', 'utf-8'));
+        resbufs.push(new Buffer('function(){return\'other\';}', 'utf-8'));
     }
     resbufs.push(new Buffer(',', 'utf-8'));
     resbufs.push(new Buffer(JSON.stringify(translationMessages), 'utf-8'));

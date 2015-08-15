@@ -151,3 +151,4 @@ var TranslationDb = (function () {
     };
     return TranslationDb;
 })();
+exports.TranslationDb = TranslationDb;

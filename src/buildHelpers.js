@@ -25,14 +25,12 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
             var sf = moduleSymbol.valueDeclaration.getSourceFile();
             var fn = sf.fileName;
-            // bobril import is detected that filename contains bobril and content contains sprite export
-            if (/bobril/i.test(fn) && moduleSymbol.exports["sprite"] != null) {
+            if (/bobril\/index\.ts/i.test(fn)) {
                 if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === 222 /* NamespaceImport */) {
                     result.bobrilNamespace = id.importClause.namedBindings.name.text;
                 }
             }
-            // bobril-g11n import is detected that filename contains bobril and content contains registerTranslations and t export
-            if (/bobril/i.test(fn) && moduleSymbol.exports["registerTranslations"] != null && moduleSymbol.exports["t"] != null) {
+            else if (/bobril-g11n\/index\.ts/i.test(fn)) {
                 if (result.bobrilG11NNamespace == null && id.importClause.namedBindings.kind === 222 /* NamespaceImport */) {
                     result.bobrilG11NNamespace = id.importClause.namedBindings.name.text;
                 }

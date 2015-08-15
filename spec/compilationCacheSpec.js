@@ -1,4 +1,5 @@
 var compilationCache = require('../src/compilationCache');
+var translationCache = require('../src/translationCache');
 var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
 var ts = require("typescript");
 var path = require("path");
@@ -24,6 +25,7 @@ function mkpathsync(dirpath) {
 describe("compilationCache", function () {
     it("works", function (done) {
         var cc = new compilationCache.CompilationCache();
+        var tc = new translationCache.TranslationDb();
         function write(fn, b) {
             var dir = path.dirname(path.join(__dirname, 'ccout', fn));
             mkpathsync(dir);
@@ -36,9 +38,12 @@ describe("compilationCache", function () {
             debugStyleDefs: true,
             releaseStyleDefs: false,
             spriteMerge: true,
-            writeFileCallback: write
+            writeFileCallback: write,
+            textForTranslationReplacer: tc.addUsageOfMessage.bind(tc)
         }).then(function () {
             bobrilDepsHelpers.writeSystemJsBasedDist(write, 'app.js');
+            bobrilDepsHelpers.writeTranslationFile('en', tc.getMessageArrayInLang('en'), 'en.js', write);
+            bobrilDepsHelpers.writeTranslationFile('cs-CZ', tc.getMessageArrayInLang('cs-CZ'), 'cs-CZ.js', write);
         }).then(done);
     });
 });

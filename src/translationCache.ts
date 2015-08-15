@@ -3,7 +3,7 @@ import * as BuildHelpers from './buildHelpers';
 
 const indexOfLangsMessages = 4;
 
-class TranslationDb {
+export class TranslationDb {
     // 0 - english message
     // 1 - hint
     // 2 - withParams&1 temporary&2 used&4

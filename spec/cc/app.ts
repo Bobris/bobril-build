@@ -1,7 +1,10 @@
 import * as b from './node_modules/bobril/index';
 import * as g from './node_modules/bobril-g11n/index';
 
-g.initGlobalization({});
+g.initGlobalization({
+    defaultLocale: 'cs-CZ',
+	pathToTranslation: (locale: string) => { return locale+'.js'; }
+});
 
 const bobrilLogo = b.styleDef([{ display: 'inline-block' }, b.sprite('logo.png')]);
 
