@@ -26,7 +26,7 @@ function momentJsFiles() {
 }
 exports.momentJsFiles = momentJsFiles;
 function systemJsBasedIndexHtml(mainRequire) {
-    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>Bobril Application</title>\n    </head>\n    <body>\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            System.config({\n                'baseURL': '/',\n                'defaultJSExtensions': true,\n            });\n            System.import('numeral.js');\n            System.import('moment.js');\n            System.import('" + mainRequire + "');\n        </script>\n    </body>\n</html>\n";
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>Bobril Application</title>\n    </head>\n    <body>\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            System.config({\n                'baseURL': '/',\n                'defaultJSExtensions': true,\n            });\n            System.import('" + mainRequire + "');\n        </script>\n    </body>\n</html>\n";
 }
 exports.systemJsBasedIndexHtml = systemJsBasedIndexHtml;
 function writeDir(write, dir, files) {
@@ -47,7 +47,6 @@ exports.writeSystemJsBasedDist = writeSystemJsBasedDist;
 function findLocaleFile(filePath, locale, ext) {
     var improved = false;
     while (true) {
-        console.log(locale);
         if (fs.existsSync(path.join(filePath, locale + ext))) {
             return path.join(filePath, locale + ext);
         }
@@ -82,7 +81,7 @@ function writeTranslationFile(locale, translationMessages, filename, write) {
             resbufs.push(new Buffer('\n', 'utf-8'));
         }
     }
-    resbufs.push(new Buffer('bobrilRegisterTranslations(\'' + locale + '\',', 'utf-8'));
+    resbufs.push(new Buffer('bobrilRegisterTranslations(\'' + locale + '\',[', 'utf-8'));
     var pluralFn = pluralFns[getLanguageFromLocale(locale)];
     if (pluralFn) {
         resbufs.push(new Buffer(pluralFn.toString(), 'utf-8'));
@@ -90,7 +89,7 @@ function writeTranslationFile(locale, translationMessages, filename, write) {
     else {
         resbufs.push(new Buffer('function(){return\'other\';}', 'utf-8'));
     }
-    resbufs.push(new Buffer(',', 'utf-8'));
+    resbufs.push(new Buffer('],', 'utf-8'));
     resbufs.push(new Buffer(JSON.stringify(translationMessages), 'utf-8'));
     resbufs.push(new Buffer(')', 'utf-8'));
     write(filename, Buffer.concat(resbufs));

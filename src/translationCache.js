@@ -145,9 +145,38 @@ var TranslationDb = (function () {
             else {
                 result.push(item[0]); // English as fallback
             }
-            item[2] = item[2] & ~4;
         }
         return result;
+    };
+    TranslationDb.prototype.getForTranslationLang = function (lang) {
+        var pos = this.langs.indexOf(lang);
+        if (pos < 0)
+            pos = this.langs.length;
+        pos += indexOfLangsMessages;
+        var result = [];
+        var list = this.usedKeyList;
+        var db = this.db;
+        for (var i = 0; i < list.length; i++) {
+            var item = db[list[i]];
+            if (item[pos] != null)
+                continue;
+            result.push([null, item[0], item[1], item[2] & 1, list[i]]);
+        }
+        return result;
+    };
+    TranslationDb.prototype.setForTranslationLang = function (lang, trs) {
+        var pos = this.langs.indexOf(lang);
+        if (pos < 0)
+            pos = this.langs.length;
+        pos += indexOfLangsMessages;
+        var db = this.db;
+        for (var i = 0; i < trs.length; i++) {
+            var row = trs[i];
+            if (typeof row[0] !== 'string')
+                continue;
+            var item = db[row[4]];
+            item[pos] = row[0];
+        }
     };
     return TranslationDb;
 })();

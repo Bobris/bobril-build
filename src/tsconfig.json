@@ -15,8 +15,7 @@
         "../node_modules/typescript/lib/typescript.d.ts",
         "!./node_modules/**/*.ts",
         "../typings/node/**/*.d.ts",
-        "../typings/png-async/**/*.d.ts",
-        "!./test/*.ts"
+        "../typings/png-async/**/*.d.ts"
     ],
     "files": [
         "./bobrilDepsHelpers.ts",

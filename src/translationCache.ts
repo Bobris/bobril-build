@@ -154,8 +154,36 @@ export class TranslationDb {
             } else {
                 result.push(item[0]); // English as fallback
             }
-            item[2] = (<number>item[2]) & ~4;
         }
         return result;
+    }
+
+    getForTranslationLang(lang: string): [string, string, string, number, string][] {
+        let pos = this.langs.indexOf(lang);
+        if (pos < 0) pos = this.langs.length;
+        pos += indexOfLangsMessages;
+        let result = [];
+        let list = this.usedKeyList;
+        let db = this.db;
+        for (let i = 0; i < list.length; i++) {
+            let item = db[list[i]];
+            if (item[pos] != null)
+                continue;
+            result.push([null, item[0], item[1], <number>item[2] & 1, list[i]]);
+        }
+        return result;
+    }
+
+    setForTranslationLang(lang: string, trs: [string, string, string, number, string][]) {
+        let pos = this.langs.indexOf(lang);
+        if (pos < 0) pos = this.langs.length;
+        pos += indexOfLangsMessages;
+        let db = this.db;
+        for (let i = 0; i < trs.length; i++) {
+            let row = trs[i];
+            if (typeof row[0]!=='string') continue;
+            let item = db[row[4]];
+            item[pos] = row[0];
+        }
     }
 }

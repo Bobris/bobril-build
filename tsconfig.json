@@ -1,0 +1,24 @@
+{
+    "version": "1.4.1",
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": false,
+        "noLib": false
+    },
+    "compileOnSave": false,
+    "filesGlob": [
+        "./index.ts",
+        "./node_modules/typescript/lib/typescript.d.ts",
+        "./typings/node/**/*.d.ts",
+        "./typings/png-async/**/*.d.ts"
+    ],
+    "files": [
+        "./index.ts",
+        "./node_modules/typescript/lib/typescript.d.ts",
+        "./typings/node/node.d.ts",
+        "./typings/png-async/png-async.d.ts"
+    ]
+}

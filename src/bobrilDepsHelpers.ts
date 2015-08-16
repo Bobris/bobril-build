@@ -39,8 +39,6 @@ export function systemJsBasedIndexHtml(mainRequire: string) {
                 'baseURL': '/',
                 'defaultJSExtensions': true,
             });
-            System.import('numeral.js');
-            System.import('moment.js');
             System.import('${mainRequire}');
         </script>
     </body>
@@ -67,7 +65,6 @@ export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, m
 function findLocaleFile(filePath: string, locale: string, ext: string): string {
     let improved = false;
     while (true) {
-        console.log(locale);
         if (fs.existsSync(path.join(filePath, locale + ext))) {
             return path.join(filePath, locale + ext);
         }
@@ -105,14 +102,14 @@ export function writeTranslationFile(locale: string, translationMessages: string
             resbufs.push(new Buffer('\n', 'utf-8'));
         }
     }
-    resbufs.push(new Buffer('bobrilRegisterTranslations(\'' + locale + '\',', 'utf-8'));
+    resbufs.push(new Buffer('bobrilRegisterTranslations(\'' + locale + '\',[', 'utf-8'));
     let pluralFn = pluralFns[getLanguageFromLocale(locale)];
     if (pluralFn) {
         resbufs.push(new Buffer(pluralFn.toString(), 'utf-8'));
     } else {
         resbufs.push(new Buffer('function(){return\'other\';}', 'utf-8'));
     }
-    resbufs.push(new Buffer(',', 'utf-8'));
+    resbufs.push(new Buffer('],', 'utf-8'));
     resbufs.push(new Buffer(JSON.stringify(translationMessages), 'utf-8'));
     resbufs.push(new Buffer(')', 'utf-8'));
     write(filename, Buffer.concat(resbufs));

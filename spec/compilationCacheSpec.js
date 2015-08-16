@@ -43,6 +43,11 @@ describe("compilationCache", function () {
         }).then(function () {
             bobrilDepsHelpers.writeSystemJsBasedDist(write, 'app.js');
             bobrilDepsHelpers.writeTranslationFile('en', tc.getMessageArrayInLang('en'), 'en.js', write);
+            tc.addLang('cs-CZ');
+            var trs = tc.getForTranslationLang('cs-CZ');
+            trs[0][0] = 'Ahoj';
+            trs[1][0] = 'Právě je {now, date, LLLL}';
+            tc.setForTranslationLang('cs-CZ', trs);
             bobrilDepsHelpers.writeTranslationFile('cs-CZ', tc.getMessageArrayInLang('cs-CZ'), 'cs-CZ.js', write);
         }).then(done);
     });
