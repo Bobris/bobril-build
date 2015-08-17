@@ -1,6 +1,6 @@
 var b = require('./node_modules/bobril/index');
-var g = require('./node_modules/bobril-g11n/index');
-g.initGlobalization({
+var index_1 = require('./node_modules/bobril-g11n/index');
+index_1.initGlobalization({
     defaultLocale: 'cs-CZ',
     pathToTranslation: function (locale) { return locale + '.js'; }
 });
@@ -21,7 +21,7 @@ setInterval(1000, function () {
     b.invalidate();
 });
 b.init(function () { return [
-    header({ fontSize: 20 }, g.t(0)),
+    header({ fontSize: 20 }, index_1.t(0)),
     warnHeader({ fontSize: 25, isWarning: true }, 'World'),
-    header({ fontSize: 15 }, g.t(1, { now: b.now() }))
+    header({ fontSize: 15 }, index_1.t(1, { now: b.now() }))
 ]; });

@@ -1,7 +1,7 @@
 import * as b from './node_modules/bobril/index';
-import * as g from './node_modules/bobril-g11n/index';
+import { t, initGlobalization as initG } from './node_modules/bobril-g11n/index';
 
-g.initGlobalization({
+initG({
     defaultLocale: 'cs-CZ',
 	pathToTranslation: (locale: string) => { return locale+'.js'; }
 });
@@ -45,7 +45,7 @@ setInterval(1000, ()=> {
 });
 
 b.init(() => [
-    header({ fontSize: 20 }, g.t('Hello')),
+    header({ fontSize: 20 }, t('Hello')),
 	warnHeader({ fontSize: 25, isWarning: true }, 'World'),
-	header({ fontSize: 15 }, g.t('Right now is {now, date, LLLL}', { now: b.now() }))
+	header({ fontSize: 15 }, t('Right now is {now, date, LLLL}', { now: b.now() }))
 ]);

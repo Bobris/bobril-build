@@ -2,10 +2,25 @@ var ts = require("typescript");
 var evalNode = require("./evalNode");
 require('bluebird');
 function isBobrilFunction(name, callExpression, sourceInfo) {
-    return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
+    var text = callExpression.expression.getText();
+    return text === sourceInfo.bobrilNamespace + '.' + name || text === sourceInfo.bobrilImports[name];
 }
 function isBobrilG11NFunction(name, callExpression, sourceInfo) {
-    return callExpression.expression.getText() === sourceInfo.bobrilG11NNamespace + '.' + name;
+    var text = callExpression.expression.getText();
+    return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
+}
+function extractBindings(bindings, ns, ims) {
+    if (bindings.kind === 223 /* NamedImports */) {
+        var namedBindings = bindings;
+        for (var i = 0; i < namedBindings.elements.length; i++) {
+            var binding = namedBindings.elements[i];
+            ims[(binding.propertyName || binding.name).text] = binding.name.text;
+        }
+    }
+    else if (ns == null && bindings.kind === 222 /* NamespaceImport */) {
+        return bindings.name.text;
+    }
+    return ns;
 }
 function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
     var result = {
@@ -23,17 +38,13 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         if (n.kind === 220 /* ImportDeclaration */) {
             var id = n;
             var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
-            var sf = moduleSymbol.valueDeclaration.getSourceFile();
-            var fn = sf.fileName;
+            var fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
+            var bindings = id.importClause.namedBindings;
             if (/bobril\/index\.ts/i.test(fn)) {
-                if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === 222 /* NamespaceImport */) {
-                    result.bobrilNamespace = id.importClause.namedBindings.name.text;
-                }
+                result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
             }
             else if (/bobril-g11n\/index\.ts/i.test(fn)) {
-                if (result.bobrilG11NNamespace == null && id.importClause.namedBindings.kind === 222 /* NamespaceImport */) {
-                    result.bobrilG11NNamespace = id.importClause.namedBindings.name.text;
-                }
+                result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
             }
             result.sourceDeps.push(fn);
         }

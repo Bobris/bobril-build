@@ -45,11 +45,26 @@ export interface TranslationMessage {
 }
 
 function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
-    return callExpression.expression.getText() === sourceInfo.bobrilNamespace + '.' + name;
+    let text = callExpression.expression.getText();
+    return text === sourceInfo.bobrilNamespace + '.' + name || text === sourceInfo.bobrilImports[name];
 }
 
 function isBobrilG11NFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
-    return callExpression.expression.getText() === sourceInfo.bobrilG11NNamespace + '.' + name;
+    let text = callExpression.expression.getText();
+    return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
+}
+
+function extractBindings(bindings: ts.NamespaceImport|ts.NamedImports, ns: string, ims: Object): string {
+    if (bindings.kind === ts.SyntaxKind.NamedImports) {
+        let namedBindings = <ts.NamedImports>bindings;
+        for (let i = 0; i < namedBindings.elements.length; i++) {
+            let binding = namedBindings.elements[i];
+            ims[(binding.propertyName || binding.name).text] = binding.name.text;
+        }
+    } else if (ns == null && bindings.kind === ts.SyntaxKind.NamespaceImport) {
+        return (<ts.NamespaceImport>bindings).name.text;
+    }
+    return ns;
 }
 
 export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, resolvePathStringLiteral: (sl: ts.StringLiteral) => string): SourceInfo {
@@ -68,16 +83,12 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             let id = <ts.ImportDeclaration>n;
             let moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
-            let sf = moduleSymbol.valueDeclaration.getSourceFile();
-            let fn = sf.fileName;
+            let fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
+            let bindings = id.importClause.namedBindings;
             if (/bobril\/index\.ts/i.test(fn)) {
-                if (result.bobrilNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
-                    result.bobrilNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
-                }
+                result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
             } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
-                if (result.bobrilG11NNamespace == null && id.importClause.namedBindings.kind === ts.SyntaxKind.NamespaceImport) {
-                    result.bobrilG11NNamespace = (<ts.NamespaceImport>id.importClause.namedBindings).name.text;
-                }
+                result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
             }
             result.sourceDeps.push(fn);
         }
