@@ -46,15 +46,13 @@ function createCompilerHost(currentDirectory) {
 		if (filename===defaultLibFilename && languageVersion===lastLibVersion) {
 			return lastLibPrecompiled;
 		}
-		var indexOfNodeModules = filename.lastIndexOf('/node_modules/');
-		var indexOfNodeModules2 = filename.indexOf('/node_modules/');
-		if (indexOfNodeModules >= 0 && indexOfNodeModules2 >= 0 && indexOfNodeModules!==indexOfNodeModules2) {
-			filename = filename.substr(indexOfNodeModules + 1);
-		}
 		try {
 			var text = getFileFromCache(filename).content;
 		} catch (e) {
-			return null;
+			if (onError) {
+				onError(e.message);
+			}
+			text = "";
 		}
 		if (filename===defaultLibFilename) {
 			lastLibVersion=languageVersion;
@@ -89,7 +87,18 @@ function createCompilerHost(currentDirectory) {
 		getCurrentDirectory: function () { return currentDirectory; },
 		useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
 		getCanonicalFileName: getCanonicalFileName,
-		getNewLine: function () { return '\n'; }
+		getNewLine: function () { return '\n'; },
+        fileExists: function(fileName) {
+			try {
+				getFileFromCache(fileName);
+				return true;
+			} catch (e) {
+			}
+			return false;
+		},
+        readFile: function(fileName) {
+			return getFileFromCache(filename).content;
+		}	
 	};
 }
 
@@ -116,6 +125,7 @@ function typeScriptCompile(tsconfig, rebuild) {
 	if (!path.isAbsolute(tsconfig)) tsconfig = path.join(curDir, tsconfig);
 	curDir = path.dirname(tsconfig);
 	var tsconfigjson = ts.readConfigFile(tsconfig)['config'];
+	tsconfigjson["compilerOptions"]["moduleResolution"]="node";
 	tsconfigjson["compilerOptions"]["target"]="es5";
 	tsconfigjson["compilerOptions"]["module"]="commonjs";
 	var tscmd = ts.parseConfigFile(tsconfigjson, null, curDir);

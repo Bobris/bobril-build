@@ -1,5 +1,5 @@
-import * as b from './node_modules/bobril/index';
-import { t, initGlobalization as initG } from './node_modules/bobril-g11n/index';
+import * as b from 'bobril';
+import { t, initGlobalization as initG } from 'bobril-g11n';
 
 initG({
     defaultLocale: 'cs-CZ',

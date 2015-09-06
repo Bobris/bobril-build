@@ -53,7 +53,18 @@ function createCompilerHost(currentDirectory) {
         getCurrentDirectory: function () { return currentDirectory; },
         useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
         getCanonicalFileName: getCanonicalFileName,
-        getNewLine: function () { return '\n'; }
+        getNewLine: function () { return '\n'; },
+        fileExists: function (fileName) {
+            try {
+                return fs.statSync(path.join(currentDirectory, fileName)).isFile();
+            }
+            catch (e) {
+                return false;
+            }
+        },
+        readFile: function (fileName) {
+            return fs.readFileSync(path.join(currentDirectory, fileName)).toString();
+        }
     };
 }
 function reportDiagnostic(diagnostic) {

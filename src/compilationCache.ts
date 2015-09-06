@@ -222,6 +222,49 @@ export class CompilationCache {
         function getCanonicalFileName(fileName: string): string {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
+
+        function getCachedFileExistence(fileName: string): ICacheFile {
+            let resolvedName = path.resolve(currentDirectory, fileName);
+            let resolvedNameLowerCased = resolvedName.toLowerCase();
+            let cached = cc.cacheFiles[resolvedNameLowerCased];
+            if (cached === undefined) {
+                cached = { fullName: resolvedName };
+                cc.cacheFiles[resolvedNameLowerCased] = cached;
+            }
+            if (cached.curTime == null) {
+                if (cached.curTime === null) {
+                    return cached;
+                }
+                try {
+                    cached.curTime = fs.statSync(resolvedName).mtime.getTime();
+                } catch (er) {
+                    cached.curTime = null;
+                    return cached;
+                }
+            }
+            return cached;
+        }
+
+        function getCachedFileContent(fileName: string): ICacheFile {
+            let cached = getCachedFileExistence(fileName);
+            if (cached.curTime === null) {
+                cached.textTime = null;
+                return cached;
+            }
+            if (cached.textTime !== cached.curTime) {
+                let text: string;
+                try {
+                    text = fs.readFileSync(cached.fullName).toString();
+                } catch (er) {
+                    cached.textTime = null;
+                    return cached;
+                }
+                cached.textTime = cached.curTime;
+                cached.text = text;
+            }
+            return cached;
+        }
+
         function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
             let isDefLib = fileName === cc.defaultLibFilenameNorm;
             if (isDefLib) {
@@ -236,39 +279,9 @@ export class CompilationCache {
                 cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
                 return cc.defLibPrecompiled;
             }
-            // Workaround for buggy TypeScript module path resolver
-            let indexOfNodeModules = fileName.lastIndexOf('/node_modules/');
-            let indexOfNodeModules2 = fileName.indexOf('/node_modules/');
-            if (indexOfNodeModules >= 0 && indexOfNodeModules2 >= 0 && indexOfNodeModules != indexOfNodeModules2) {
-                fileName = fileName.substr(indexOfNodeModules + 1);
-            }
-            let resolvedName = path.resolve(currentDirectory, fileName);
-            let cached = cc.cacheFiles[resolvedName.toLowerCase()];
-            if (cached === undefined) {
-                cached = { fullName: resolvedName };
-                cc.cacheFiles[resolvedName.toLowerCase()] = cached;
-            }
-            if (cached.curTime == null) {
-                if (cached.curTime === null) {
-                    return null;
-                }
-                try {
-                    cached.curTime = fs.statSync(resolvedName).mtime.getTime();
-                } catch (er) {
-                    cached.curTime == null;
-                    return null;
-                }
-            }
-            if (cached.textTime !== cached.curTime) {
-                let text: string;
-                try {
-                    text = fs.readFileSync(resolvedName).toString();
-                } catch (er) {
-                    if (onError) onError('Openning ' + resolvedName + " failed with " + er);
-                    return null;
-                }
-                cached.textTime = cached.curTime;
-                cached.text = text;
+            let cached = getCachedFileContent(fileName);
+            if (cached.textTime == null) {
+                return null;
             }
             if (cached.sourceTime !== cached.textTime) {
                 cached.sourceFile = ts.createSourceFile(fileName, cached.text, languageVersion, true);
@@ -285,6 +298,13 @@ export class CompilationCache {
                 }
             }
         }
+        function resolveModuleName(moduleName: string, containingFile: string): string {
+            if (moduleName.substr(0, 1) === '.') {
+                return path.join(path.dirname(containingFile), moduleName) + ".ts";
+            }
+            // TODO: read packege.json for main.js to exchange for main.ts
+            return "node_modules/" + moduleName + "/index.ts";
+        }
         return {
             getSourceFile: getSourceFile,
             getDefaultLibFileName: function(options) { return cc.defaultLibFilenameNorm; },
@@ -292,7 +312,25 @@ export class CompilationCache {
             getCurrentDirectory: function() { return currentDirectory; },
             useCaseSensitiveFileNames: function() { return ts.sys.useCaseSensitiveFileNames; },
             getCanonicalFileName: getCanonicalFileName,
-            getNewLine: function() { return '\n'; }
+            getNewLine: function() { return '\n'; },
+            fileExists(fileName: string): boolean {
+                if (fileName === cc.defaultLibFilenameNorm) return true;
+                let cached = getCachedFileExistence(fileName);
+                if (cached.curTime === null) return false;
+                return true;
+            },
+            readFile(fileName: string): string {
+                let cached = getCachedFileContent(fileName);
+                if (cached.textTime == null) return null;
+                return cached.text;
+            },
+            resolveModuleNames(moduleNames: string[], containingFile: string): string[] {
+                return moduleNames.map((n) => {
+                    let r = resolveModuleName(n, containingFile);
+                    //console.log(n, containingFile, r);
+                    return r;
+                });
+            }
         };
     }
 }

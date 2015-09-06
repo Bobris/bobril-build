@@ -8,7 +8,7 @@ var defaultLibFilenameNorm = defaultLibFilename.replace(/\\/g, "/");
 
 var lastLibPrecompiled;
 
-function createCompilerHost(currentDirectory) {
+function createCompilerHost(currentDirectory): ts.CompilerHost {
     function getCanonicalFileName(fileName) {
         return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
     }
@@ -53,7 +53,17 @@ function createCompilerHost(currentDirectory) {
         getCurrentDirectory: function() { return currentDirectory; },
         useCaseSensitiveFileNames: function() { return ts.sys.useCaseSensitiveFileNames; },
         getCanonicalFileName: getCanonicalFileName,
-        getNewLine: function() { return '\n'; }
+        getNewLine: function() { return '\n'; },
+        fileExists(fileName: string): boolean {
+            try {
+                return fs.statSync(path.join(currentDirectory,fileName)).isFile();
+            } catch (e) {
+                return false;
+            }
+        },
+        readFile(fileName: string): string {
+            return fs.readFileSync(path.join(currentDirectory,fileName)).toString();
+        }
     };
 }
 
