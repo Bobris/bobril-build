@@ -34,6 +34,8 @@ interface ICacheFile {
     info?: BuildHelpers.SourceInfo;
     infoTime?: number;
     curTime?: number;
+    maxTimeForDeps?: number;
+    outputTime?: number;
 }
 
 interface IResFile {
@@ -74,10 +76,32 @@ export class CompilationCache {
     defLibPrecompiled: ts.SourceFile;
     imageCache: imgCache.ImgCache;
 
+    clearFileTimeModifications() {
+        let cacheFiles = this.cacheFiles;
+        let names = Object.keys(cacheFiles);
+        for (let i = 0; i < names.length; i++) {
+            cacheFiles[names[i]].curTime = undefined;
+        }
+    }
+
+    forceRebuild() {
+        let cacheFiles = this.cacheFiles;
+        let names = Object.keys(cacheFiles);
+        for (let i = 0; i < names.length; i++) {
+            cacheFiles[names[i]].infoTime = undefined;
+            cacheFiles[names[i]].outputTime = undefined;
+        }
+    }
+
     compile(project: IProject): Promise<any> {
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
-        // TODO quick check if nothing changed
+        this.clearMaxTimeForDeps();
+        let mainCache = this.calcMaxTimeForDeps(project.main, project.dir);
+        if (mainCache.maxTimeForDeps !== null && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+            // nothing needs to be build, evrything is fresh
+            return Promise.resolve(null);
+        }
         let program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir, project.writeFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
@@ -106,8 +130,7 @@ export class CompilationCache {
         for (let i = 0; i < sourceFiles.length; i++) {
             let src = sourceFiles[i];
             if (src.hasNoDefaultLib) continue; // skip searching default lib
-            let resolvedName = path.resolve(project.dir, src.fileName);
-            let cached = this.cacheFiles[resolvedName.toLowerCase()];
+            let cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
@@ -147,9 +170,13 @@ export class CompilationCache {
             for (let i = 0; i < sourceFiles.length; i++) {
                 let src = sourceFiles[i];
                 if (src.hasNoDefaultLib) continue; // skip searching default lib
+                let cached = this.getCachedFileExistence(src.fileName, project.dir);
+                if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
+                    && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+                    continue;
+                }
                 let restorationMemory = <(() => void)[]>[];
-                let resolvedName = path.resolve(project.dir, src.fileName);
-                let info = this.cacheFiles[resolvedName.toLowerCase()].info;
+                let info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
                         let si = info.sprites[j];
@@ -209,6 +236,7 @@ export class CompilationCache {
                 for (let j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
                 }
+                cached.outputTime = cached.maxTimeForDeps;
             }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
@@ -218,51 +246,98 @@ export class CompilationCache {
         return prom;
     }
 
+    private clearMaxTimeForDeps() {
+        let cacheFiles = this.cacheFiles;
+        let names = Object.keys(cacheFiles);
+        for (let i = 0; i < names.length; i++) {
+            cacheFiles[names[i]].maxTimeForDeps = undefined;
+        }
+    }
+
+    private getCachedFileExistence(fileName: string, baseDir: string): ICacheFile {
+        let resolvedName = path.resolve(baseDir, fileName);
+        let resolvedNameLowerCased = resolvedName.toLowerCase();
+        let cached = this.cacheFiles[resolvedNameLowerCased];
+        if (cached === undefined) {
+            cached = { fullName: resolvedName };
+            this.cacheFiles[resolvedNameLowerCased] = cached;
+        }
+        if (cached.curTime == null) {
+            if (cached.curTime === null) {
+                return cached;
+            }
+            try {
+                cached.curTime = fs.statSync(resolvedName).mtime.getTime();
+            } catch (er) {
+                cached.curTime = null;
+                return cached;
+            }
+        }
+        return cached;
+    }
+
+    private updateCachedFileContent(cached: ICacheFile) {
+        if (cached.textTime !== cached.curTime) {
+            let text: string;
+            try {
+                text = fs.readFileSync(cached.fullName).toString();
+            } catch (er) {
+                cached.textTime = null;
+                return cached;
+            }
+            cached.textTime = cached.curTime;
+            cached.text = text;
+        }
+    }
+
+    private getCachedFileContent(fileName: string, baseDir: string): ICacheFile {
+        let cached = this.getCachedFileExistence(fileName, baseDir);
+        if (cached.curTime === null) {
+            cached.textTime = null;
+            return cached;
+        }
+        this.updateCachedFileContent(cached);
+        return cached;
+    }
+
+    private calcMaxTimeForDeps(name: string, baseDir: string): ICacheFile {
+        let cached = this.getCachedFileExistence(name, baseDir);
+        if (cached.maxTimeForDeps !== undefined) // It was already calculated or is being calculated
+            return cached;
+        cached.maxTimeForDeps = cached.curTime;
+        if (cached.curTime === null) // Does not exists, that's bad full rebuild will be needed
+            return cached;
+        if (cached.outputTime == null) // Output does not exists or is in unknown freshness
+        {
+            cached.maxTimeForDeps = null;
+            return cached;
+        }
+        if (cached.curTime === cached.infoTime) { // If info is fresh
+            let deps = cached.info.sourceDeps;
+            for (let i = 0; i < deps.length; i++) {
+                let depCached = this.calcMaxTimeForDeps(deps[i], baseDir);
+                if (depCached.maxTimeForDeps === null) { // dependency does not exist -> rebuild to show error
+                    cached.maxTimeForDeps = null;
+                    return cached;
+                }
+                if (depCached.maxTimeForDeps > cached.maxTimeForDeps) {
+                    cached.maxTimeForDeps = depCached.maxTimeForDeps;
+                }
+            }
+        }
+    }
+
     private createCompilerHost(cc: CompilationCache, currentDirectory: string, writeFileCallback: (filename: string, content: Buffer) => void): ts.CompilerHost {
         function getCanonicalFileName(fileName: string): string {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
 
         function getCachedFileExistence(fileName: string): ICacheFile {
-            let resolvedName = path.resolve(currentDirectory, fileName);
-            let resolvedNameLowerCased = resolvedName.toLowerCase();
-            let cached = cc.cacheFiles[resolvedNameLowerCased];
-            if (cached === undefined) {
-                cached = { fullName: resolvedName };
-                cc.cacheFiles[resolvedNameLowerCased] = cached;
-            }
-            if (cached.curTime == null) {
-                if (cached.curTime === null) {
-                    return cached;
-                }
-                try {
-                    cached.curTime = fs.statSync(resolvedName).mtime.getTime();
-                } catch (er) {
-                    cached.curTime = null;
-                    return cached;
-                }
-            }
-            return cached;
+            return cc.getCachedFileExistence(fileName, currentDirectory);
         }
 
         function getCachedFileContent(fileName: string): ICacheFile {
-            let cached = getCachedFileExistence(fileName);
-            if (cached.curTime === null) {
-                cached.textTime = null;
-                return cached;
-            }
-            if (cached.textTime !== cached.curTime) {
-                let text: string;
-                try {
-                    text = fs.readFileSync(cached.fullName).toString();
-                } catch (er) {
-                    cached.textTime = null;
-                    return cached;
-                }
-                cached.textTime = cached.curTime;
-                cached.text = text;
-            }
-            return cached;
+            return cc.getCachedFileContent(fileName, currentDirectory);
         }
 
         function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {

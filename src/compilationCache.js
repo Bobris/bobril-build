@@ -28,11 +28,31 @@ var CompilationCache = (function () {
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
     }
+    CompilationCache.prototype.clearFileTimeModifications = function () {
+        var cacheFiles = this.cacheFiles;
+        var names = Object.keys(cacheFiles);
+        for (var i = 0; i < names.length; i++) {
+            cacheFiles[names[i]].curTime = undefined;
+        }
+    };
+    CompilationCache.prototype.forceRebuild = function () {
+        var cacheFiles = this.cacheFiles;
+        var names = Object.keys(cacheFiles);
+        for (var i = 0; i < names.length; i++) {
+            cacheFiles[names[i]].infoTime = undefined;
+            cacheFiles[names[i]].outputTime = undefined;
+        }
+    };
     CompilationCache.prototype.compile = function (project) {
         var _this = this;
         project.logCallback = project.logCallback || (function (text) { return console.log(text); });
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
-        // TODO quick check if nothing changed
+        this.clearMaxTimeForDeps();
+        var mainCache = this.calcMaxTimeForDeps(project.main, project.dir);
+        if (mainCache.maxTimeForDeps !== null && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+            // nothing needs to be build, evrything is fresh
+            return Promise.resolve(null);
+        }
         var program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir, project.writeFileCallback));
         var diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
@@ -61,8 +81,7 @@ var CompilationCache = (function () {
             var src = sourceFiles[i];
             if (src.hasNoDefaultLib)
                 continue; // skip searching default lib
-            var resolvedName = path.resolve(project.dir, src.fileName);
-            var cached = this.cacheFiles[resolvedName.toLowerCase()];
+            var cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
@@ -101,9 +120,13 @@ var CompilationCache = (function () {
                 var src = sourceFiles[i];
                 if (src.hasNoDefaultLib)
                     continue; // skip searching default lib
+                var cached = _this.getCachedFileExistence(src.fileName, project.dir);
+                if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
+                    && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+                    continue;
+                }
                 var restorationMemory = [];
-                var resolvedName = path.resolve(project.dir, src.fileName);
-                var info = _this.cacheFiles[resolvedName.toLowerCase()].info;
+                var info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
                     for (var j = 0; j < info.sprites.length; j++) {
                         var si = info.sprites[j];
@@ -165,6 +188,7 @@ var CompilationCache = (function () {
                 for (var j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
                 }
+                cached.outputTime = cached.maxTimeForDeps;
             }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
@@ -173,51 +197,92 @@ var CompilationCache = (function () {
         });
         return prom;
     };
+    CompilationCache.prototype.clearMaxTimeForDeps = function () {
+        var cacheFiles = this.cacheFiles;
+        var names = Object.keys(cacheFiles);
+        for (var i = 0; i < names.length; i++) {
+            cacheFiles[names[i]].maxTimeForDeps = undefined;
+        }
+    };
+    CompilationCache.prototype.getCachedFileExistence = function (fileName, baseDir) {
+        var resolvedName = path.resolve(baseDir, fileName);
+        var resolvedNameLowerCased = resolvedName.toLowerCase();
+        var cached = this.cacheFiles[resolvedNameLowerCased];
+        if (cached === undefined) {
+            cached = { fullName: resolvedName };
+            this.cacheFiles[resolvedNameLowerCased] = cached;
+        }
+        if (cached.curTime == null) {
+            if (cached.curTime === null) {
+                return cached;
+            }
+            try {
+                cached.curTime = fs.statSync(resolvedName).mtime.getTime();
+            }
+            catch (er) {
+                cached.curTime = null;
+                return cached;
+            }
+        }
+        return cached;
+    };
+    CompilationCache.prototype.updateCachedFileContent = function (cached) {
+        if (cached.textTime !== cached.curTime) {
+            var text;
+            try {
+                text = fs.readFileSync(cached.fullName).toString();
+            }
+            catch (er) {
+                cached.textTime = null;
+                return cached;
+            }
+            cached.textTime = cached.curTime;
+            cached.text = text;
+        }
+    };
+    CompilationCache.prototype.getCachedFileContent = function (fileName, baseDir) {
+        var cached = this.getCachedFileExistence(fileName, baseDir);
+        if (cached.curTime === null) {
+            cached.textTime = null;
+            return cached;
+        }
+        this.updateCachedFileContent(cached);
+        return cached;
+    };
+    CompilationCache.prototype.calcMaxTimeForDeps = function (name, baseDir) {
+        var cached = this.getCachedFileExistence(name, baseDir);
+        if (cached.maxTimeForDeps !== undefined)
+            return cached;
+        cached.maxTimeForDeps = cached.curTime;
+        if (cached.curTime === null)
+            return cached;
+        if (cached.outputTime == null) {
+            cached.maxTimeForDeps = null;
+            return cached;
+        }
+        if (cached.curTime === cached.infoTime) {
+            var deps = cached.info.sourceDeps;
+            for (var i = 0; i < deps.length; i++) {
+                var depCached = this.calcMaxTimeForDeps(deps[i], baseDir);
+                if (depCached.maxTimeForDeps === null) {
+                    cached.maxTimeForDeps = null;
+                    return cached;
+                }
+                if (depCached.maxTimeForDeps > cached.maxTimeForDeps) {
+                    cached.maxTimeForDeps = depCached.maxTimeForDeps;
+                }
+            }
+        }
+    };
     CompilationCache.prototype.createCompilerHost = function (cc, currentDirectory, writeFileCallback) {
         function getCanonicalFileName(fileName) {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
         function getCachedFileExistence(fileName) {
-            var resolvedName = path.resolve(currentDirectory, fileName);
-            var resolvedNameLowerCased = resolvedName.toLowerCase();
-            var cached = cc.cacheFiles[resolvedNameLowerCased];
-            if (cached === undefined) {
-                cached = { fullName: resolvedName };
-                cc.cacheFiles[resolvedNameLowerCased] = cached;
-            }
-            if (cached.curTime == null) {
-                if (cached.curTime === null) {
-                    return cached;
-                }
-                try {
-                    cached.curTime = fs.statSync(resolvedName).mtime.getTime();
-                }
-                catch (er) {
-                    cached.curTime = null;
-                    return cached;
-                }
-            }
-            return cached;
+            return cc.getCachedFileExistence(fileName, currentDirectory);
         }
         function getCachedFileContent(fileName) {
-            var cached = getCachedFileExistence(fileName);
-            if (cached.curTime === null) {
-                cached.textTime = null;
-                return cached;
-            }
-            if (cached.textTime !== cached.curTime) {
-                var text;
-                try {
-                    text = fs.readFileSync(cached.fullName).toString();
-                }
-                catch (er) {
-                    cached.textTime = null;
-                    return cached;
-                }
-                cached.textTime = cached.curTime;
-                cached.text = text;
-            }
-            return cached;
+            return cc.getCachedFileContent(fileName, currentDirectory);
         }
         function getSourceFile(fileName, languageVersion, onError) {
             var isDefLib = fileName === cc.defaultLibFilenameNorm;
