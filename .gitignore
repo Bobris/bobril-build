@@ -4,6 +4,7 @@ gh-pages/
 .vs/
 *.sln.ide/
 node_modules/
+!/spec/cc/node_modules
 
 # User-specific files
 *.suo

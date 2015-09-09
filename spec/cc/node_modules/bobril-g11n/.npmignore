@@ -1,0 +1,5 @@
+test/
+testbundle/
+gulpfile.js
+karma.conf.js
+tscomp.js
