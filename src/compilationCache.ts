@@ -1,12 +1,15 @@
 import * as ts from "typescript";
 import * as fs from "fs";
-import * as path from "path";
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as evalNode from "./evalNode";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
 import * as imgCache from "./imgCache";
 require('bluebird');
 import * as BuildHelpers from './buildHelpers';
+import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
+import * as pathUtils from './pathUtils';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -44,8 +47,8 @@ interface IResFile {
     curTime?: number;
 }
 
-interface IProject {
-    main: string;
+export interface IProject {
+    main: string | string[];
     dir: string;
     options: ts.CompilerOptions;
     logCallback?: (text: string) => void;
@@ -58,13 +61,14 @@ interface IProject {
     textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
 
     imgBundleCache?: imgCache.ImgBundleCache;
+    depJsFiles?: { [name: string]: string };
+    moduleMap?: { [name: string]: { defFile: string, jsFile: string, isDefOnly: boolean, internalModule: boolean } };
 }
 
 export class CompilationCache {
     constructor(resolvePathStringLiteral?: (sl: ts.StringLiteral) => string) {
         this.resolvePathStringLiteral = resolvePathStringLiteral || ((nn: ts.StringLiteral) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text));
-        this.defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve('typescript'))), 'lib.es6.d.ts');
-        this.defaultLibFilenameNorm = this.defaultLibFilename.replace(/\\/g, '/');
+        this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
     }
@@ -72,7 +76,6 @@ export class CompilationCache {
     resolvePathStringLiteral: (sl: ts.StringLiteral) => string;
     cacheFiles: { [name: string]: ICacheFile };
     defaultLibFilename: string;
-    defaultLibFilenameNorm: string;
     defLibPrecompiled: ts.SourceFile;
     imageCache: imgCache.ImgCache;
 
@@ -84,7 +87,11 @@ export class CompilationCache {
         }
     }
 
-    forceRebuild() {
+    forceRebuildNextCompile(project?: IProject) {
+        if (project) {
+            project.moduleMap = null;
+            project.depJsFiles = null;
+        }
         let cacheFiles = this.cacheFiles;
         let names = Object.keys(cacheFiles);
         for (let i = 0; i < names.length; i++) {
@@ -94,15 +101,21 @@ export class CompilationCache {
     }
 
     compile(project: IProject): Promise<any> {
+        let mainList = Array.isArray(project.main) ? project.main : [<string>project.main];
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
+        project.moduleMap = project.moduleMap || Object.create(null);
+        project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
-        let mainCache = this.calcMaxTimeForDeps(project.main, project.dir);
-        if (mainCache.maxTimeForDeps !== null && project.spriteMerge == null && project.textForTranslationReplacer == null) {
-            // nothing needs to be build, evrything is fresh
-            return Promise.resolve(null);
+        let mainChangedList = [];
+        for (let i = 0; i < mainList.length; i++) {
+            let main = mainList[i];
+            let mainCache = this.calcMaxTimeForDeps(main, project.dir);
+            if (mainCache.maxTimeForDeps !== null || project.spriteMerge != null || project.textForTranslationReplacer != null) {
+                mainChangedList.push(main);
+            }
         }
-        let program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir, project.writeFileCallback));
+        let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
@@ -175,6 +188,10 @@ export class CompilationCache {
                     && project.spriteMerge == null && project.textForTranslationReplacer == null) {
                     continue;
                 }
+                if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
+                    this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
+                    this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
+                }
                 let restorationMemory = <(() => void)[]>[];
                 let info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
@@ -238,12 +255,33 @@ export class CompilationCache {
                 }
                 cached.outputTime = cached.maxTimeForDeps;
             }
+            let jsFiles = Object.keys(project.depJsFiles);
+            for (let i = 0; i < jsFiles.length; i++) {
+                let jsFile = jsFiles[i];
+                let cached = this.getCachedFileExistence(jsFile, project.dir);
+                if (cached.curTime == null) {
+                    project.logCallback('Error: Dependent ' + jsFile + ' not found');
+                    continue;
+                }
+                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    this.updateCachedFileContent(cached);
+                    if (cached.textTime !== cached.curTime) {
+                        project.logCallback('Error: Dependent ' + jsFile + ' failed to load');
+                        continue;
+                    }
+                    project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                }
+            }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
             }
             return null;
         });
         return prom;
+    }
+
+    private addDepJsToOutput(project: IProject, srcDir: string, name: string) {
+        project.depJsFiles[path.join(srcDir, name)] = name;
     }
 
     private clearMaxTimeForDeps() {
@@ -255,7 +293,7 @@ export class CompilationCache {
     }
 
     private getCachedFileExistence(fileName: string, baseDir: string): ICacheFile {
-        let resolvedName = path.resolve(baseDir, fileName);
+        let resolvedName: string = pathUtils.isAbsolutePath(fileName) ? fileName : path.join(baseDir, fileName);
         let resolvedNameLowerCased = resolvedName.toLowerCase();
         let cached = this.cacheFiles[resolvedNameLowerCased];
         if (cached === undefined) {
@@ -315,7 +353,7 @@ export class CompilationCache {
         if (cached.curTime === cached.infoTime) { // If info is fresh
             let deps = cached.info.sourceDeps;
             for (let i = 0; i < deps.length; i++) {
-                let depCached = this.calcMaxTimeForDeps(deps[i], baseDir);
+                let depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir);
                 if (depCached.maxTimeForDeps === null) { // dependency does not exist -> rebuild to show error
                     cached.maxTimeForDeps = null;
                     return cached;
@@ -327,7 +365,9 @@ export class CompilationCache {
         }
     }
 
-    private createCompilerHost(cc: CompilationCache, currentDirectory: string, writeFileCallback: (filename: string, content: Buffer) => void): ts.CompilerHost {
+    private createCompilerHost(cc: CompilationCache, project: IProject, writeFileCallback: (filename: string, content: Buffer) => void): ts.CompilerHost {
+        let currentDirectory = project.dir;
+
         function getCanonicalFileName(fileName: string): string {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
@@ -341,7 +381,7 @@ export class CompilationCache {
         }
 
         function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
-            let isDefLib = fileName === cc.defaultLibFilenameNorm;
+            let isDefLib = fileName === cc.defaultLibFilename;
             if (isDefLib) {
                 if (cc.defLibPrecompiled) return cc.defLibPrecompiled;
                 let text: string;
@@ -364,6 +404,7 @@ export class CompilationCache {
             }
             return cached.sourceFile;
         }
+
         function writeFile(fileName, data, writeByteOrderMark, onError) {
             try {
                 writeFileCallback(fileName, new Buffer(data));
@@ -373,23 +414,58 @@ export class CompilationCache {
                 }
             }
         }
+
+        function resolveModuleExtension(moduleName: string, nameWithoutExtension: string, internalModule: boolean): string {
+            let cached = getCachedFileExistence(nameWithoutExtension + '.ts');
+            if (cached.curTime !== null) {
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                return nameWithoutExtension + '.ts';
+            }
+            cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
+            if (cached.curTime !== null) {
+                cached = getCachedFileExistence(nameWithoutExtension + '.js');
+                if (cached.curTime !== null) {
+                    cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
+                    project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
+                    return nameWithoutExtension + '.d.ts';
+                }
+            }
+            throw new Error('Module ' + moduleName + ' is not valid in ' + nameWithoutExtension);
+        }
+
         function resolveModuleName(moduleName: string, containingFile: string): string {
             if (moduleName.substr(0, 1) === '.') {
-                return path.join(path.dirname(containingFile), moduleName) + ".ts";
+                return resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
             }
-            // TODO: read packege.json for main.js to exchange for main.ts
-            return "node_modules/" + moduleName + "/index.ts";
+            if (/^node_modules\//i.test(moduleName)) { // support for deprecated import * as b from 'node_modules/bobril/index';
+                return resolveModuleExtension(moduleName, path.join(currentDirectory, moduleName), false);
+            }
+            // only flat node_modules currently supported
+            let pkgname = "node_modules/" + moduleName + "/package.json";
+            let cached = getCachedFileContent(pkgname);
+            if (cached.textTime == null) {
+                throw new Error('Cannot resolve ' + moduleName + ' in ' + currentDirectory + '. ' + pkgname + ' not found');
+            }
+            let main: string;
+            try {
+                main = JSON.parse(cached.text).main;
+            } catch (e) {
+                throw new Error('Cannot parse ' + pkgname + ' ' + e);
+            }
+            let mainWithoutExt = main.replace(/\.[^/.]+$/, "");
+            return resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
         }
+
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function(options) { return cc.defaultLibFilenameNorm; },
+            getDefaultLibFileName: function(options) { return cc.defaultLibFilename; },
             writeFile: writeFile,
             getCurrentDirectory: function() { return currentDirectory; },
             useCaseSensitiveFileNames: function() { return ts.sys.useCaseSensitiveFileNames; },
             getCanonicalFileName: getCanonicalFileName,
             getNewLine: function() { return '\n'; },
             fileExists(fileName: string): boolean {
-                if (fileName === cc.defaultLibFilenameNorm) return true;
+                if (fileName === cc.defaultLibFilename) return true;
                 let cached = getCachedFileExistence(fileName);
                 if (cached.curTime === null) return false;
                 return true;

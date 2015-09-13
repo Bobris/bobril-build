@@ -2,24 +2,10 @@ import * as compilationCache from '../src/compilationCache';
 import * as translationCache from '../src/translationCache';
 import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
 import * as ts from "typescript";
-import * as path from "path";
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
-
-function mkpathsync(dirpath) {
-    dirpath = path.resolve(dirpath);
-    try {
-        if (!fs.statSync(dirpath).isDirectory()) {
-            throw new Error(dirpath + ' exists and is not a directory');
-        }
-    } catch (err) {
-        if (err.code === 'ENOENT') {
-            mkpathsync(path.dirname(dirpath));
-            fs.mkdirSync(dirpath);
-        } else {
-            throw err;
-        }
-    }
-};
+import * as pathUtils from '../src/pathUtils';
 
 describe("compilationCache", () => {
     it("works", (done) => {
@@ -27,10 +13,10 @@ describe("compilationCache", () => {
         var tc = new translationCache.TranslationDb();
         function write(fn: string, b: Buffer) {
             let dir = path.dirname(path.join(__dirname, 'ccout', fn));
-            mkpathsync(dir);
+            pathUtils.mkpathsync(dir);
             fs.writeFileSync(path.join(__dirname, 'ccout', fn), b);
         }
-        cc.compile({
+        let project:compilationCache.IProject = {
             dir: path.join(__dirname, 'cc'),
             main: 'app.ts',
             options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
@@ -39,8 +25,17 @@ describe("compilationCache", () => {
             spriteMerge: true,
             writeFileCallback: write,
             textForTranslationReplacer: tc.addUsageOfMessage.bind(tc)
-        }).then(() => {
-            bobrilDepsHelpers.writeSystemJsBasedDist(write, 'app.js');
+        };
+        cc.compile(project).then(() => {
+            let moduleNames = Object.keys(project.moduleMap);
+            let moduleMap = <{ [name:string]:string }>Object.create(null);
+            for (let i = 0; i < moduleNames.length; i++) {
+                let name=moduleNames[i];
+                if (project.moduleMap[name].internalModule)
+                    continue;
+                moduleMap[name] = project.moduleMap[name].jsFile;
+            }
+            bobrilDepsHelpers.writeSystemJsBasedDist(write, 'app.js', moduleMap);
             bobrilDepsHelpers.writeTranslationFile('en', tc.getMessageArrayInLang('en'), 'en.js', write);
             tc.addLang('cs-CZ');
             let trs = tc.getForTranslationLang('cs-CZ');
@@ -48,6 +43,9 @@ describe("compilationCache", () => {
             trs[1][0]='Právě je {now, date, LLLL}';
             tc.setForTranslationLang('cs-CZ',trs);
             bobrilDepsHelpers.writeTranslationFile('cs-CZ', tc.getMessageArrayInLang('cs-CZ'), 'cs-CZ.js', write);
-        }).then(done);
+        }).then(done, e=>{
+            fail(e);
+            done();
+        });
     });
 });

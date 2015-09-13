@@ -1,5 +1,6 @@
 import * as fs from "fs";
-import * as path from "path";
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
 require('bluebird');

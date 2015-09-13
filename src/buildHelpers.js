@@ -1,4 +1,6 @@
 var ts = require("typescript");
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var evalNode = require("./evalNode");
 require('bluebird');
 function isBobrilFunction(name, callExpression, sourceInfo) {
@@ -46,13 +48,13 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             else if (/bobril-g11n\/index\.ts/i.test(fn)) {
                 result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
             }
-            result.sourceDeps.push(fn);
+            result.sourceDeps.push([moduleSymbol.name, fn]);
         }
         else if (n.kind === 226 /* ExportDeclaration */) {
             var ed = n;
             if (ed.moduleSpecifier) {
                 var moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
-                result.sourceDeps.push(moduleSymbol.valueDeclaration.getSourceFile().fileName);
+                result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
         }
         else if (n.kind === 166 /* CallExpression */) {

@@ -1,4 +1,5 @@
-var path = require("path");
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var image = require("../src/imageOps");
 require('bluebird');
 describe("replaceColor", function () {

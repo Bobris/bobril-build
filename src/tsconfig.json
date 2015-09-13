@@ -24,6 +24,7 @@
         "./evalNode.ts",
         "./imageOps.ts",
         "./imgCache.ts",
+        "./pathUtils.ts",
         "./spriter.ts",
         "./translationCache.ts",
         "../node_modules/typescript/lib/typescript.d.ts",

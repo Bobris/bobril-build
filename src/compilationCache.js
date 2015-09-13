@@ -1,10 +1,13 @@
 var ts = require("typescript");
 var fs = require("fs");
-var path = require("path");
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var imageOps = require("./imageOps");
 var imgCache = require("./imgCache");
 require('bluebird');
 var BuildHelpers = require('./buildHelpers');
+var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
+var pathUtils = require('./pathUtils');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
@@ -23,8 +26,7 @@ function reportDiagnostics(diagnostics, logcb) {
 var CompilationCache = (function () {
     function CompilationCache(resolvePathStringLiteral) {
         this.resolvePathStringLiteral = resolvePathStringLiteral || (function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); });
-        this.defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve('typescript'))), 'lib.es6.d.ts');
-        this.defaultLibFilenameNorm = this.defaultLibFilename.replace(/\\/g, '/');
+        this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
     }
@@ -35,7 +37,11 @@ var CompilationCache = (function () {
             cacheFiles[names[i]].curTime = undefined;
         }
     };
-    CompilationCache.prototype.forceRebuild = function () {
+    CompilationCache.prototype.forceRebuildNextCompile = function (project) {
+        if (project) {
+            project.moduleMap = null;
+            project.depJsFiles = null;
+        }
         var cacheFiles = this.cacheFiles;
         var names = Object.keys(cacheFiles);
         for (var i = 0; i < names.length; i++) {
@@ -45,15 +51,21 @@ var CompilationCache = (function () {
     };
     CompilationCache.prototype.compile = function (project) {
         var _this = this;
+        var mainList = Array.isArray(project.main) ? project.main : [project.main];
         project.logCallback = project.logCallback || (function (text) { return console.log(text); });
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
+        project.moduleMap = project.moduleMap || Object.create(null);
+        project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
-        var mainCache = this.calcMaxTimeForDeps(project.main, project.dir);
-        if (mainCache.maxTimeForDeps !== null && project.spriteMerge == null && project.textForTranslationReplacer == null) {
-            // nothing needs to be build, evrything is fresh
-            return Promise.resolve(null);
+        var mainChangedList = [];
+        for (var i = 0; i < mainList.length; i++) {
+            var main = mainList[i];
+            var mainCache = this.calcMaxTimeForDeps(main, project.dir);
+            if (mainCache.maxTimeForDeps !== null || project.spriteMerge != null || project.textForTranslationReplacer != null) {
+                mainChangedList.push(main);
+            }
         }
-        var program = ts.createProgram([project.main], project.options, this.createCompilerHost(this, project.dir, project.writeFileCallback));
+        var program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
         var diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
@@ -125,6 +137,10 @@ var CompilationCache = (function () {
                     && project.spriteMerge == null && project.textForTranslationReplacer == null) {
                     continue;
                 }
+                if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
+                    _this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
+                    _this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
+                }
                 var restorationMemory = [];
                 var info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
@@ -190,12 +206,32 @@ var CompilationCache = (function () {
                 }
                 cached.outputTime = cached.maxTimeForDeps;
             }
+            var jsFiles = Object.keys(project.depJsFiles);
+            for (var i = 0; i < jsFiles.length; i++) {
+                var jsFile = jsFiles[i];
+                var cached = _this.getCachedFileExistence(jsFile, project.dir);
+                if (cached.curTime == null) {
+                    project.logCallback('Error: Dependent ' + jsFile + ' not found');
+                    continue;
+                }
+                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    _this.updateCachedFileContent(cached);
+                    if (cached.textTime !== cached.curTime) {
+                        project.logCallback('Error: Dependent ' + jsFile + ' failed to load');
+                        continue;
+                    }
+                    project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                }
+            }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
             }
             return null;
         });
         return prom;
+    };
+    CompilationCache.prototype.addDepJsToOutput = function (project, srcDir, name) {
+        project.depJsFiles[path.join(srcDir, name)] = name;
     };
     CompilationCache.prototype.clearMaxTimeForDeps = function () {
         var cacheFiles = this.cacheFiles;
@@ -205,7 +241,7 @@ var CompilationCache = (function () {
         }
     };
     CompilationCache.prototype.getCachedFileExistence = function (fileName, baseDir) {
-        var resolvedName = path.resolve(baseDir, fileName);
+        var resolvedName = pathUtils.isAbsolutePath(fileName) ? fileName : path.join(baseDir, fileName);
         var resolvedNameLowerCased = resolvedName.toLowerCase();
         var cached = this.cacheFiles[resolvedNameLowerCased];
         if (cached === undefined) {
@@ -263,7 +299,7 @@ var CompilationCache = (function () {
         if (cached.curTime === cached.infoTime) {
             var deps = cached.info.sourceDeps;
             for (var i = 0; i < deps.length; i++) {
-                var depCached = this.calcMaxTimeForDeps(deps[i], baseDir);
+                var depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir);
                 if (depCached.maxTimeForDeps === null) {
                     cached.maxTimeForDeps = null;
                     return cached;
@@ -274,7 +310,8 @@ var CompilationCache = (function () {
             }
         }
     };
-    CompilationCache.prototype.createCompilerHost = function (cc, currentDirectory, writeFileCallback) {
+    CompilationCache.prototype.createCompilerHost = function (cc, project, writeFileCallback) {
+        var currentDirectory = project.dir;
         function getCanonicalFileName(fileName) {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
@@ -285,7 +322,7 @@ var CompilationCache = (function () {
             return cc.getCachedFileContent(fileName, currentDirectory);
         }
         function getSourceFile(fileName, languageVersion, onError) {
-            var isDefLib = fileName === cc.defaultLibFilenameNorm;
+            var isDefLib = fileName === cc.defaultLibFilename;
             if (isDefLib) {
                 if (cc.defLibPrecompiled)
                     return cc.defLibPrecompiled;
@@ -321,23 +358,56 @@ var CompilationCache = (function () {
                 }
             }
         }
+        function resolveModuleExtension(moduleName, nameWithoutExtension, internalModule) {
+            var cached = getCachedFileExistence(nameWithoutExtension + '.ts');
+            if (cached.curTime !== null) {
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
+                return nameWithoutExtension + '.ts';
+            }
+            cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
+            if (cached.curTime !== null) {
+                cached = getCachedFileExistence(nameWithoutExtension + '.js');
+                if (cached.curTime !== null) {
+                    cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
+                    project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule: internalModule };
+                    return nameWithoutExtension + '.d.ts';
+                }
+            }
+            throw new Error('Module ' + moduleName + ' is not valid in ' + nameWithoutExtension);
+        }
         function resolveModuleName(moduleName, containingFile) {
             if (moduleName.substr(0, 1) === '.') {
-                return path.join(path.dirname(containingFile), moduleName) + ".ts";
+                return resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
             }
-            // TODO: read packege.json for main.js to exchange for main.ts
-            return "node_modules/" + moduleName + "/index.ts";
+            if (/^node_modules\//i.test(moduleName)) {
+                return resolveModuleExtension(moduleName, path.join(currentDirectory, moduleName), false);
+            }
+            // only flat node_modules currently supported
+            var pkgname = "node_modules/" + moduleName + "/package.json";
+            var cached = getCachedFileContent(pkgname);
+            if (cached.textTime == null) {
+                throw new Error('Cannot resolve ' + moduleName + ' in ' + currentDirectory + '. ' + pkgname + ' not found');
+            }
+            var main;
+            try {
+                main = JSON.parse(cached.text).main;
+            }
+            catch (e) {
+                throw new Error('Cannot parse ' + pkgname + ' ' + e);
+            }
+            var mainWithoutExt = main.replace(/\.[^/.]+$/, "");
+            return resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
         }
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function (options) { return cc.defaultLibFilenameNorm; },
+            getDefaultLibFileName: function (options) { return cc.defaultLibFilename; },
             writeFile: writeFile,
             getCurrentDirectory: function () { return currentDirectory; },
             useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
             getCanonicalFileName: getCanonicalFileName,
             getNewLine: function () { return '\n'; },
             fileExists: function (fileName) {
-                if (fileName === cc.defaultLibFilenameNorm)
+                if (fileName === cc.defaultLibFilename)
                     return true;
                 var cached = getCachedFileExistence(fileName);
                 if (cached.curTime === null)

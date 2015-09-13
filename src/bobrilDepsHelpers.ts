@@ -1,9 +1,11 @@
-import * as path from 'path';
+import * as pathUtils from './pathUtils';
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from 'fs';
 require('bluebird');
 
 export function systemJsPath(): string {
-    return path.join(path.dirname(require.resolve('systemjs')), 'dist');
+    return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
 }
 
 export function systemJsFiles(): string[] {
@@ -11,7 +13,7 @@ export function systemJsFiles(): string[] {
 }
 
 export function numeralJsPath(): string {
-    return path.dirname(require.resolve('numeral'));
+    return pathUtils.dirOfNodeModule('numeral');
 }
 
 export function numeralJsFiles(): string[] {
@@ -19,14 +21,14 @@ export function numeralJsFiles(): string[] {
 }
 
 export function momentJsPath(): string {
-    return path.dirname(require.resolve('moment'));
+    return pathUtils.dirOfNodeModule('moment');
 }
 
 export function momentJsFiles(): string[] {
     return ['moment.js'];
 }
 
-export function systemJsBasedIndexHtml(mainRequire: string) {
+export function systemJsBasedIndexHtml(mainRequire: string, moduleMap: { [name:string]:string }) {
     return `<html>
     <head>
         <meta charset="utf-8">
@@ -36,8 +38,9 @@ export function systemJsBasedIndexHtml(mainRequire: string) {
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
         <script type="text/javascript">
             System.config({
-                'baseURL': '/',
-                'defaultJSExtensions': true,
+                baseURL: '/',
+                defaultJSExtensions: true,
+                map: ${JSON.stringify(moduleMap)}
             });
             System.import('${mainRequire}');
         </script>
@@ -53,12 +56,10 @@ function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: st
     }
 }
 
-export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, mainRequire: string): Promise<any> {
+export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, mainRequire: string, moduleMap: { [name:string]:string }): Promise<any> {
     let prom = Promise.resolve(null);
-    write('index.html', new Buffer(systemJsBasedIndexHtml(mainRequire)));
+    write('index.html', new Buffer(systemJsBasedIndexHtml(mainRequire, moduleMap)));
     writeDir(write, systemJsPath(), systemJsFiles());
-    writeDir(write, numeralJsPath(), numeralJsFiles());
-    writeDir(write, momentJsPath(), momentJsFiles());
     return prom;
 }
 

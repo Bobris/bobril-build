@@ -1,6 +1,7 @@
 import * as ts from "typescript";
 import * as fs from "fs";
-import * as path from "path";
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as evalNode from "./evalNode";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
@@ -9,7 +10,8 @@ require('bluebird');
 
 export interface SourceInfo {
     sourceFile: ts.SourceFile;
-    sourceDeps: string[];
+    // module name, module main file
+    sourceDeps: [string, string][];
     bobrilNamespace: string;
     bobrilImports: { [name: string]: string };
     bobrilG11NNamespace: string;
@@ -54,7 +56,7 @@ function isBobrilG11NFunction(name: string, callExpression: ts.CallExpression, s
     return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
 }
 
-function extractBindings(bindings: ts.NamespaceImport|ts.NamedImports, ns: string, ims: Object): string {
+function extractBindings(bindings: ts.NamespaceImport | ts.NamedImports, ns: string, ims: Object): string {
     if (bindings.kind === ts.SyntaxKind.NamedImports) {
         let namedBindings = <ts.NamedImports>bindings;
         for (let i = 0; i < namedBindings.elements.length; i++) {
@@ -90,13 +92,13 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
             } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
                 result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
             }
-            result.sourceDeps.push(fn);
+            result.sourceDeps.push([moduleSymbol.name, fn]);
         }
         else if (n.kind === ts.SyntaxKind.ExportDeclaration) {
             let ed = <ts.ExportDeclaration>n;
             if (ed.moduleSpecifier) {
                 let moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
-                result.sourceDeps.push(moduleSymbol.valueDeclaration.getSourceFile().fileName);
+                result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
         }
         else if (n.kind === ts.SyntaxKind.CallExpression) {
@@ -165,7 +167,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
     return result;
 }
 
-function createNodeFromValue(value: string|number|boolean): ts.Node {
+function createNodeFromValue(value: string | number | boolean): ts.Node {
     if (value === null) {
         let nullNode = ts.createNode(ts.SyntaxKind.NullKeyword);
         nullNode.pos = -1;
@@ -206,7 +208,7 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 
-export function setArgument(callExpression: ts.CallExpression, index: number, value: string|number|boolean): void {
+export function setArgument(callExpression: ts.CallExpression, index: number, value: string | number | boolean): void {
     while (callExpression.arguments.length < index) {
         callExpression.arguments.push(<ts.Expression>createNodeFromValue(null));
     }

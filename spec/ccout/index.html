@@ -7,8 +7,9 @@
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
         <script type="text/javascript">
             System.config({
-                'baseURL': '/',
-                'defaultJSExtensions': true,
+                baseURL: '/',
+                defaultJSExtensions: true,
+                map: {"bobril":"node_modules/bobril/index.js","bobril-g11n":"node_modules/bobril-g11n/index.js"}
             });
             System.import('app.js');
         </script>

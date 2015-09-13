@@ -1,25 +1,25 @@
 var ts = require("typescript");
 var fs = require("fs");
-var path = require("path");
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var evalNode_1 = require("../src/evalNode");
-var defaultLibFilename = path.join(path.dirname(path.resolve(require.resolve("typescript"))), "lib.es6.d.ts");
-var defaultLibFilenameNorm = defaultLibFilename.replace(/\\/g, "/");
+var defaultLibFilename = path.join(path.dirname(require.resolve("typescript").replace(/\\/g, "/")), "lib.es6.d.ts");
 var lastLibPrecompiled;
 function createCompilerHost(currentDirectory) {
     function getCanonicalFileName(fileName) {
         return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
     }
     function getSourceFile(filename, languageVersion, onError) {
-        if (filename === defaultLibFilenameNorm && lastLibPrecompiled) {
+        if (filename === defaultLibFilename && lastLibPrecompiled) {
             return lastLibPrecompiled;
         }
         try {
-            var text = fs.readFileSync(filename === defaultLibFilenameNorm ? defaultLibFilename : path.resolve(currentDirectory, filename)).toString();
+            var text = fs.readFileSync(filename === defaultLibFilename ? defaultLibFilename : path.join(currentDirectory, filename)).toString();
         }
         catch (e) {
             return null;
         }
-        if (filename === defaultLibFilenameNorm) {
+        if (filename === defaultLibFilename) {
             lastLibPrecompiled = ts.createSourceFile(filename, text, languageVersion, true);
             return lastLibPrecompiled;
         }
@@ -83,7 +83,7 @@ function reportDiagnostics(diagnostics) {
     }
 }
 describe("evalNode", function () {
-    var testpath = path.join(__dirname, "evalNode");
+    var testpath = path.join(__dirname.replace(/\\/g, "/"), "evalNode");
     var di = fs.readdirSync(testpath).sort();
     try {
         fs.mkdirSync(path.join(testpath, "_accept"));

@@ -1,8 +1,10 @@
-var path = require('path');
+var pathUtils = require('./pathUtils');
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var fs = require('fs');
 require('bluebird');
 function systemJsPath() {
-    return path.join(path.dirname(require.resolve('systemjs')), 'dist');
+    return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
 }
 exports.systemJsPath = systemJsPath;
 function systemJsFiles() {
@@ -10,7 +12,7 @@ function systemJsFiles() {
 }
 exports.systemJsFiles = systemJsFiles;
 function numeralJsPath() {
-    return path.dirname(require.resolve('numeral'));
+    return pathUtils.dirOfNodeModule('numeral');
 }
 exports.numeralJsPath = numeralJsPath;
 function numeralJsFiles() {
@@ -18,15 +20,15 @@ function numeralJsFiles() {
 }
 exports.numeralJsFiles = numeralJsFiles;
 function momentJsPath() {
-    return path.dirname(require.resolve('moment'));
+    return pathUtils.dirOfNodeModule('moment');
 }
 exports.momentJsPath = momentJsPath;
 function momentJsFiles() {
     return ['moment.js'];
 }
 exports.momentJsFiles = momentJsFiles;
-function systemJsBasedIndexHtml(mainRequire) {
-    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>Bobril Application</title>\n    </head>\n    <body>\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            System.config({\n                'baseURL': '/',\n                'defaultJSExtensions': true,\n            });\n            System.import('" + mainRequire + "');\n        </script>\n    </body>\n</html>\n";
+function systemJsBasedIndexHtml(mainRequire, moduleMap) {
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>Bobril Application</title>\n    </head>\n    <body>\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            System.config({\n                baseURL: '/',\n                defaultJSExtensions: true,\n                map: " + JSON.stringify(moduleMap) + "\n            });\n            System.import('" + mainRequire + "');\n        </script>\n    </body>\n</html>\n";
 }
 exports.systemJsBasedIndexHtml = systemJsBasedIndexHtml;
 function writeDir(write, dir, files) {
@@ -35,12 +37,10 @@ function writeDir(write, dir, files) {
         write(f, fs.readFileSync(path.join(dir, f)));
     }
 }
-function writeSystemJsBasedDist(write, mainRequire) {
+function writeSystemJsBasedDist(write, mainRequire, moduleMap) {
     var prom = Promise.resolve(null);
-    write('index.html', new Buffer(systemJsBasedIndexHtml(mainRequire)));
+    write('index.html', new Buffer(systemJsBasedIndexHtml(mainRequire, moduleMap)));
     writeDir(write, systemJsPath(), systemJsFiles());
-    writeDir(write, numeralJsPath(), numeralJsFiles());
-    writeDir(write, momentJsPath(), momentJsFiles());
     return prom;
 }
 exports.writeSystemJsBasedDist = writeSystemJsBasedDist;

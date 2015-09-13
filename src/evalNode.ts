@@ -1,5 +1,6 @@
 import * as ts from "typescript";
-import { posix as path } from "path";
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 
 export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral: (sl: ts.StringLiteral) => string): any {
     switch (n.kind) {
