@@ -78,6 +78,7 @@ export class CompilationCache {
     defaultLibFilename: string;
     defLibPrecompiled: ts.SourceFile;
     imageCache: imgCache.ImgCache;
+    logCallback: (text:string) => void;
 
     clearFileTimeModifications() {
         let cacheFiles = this.cacheFiles;
@@ -103,6 +104,7 @@ export class CompilationCache {
     compile(project: IProject): Promise<any> {
         let mainList = Array.isArray(project.main) ? project.main : [<string>project.main];
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
+        this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
@@ -430,21 +432,33 @@ export class CompilationCache {
                     return nameWithoutExtension + '.d.ts';
                 }
             }
-            throw new Error('Module ' + moduleName + ' is not valid in ' + nameWithoutExtension);
+            return null;
         }
 
         function resolveModuleName(moduleName: string, containingFile: string): string {
             if (moduleName.substr(0, 1) === '.') {
-                return resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
+                let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
+                if (res == null)
+                    throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+                return res;
             }
-            if (/^node_modules\//i.test(moduleName)) { // support for deprecated import * as b from 'node_modules/bobril/index';
-                return resolveModuleExtension(moduleName, path.join(currentDirectory, moduleName), false);
-            }
+            // support for deprecated import * as b from 'node_modules/bobril/index';
+            let curDir = path.dirname(containingFile);
+            do {
+                let res = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
+                if (res != null) {
+                    if (!/^node_modules\//i.test(moduleName)) {
+                        this.logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
+                    }
+                    return res;
+                }
+                curDir = path.dirname(curDir);
+            } while (curDir.length >= currentDirectory.length);
             // only flat node_modules currently supported
             let pkgname = "node_modules/" + moduleName + "/package.json";
             let cached = getCachedFileContent(pkgname);
             if (cached.textTime == null) {
-                throw new Error('Cannot resolve ' + moduleName + ' in ' + currentDirectory + '. ' + pkgname + ' not found');
+                throw new Error('Cannot resolve ' + moduleName + ' in ' + containingFile + '. ' + pkgname + ' not found');
             }
             let main: string;
             try {
@@ -453,7 +467,10 @@ export class CompilationCache {
                 throw new Error('Cannot parse ' + pkgname + ' ' + e);
             }
             let mainWithoutExt = main.replace(/\.[^/.]+$/, "");
-            return resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
+            let res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
+            if (res == null)
+                throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+            return res;
         }
 
         return {

@@ -1,6 +1,6 @@
 {
   "name": "bobril-build",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Builds Bobril Applications or Libraries",
   "main": "index.js",
   "dependencies": {
@@ -12,7 +12,7 @@
     "numeral": "^1.5.3",
     "png-async": "^0.9.0",
     "systemjs": "^0.18.9",
-    "typescript": "*"
+    "typescript": "1.7.0-dev.20150904"
   },
   "devDependencies": {
     "graceful-fs": "^4.1.2",

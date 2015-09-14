@@ -53,6 +53,7 @@ var CompilationCache = (function () {
         var _this = this;
         var mainList = Array.isArray(project.main) ? project.main : [project.main];
         project.logCallback = project.logCallback || (function (text) { return console.log(text); });
+        this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
@@ -373,20 +374,32 @@ var CompilationCache = (function () {
                     return nameWithoutExtension + '.d.ts';
                 }
             }
-            throw new Error('Module ' + moduleName + ' is not valid in ' + nameWithoutExtension);
+            return null;
         }
         function resolveModuleName(moduleName, containingFile) {
             if (moduleName.substr(0, 1) === '.') {
-                return resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
+                var res_1 = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
+                if (res_1 == null)
+                    throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+                return res_1;
             }
-            if (/^node_modules\//i.test(moduleName)) {
-                return resolveModuleExtension(moduleName, path.join(currentDirectory, moduleName), false);
-            }
+            // support for deprecated import * as b from 'node_modules/bobril/index';
+            var curDir = path.dirname(containingFile);
+            do {
+                var res_2 = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
+                if (res_2 != null) {
+                    if (!/^node_modules\//i.test(moduleName)) {
+                        this.logCallback("Wrong import '" + moduleName + "' in " + containingFile + ". You must use relative path.");
+                    }
+                    return res_2;
+                }
+                curDir = path.dirname(curDir);
+            } while (curDir.length >= currentDirectory.length);
             // only flat node_modules currently supported
             var pkgname = "node_modules/" + moduleName + "/package.json";
             var cached = getCachedFileContent(pkgname);
             if (cached.textTime == null) {
-                throw new Error('Cannot resolve ' + moduleName + ' in ' + currentDirectory + '. ' + pkgname + ' not found');
+                throw new Error('Cannot resolve ' + moduleName + ' in ' + containingFile + '. ' + pkgname + ' not found');
             }
             var main;
             try {
@@ -396,7 +409,10 @@ var CompilationCache = (function () {
                 throw new Error('Cannot parse ' + pkgname + ' ' + e);
             }
             var mainWithoutExt = main.replace(/\.[^/.]+$/, "");
-            return resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
+            var res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
+            if (res == null)
+                throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+            return res;
         }
         return {
             getSourceFile: getSourceFile,
