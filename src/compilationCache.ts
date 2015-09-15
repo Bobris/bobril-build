@@ -78,7 +78,7 @@ export class CompilationCache {
     defaultLibFilename: string;
     defLibPrecompiled: ts.SourceFile;
     imageCache: imgCache.ImgCache;
-    logCallback: (text:string) => void;
+    logCallback: (text: string) => void;
 
     clearFileTimeModifications() {
         let cacheFiles = this.cacheFiles;
@@ -154,6 +154,8 @@ export class CompilationCache {
                 let info = cached.info;
                 for (let j = 0; j < info.sprites.length; j++) {
                     let si = info.sprites[j];
+                    if (si.name == null)
+                        continue;
                     bundleCache.add(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
@@ -199,6 +201,8 @@ export class CompilationCache {
                 if (project.remapImages && !project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
                         let si = info.sprites[j];
+                        if (si.name == null)
+                            continue;
                         let newname = project.remapImages(si.name);
                         if (newname != si.name) {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
@@ -209,6 +213,8 @@ export class CompilationCache {
                 if (project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
                         let si = info.sprites[j];
+                        if (si.name == null)
+                            continue;
                         let bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setMethod(si.callExpression, "spriteb");
@@ -447,13 +453,17 @@ export class CompilationCache {
             do {
                 let res = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res != null) {
+                    let niceFileName = path.relative(currentDirectory, containingFile);
                     if (!/^node_modules\//i.test(moduleName)) {
-                        this.logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
+                        this.logCallback(`Wrong import '${moduleName}' in ${niceFileName}. You must use relative path.`)
                     }
                     return res;
                 }
+                let previousDir = curDir;
                 curDir = path.dirname(curDir);
-            } while (curDir.length >= currentDirectory.length);
+                if (previousDir === curDir)
+                    break;
+            } while (true);
             // only flat node_modules currently supported
             let pkgname = "node_modules/" + moduleName + "/package.json";
             let cached = getCachedFileContent(pkgname);

@@ -103,6 +103,8 @@ var CompilationCache = (function () {
                 var info = cached.info;
                 for (var j = 0; j < info.sprites.length; j++) {
                     var si = info.sprites[j];
+                    if (si.name == null)
+                        continue;
                     bundleCache.add(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
@@ -147,6 +149,8 @@ var CompilationCache = (function () {
                 if (project.remapImages && !project.spriteMerge) {
                     for (var j = 0; j < info.sprites.length; j++) {
                         var si = info.sprites[j];
+                        if (si.name == null)
+                            continue;
                         var newname = project.remapImages(si.name);
                         if (newname != si.name) {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
@@ -157,6 +161,8 @@ var CompilationCache = (function () {
                 if (project.spriteMerge) {
                     for (var j = 0; j < info.sprites.length; j++) {
                         var si = info.sprites[j];
+                        if (si.name == null)
+                            continue;
                         var bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setMethod(si.callExpression, "spriteb");
@@ -388,13 +394,17 @@ var CompilationCache = (function () {
             do {
                 var res_2 = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res_2 != null) {
+                    var niceFileName = path.relative(currentDirectory, containingFile);
                     if (!/^node_modules\//i.test(moduleName)) {
-                        this.logCallback("Wrong import '" + moduleName + "' in " + containingFile + ". You must use relative path.");
+                        this.logCallback("Wrong import '" + moduleName + "' in " + niceFileName + ". You must use relative path.");
                     }
                     return res_2;
                 }
+                var previousDir = curDir;
                 curDir = path.dirname(curDir);
-            } while (curDir.length >= currentDirectory.length);
+                if (previousDir === curDir)
+                    break;
+            } while (true);
             // only flat node_modules currently supported
             var pkgname = "node_modules/" + moduleName + "/package.json";
             var cached = getCachedFileContent(pkgname);
