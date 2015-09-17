@@ -12,12 +12,12 @@ describe("compilationCache", () => {
         var cc = new compilationCache.CompilationCache();
         var tc = new translationCache.TranslationDb();
         function write(fn: string, b: Buffer) {
-            let dir = path.dirname(path.join(__dirname, 'ccout', fn));
+            let dir = path.dirname(path.join(__dirname.replace(/\\/g,'/'), 'ccout', fn));
             pathUtils.mkpathsync(dir);
-            fs.writeFileSync(path.join(__dirname, 'ccout', fn), b);
+            fs.writeFileSync(path.join(__dirname.replace(/\\/g,'/'), 'ccout', fn), b);
         }
         let project:compilationCache.IProject = {
-            dir: path.join(__dirname, 'cc'),
+            dir: path.join(__dirname.replace(/\\/g,'/'), 'cc'),
             main: 'app.ts',
             options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
             debugStyleDefs: true,
@@ -47,5 +47,5 @@ describe("compilationCache", () => {
             fail(e);
             done();
         });
-    });
+    }, 60000);
 });

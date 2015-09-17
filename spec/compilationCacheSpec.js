@@ -11,12 +11,12 @@ describe("compilationCache", function () {
         var cc = new compilationCache.CompilationCache();
         var tc = new translationCache.TranslationDb();
         function write(fn, b) {
-            var dir = path.dirname(path.join(__dirname, 'ccout', fn));
+            var dir = path.dirname(path.join(__dirname.replace(/\\/g, '/'), 'ccout', fn));
             pathUtils.mkpathsync(dir);
-            fs.writeFileSync(path.join(__dirname, 'ccout', fn), b);
+            fs.writeFileSync(path.join(__dirname.replace(/\\/g, '/'), 'ccout', fn), b);
         }
         var project = {
-            dir: path.join(__dirname, 'cc'),
+            dir: path.join(__dirname.replace(/\\/g, '/'), 'cc'),
             main: 'app.ts',
             options: { module: 1 /* CommonJS */, target: 1 /* ES5 */ },
             debugStyleDefs: true,
@@ -46,5 +46,5 @@ describe("compilationCache", function () {
             fail(e);
             done();
         });
-    });
+    }, 60000);
 });

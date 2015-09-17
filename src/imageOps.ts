@@ -25,11 +25,18 @@ export function replaceColor(img: Image, color: string) {
 
 export function loadPNG(filename: string): Promise<Image> {
     return new Promise<Image>((r, e) => {
-        fs.createReadStream(filename)
-            .pipe(pnglib.createImage({}))
+        try {
+        (<fs.ReadStream>fs.createReadStream(filename).on('error', function(err) {
+            e(err);
+        })).pipe(pnglib.createImage({}))
             .on('parsed', function() {
                 r(this);
+            }).on('error', function(err) {
+                e(err);
             });
+        } catch (err) {
+            e(err);
+        }
     });
 }
 

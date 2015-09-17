@@ -24,11 +24,19 @@ function replaceColor(img, color) {
 exports.replaceColor = replaceColor;
 function loadPNG(filename) {
     return new Promise(function (r, e) {
-        fs.createReadStream(filename)
-            .pipe(pnglib.createImage({}))
-            .on('parsed', function () {
-            r(this);
-        });
+        try {
+            fs.createReadStream(filename).on('error', function (err) {
+                e(err);
+            }).pipe(pnglib.createImage({}))
+                .on('parsed', function () {
+                r(this);
+            }).on('error', function (err) {
+                e(err);
+            });
+        }
+        catch (err) {
+            e(err);
+        }
     });
 }
 exports.loadPNG = loadPNG;

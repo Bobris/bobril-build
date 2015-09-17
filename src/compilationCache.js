@@ -319,6 +319,7 @@ var CompilationCache = (function () {
     };
     CompilationCache.prototype.createCompilerHost = function (cc, project, writeFileCallback) {
         var currentDirectory = project.dir;
+        var logCallback = project.logCallback;
         function getCanonicalFileName(fileName) {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
         }
@@ -387,18 +388,17 @@ var CompilationCache = (function () {
                 var res_1 = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
                 if (res_1 == null)
                     throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
-                return res_1;
+                return { resolvedFileName: res_1 };
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
             var curDir = path.dirname(containingFile);
             do {
                 var res_2 = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res_2 != null) {
-                    var niceFileName = path.relative(currentDirectory, containingFile);
                     if (!/^node_modules\//i.test(moduleName)) {
-                        this.logCallback("Wrong import '" + moduleName + "' in " + niceFileName + ". You must use relative path.");
+                        logCallback("Wrong import '" + moduleName + "' in " + containingFile + ". You must use relative path.");
                     }
-                    return res_2;
+                    return { resolvedFileName: res_2 };
                 }
                 var previousDir = curDir;
                 curDir = path.dirname(curDir);
@@ -422,7 +422,7 @@ var CompilationCache = (function () {
             var res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
             if (res == null)
                 throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
-            return res;
+            return { resolvedFileName: res };
         }
         return {
             getSourceFile: getSourceFile,

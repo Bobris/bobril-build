@@ -375,6 +375,7 @@ export class CompilationCache {
 
     private createCompilerHost(cc: CompilationCache, project: IProject, writeFileCallback: (filename: string, content: Buffer) => void): ts.CompilerHost {
         let currentDirectory = project.dir;
+        let logCallback = project.logCallback;
 
         function getCanonicalFileName(fileName: string): string {
             return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
@@ -441,23 +442,22 @@ export class CompilationCache {
             return null;
         }
 
-        function resolveModuleName(moduleName: string, containingFile: string): string {
+        function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModule {
             if (moduleName.substr(0, 1) === '.') {
                 let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
                 if (res == null)
                     throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
-                return res;
+                return { resolvedFileName: res };
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
             let curDir = path.dirname(containingFile);
             do {
                 let res = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res != null) {
-                    let niceFileName = path.relative(currentDirectory, containingFile);
                     if (!/^node_modules\//i.test(moduleName)) {
-                        this.logCallback(`Wrong import '${moduleName}' in ${niceFileName}. You must use relative path.`)
+                        logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
                     }
-                    return res;
+                    return { resolvedFileName: res };
                 }
                 let previousDir = curDir;
                 curDir = path.dirname(curDir);
@@ -480,7 +480,7 @@ export class CompilationCache {
             let res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
             if (res == null)
                 throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
-            return res;
+            return { resolvedFileName: res };
         }
 
         return {
@@ -502,7 +502,7 @@ export class CompilationCache {
                 if (cached.textTime == null) return null;
                 return cached.text;
             },
-            resolveModuleNames(moduleNames: string[], containingFile: string): string[] {
+            resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
                 return moduleNames.map((n) => {
                     let r = resolveModuleName(n, containingFile);
                     //console.log(n, containingFile, r);
