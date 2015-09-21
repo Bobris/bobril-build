@@ -3,10 +3,14 @@
   "version": "0.3.3",
   "description": "Builds Bobril Applications or Libraries",
   "main": "index.js",
+  "bin": {
+    "bb": "./bin/bb"
+  },
   "dependencies": {
     "bluebird": "^2.9.34",
     "bobril": "*",
     "bobril-g11n": "*",
+    "chokidar": "^1.0.6",
     "make-plural": "^3.0.0",
     "moment": "^2.10.6",
     "numeral": "^1.5.3",
