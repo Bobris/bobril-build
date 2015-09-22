@@ -1,0 +1,33 @@
+{
+    "version": "1.6.0",
+    "compileOnSave": false,
+    "compilerOptions": {
+        "target": "es6",
+        "module": "amd"
+    },
+    "formatCodeOptions": {
+        "indentSize": 4,
+        "tabSize": 4,
+        "newLineCharacter": "\r\n",
+        "convertTabsToSpaces": true,
+        "insertSpaceAfterCommaDelimiter": true,
+        "insertSpaceAfterSemicolonInForStatements": true,
+        "insertSpaceBeforeAndAfterBinaryOperators": true,
+        "insertSpaceAfterKeywordsInControlFlowStatements": true,
+        "insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+        "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+        "placeOpenBraceOnNewLineForFunctions": false,
+        "placeOpenBraceOnNewLineForControlBlocks": false
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "!./node_modules/bobril-build/**/*.*",
+        "!./node_modules/typescript/**/*.*"
+    ],
+    "files": [
+        "./node_modules/bobril/index.d.ts",
+        "./node_modules/bobril/index.ts",
+        "./src/app.ts",
+        "./src/page.ts"
+    ]
+}
