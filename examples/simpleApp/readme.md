@@ -11,7 +11,7 @@ project
 └───src // application source files
     │   app.ts // main application file
     │   page.ts // main page file
-└───dist // generated output of bobril-bobril
+└───dist // generated output of bobril-build
 ```
 ## Start guide
 Follow the next steps:
