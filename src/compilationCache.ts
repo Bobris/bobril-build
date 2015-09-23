@@ -113,9 +113,12 @@ export class CompilationCache {
         for (let i = 0; i < mainList.length; i++) {
             let main = mainList[i];
             let mainCache = this.calcMaxTimeForDeps(main, project.dir);
-            if (mainCache.maxTimeForDeps !== null || project.spriteMerge != null || project.textForTranslationReplacer != null) {
+            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge || project.textForTranslationReplacer != null) {
                 mainChangedList.push(main);
             }
+        }
+        if (mainChangedList.length === 0) {
+            return Promise.resolve(null);
         }
         let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
@@ -189,7 +192,7 @@ export class CompilationCache {
                 if (src.hasNoDefaultLib) continue; // skip searching default lib
                 let cached = this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
-                    && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+                    && !project.spriteMerge && project.textForTranslationReplacer == null) {
                     continue;
                 }
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
@@ -261,7 +264,7 @@ export class CompilationCache {
                 for (let j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
                 }
-                cached.outputTime = cached.maxTimeForDeps;
+                cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
             }
             let jsFiles = Object.keys(project.depJsFiles);
             for (let i = 0; i < jsFiles.length; i++) {
@@ -371,6 +374,7 @@ export class CompilationCache {
                 }
             }
         }
+        return cached;
     }
 
     private createCompilerHost(cc: CompilationCache, project: IProject, writeFileCallback: (filename: string, content: Buffer) => void): ts.CompilerHost {

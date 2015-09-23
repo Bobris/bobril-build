@@ -22,7 +22,7 @@ function compile() {
     console.log('Compiling ...');
     var startCompilation = Date.now();
     compilationCache.clearFileTimeModifications();
-    compilationCache.compile(project).then(function () {
+    return compilationCache.compile(project).then(function () {
         var moduleNames = Object.keys(project.moduleMap);
         var moduleMap = Object.create(null);
         for (var i = 0; i < moduleNames.length; i++) {
@@ -39,7 +39,7 @@ function compile() {
     });
 }
 function handleRequest(request, response) {
-    console.log('Req ' + request.url);
+    //console.log('Req ' + request.url);
     if (request.url === '/') {
         response.end(memoryFs['index.html']);
         return;
@@ -66,13 +66,14 @@ function run() {
     var startWatching = Date.now();
     chokidar.watch(['**/*.ts', '**/tsconfig.json', 'package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', function () {
         console.log('Watching in ' + (Date.now() - startWatching).toFixed(0) + 'ms');
+        compile().then(function () {
+            var server = http.createServer(handleRequest);
+            server.listen(8080, function () {
+                console.log("Server listening on: http://localhost:8080");
+            });
+        });
     }).on('all', bb.debounce(function (v, v2) {
         compile();
     }));
-    var server = http.createServer(handleRequest);
-    server.listen(8080, function () {
-        console.log("Server listening on: http://localhost:8080");
-    });
-    compile();
 }
 exports.run = run;

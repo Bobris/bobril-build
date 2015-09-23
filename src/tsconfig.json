@@ -21,6 +21,7 @@
         "./bobrilDepsHelpers.ts",
         "./buildHelpers.ts",
         "./compilationCache.ts",
+        "./debounce.ts",
         "./evalNode.ts",
         "./imageOps.ts",
         "./imgCache.ts",

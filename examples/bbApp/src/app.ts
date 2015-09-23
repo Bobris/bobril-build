@@ -13,7 +13,7 @@ let page = b.createComponent({
                         attrs: { href: 'https://github.com/Bobris/Bobril' },
                         children: 'Bobril GitHub pages'
                     },
-					'!'
+					'!!'
                 ]
             }
         ];

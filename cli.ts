@@ -23,11 +23,11 @@ function write(fn: string, b: Buffer) {
     memoryFs[fn] = b;
 }
 
-function compile() {
+function compile(): Promise<any> {
     console.log('Compiling ...');
     let startCompilation = Date.now();
     compilationCache.clearFileTimeModifications();
-    compilationCache.compile(project).then(() => {
+    return compilationCache.compile(project).then(() => {
         let moduleNames = Object.keys(project.moduleMap);
         let moduleMap = <{ [name: string]: string }>Object.create(null);
         for (let i = 0; i < moduleNames.length; i++) {
@@ -45,7 +45,7 @@ function compile() {
 }
 
 function handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
-    console.log('Req ' + request.url);
+    //console.log('Req ' + request.url);
     if (request.url === '/') {
         response.end(memoryFs['index.html']);
         return;
@@ -73,14 +73,14 @@ export function run() {
     let startWatching = Date.now();
     chokidar.watch(['**/*.ts', '**/tsconfig.json', 'package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', () => {
         console.log('Watching in ' + (Date.now() - startWatching).toFixed(0)+'ms');
+        compile().then(() => {
+            var server = http.createServer(handleRequest);
+            server.listen(8080, function () {
+                console.log("Server listening on: http://localhost:8080");
+            });
+        });
     }).on('all', bb.debounce((v,v2) => {
         compile();
     }));
 
-    var server = http.createServer(handleRequest);
-    server.listen(8080, function () {
-        console.log("Server listening on: http://localhost:8080");
-    });
-
-    compile();
 }
