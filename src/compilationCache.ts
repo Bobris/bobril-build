@@ -152,6 +152,8 @@ export class CompilationCache {
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
+                cached.maxTimeForDeps = undefined; // invalidate to recalculate fresness of dependencies
+                this.calcMaxTimeForDeps(src.fileName, project.dir);
             }
             if (project.spriteMerge) {
                 let info = cached.info;
