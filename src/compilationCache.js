@@ -242,6 +242,17 @@ var CompilationCache = (function () {
         });
         return prom;
     };
+    CompilationCache.prototype.copyToProjectIfChanged = function (name, dir, outName, write) {
+        var cache = this.getCachedFileExistence(name, dir);
+        if (cache.curTime == null) {
+            throw Error('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+        }
+        if (cache.outputTime == null || cache.curTime > cache.outputTime) {
+            var buf = fs.readFileSync(cache.fullName);
+            write(outName, buf);
+            cache.outputTime = cache.curTime;
+        }
+    };
     CompilationCache.prototype.addDepJsToOutput = function (project, srcDir, name) {
         project.depJsFiles[path.join(srcDir, name)] = name;
     };

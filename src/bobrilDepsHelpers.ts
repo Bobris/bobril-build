@@ -2,6 +2,7 @@ import * as pathUtils from './pathUtils';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from 'fs';
+import * as compilationCache from './compilationCache';
 require('bluebird');
 
 export function systemJsPath(): string {
@@ -28,11 +29,12 @@ export function momentJsFiles(): string[] {
     return ['moment.js'];
 }
 
-export function systemJsBasedIndexHtml(mainRequire: string, moduleMap: { [name:string]:string }) {
+export function systemJsBasedIndexHtml(mainRequire: string, moduleMap: { [name: string]: string }, title?: string) {
+    title = title || 'Bobril Application';
     return `<html>
     <head>
         <meta charset="utf-8">
-        <title>Bobril Application</title>
+        <title>${title}</title>
     </head>
     <body>
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
@@ -62,6 +64,23 @@ export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, m
     writeDir(write, systemJsPath(), systemJsFiles());
     return prom;
 }
+
+export function updateIndexHtml(project: compilationCache.IProject) {
+    let moduleNames = Object.keys(project.moduleMap);
+    let moduleMap = <{ [name: string]: string }>Object.create(null);
+    for (let i = 0; i < moduleNames.length; i++) {
+        let name = moduleNames[i];
+        if (project.moduleMap[name].internalModule)
+            continue;
+        moduleMap[name] = project.moduleMap[name].jsFile;
+    }
+    let newIndexHtml = systemJsBasedIndexHtml(project.mainJsFile, moduleMap, project.htmlTitle);
+    if (newIndexHtml !== project.lastwrittenIndexHtml) {
+        project.writeFileCallback('index.html', new Buffer(newIndexHtml));
+        project.lastwrittenIndexHtml = newIndexHtml;
+    }
+}
+
 
 function findLocaleFile(filePath: string, locale: string, ext: string): string {
     let improved = false;
@@ -114,4 +133,15 @@ export function writeTranslationFile(locale: string, translationMessages: string
     resbufs.push(new Buffer(JSON.stringify(translationMessages), 'utf-8'));
     resbufs.push(new Buffer(')', 'utf-8'));
     write(filename, Buffer.concat(resbufs));
+}
+
+function writeDirFromCompilationCache(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
+    for (let i = 0; i < files.length; i++) {
+        let f = files[i];
+        cc.copyToProjectIfChanged(f, dir, f, write);
+    }
+}
+
+export function updateSystemJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
+    writeDirFromCompilationCache(cc, write, systemJsPath(), systemJsFiles());
 }

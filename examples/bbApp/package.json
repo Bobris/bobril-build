@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "typescript": {
-    "main": "app.ts"
+    "main": "src/app.ts"
+  },
+  "bobril": {
+    "title": "Bobril Hello World"
   },
   "author": "",
   "license": "",

@@ -28,7 +28,7 @@ function reportDiagnostics(diagnostics, logcb: (text: string) => void) {
     }
 }
 
-interface ICacheFile {
+export interface ICacheFile {
     fullName: string;
     text?: string;
     textTime?: number;
@@ -59,7 +59,10 @@ export interface IProject {
     remapImages?: (filename: string) => string;
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
     textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
+    htmlTitle?: string;
+    mainJsFile?: string;
 
+    lastwrittenIndexHtml?: string;
     imgBundleCache?: imgCache.ImgBundleCache;
     depJsFiles?: { [name: string]: string };
     moduleMap?: { [name: string]: { defFile: string, jsFile: string, isDefOnly: boolean, internalModule: boolean } };
@@ -293,6 +296,18 @@ export class CompilationCache {
         return prom;
     }
 
+    public copyToProjectIfChanged(name: string, dir: string, outName: string, write: (filename: string, content: Buffer) => void) {
+        let cache = this.getCachedFileExistence(name, dir);
+        if (cache.curTime == null) {
+            throw Error('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+        }
+        if (cache.outputTime == null || cache.curTime > cache.outputTime) {
+            let buf = fs.readFileSync(cache.fullName);
+            write(outName, buf);
+            cache.outputTime = cache.curTime;
+        }
+    }
+     
     private addDepJsToOutput(project: IProject, srcDir: string, name: string) {
         project.depJsFiles[path.join(srcDir, name)] = name;
     }

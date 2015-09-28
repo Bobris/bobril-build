@@ -12,7 +12,6 @@ function printIntroLine() {
     console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
 }
 
-
 var compilationCache = new bb.CompilationCache();
 var translationDb = new bb.TranslationDb();
 var memoryFs: { [name:string]:Buffer } = Object.create(null);
@@ -28,15 +27,8 @@ function compile(): Promise<any> {
     let startCompilation = Date.now();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
-        let moduleNames = Object.keys(project.moduleMap);
-        let moduleMap = <{ [name: string]: string }>Object.create(null);
-        for (let i = 0; i < moduleNames.length; i++) {
-            let name = moduleNames[i];
-            if (project.moduleMap[name].internalModule)
-                continue;
-            moduleMap[name] = project.moduleMap[name].jsFile;
-        }
-        bb.writeSystemJsBasedDist(write, 'src/app.js', moduleMap);
+        bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+        bb.updateIndexHtml(project);
     }).then(() => {
         console.log('Compiled in ' + (Date.now() - startCompilation) + 'ms');
     }, e=> {
@@ -59,17 +51,71 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
     response.end('Not found');
 }
 
-export function run() {
-    printIntroLine();
-    project = {
+function autodetectMainTs(project: bb.IProject): bb.IProject {
+    const searchMainTsList = ['index.ts', 'app.ts', 'lib.ts', 'src/index.ts', 'src/app.ts', 'src/lib.ts'];
+    for (let i = 0; i < searchMainTsList.length; i++) {
+        let fn = searchMainTsList[i];
+        if (fs.existsSync(fn)) {
+            project.main = fn;
+            console.log('Detected main ' + fn);
+            project.mainJsFile = fn.replace(/\.ts$/, '.js');
+            return project;
+        }
+    }
+    console.log('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
+    return null;
+}
+
+function createProjectFromPackageJson(): bb.IProject {
+    let project: bb.IProject = {
         dir: process.cwd().replace(/\\/g, '/'),
         main: 'src/app.ts',
-        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
+        mainJsFile: 'src/app.js',
+        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true },
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
         writeFileCallback: write
     };
+    let packageJson = null;
+    try {
+        packageJson = fs.readFileSync('package.json', 'utf-8');
+    } catch (err) {
+        console.log('Cannot read package.json ' + err + '. Autodetecting main ts file.');
+        return autodetectMainTs(project);
+    }
+    let packageObj = null;
+    try {
+        packageObj = JSON.parse(packageJson);
+    } catch (err) {
+        console.log('Package.json cannot be parsed. ' + err);
+        return null;
+    }
+    if (packageObj.typescript && typeof packageObj.typescript.main === 'string') {
+        let main = packageObj.typescript.main;
+        if (!fs.existsSync(main)) {
+            console.log('Package.json typescript.main is ' + main + ', but this file does not exists. Aborting.');
+            return null;
+        }
+        project.main = main;
+        project.mainJsFile = main.replace(/\.ts$/, '.js');
+    } else {
+        console.log('Package.json missing typescript.main. Autodetecting main ts file.');
+        project = autodetectMainTs(project);
+        if (project == null) return null;
+    }
+    let bobrilSection = packageObj.bobril;
+    if (bobrilSection == null) return project;
+    if (typeof bobrilSection.title === 'string') {
+        project.htmlTitle = bobrilSection.title; 
+    }
+    return project;
+}
+
+export function run() {
+    printIntroLine();
+    project = createProjectFromPackageJson();
+    if (project == null) return;
     let startWatching = Date.now();
     chokidar.watch(['**/*.ts', '**/tsconfig.json', 'package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', () => {
         console.log('Watching in ' + (Date.now() - startWatching).toFixed(0)+'ms');
@@ -82,5 +128,4 @@ export function run() {
     }).on('all', bb.debounce((v,v2) => {
         compile();
     }));
-
 }
