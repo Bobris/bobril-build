@@ -10,6 +10,7 @@ require('bluebird');
 import * as BuildHelpers from './buildHelpers';
 import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
+import * as uglify from 'uglifyjs';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -61,11 +62,13 @@ export interface IProject {
     textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
     htmlTitle?: string;
     mainJsFile?: string;
+    totalBundle?: boolean;
 
     lastwrittenIndexHtml?: string;
     imgBundleCache?: imgCache.ImgBundleCache;
     depJsFiles?: { [name: string]: string };
     moduleMap?: { [name: string]: { defFile: string, jsFile: string, isDefOnly: boolean, internalModule: boolean } };
+    commonJsTemp?: { [name: string]: Buffer };
 }
 
 export class CompilationCache {
@@ -109,6 +112,14 @@ export class CompilationCache {
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
+        if (project.totalBundle) {
+            project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            let prevWriteFileCallback = project.writeFileCallback;
+            project.writeFileCallback = (filename: string, content: Buffer) => {
+                project.commonJsTemp[filename] = content;
+                prevWriteFileCallback(filename, content);
+            };
+        }
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
@@ -193,6 +204,7 @@ export class CompilationCache {
 
         prom = prom.then(() => {
             for (let i = 0; i < sourceFiles.length; i++) {
+                let restorationMemory = <(() => void)[]>[];
                 let src = sourceFiles[i];
                 if (src.hasNoDefaultLib) continue; // skip searching default lib
                 let cached = this.getCachedFileExistence(src.fileName, project.dir);
@@ -204,7 +216,6 @@ export class CompilationCache {
                     this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
                 }
-                let restorationMemory = <(() => void)[]>[];
                 let info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
@@ -266,11 +277,12 @@ export class CompilationCache {
                     }
                 }
                 program.emit(src);
+                cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
                 for (let j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
                 }
-                cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
             }
+
             let jsFiles = Object.keys(project.depJsFiles);
             for (let i = 0; i < jsFiles.length; i++) {
                 let jsFile = jsFiles[i];
@@ -287,6 +299,14 @@ export class CompilationCache {
                     }
                     project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
                 }
+            }
+            if (project.totalBundle) {
+                let firstMain = mainList[0].replace(/\.ts$/, '.js');
+                let mainsrc = project.commonJsTemp[firstMain].toString('utf-8');
+                let ast = uglify.parse(mainsrc);
+                let os = uglify.OutputStream({});
+                ast.print(os);
+                project.writeFileCallback('bundle.js', new Buffer(os.toString()));
             }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
