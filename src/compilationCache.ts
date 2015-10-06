@@ -304,6 +304,7 @@ export class CompilationCache {
                 let firstMain = mainList[0].replace(/\.ts$/, '.js');
                 let mainsrc = project.commonJsTemp[firstMain].toString('utf-8');
                 let ast = uglify.parse(mainsrc);
+
                 let os = uglify.OutputStream({});
                 ast.print(os);
                 project.writeFileCallback('bundle.js', new Buffer(os.toString()));
