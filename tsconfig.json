@@ -33,6 +33,7 @@
         "./src/imgCache.ts",
         "./src/pathUtils.ts",
         "./src/spriter.ts",
+        "./src/bundler.ts",
         "./src/translationCache.ts",
         "./spec/compilationCacheSpec.ts",
         "./spec/evalNodeSpec.ts",

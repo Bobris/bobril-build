@@ -10,7 +10,7 @@ require('bluebird');
 import * as BuildHelpers from './buildHelpers';
 import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
-import * as uglify from 'uglifyjs';
+import * as bundler from './bundler';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -301,13 +301,25 @@ export class CompilationCache {
                 }
             }
             if (project.totalBundle) {
-                let firstMain = mainList[0].replace(/\.ts$/, '.js');
-                let mainsrc = project.commonJsTemp[firstMain].toString('utf-8');
-                let ast = uglify.parse(mainsrc);
-
-                let os = uglify.OutputStream({});
-                ast.print(os);
-                project.writeFileCallback('bundle.js', new Buffer(os.toString()));
+                let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
+                let that = this;
+                let bp: bundler.IBundleProject = {
+                    getMainFiles() { return mainJsList; },
+                    checkFileModification(name: string):number {
+                        if (/\.js$/.test(name)) {
+                            let cached = that.getCachedFileContent(name, project.dir);
+                            return cached.outputTime;
+                        }
+                        return null;
+                    },
+                    readContent(name: string) {
+                        return project.commonJsTemp[name].toString('utf-8');
+                    },
+                    writeBundle(content: string) {
+                        project.writeFileCallback('bundle.js', new Buffer(content));
+                    }
+                };
+                bundler.bundle(bp);
             }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
