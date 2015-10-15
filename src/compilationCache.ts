@@ -307,7 +307,7 @@ export class CompilationCache {
                     getMainFiles() { return mainJsList; },
                     checkFileModification(name: string):number {
                         if (/\.js$/.test(name)) {
-                            let cached = that.getCachedFileContent(name, project.dir);
+                            let cached = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
                             return cached.outputTime;
                         }
                         return null;

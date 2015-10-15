@@ -35,6 +35,7 @@ declare module "uglifyjs" {
         clone?(): IAstNode;
         walk?(walker: IWalker);
         transform?(transformer: ITransformer): IAstNode;
+        TYPE?: string;
     }
 
     /// Base class of all AST nodes
@@ -118,7 +119,7 @@ declare module "uglifyjs" {
     /// The toplevel scope
     interface IAstToplevel extends IAstScope {
         /// a map of name -> SymbolDef for all undeclared names (After Scope)
-        globals?: { [name: string]: any };
+        globals?: { [name: string]: ISymbolDef };
 
         figure_out_scope?(): void;
         compute_char_frequency?(): void;
@@ -127,7 +128,10 @@ declare module "uglifyjs" {
     }
 
     /// The toplevel scope
-    function AST_Toplevel(props?: IAstToplevel): IAstToplevel;
+    interface IAST_Toplevel {
+        new (props?: IAstToplevel): IAstToplevel;
+    }
+    const AST_Toplevel: IAST_Toplevel;
 
     /// Base class for functions
     interface IAstLambda extends IAstScope {
@@ -803,7 +807,18 @@ declare module "uglifyjs" {
 
     function parse(code: string, options?: IParseOptions): IAstToplevel;
     function OutputStream(options: IOutputStreamOptions): IOutputStream;
-    function TreeWalker(visitor: (node: IAstNode, descend: () => void) => boolean): IWalker;
-    function TreeTransformer(before: (node: IAstNode, descend: (node: IAstNode, walker: IWalker) => void) => IAstNode, after: (node: IAstNode) => IAstNode): ITransformer;
+
+    interface ITreeWalker {
+        new (visitor: (node: IAstNode, descend: () => void) => boolean): IWalker;
+    }
+
+    const TreeWalker: ITreeWalker;
+
+    interface ITreeTransformer {
+        new (before: (node: IAstNode, descend: (node: IAstNode, walker: IWalker) => void) => IAstNode, after: (node: IAstNode) => IAstNode): ITransformer;
+    }
+
+    const TreeTransformer: ITreeTransformer;
+
     function Compressor(options: ICompressorOptions): ITransformer;
 }

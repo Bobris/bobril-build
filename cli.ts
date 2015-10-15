@@ -117,7 +117,7 @@ export function run() {
     project = createProjectFromPackageJson();
     if (project == null) return;
     let startWatching = Date.now();
-    chokidar.watch(['**/*.ts', '**/tsconfig.json', 'package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', () => {
+    chokidar.watch(['**/*.ts', '**/tsconfig.json', '**/package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', () => {
         console.log('Watching in ' + (Date.now() - startWatching).toFixed(0)+'ms');
         compile().then(() => {
             var server = http.createServer(handleRequest);

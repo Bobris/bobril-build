@@ -251,7 +251,7 @@ var CompilationCache = (function () {
                     getMainFiles: function () { return mainJsList; },
                     checkFileModification: function (name) {
                         if (/\.js$/.test(name)) {
-                            var cached = that.getCachedFileContent(name, project.dir);
+                            var cached = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
                             return cached.outputTime;
                         }
                         return null;
