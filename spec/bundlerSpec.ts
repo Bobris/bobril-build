@@ -10,7 +10,7 @@ describe("bundler", () => {
     let testpath = path.join(__dirname.replace(/\\/g, "/"), "bundle");
     let di = fs.readdirSync(testpath).sort();
     try { fs.mkdirSync(path.join(testpath, "_accept")); } catch (err) { };
-    try { fs.mkdirSync(path.join(testpath, "_expected")); } catch (err) { };
+    try { fs.mkdirSync(path.join(testpath, "_expect")); } catch (err) { };
     di.forEach(n=> {
         if (n[0] === ".") return;
         if (n[0] === "_") return;
@@ -18,7 +18,7 @@ describe("bundler", () => {
             var full = path.join(testpath, n);
             var cc = new compilationCache.CompilationCache();
             function write(fn: string, b: Buffer) {
-                let dir = path.join(testpath,'_accept',n);
+                let dir = path.join(testpath, '_accept', n);
                 pathUtils.mkpathsync(dir);
                 fs.writeFileSync(path.join(dir, fn), b);
             }
@@ -30,6 +30,20 @@ describe("bundler", () => {
                 writeFileCallback: write
             };
             cc.compile(project).then(() => {
+                let acc = path.join(testpath, '_accept', n);
+                let exp = path.join(testpath, '_expect', n);
+                pathUtils.mkpathsync(exp);
+                let files = fs.readdirSync(acc);
+                files.forEach((fn) => {
+                    let source = fs.readFileSync(path.join(acc, fn)).toString('utf-8');
+                    let dest = "";
+                    try {
+                        dest = fs.readFileSync(path.join(exp, fn)).toString('utf-8');
+                    } catch (err) { }
+                    if (dest != source) {
+                        fail(path.join(acc, fn) + " is not equal to " + path.join(exp, fn));
+                    }
+                });
             }).then(done, e=> {
                 fail(e);
                 done();

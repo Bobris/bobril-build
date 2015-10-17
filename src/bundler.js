@@ -90,34 +90,100 @@ function paternAssignExports(node) {
     }
     return null;
 }
+function patternDefinePropertyExportsEsModule(call) {
+    //Object.defineProperty(exports, "__esModule", { value: true });
+    if (call.args.length === 3 && isExports(call.args[0])) {
+        if (call.expression instanceof uglify.AST_PropAccess) {
+            var exp = call.expression;
+            if (matchPropKey(exp) === 'defineProperty') {
+                if (exp.expression instanceof uglify.AST_SymbolRef) {
+                    var symb = exp.expression;
+                    if (symb.name === 'Object')
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 function check(name, order, stack, project, resolveRequire) {
     var cached = project.cache[name];
     var mod = project.checkFileModification(name);
+    var reexportDef = null;
     if (cached === undefined || cached.astTime !== mod) {
         if (mod == null) {
             throw new Error('Cannot open ' + name);
         }
         var ast = uglify.parse(project.readContent(name));
         ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], exports: Object.create(null) };
+        cached = { name: name, astTime: mod, ast: ast, requires: [], selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
         var exportsSymbol = ast.globals['exports'];
-        var walker = new uglify.TreeWalker(function (node) {
+        var walker = new uglify.TreeWalker(function (node, descend) {
             if (node instanceof uglify.AST_Block) {
+                descend();
                 node.body = node.body.filter(function (stm) {
                     if (stm instanceof uglify.AST_SimpleStatement) {
                         var stmbody = stm.body;
                         var pea = paternAssignExports(stmbody);
                         if (pea) {
-                            cached.exports[pea.name] = pea.value;
+                            if (pea.value instanceof uglify.AST_PropAccess) {
+                                var propAccess = pea.value;
+                                if (propAccess.expression instanceof uglify.AST_SymbolRef) {
+                                    var symb = propAccess.expression;
+                                    var thedef = symb.thedef;
+                                    if (thedef.bbRequirePath) {
+                                        var extf = cached.reexport[thedef.bbRequirePath];
+                                        if (extf === undefined) {
+                                            extf = Object.create(null);
+                                            cached.reexport[thedef.bbRequirePath] = extf;
+                                        }
+                                        var extn = matchPropKey(propAccess);
+                                        if (extn) {
+                                            extf[pea.name] = extn;
+                                            return false;
+                                        }
+                                    }
+                                }
+                            }
+                            cached.selfexports[pea.name] = pea.value;
+                            return false;
+                        }
+                        if (stmbody instanceof uglify.AST_Call) {
+                            var call = stmbody;
+                            if (patternDefinePropertyExportsEsModule(call))
+                                return false;
+                            if (call.args.length === 1 && call.expression instanceof uglify.AST_SymbolRef) {
+                                var symb = call.expression;
+                                if (symb.thedef === reexportDef) {
+                                    var req_1 = constParamOfCallRequire(call.args[0]);
+                                    if (req_1 != null) {
+                                        var reqr = resolveRequire(req_1, name);
+                                        if (reqr == null) {
+                                            throw new Error('require("' + req_1 + '") not found from ' + name);
+                                        }
+                                        if (cached.requires.indexOf(reqr) < 0)
+                                            cached.requires.push(reqr);
+                                        if (cached.reexportAll.indexOf(reqr) < 0)
+                                            cached.reexportAll.push(reqr);
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (stm instanceof uglify.AST_Defun) {
+                        var fnc = stm;
+                        if (fnc.name.name === '__export') {
+                            reexportDef = fnc.name.thedef;
                             return false;
                         }
                     }
                     return true;
                 });
+                return true;
             }
             var req = constParamOfCallRequire(node);
             if (req != null) {
-                console.log(walker.parent(0).TYPE, walker.parent(1).TYPE, walker.parent(2).TYPE);
                 var reqr = resolveRequire(req, name);
                 if (reqr == null) {
                     throw new Error('require("' + req + '") not found from ' + name);
@@ -141,6 +207,19 @@ function check(name, order, stack, project, resolveRequire) {
         stack.push(r);
         check(r, order, stack, project, resolveRequire);
     });
+    cached.exports = Object.assign(Object.create(null), cached.selfexports);
+    cached.reexportAll.forEach(function (exp) {
+        Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
+    });
+    var reex = Object.keys(cached.reexport);
+    reex.forEach(function (exp) {
+        var expm = project.cache[exp].exports || project.cache[exp].selfexports;
+        var exps = cached.reexport[exp];
+        var expsn = Object.keys(exps);
+        expsn.forEach(function (nn) {
+            cached.exports[nn] = expm[exps[nn]];
+        });
+    });
     order.push(cached);
 }
 function bundle(project) {
@@ -157,20 +236,53 @@ function bundle(project) {
     var bundleAst = new uglify.AST_Toplevel({ body: [] });
     order.forEach(function (f) {
         var transformer = new uglify.TreeTransformer(null, function (node) {
+            if (node instanceof uglify.AST_Block) {
+                var block = node;
+                block.body = block.body.filter(function (stm) {
+                    if (stm instanceof uglify.AST_Var) {
+                        var varn = stm;
+                        if (varn.definitions.length === 0)
+                            return false;
+                    }
+                    return true;
+                });
+            }
             if (node instanceof uglify.AST_Toplevel) {
-                bundleAst.body.push(node.body);
+                (_a = bundleAst.body).push.apply(_a, node.body);
+            }
+            else if (node instanceof uglify.AST_Var) {
+                var varn = node;
+                varn.definitions = varn.definitions.filter(function (vd) {
+                    return vd.name != null;
+                });
             }
             else if (node instanceof uglify.AST_VarDef) {
                 var vardef = node;
                 var thedef = vardef.name.thedef;
                 if (thedef.bbRequirePath) {
                     vardef.value = null;
+                    vardef.name = null;
                 }
             }
             else if (node instanceof uglify.AST_PropAccess) {
                 var propAccess = node;
+                if (propAccess.expression instanceof uglify.AST_SymbolRef) {
+                    var symb = propAccess.expression;
+                    var thedef = symb.thedef;
+                    if (thedef.bbRequirePath) {
+                        var extf = project.cache[thedef.bbRequirePath];
+                        var extn = matchPropKey(propAccess);
+                        if (extn) {
+                            var asts = extf.exports[extn];
+                            if (asts)
+                                return asts;
+                            throw new Error('In ' + thedef.bbRequirePath + ' cannot find ' + extn);
+                        }
+                    }
+                }
             }
             return undefined;
+            var _a;
         });
         f.ast.transform(transformer);
     });

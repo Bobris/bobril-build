@@ -9,7 +9,12 @@ export interface IFileForBundle {
     astTime: number;
     ast: uglify.IAstToplevel;
     requires: string[];
+    selfexports: { [name: string]: uglify.IAstNode };
     exports: { [name: string]: uglify.IAstNode };
+    reexportAll: string[];
+    reexport: {
+        [from: string]: { [name: string]: string }
+    };
 }
 
 export interface IBundleProject {
@@ -63,7 +68,7 @@ function isRequire(symbolDef: uglify.ISymbolDef) {
     return symbolDef.undeclared && symbolDef.global && symbolDef.name === 'require';
 }
 
-function constParamOfCallRequire(node: uglify.IAstNode):string {
+function constParamOfCallRequire(node: uglify.IAstNode): string {
     if (node instanceof uglify.AST_Call) {
         let call = <uglify.IAstCall>node;
         if (call.args.length === 1 && call.expression instanceof uglify.AST_SymbolRef && (isRequire((<uglify.IAstSymbolRef>call.expression).thedef))) {
@@ -117,34 +122,100 @@ function paternAssignExports(node: uglify.IAstNode): { name: string, value: ugli
     return null;
 }
 
+function patternDefinePropertyExportsEsModule(call: uglify.IAstCall) {
+    //Object.defineProperty(exports, "__esModule", { value: true });
+    if (call.args.length === 3 && isExports(call.args[0])) {
+        if (call.expression instanceof uglify.AST_PropAccess) {
+            let exp = <uglify.IAstPropAccess>call.expression;
+            if (matchPropKey(exp) === 'defineProperty') {
+                if (exp.expression instanceof uglify.AST_SymbolRef) {
+                    let symb = <uglify.IAstSymbolRef>exp.expression;
+                    if (symb.name === 'Object')
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 function check(name: string, order: IFileForBundle[], stack: string[], project: IBundleProject, resolveRequire: (name: string, from: string) => string) {
     let cached: IFileForBundle = project.cache[name];
     let mod = project.checkFileModification(name);
+    let reexportDef: uglify.ISymbolDef = null;
     if (cached === undefined || cached.astTime !== mod) {
         if (mod == null) {
             throw new Error('Cannot open ' + name);
         }
         let ast = uglify.parse(project.readContent(name));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], exports: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
         let exportsSymbol = ast.globals['exports'];
-        let walker = new uglify.TreeWalker((node: uglify.IAstNode) => {
+        let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: ()=>void) => {
             if (node instanceof uglify.AST_Block) {
+                descend();
                 (<uglify.IAstBlock>node).body = (<uglify.IAstBlock>node).body.filter((stm) => {
                     if (stm instanceof uglify.AST_SimpleStatement) {
                         let stmbody = (<uglify.IAstSimpleStatement>stm).body;
                         let pea = paternAssignExports(stmbody);
                         if (pea) {
-                            cached.exports[pea.name] = pea.value;
+                            if (pea.value instanceof uglify.AST_PropAccess) {
+                                let propAccess = <uglify.IAstPropAccess>pea.value;
+                                if (propAccess.expression instanceof uglify.AST_SymbolRef) {
+                                    let symb = <uglify.IAstSymbolRef>propAccess.expression;
+                                    let thedef = <ISymbolDef>symb.thedef;
+                                    if (thedef.bbRequirePath) {
+                                        let extf = cached.reexport[thedef.bbRequirePath];
+                                        if (extf === undefined) {
+                                            extf = Object.create(null);
+                                            cached.reexport[thedef.bbRequirePath] = extf;
+                                        }
+                                        let extn = matchPropKey(propAccess);
+                                        if (extn) {
+                                            extf[pea.name] = extn;
+                                            return false;
+                                        }
+                                    }
+                                }
+                            }
+                            cached.selfexports[pea.name] = pea.value;
+                            return false;
+                        }
+                        if (stmbody instanceof uglify.AST_Call) {
+                            let call = <uglify.IAstCall>stmbody;
+                            if (patternDefinePropertyExportsEsModule(call))
+                                return false;
+                            if (call.args.length === 1 && call.expression instanceof uglify.AST_SymbolRef) {
+                                let symb = <uglify.IAstSymbolRef>call.expression;
+                                if (symb.thedef === reexportDef) {
+                                    let req = constParamOfCallRequire(call.args[0]);
+                                    if (req != null) {
+                                        let reqr = resolveRequire(req, name);
+                                        if (reqr == null) {
+                                            throw new Error('require("' + req + '") not found from ' + name);
+                                        }
+                                        if (cached.requires.indexOf(reqr) < 0)
+                                            cached.requires.push(reqr);
+                                        if (cached.reexportAll.indexOf(reqr) < 0)
+                                            cached.reexportAll.push(reqr);
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (stm instanceof uglify.AST_Defun) {
+                        let fnc = <uglify.IAstFunction>stm;
+                        if (fnc.name.name === '__export') {
+                            reexportDef = fnc.name.thedef;
                             return false;
                         }
                     }
                     return true;
                 });
+                return true;
             }
             let req = constParamOfCallRequire(node);
             if (req != null) {
-                console.log(walker.parent(0).TYPE, walker.parent(1).TYPE, walker.parent(2).TYPE);
                 let reqr = resolveRequire(req, name);
                 if (reqr == null) {
                     throw new Error('require("' + req + '") not found from ' + name);
@@ -168,6 +239,19 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         stack.push(r);
         check(r, order, stack, project, resolveRequire);
     });
+    cached.exports = Object.assign(Object.create(null), cached.selfexports);
+    cached.reexportAll.forEach(exp=> {
+        Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
+    });
+    let reex = Object.keys(cached.reexport);
+    reex.forEach((exp) => {
+        let expm = project.cache[exp].exports || project.cache[exp].selfexports;
+        let exps = cached.reexport[exp];
+        let expsn = Object.keys(exps);
+        expsn.forEach((nn) => {
+            cached.exports[nn] = expm[exps[nn]];
+        });
+    });
     order.push(cached);
 }
 
@@ -185,17 +269,45 @@ export function bundle(project: IBundleProject) {
     let bundleAst = new uglify.AST_Toplevel({ body: [] });
     order.forEach((f) => {
         let transformer = new uglify.TreeTransformer(null, (node) => {
+            if (node instanceof uglify.AST_Block) {
+                let block = <uglify.IAstBlock>node;
+                block.body = block.body.filter((stm) => {
+                    if (stm instanceof uglify.AST_Var) {
+                        let varn = <uglify.IAstVar>stm;
+                        if (varn.definitions.length === 0) return false;
+                    }
+                    return true;
+                });
+            }
             if (node instanceof uglify.AST_Toplevel) {
-                bundleAst.body.push((<uglify.IAstToplevel>node).body);
+                bundleAst.body.push(...(<uglify.IAstToplevel>node).body);
+            } else if (node instanceof uglify.AST_Var) {
+                let varn = <uglify.IAstVar>node;
+                varn.definitions = varn.definitions.filter((vd) => {
+                    return vd.name != null;
+                });
             } else if (node instanceof uglify.AST_VarDef) {
                 let vardef = <uglify.IAstVarDef>node;
                 let thedef = <ISymbolDef>vardef.name.thedef;
                 if (thedef.bbRequirePath) {
                     vardef.value = null;
+                    vardef.name = null;
                 }
             } else if (node instanceof uglify.AST_PropAccess) {
                 let propAccess = <uglify.IAstPropAccess>node;
-
+                if (propAccess.expression instanceof uglify.AST_SymbolRef) {
+                    let symb = <uglify.IAstSymbolRef>propAccess.expression;
+                    let thedef = <ISymbolDef>symb.thedef;
+                    if (thedef.bbRequirePath) {
+                        let extf = project.cache[thedef.bbRequirePath];
+                        let extn = matchPropKey(propAccess);
+                        if (extn) {
+                            let asts = extf.exports[extn];
+                            if (asts) return asts;
+                            throw new Error('In ' + thedef.bbRequirePath + ' cannot find ' + extn);
+                        }
+                    }
+                }
             }
             return undefined;
         });

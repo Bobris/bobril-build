@@ -13,7 +13,7 @@ describe("bundler", function () {
     catch (err) { }
     ;
     try {
-        fs.mkdirSync(path.join(testpath, "_expected"));
+        fs.mkdirSync(path.join(testpath, "_expect"));
     }
     catch (err) { }
     ;
@@ -38,6 +38,21 @@ describe("bundler", function () {
                 writeFileCallback: write
             };
             cc.compile(project).then(function () {
+                var acc = path.join(testpath, '_accept', n);
+                var exp = path.join(testpath, '_expect', n);
+                pathUtils.mkpathsync(exp);
+                var files = fs.readdirSync(acc);
+                files.forEach(function (fn) {
+                    var source = fs.readFileSync(path.join(acc, fn)).toString('utf-8');
+                    var dest = "";
+                    try {
+                        dest = fs.readFileSync(path.join(exp, fn)).toString('utf-8');
+                    }
+                    catch (err) { }
+                    if (dest != source) {
+                        fail(path.join(acc, fn) + " is not equal to " + path.join(exp, fn));
+                    }
+                });
             }).then(done, function (e) {
                 fail(e);
                 done();
