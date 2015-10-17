@@ -10,12 +10,23 @@ export function cloneImage(img: Image): Image {
     return res;
 }
 
+const rgbaRegex = /\s*rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d+|\d*\.\d+)\s*\)\s*/;
+
 export function replaceColor(img: Image, color: string) {
     let { width, height, data: imgd } = img;
-    var cred = parseInt(color.substr(1, 2), 16);
-    var cgreen = parseInt(color.substr(3, 2), 16);
-    var cblue = parseInt(color.substr(5, 2), 16);
-    var calpha = parseInt(color.substr(7, 2), 16) || 0xff;
+    let rgba = rgbaRegex.exec(color);
+    let cred: number, cgreen: number, cblue: number, calpha: number;
+    if (rgba) {
+        cred = parseInt(rgba[1], 10);
+        cgreen = parseInt(rgba[2], 10);
+        cblue = parseInt(rgba[3], 10);
+        calpha = Math.round(parseFloat(rgba[4]) * 255);
+    } else {
+        cred = parseInt(color.substr(1, 2), 16);
+        cgreen = parseInt(color.substr(3, 2), 16);
+        cblue = parseInt(color.substr(5, 2), 16);
+        calpha = parseInt(color.substr(7, 2), 16) || 0xff;
+    }
     if (calpha === 0xff) {
         for (var i = 0; i < imgd.length; i += 4) {
             // Horrible workaround for imprecisions due to browsers using premultiplied alpha internally for canvas

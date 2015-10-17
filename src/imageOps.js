@@ -7,12 +7,23 @@ function cloneImage(img) {
     return res;
 }
 exports.cloneImage = cloneImage;
+var rgbaRegex = /\s*rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d+|\d*\.\d+)\s*\)\s*/;
 function replaceColor(img, color) {
     var width = img.width, height = img.height, imgd = img.data;
-    var cred = parseInt(color.substr(1, 2), 16);
-    var cgreen = parseInt(color.substr(3, 2), 16);
-    var cblue = parseInt(color.substr(5, 2), 16);
-    var calpha = parseInt(color.substr(7, 2), 16) || 0xff;
+    var rgba = rgbaRegex.exec(color);
+    var cred, cgreen, cblue, calpha;
+    if (rgba) {
+        cred = parseInt(rgba[1], 10);
+        cgreen = parseInt(rgba[2], 10);
+        cblue = parseInt(rgba[3], 10);
+        calpha = Math.round(parseFloat(rgba[4]) * 255);
+    }
+    else {
+        cred = parseInt(color.substr(1, 2), 16);
+        cgreen = parseInt(color.substr(3, 2), 16);
+        cblue = parseInt(color.substr(5, 2), 16);
+        calpha = parseInt(color.substr(7, 2), 16) || 0xff;
+    }
     if (calpha === 0xff) {
         for (var i = 0; i < imgd.length; i += 4) {
             // Horrible workaround for imprecisions due to browsers using premultiplied alpha internally for canvas
