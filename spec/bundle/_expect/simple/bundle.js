@@ -1,5 +1,1 @@
-function fn(a, b) {
-    return a + b;
-}
-
-console.log(fn(1, 2));
+!function(){function a(a,b){return a+b}console.log(a(1,2))}();

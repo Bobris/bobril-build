@@ -11,6 +11,6 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "bobril": "^4.7.0"
+    "bobril": "*"
   }
 }

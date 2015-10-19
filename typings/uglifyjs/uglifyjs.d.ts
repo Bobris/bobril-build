@@ -1,4 +1,15 @@
 declare module "uglifyjs" {
+    interface IDictionary<T> {
+        has(key: string): boolean;
+        set(key: string, val: T): IDictionary<T>;
+        add(key: string, val: T): IDictionary<T>;
+        get(key: string): T;
+        del(key: string): IDictionary<T>;
+        each(f: (val: T, key: string) => void): void;
+        size(): number;
+        map<U>(f: (val: T, key: string) => U): U[];
+    }
+
     interface IOutputStream {
         toString(): string;
     }
@@ -26,34 +37,46 @@ declare module "uglifyjs" {
         mangled_name?: string;
     }
 
+
     /// Base class of all AST nodes
     interface IAstNode {
         /// The first token of this node
         start?: IAstToken;
         /// The last token of this node
         end?: IAstToken;
+
         clone?(): IAstNode;
         walk?(walker: IWalker);
         transform?(transformer: ITransformer): IAstNode;
         TYPE?: string;
+        print_to_string?(options?: IOutputStreamOptions): string;
     }
 
+    interface IAST_Node {
+        new (props?: IAstNode): IAstNode;
+    }
     /// Base class of all AST nodes
-    function AST_Node(props?: IAstNode): IAstNode;
+    const AST_Node: IAST_Node;
 
     /// Base class of all statements
     interface IAstStatement extends IAstNode {
     }
 
+    interface IAST_Statement {
+        new (props?: IAstStatement): IAstStatement;
+    }
     /// Base class of all statements
-    function AST_Statement(props?: IAstStatement): IAstStatement;
+    const AST_Statement: IAST_Statement;
 
     /// Represents a debugger statement
     interface IAstDebugger extends IAstStatement {
     }
 
+    interface IAST_Debugger {
+        new (props?: IAstDebugger): IAstDebugger;
+    }
     /// Represents a debugger statement
-    function AST_Debugger(props?: IAstDebugger): IAstDebugger;
+    const AST_Debugger: IAST_Debugger;
 
     /// Represents a directive, like "use strict";
     interface IAstDirective extends IAstStatement {
@@ -65,8 +88,11 @@ declare module "uglifyjs" {
         quote?: string;
     }
 
+    interface IAST_Directive {
+        new (props?: IAstDirective): IAstDirective;
+    }
     /// Represents a directive, like "use strict";
-    function AST_Directive(props?: IAstDirective): IAstDirective;
+    const AST_Directive: IAST_Directive;
 
     /// A statement consisting of an expression, i.e. a = 1 + 2
     interface IAstSimpleStatement extends IAstStatement {
@@ -74,8 +100,11 @@ declare module "uglifyjs" {
         body?: IAstNode;
     }
 
+    interface IAST_SimpleStatement {
+        new (props?: IAstSimpleStatement): IAstSimpleStatement;
+    }
     /// A statement consisting of an expression, i.e. a = 1 + 2
-    function AST_SimpleStatement(props?: IAstSimpleStatement): IAstSimpleStatement;
+    const AST_SimpleStatement: IAST_SimpleStatement;
 
     /// A body of statements (usually bracketed)
     interface IAstBlock extends IAstStatement {
@@ -83,24 +112,30 @@ declare module "uglifyjs" {
         body?: IAstStatement[];
     }
 
+    interface IAST_Block {
+        new (props?: IAstBlock): IAstBlock;
+    }
     /// A body of statements (usually bracketed)
-    function AST_Block(props?: IAstBlock): IAstBlock;
+    const AST_Block: IAST_Block;
 
     /// A block statement
     interface IAstBlockStatement extends IAstBlock {
     }
 
+    interface IAST_BlockStatement {
+        new (props?: IAstBlockStatement): IAstBlockStatement;
+    }
     /// A block statement
-    function AST_BlockStatement(props?: IAstBlockStatement): IAstBlockStatement;
+    const AST_BlockStatement: IAST_BlockStatement;
 
     /// Base class for all statements introducing a lexical scope
     interface IAstScope extends IAstBlock {
         /// an array of directives declared in this scope (After Scope)
         directives?: string[];
         /// a map of name -> SymbolDef for all variables/functions defined in this scope (After Scope)
-        variables?: { [name: string]: ISymbolDef };
+        variables?: IDictionary<ISymbolDef>;
         /// like `variables`, but only lists function declarations (After Scope)
-        functions?: { [name: string]: ISymbolDef };
+        functions?: IDictionary<ISymbolDef>;
         /// tells whether this scope uses the `with` statement (After Scope)
         uses_with?: boolean;
         /// tells whether this scope contains a direct call to the global `eval` (After Scope)
@@ -113,13 +148,16 @@ declare module "uglifyjs" {
         cname?: number;
     }
 
+    interface IAST_Scope {
+        new (props?: IAstScope): IAstScope;
+    }
     /// Base class for all statements introducing a lexical scope
-    function AST_Scope(props?: IAstScope): IAstScope;
+    const AST_Scope: IAST_Scope;
 
     /// The toplevel scope
     interface IAstToplevel extends IAstScope {
         /// a map of name -> SymbolDef for all undeclared names (After Scope)
-        globals?: { [name: string]: ISymbolDef };
+        globals?: IDictionary<ISymbolDef>;
 
         figure_out_scope?(): void;
         compute_char_frequency?(): void;
@@ -127,10 +165,10 @@ declare module "uglifyjs" {
         print?(os: IOutputStream): void;
     }
 
-    /// The toplevel scope
     interface IAST_Toplevel {
         new (props?: IAstToplevel): IAstToplevel;
     }
+    /// The toplevel scope
     const AST_Toplevel: IAST_Toplevel;
 
     /// Base class for functions
@@ -143,29 +181,41 @@ declare module "uglifyjs" {
         uses_arguments?: boolean;
     }
 
+    interface IAST_Lambda {
+        new (props?: IAstLambda): IAstLambda;
+    }
     /// Base class for functions
-    function AST_Lambda(props?: IAstLambda): IAstLambda;
+    const AST_Lambda: IAST_Lambda;
 
     /// A setter/getter function.  The `name` property is always null.
     interface IAstAccessor extends IAstLambda {
     }
 
+    interface IAST_Accessor {
+        new (props?: IAstAccessor): IAstAccessor;
+    }
     /// A setter/getter function.  The `name` property is always null.
-    function AST_Accessor(props?: IAstAccessor): IAstAccessor;
+    const AST_Accessor: IAST_Accessor;
 
     /// A function expression
     interface IAstFunction extends IAstLambda {
     }
 
+    interface IAST_Function {
+        new (props?: IAstFunction): IAstFunction;
+    }
     /// A function expression
-    function AST_Function(props?: IAstFunction): IAstFunction;
+    const AST_Function: IAST_Function;
 
     /// A function definition
     interface IAstDefun extends IAstLambda {
     }
 
+    interface IAST_Defun {
+        new (props?: IAstDefun): IAstDefun;
+    }
     /// A function definition
-    function AST_Defun(props?: IAstDefun): IAstDefun;
+    const AST_Defun: IAST_Defun;
 
     /// A `switch` statement
     interface IAstSwitch extends IAstBlock {
@@ -173,22 +223,31 @@ declare module "uglifyjs" {
         expression?: IAstNode;
     }
 
+    interface IAST_Switch {
+        new (props?: IAstSwitch): IAstSwitch;
+    }
     /// A `switch` statement
-    function AST_Switch(props?: IAstSwitch): IAstSwitch;
+    const AST_Switch: IAST_Switch;
 
     /// Base class for `switch` branches
     interface IAstSwitchBranch extends IAstBlock {
     }
 
+    interface IAST_SwitchBranch {
+        new (props?: IAstSwitchBranch): IAstSwitchBranch;
+    }
     /// Base class for `switch` branches
-    function AST_SwitchBranch(props?: IAstSwitchBranch): IAstSwitchBranch;
+    const AST_SwitchBranch: IAST_SwitchBranch;
 
     /// A `default` switch branch
     interface IAstDefault extends IAstSwitchBranch {
     }
 
+    interface IAST_Default {
+        new (props?: IAstDefault): IAstDefault;
+    }
     /// A `default` switch branch
-    function AST_Default(props?: IAstDefault): IAstDefault;
+    const AST_Default: IAST_Default;
 
     /// A `case` switch branch
     interface IAstCase extends IAstSwitchBranch {
@@ -196,8 +255,11 @@ declare module "uglifyjs" {
         expression?: IAstNode;
     }
 
+    interface IAST_Case {
+        new (props?: IAstCase): IAstCase;
+    }
     /// A `case` switch branch
-    function AST_Case(props?: IAstCase): IAstCase;
+    const AST_Case: IAST_Case;
 
     /// A `try` statement
     interface IAstTry extends IAstBlock {
@@ -207,8 +269,11 @@ declare module "uglifyjs" {
         bfinally?: IAstFinally;
     }
 
+    interface IAST_Try {
+        new (props?: IAstTry): IAstTry;
+    }
     /// A `try` statement
-    function AST_Try(props?: IAstTry): IAstTry;
+    const AST_Try: IAST_Try;
 
     /// A `catch` node; only makes sense as part of a `try` statement
     interface IAstCatch extends IAstBlock {
@@ -216,22 +281,31 @@ declare module "uglifyjs" {
         argname?: IAstSymbolCatch;
     }
 
+    interface IAST_Catch {
+        new (props?: IAstCatch): IAstCatch;
+    }
     /// A `catch` node; only makes sense as part of a `try` statement
-    function AST_Catch(props?: IAstCatch): IAstCatch;
+    const AST_Catch: IAST_Catch;
 
     /// A `finally` node; only makes sense as part of a `try` statement
     interface IAstFinally extends IAstBlock {
     }
 
+    interface IAST_Finally {
+        new (props?: IAstFinally): IAstFinally;
+    }
     /// A `finally` node; only makes sense as part of a `try` statement
-    function AST_Finally(props?: IAstFinally): IAstFinally;
+    const AST_Finally: IAST_Finally;
 
     /// The empty statement (empty block or simply a semicolon)
     interface IAstEmptyStatement extends IAstStatement {
     }
 
+    interface IAST_EmptyStatement {
+        new (props?: IAstEmptyStatement): IAstEmptyStatement;
+    }
     /// The empty statement (empty block or simply a semicolon)
-    function AST_EmptyStatement(props?: IAstEmptyStatement): IAstEmptyStatement;
+    const AST_EmptyStatement: IAST_EmptyStatement;
 
     /// Base class for all statements that contain one nested body: `For`, `ForIn`, `Do`, `While`, `With`
     interface IAstStatementWithBody extends IAstStatement {
@@ -239,8 +313,11 @@ declare module "uglifyjs" {
         body?: IAstStatement;
     }
 
+    interface IAST_StatementWithBody {
+        new (props?: IAstStatementWithBody): IAstStatementWithBody;
+    }
     /// Base class for all statements that contain one nested body: `For`, `ForIn`, `Do`, `While`, `With`
-    function AST_StatementWithBody(props?: IAstStatementWithBody): IAstStatementWithBody;
+    const AST_StatementWithBody: IAST_StatementWithBody;
 
     /// Statement with a label
     interface IAstLabeledStatement extends IAstStatementWithBody {
@@ -248,15 +325,21 @@ declare module "uglifyjs" {
         label?: IAstLabel;
     }
 
+    interface IAST_LabeledStatement {
+        new (props?: IAstLabeledStatement): IAstLabeledStatement;
+    }
     /// Statement with a label
-    function AST_LabeledStatement(props?: IAstLabeledStatement): IAstLabeledStatement;
+    const AST_LabeledStatement: IAST_LabeledStatement;
 
     /// Internal class.  All loops inherit from it.
     interface IAstIterationStatement extends IAstStatementWithBody {
     }
 
+    interface IAST_IterationStatement {
+        new (props?: IAstIterationStatement): IAstIterationStatement;
+    }
     /// Internal class.  All loops inherit from it.
-    function AST_IterationStatement(props?: IAstIterationStatement): IAstIterationStatement;
+    const AST_IterationStatement: IAST_IterationStatement;
 
     /// Base class for do/while statements
     interface IAstDWLoop extends IAstIterationStatement {
@@ -264,22 +347,31 @@ declare module "uglifyjs" {
         condition?: IAstNode;
     }
 
+    interface IAST_DWLoop {
+        new (props?: IAstDWLoop): IAstDWLoop;
+    }
     /// Base class for do/while statements
-    function AST_DWLoop(props?: IAstDWLoop): IAstDWLoop;
+    const AST_DWLoop: IAST_DWLoop;
 
     /// A `do` statement
     interface IAstDo extends IAstDWLoop {
     }
 
+    interface IAST_Do {
+        new (props?: IAstDo): IAstDo;
+    }
     /// A `do` statement
-    function AST_Do(props?: IAstDo): IAstDo;
+    const AST_Do: IAST_Do;
 
     /// A `while` statement
     interface IAstWhile extends IAstDWLoop {
     }
 
+    interface IAST_While {
+        new (props?: IAstWhile): IAstWhile;
+    }
     /// A `while` statement
-    function AST_While(props?: IAstWhile): IAstWhile;
+    const AST_While: IAST_While;
 
     /// A `for` statement
     interface IAstFor extends IAstIterationStatement {
@@ -291,8 +383,11 @@ declare module "uglifyjs" {
         step?: IAstNode;
     }
 
+    interface IAST_For {
+        new (props?: IAstFor): IAstFor;
+    }
     /// A `for` statement
-    function AST_For(props?: IAstFor): IAstFor;
+    const AST_For: IAST_For;
 
     /// A `for ... in` statement
     interface IAstForIn extends IAstIterationStatement {
@@ -304,8 +399,11 @@ declare module "uglifyjs" {
         object?: IAstNode;
     }
 
+    interface IAST_ForIn {
+        new (props?: IAstForIn): IAstForIn;
+    }
     /// A `for ... in` statement
-    function AST_ForIn(props?: IAstForIn): IAstForIn;
+    const AST_ForIn: IAST_ForIn;
 
     /// A `with` statement
     interface IAstWith extends IAstStatementWithBody {
@@ -313,8 +411,11 @@ declare module "uglifyjs" {
         expression?: IAstNode;
     }
 
+    interface IAST_With {
+        new (props?: IAstWith): IAstWith;
+    }
     /// A `with` statement
-    function AST_With(props?: IAstWith): IAstWith;
+    const AST_With: IAST_With;
 
     /// A `if` statement
     interface IAstIf extends IAstStatementWithBody {
@@ -324,15 +425,21 @@ declare module "uglifyjs" {
         alternative?: IAstStatement;
     }
 
+    interface IAST_If {
+        new (props?: IAstIf): IAstIf;
+    }
     /// A `if` statement
-    function AST_If(props?: IAstIf): IAstIf;
+    const AST_If: IAST_If;
 
     /// Base class for “jumps” (for now that's `return`, `throw`, `break` and `continue`)
     interface IAstJump extends IAstStatement {
     }
 
+    interface IAST_Jump {
+        new (props?: IAstJump): IAstJump;
+    }
     /// Base class for “jumps” (for now that's `return`, `throw`, `break` and `continue`)
-    function AST_Jump(props?: IAstJump): IAstJump;
+    const AST_Jump: IAST_Jump;
 
     /// Base class for “exits” (`return` and `throw`)
     interface IAstExit extends IAstJump {
@@ -340,22 +447,31 @@ declare module "uglifyjs" {
         value?: IAstNode;
     }
 
+    interface IAST_Exit {
+        new (props?: IAstExit): IAstExit;
+    }
     /// Base class for “exits” (`return` and `throw`)
-    function AST_Exit(props?: IAstExit): IAstExit;
+    const AST_Exit: IAST_Exit;
 
     /// A `return` statement
     interface IAstReturn extends IAstExit {
     }
 
+    interface IAST_Return {
+        new (props?: IAstReturn): IAstReturn;
+    }
     /// A `return` statement
-    function AST_Return(props?: IAstReturn): IAstReturn;
+    const AST_Return: IAST_Return;
 
     /// A `throw` statement
     interface IAstThrow extends IAstExit {
     }
 
+    interface IAST_Throw {
+        new (props?: IAstThrow): IAstThrow;
+    }
     /// A `throw` statement
-    function AST_Throw(props?: IAstThrow): IAstThrow;
+    const AST_Throw: IAST_Throw;
 
     /// Base class for loop control statements (`break` and `continue`)
     interface IAstLoopControl extends IAstJump {
@@ -363,22 +479,31 @@ declare module "uglifyjs" {
         label?: IAstLabelRef;
     }
 
+    interface IAST_LoopControl {
+        new (props?: IAstLoopControl): IAstLoopControl;
+    }
     /// Base class for loop control statements (`break` and `continue`)
-    function AST_LoopControl(props?: IAstLoopControl): IAstLoopControl;
+    const AST_LoopControl: IAST_LoopControl;
 
     /// A `break` statement
     interface IAstBreak extends IAstLoopControl {
     }
 
+    interface IAST_Break {
+        new (props?: IAstBreak): IAstBreak;
+    }
     /// A `break` statement
-    function AST_Break(props?: IAstBreak): IAstBreak;
+    const AST_Break: IAST_Break;
 
     /// A `continue` statement
     interface IAstContinue extends IAstLoopControl {
     }
 
+    interface IAST_Continue {
+        new (props?: IAstContinue): IAstContinue;
+    }
     /// A `continue` statement
-    function AST_Continue(props?: IAstContinue): IAstContinue;
+    const AST_Continue: IAST_Continue;
 
     /// Base class for `var` or `const` nodes (variable declarations/initializations)
     interface IAstDefinitions extends IAstStatement {
@@ -386,22 +511,31 @@ declare module "uglifyjs" {
         definitions?: IAstVarDef[];
     }
 
+    interface IAST_Definitions {
+        new (props?: IAstDefinitions): IAstDefinitions;
+    }
     /// Base class for `var` or `const` nodes (variable declarations/initializations)
-    function AST_Definitions(props?: IAstDefinitions): IAstDefinitions;
+    const AST_Definitions: IAST_Definitions;
 
     /// A `var` statement
     interface IAstVar extends IAstDefinitions {
     }
 
+    interface IAST_Var {
+        new (props?: IAstVar): IAstVar;
+    }
     /// A `var` statement
-    function AST_Var(props?: IAstVar): IAstVar;
+    const AST_Var: IAST_Var;
 
     /// A `const` statement
     interface IAstConst extends IAstDefinitions {
     }
 
+    interface IAST_Const {
+        new (props?: IAstConst): IAstConst;
+    }
     /// A `const` statement
-    function AST_Const(props?: IAstConst): IAstConst;
+    const AST_Const: IAST_Const;
 
     /// A variable declaration; only appears in a AST_Definitions node
     interface IAstVarDef extends IAstNode {
@@ -411,8 +545,11 @@ declare module "uglifyjs" {
         value?: IAstNode;
     }
 
+    interface IAST_VarDef {
+        new (props?: IAstVarDef): IAstVarDef;
+    }
     /// A variable declaration; only appears in a AST_Definitions node
-    function AST_VarDef(props?: IAstVarDef): IAstVarDef;
+    const AST_VarDef: IAST_VarDef;
 
     /// A function call expression
     interface IAstCall extends IAstNode {
@@ -422,15 +559,21 @@ declare module "uglifyjs" {
         args?: IAstNode[];
     }
 
+    interface IAST_Call {
+        new (props?: IAstCall): IAstCall;
+    }
     /// A function call expression
-    function AST_Call(props?: IAstCall): IAstCall;
+    const AST_Call: IAST_Call;
 
     /// An object instantiation.  Derives from a function call since it has exactly the same properties
     interface IAstNew extends IAstCall {
     }
 
+    interface IAST_New {
+        new (props?: IAstNew): IAstNew;
+    }
     /// An object instantiation.  Derives from a function call since it has exactly the same properties
-    function AST_New(props?: IAstNew): IAstNew;
+    const AST_New: IAST_New;
 
     /// A sequence expression (two comma-separated expressions)
     interface IAstSeq extends IAstNode {
@@ -440,8 +583,11 @@ declare module "uglifyjs" {
         cdr?: IAstNode;
     }
 
+    interface IAST_Seq {
+        new (props?: IAstSeq): IAstSeq;
+    }
     /// A sequence expression (two comma-separated expressions)
-    function AST_Seq(props?: IAstSeq): IAstSeq;
+    const AST_Seq: IAST_Seq;
 
     /// Base class for property access expressions, i.e. `a.foo` or `a["foo"]`
     interface IAstPropAccess extends IAstNode {
@@ -451,22 +597,31 @@ declare module "uglifyjs" {
         property?: IAstNode | string;
     }
 
+    interface IAST_PropAccess {
+        new (props?: IAstPropAccess): IAstPropAccess;
+    }
     /// Base class for property access expressions, i.e. `a.foo` or `a["foo"]`
-    function AST_PropAccess(props?: IAstPropAccess): IAstPropAccess;
+    const AST_PropAccess: IAST_PropAccess;
 
     /// A dotted property access expression
     interface IAstDot extends IAstPropAccess {
     }
 
+    interface IAST_Dot {
+        new (props?: IAstDot): IAstDot;
+    }
     /// A dotted property access expression
-    function AST_Dot(props?: IAstDot): IAstDot;
+    const AST_Dot: IAST_Dot;
 
     /// Index-style property access, i.e. `a["foo"]`
     interface IAstSub extends IAstPropAccess {
     }
 
+    interface IAST_Sub {
+        new (props?: IAstSub): IAstSub;
+    }
     /// Index-style property access, i.e. `a["foo"]`
-    function AST_Sub(props?: IAstSub): IAstSub;
+    const AST_Sub: IAST_Sub;
 
     /// Base class for unary expressions
     interface IAstUnary extends IAstNode {
@@ -476,22 +631,31 @@ declare module "uglifyjs" {
         expression?: IAstNode;
     }
 
+    interface IAST_Unary {
+        new (props?: IAstUnary): IAstUnary;
+    }
     /// Base class for unary expressions
-    function AST_Unary(props?: IAstUnary): IAstUnary;
+    const AST_Unary: IAST_Unary;
 
     /// Unary prefix expression, i.e. `typeof i` or `++i`
     interface IAstUnaryPrefix extends IAstUnary {
     }
 
+    interface IAST_UnaryPrefix {
+        new (props?: IAstUnaryPrefix): IAstUnaryPrefix;
+    }
     /// Unary prefix expression, i.e. `typeof i` or `++i`
-    function AST_UnaryPrefix(props?: IAstUnaryPrefix): IAstUnaryPrefix;
+    const AST_UnaryPrefix: IAST_UnaryPrefix;
 
     /// Unary postfix expression, i.e. `i++`
     interface IAstUnaryPostfix extends IAstUnary {
     }
 
+    interface IAST_UnaryPostfix {
+        new (props?: IAstUnaryPostfix): IAstUnaryPostfix;
+    }
     /// Unary postfix expression, i.e. `i++`
-    function AST_UnaryPostfix(props?: IAstUnaryPostfix): IAstUnaryPostfix;
+    const AST_UnaryPostfix: IAST_UnaryPostfix;
 
     /// Binary expression, i.e. `a + b`
     interface IAstBinary extends IAstNode {
@@ -503,15 +667,21 @@ declare module "uglifyjs" {
         right?: IAstNode;
     }
 
+    interface IAST_Binary {
+        new (props?: IAstBinary): IAstBinary;
+    }
     /// Binary expression, i.e. `a + b`
-    function AST_Binary(props?: IAstBinary): IAstBinary;
+    const AST_Binary: IAST_Binary;
 
     /// An assignment expression — `a = b + 5`
     interface IAstAssign extends IAstBinary {
     }
 
+    interface IAST_Assign {
+        new (props?: IAstAssign): IAstAssign;
+    }
     /// An assignment expression — `a = b + 5`
-    function AST_Assign(props?: IAstAssign): IAstAssign;
+    const AST_Assign: IAST_Assign;
 
     /// Conditional expression using the ternary operator, i.e. `a ? b : c`
     interface IAstConditional extends IAstNode {
@@ -523,8 +693,11 @@ declare module "uglifyjs" {
         alternative?: IAstNode;
     }
 
+    interface IAST_Conditional {
+        new (props?: IAstConditional): IAstConditional;
+    }
     /// Conditional expression using the ternary operator, i.e. `a ? b : c`
-    function AST_Conditional(props?: IAstConditional): IAstConditional;
+    const AST_Conditional: IAST_Conditional;
 
     /// An array literal
     interface IAstArray extends IAstNode {
@@ -532,8 +705,11 @@ declare module "uglifyjs" {
         elements?: IAstNode[];
     }
 
+    interface IAST_Array {
+        new (props?: IAstArray): IAstArray;
+    }
     /// An array literal
-    function AST_Array(props?: IAstArray): IAstArray;
+    const AST_Array: IAST_Array;
 
     /// An object literal
     interface IAstObject extends IAstNode {
@@ -541,8 +717,11 @@ declare module "uglifyjs" {
         properties?: IAstObjectProperty[];
     }
 
+    interface IAST_Object {
+        new (props?: IAstObject): IAstObject;
+    }
     /// An object literal
-    function AST_Object(props?: IAstObject): IAstObject;
+    const AST_Object: IAST_Object;
 
     /// Base class for literal object properties
     interface IAstObjectProperty extends IAstNode {
@@ -552,8 +731,11 @@ declare module "uglifyjs" {
         value?: IAstNode;
     }
 
+    interface IAST_ObjectProperty {
+        new (props?: IAstObjectProperty): IAstObjectProperty;
+    }
     /// Base class for literal object properties
-    function AST_ObjectProperty(props?: IAstObjectProperty): IAstObjectProperty;
+    const AST_ObjectProperty: IAST_ObjectProperty;
 
     /// A key: value object property
     interface IAstObjectKeyVal extends IAstObjectProperty {
@@ -561,22 +743,31 @@ declare module "uglifyjs" {
         quote?: string;
     }
 
+    interface IAST_ObjectKeyVal {
+        new (props?: IAstObjectKeyVal): IAstObjectKeyVal;
+    }
     /// A key: value object property
-    function AST_ObjectKeyVal(props?: IAstObjectKeyVal): IAstObjectKeyVal;
+    const AST_ObjectKeyVal: IAST_ObjectKeyVal;
 
     /// An object setter property
     interface IAstObjectSetter extends IAstObjectProperty {
     }
 
+    interface IAST_ObjectSetter {
+        new (props?: IAstObjectSetter): IAstObjectSetter;
+    }
     /// An object setter property
-    function AST_ObjectSetter(props?: IAstObjectSetter): IAstObjectSetter;
+    const AST_ObjectSetter: IAST_ObjectSetter;
 
     /// An object getter property
     interface IAstObjectGetter extends IAstObjectProperty {
     }
 
+    interface IAST_ObjectGetter {
+        new (props?: IAstObjectGetter): IAstObjectGetter;
+    }
     /// An object getter property
-    function AST_ObjectGetter(props?: IAstObjectGetter): IAstObjectGetter;
+    const AST_ObjectGetter: IAST_ObjectGetter;
 
     /// Base class for all symbols
     interface IAstSymbol extends IAstNode {
@@ -588,15 +779,21 @@ declare module "uglifyjs" {
         thedef?: ISymbolDef;
     }
 
+    interface IAST_Symbol {
+        new (props?: IAstSymbol): IAstSymbol;
+    }
     /// Base class for all symbols
-    function AST_Symbol(props?: IAstSymbol): IAstSymbol;
+    const AST_Symbol: IAST_Symbol;
 
     /// The name of a property accessor (setter/getter function)
     interface IAstSymbolAccessor extends IAstSymbol {
     }
 
+    interface IAST_SymbolAccessor {
+        new (props?: IAstSymbolAccessor): IAstSymbolAccessor;
+    }
     /// The name of a property accessor (setter/getter function)
-    function AST_SymbolAccessor(props?: IAstSymbolAccessor): IAstSymbolAccessor;
+    const AST_SymbolAccessor: IAST_SymbolAccessor;
 
     /// A declaration symbol (symbol in var/const, function name or argument, symbol in catch)
     interface IAstSymbolDeclaration extends IAstSymbol {
@@ -604,50 +801,71 @@ declare module "uglifyjs" {
         init?: IAstNode[];
     }
 
+    interface IAST_SymbolDeclaration {
+        new (props?: IAstSymbolDeclaration): IAstSymbolDeclaration;
+    }
     /// A declaration symbol (symbol in var/const, function name or argument, symbol in catch)
-    function AST_SymbolDeclaration(props?: IAstSymbolDeclaration): IAstSymbolDeclaration;
+    const AST_SymbolDeclaration: IAST_SymbolDeclaration;
 
     /// Symbol defining a variable
     interface IAstSymbolVar extends IAstSymbolDeclaration {
     }
 
+    interface IAST_SymbolVar {
+        new (props?: IAstSymbolVar): IAstSymbolVar;
+    }
     /// Symbol defining a variable
-    function AST_SymbolVar(props?: IAstSymbolVar): IAstSymbolVar;
+    const AST_SymbolVar: IAST_SymbolVar;
 
     /// Symbol naming a function argument
     interface IAstSymbolFunarg extends IAstSymbolVar {
     }
 
+    interface IAST_SymbolFunarg {
+        new (props?: IAstSymbolFunarg): IAstSymbolFunarg;
+    }
     /// Symbol naming a function argument
-    function AST_SymbolFunarg(props?: IAstSymbolFunarg): IAstSymbolFunarg;
+    const AST_SymbolFunarg: IAST_SymbolFunarg;
 
     /// A constant declaration
     interface IAstSymbolConst extends IAstSymbolDeclaration {
     }
 
+    interface IAST_SymbolConst {
+        new (props?: IAstSymbolConst): IAstSymbolConst;
+    }
     /// A constant declaration
-    function AST_SymbolConst(props?: IAstSymbolConst): IAstSymbolConst;
+    const AST_SymbolConst: IAST_SymbolConst;
 
     /// Symbol defining a function
     interface IAstSymbolDefun extends IAstSymbolDeclaration {
     }
 
+    interface IAST_SymbolDefun {
+        new (props?: IAstSymbolDefun): IAstSymbolDefun;
+    }
     /// Symbol defining a function
-    function AST_SymbolDefun(props?: IAstSymbolDefun): IAstSymbolDefun;
+    const AST_SymbolDefun: IAST_SymbolDefun;
 
     /// Symbol naming a function expression
     interface IAstSymbolLambda extends IAstSymbolDeclaration {
     }
 
+    interface IAST_SymbolLambda {
+        new (props?: IAstSymbolLambda): IAstSymbolLambda;
+    }
     /// Symbol naming a function expression
-    function AST_SymbolLambda(props?: IAstSymbolLambda): IAstSymbolLambda;
+    const AST_SymbolLambda: IAST_SymbolLambda;
 
     /// Symbol naming the exception in catch
     interface IAstSymbolCatch extends IAstSymbolDeclaration {
     }
 
+    interface IAST_SymbolCatch {
+        new (props?: IAstSymbolCatch): IAstSymbolCatch;
+    }
     /// Symbol naming the exception in catch
-    function AST_SymbolCatch(props?: IAstSymbolCatch): IAstSymbolCatch;
+    const AST_SymbolCatch: IAST_SymbolCatch;
 
     /// Symbol naming a label (declaration)
     interface IAstLabel extends IAstSymbol {
@@ -655,36 +873,51 @@ declare module "uglifyjs" {
         references?: IAstLoopControl[];
     }
 
+    interface IAST_Label {
+        new (props?: IAstLabel): IAstLabel;
+    }
     /// Symbol naming a label (declaration)
-    function AST_Label(props?: IAstLabel): IAstLabel;
+    const AST_Label: IAST_Label;
 
     /// Reference to some symbol (not definition/declaration)
     interface IAstSymbolRef extends IAstSymbol {
     }
 
+    interface IAST_SymbolRef {
+        new (props?: IAstSymbolRef): IAstSymbolRef;
+    }
     /// Reference to some symbol (not definition/declaration)
-    function AST_SymbolRef(props?: IAstSymbolRef): IAstSymbolRef;
+    const AST_SymbolRef: IAST_SymbolRef;
 
     /// Reference to a label symbol
     interface IAstLabelRef extends IAstSymbol {
     }
 
+    interface IAST_LabelRef {
+        new (props?: IAstLabelRef): IAstLabelRef;
+    }
     /// Reference to a label symbol
-    function AST_LabelRef(props?: IAstLabelRef): IAstLabelRef;
+    const AST_LabelRef: IAST_LabelRef;
 
     /// The `this` symbol
     interface IAstThis extends IAstSymbol {
     }
 
+    interface IAST_This {
+        new (props?: IAstThis): IAstThis;
+    }
     /// The `this` symbol
-    function AST_This(props?: IAstThis): IAstThis;
+    const AST_This: IAST_This;
 
     /// Base class for all constants
     interface IAstConstant extends IAstNode {
     }
 
+    interface IAST_Constant {
+        new (props?: IAstConstant): IAstConstant;
+    }
     /// Base class for all constants
-    function AST_Constant(props?: IAstConstant): IAstConstant;
+    const AST_Constant: IAST_Constant;
 
     /// A string literal
     interface IAstString extends IAstConstant {
@@ -694,19 +927,23 @@ declare module "uglifyjs" {
         quote?: string;
     }
 
+    interface IAST_String {
+        new (props?: IAstString): IAstString;
+    }
     /// A string literal
-    function AST_String(props?: IAstString): IAstString;
+    const AST_String: IAST_String;
 
     /// A number literal
     interface IAstNumber extends IAstConstant {
         /// the numeric value
         value?: number;
-        /// numeric value as string (optional)
-        literal?: string;
     }
 
+    interface IAST_Number {
+        new (props?: IAstNumber): IAstNumber;
+    }
     /// A number literal
-    function AST_Number(props?: IAstNumber): IAstNumber;
+    const AST_Number: IAST_Number;
 
     /// A regexp literal
     interface IAstRegExp extends IAstConstant {
@@ -714,71 +951,101 @@ declare module "uglifyjs" {
         value?: RegExp;
     }
 
+    interface IAST_RegExp {
+        new (props?: IAstRegExp): IAstRegExp;
+    }
     /// A regexp literal
-    function AST_RegExp(props?: IAstRegExp): IAstRegExp;
+    const AST_RegExp: IAST_RegExp;
 
     /// Base class for atoms
     interface IAstAtom extends IAstConstant {
     }
 
+    interface IAST_Atom {
+        new (props?: IAstAtom): IAstAtom;
+    }
     /// Base class for atoms
-    function AST_Atom(props?: IAstAtom): IAstAtom;
+    const AST_Atom: IAST_Atom;
 
     /// The `null` atom
     interface IAstNull extends IAstAtom {
     }
 
+    interface IAST_Null {
+        new (props?: IAstNull): IAstNull;
+    }
     /// The `null` atom
-    function AST_Null(props?: IAstNull): IAstNull;
+    const AST_Null: IAST_Null;
 
     /// The impossible value
     interface IAstNaN extends IAstAtom {
     }
 
+    interface IAST_NaN {
+        new (props?: IAstNaN): IAstNaN;
+    }
     /// The impossible value
-    function AST_NaN(props?: IAstNaN): IAstNaN;
+    const AST_NaN: IAST_NaN;
 
     /// The `undefined` value
     interface IAstUndefined extends IAstAtom {
     }
 
+    interface IAST_Undefined {
+        new (props?: IAstUndefined): IAstUndefined;
+    }
     /// The `undefined` value
-    function AST_Undefined(props?: IAstUndefined): IAstUndefined;
+    const AST_Undefined: IAST_Undefined;
 
     /// A hole in an array
     interface IAstHole extends IAstAtom {
     }
 
+    interface IAST_Hole {
+        new (props?: IAstHole): IAstHole;
+    }
     /// A hole in an array
-    function AST_Hole(props?: IAstHole): IAstHole;
+    const AST_Hole: IAST_Hole;
 
     /// The `Infinity` value
     interface IAstInfinity extends IAstAtom {
     }
 
+    interface IAST_Infinity {
+        new (props?: IAstInfinity): IAstInfinity;
+    }
     /// The `Infinity` value
-    function AST_Infinity(props?: IAstInfinity): IAstInfinity;
+    const AST_Infinity: IAST_Infinity;
 
     /// Base class for booleans
     interface IAstBoolean extends IAstAtom {
     }
 
+    interface IAST_Boolean {
+        new (props?: IAstBoolean): IAstBoolean;
+    }
     /// Base class for booleans
-    function AST_Boolean(props?: IAstBoolean): IAstBoolean;
+    const AST_Boolean: IAST_Boolean;
 
     /// The `false` atom
     interface IAstFalse extends IAstBoolean {
     }
 
+    interface IAST_False {
+        new (props?: IAstFalse): IAstFalse;
+    }
     /// The `false` atom
-    function AST_False(props?: IAstFalse): IAstFalse;
+    const AST_False: IAST_False;
 
     /// The `true` atom
     interface IAstTrue extends IAstBoolean {
     }
 
+    interface IAST_True {
+        new (props?: IAstTrue): IAstTrue;
+    }
     /// The `true` atom
-    function AST_True(props?: IAstTrue): IAstTrue;
+    const AST_True: IAST_True;
 
 
     interface IOutputStreamOptions {
@@ -786,6 +1053,7 @@ declare module "uglifyjs" {
     }
 
     interface ICompressorOptions {
+        warnings?: boolean;
         global_defs?: { [name: string]: any };
     }
 

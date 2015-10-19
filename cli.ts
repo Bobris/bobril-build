@@ -14,12 +14,20 @@ function printIntroLine() {
 
 var compilationCache = new bb.CompilationCache();
 var translationDb = new bb.TranslationDb();
-var memoryFs: { [name:string]:Buffer } = Object.create(null);
+var memoryFs: { [name: string]: Buffer } = Object.create(null);
 var project: bb.IProject;
 
 function write(fn: string, b: Buffer) {
-    console.log(fn);
+    console.log('Memory write ' + fn);
     memoryFs[fn] = b;
+}
+
+function writeDist(fn: string, b: Buffer) {
+    let ofn = path.join('dist', fn);
+    console.log('Writting ' + ofn);
+    memoryFs[fn] = b;
+    bb.mkpathsync(path.dirname(ofn));
+    fs.writeFileSync(ofn, b);
 }
 
 function compile(): Promise<any> {
@@ -27,7 +35,7 @@ function compile(): Promise<any> {
     let startCompilation = Date.now();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
-        bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+        if (!project.totalBundle) bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
         bb.updateIndexHtml(project);
     }).then(() => {
         console.log('Compiled in ' + (Date.now() - startCompilation) + 'ms');
@@ -71,11 +79,7 @@ function createProjectFromPackageJson(): bb.IProject {
         dir: process.cwd().replace(/\\/g, '/'),
         main: 'src/app.ts',
         mainJsFile: 'src/app.js',
-        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true },
-        debugStyleDefs: true,
-        releaseStyleDefs: false,
-        spriteMerge: false,
-        writeFileCallback: write
+        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     let packageJson = null;
     try {
@@ -107,25 +111,51 @@ function createProjectFromPackageJson(): bb.IProject {
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) return project;
     if (typeof bobrilSection.title === 'string') {
-        project.htmlTitle = bobrilSection.title; 
+        project.htmlTitle = bobrilSection.title;
     }
     return project;
+}
+
+function presetDebugProject(project: bb.IProject) {
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.totalBundle = false;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+    project.writeFileCallback = write;
+}
+
+function presetReleaseProject(project: bb.IProject) {
+    project.debugStyleDefs = false;
+    project.releaseStyleDefs = true;
+    project.spriteMerge = true;
+    project.totalBundle = true;
+    project.compress = true;
+    project.mangle = true;
+    project.beautify = false;
+    project.defines = { DEBUG: false };
+    project.writeFileCallback = writeDist;
 }
 
 export function run() {
     printIntroLine();
     project = createProjectFromPackageJson();
     if (project == null) return;
+    //presetDebugProject(project);
+    presetReleaseProject(project);
     let startWatching = Date.now();
     chokidar.watch(['**/*.ts', '**/tsconfig.json', '**/package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', () => {
-        console.log('Watching in ' + (Date.now() - startWatching).toFixed(0)+'ms');
+        console.log('Watching in ' + (Date.now() - startWatching).toFixed(0) + 'ms');
         compile().then(() => {
             var server = http.createServer(handleRequest);
             server.listen(8080, function () {
                 console.log("Server listening on: http://localhost:8080");
             });
         });
-    }).on('all', bb.debounce((v,v2) => {
+    }).on('all', bb.debounce((v, v2) => {
         compile();
     }));
 }

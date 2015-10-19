@@ -12,14 +12,14 @@ function isBobrilG11NFunction(name, callExpression, sourceInfo) {
     return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
 }
 function extractBindings(bindings, ns, ims) {
-    if (bindings.kind === 223 /* NamedImports */) {
+    if (bindings.kind === 225 /* NamedImports */) {
         var namedBindings = bindings;
         for (var i = 0; i < namedBindings.elements.length; i++) {
             var binding = namedBindings.elements[i];
             ims[(binding.propertyName || binding.name).text] = binding.name.text;
         }
     }
-    else if (ns == null && bindings.kind === 222 /* NamespaceImport */) {
+    else if (ns == null && bindings.kind === 224 /* NamespaceImport */) {
         return bindings.name.text;
     }
     return ns;
@@ -37,7 +37,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         trs: []
     };
     function visit(n) {
-        if (n.kind === 220 /* ImportDeclaration */) {
+        if (n.kind === 222 /* ImportDeclaration */) {
             var id = n;
             var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
             var fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
@@ -50,14 +50,14 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             }
             result.sourceDeps.push([moduleSymbol.name, fn]);
         }
-        else if (n.kind === 226 /* ExportDeclaration */) {
+        else if (n.kind === 228 /* ExportDeclaration */) {
             var ed = n;
             if (ed.moduleSpecifier) {
                 var moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
                 result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
         }
-        else if (n.kind === 166 /* CallExpression */) {
+        else if (n.kind === 168 /* CallExpression */) {
             var ce = n;
             if (isBobrilFunction('sprite', ce, result)) {
                 var si = { callExpression: ce };
@@ -101,13 +101,13 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                     item.userNamed = true;
                 }
                 else {
-                    if (ce.parent.kind === 209 /* VariableDeclaration */) {
+                    if (ce.parent.kind === 211 /* VariableDeclaration */) {
                         var vd = ce.parent;
                         item.name = vd.name.text;
                     }
-                    else if (ce.parent.kind === 179 /* BinaryExpression */) {
+                    else if (ce.parent.kind === 181 /* BinaryExpression */) {
                         var be = ce.parent;
-                        if (be.operatorToken.kind === 55 /* FirstAssignment */ && be.left.kind === 67 /* Identifier */) {
+                        if (be.operatorToken.kind === 56 /* FirstAssignment */ && be.left.kind === 69 /* Identifier */) {
                             item.name = be.left.text;
                         }
                     }
@@ -136,17 +136,17 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
 exports.gatherSourceInfo = gatherSourceInfo;
 function createNodeFromValue(value) {
     if (value === null) {
-        var nullNode = ts.createNode(91 /* NullKeyword */);
+        var nullNode = ts.createNode(93 /* NullKeyword */);
         nullNode.pos = -1;
         return nullNode;
     }
     if (value === true) {
-        var result = ts.createNode(97 /* TrueKeyword */);
+        var result = ts.createNode(99 /* TrueKeyword */);
         result.pos = -1;
         return result;
     }
     if (value === false) {
-        var result = ts.createNode(82 /* FalseKeyword */);
+        var result = ts.createNode(84 /* FalseKeyword */);
         result.pos = -1;
         return result;
     }
@@ -166,7 +166,7 @@ function createNodeFromValue(value) {
 }
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;
-    var result = ts.createNode(67 /* Identifier */);
+    var result = ts.createNode(69 /* Identifier */);
     result.pos = -1;
     result.flags = ex.name.flags;
     result.text = name;

@@ -30,10 +30,10 @@ function ex(n, base) {
 				type = type.substr(0,type.length-1);
 			}
 			if(type==='Object') {
-				type='{ [name:string]:ISymbolDef }';
+				type='IDictionary<ISymbolDef>';
 			} else if(type==='integer') {
 				type='number';
-			} else if (type === 'string' || type === 'number' || type==='boolean' || type==='RegEx') {
+			} else if (type === 'string' || type === 'number' || type==='boolean' || type==='RegExp') {
 			} else if (type.substr(0,4)==='AST_') {
 				type = 'IAst'+type.substr(4,type.length-4);
 			} else {
@@ -46,8 +46,11 @@ function ex(n, base) {
 	}
 	print('}');
 	print('');
+	print('interface IAST_'+n.TYPE+' {');
+	print('    new (props?: IAst'+n.TYPE+'): IAst'+n.TYPE+';');
+	print('}');
 	print('/// '+n.documentation);
-	print('function AST_'+n.TYPE+'(props?: IAst'+n.TYPE+'): IAst'+n.TYPE+';');
+	print('const AST_'+n.TYPE+': IAST_'+n.TYPE+';');
 	print('');
 	for(i=0;i<n.SUBCLASSES.length;i++) {
 		ex(n.SUBCLASSES[i],n.TYPE);

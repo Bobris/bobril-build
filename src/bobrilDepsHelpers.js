@@ -32,6 +32,11 @@ function systemJsBasedIndexHtml(mainRequire, moduleMap, title) {
     return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            System.config({\n                baseURL: '/',\n                defaultJSExtensions: true,\n                map: " + JSON.stringify(moduleMap) + "\n            });\n            System.import('" + mainRequire + "');\n        </script>\n    </body>\n</html>\n";
 }
 exports.systemJsBasedIndexHtml = systemJsBasedIndexHtml;
+function bundleBasedIndexHtml(title) {
+    title = title || 'Bobril Application';
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>\n        <script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script>\n    </body>\n</html>\n";
+}
+exports.bundleBasedIndexHtml = bundleBasedIndexHtml;
 function writeDir(write, dir, files) {
     for (var i = 0; i < files.length; i++) {
         var f = files[i];
@@ -46,15 +51,21 @@ function writeSystemJsBasedDist(write, mainRequire, moduleMap) {
 }
 exports.writeSystemJsBasedDist = writeSystemJsBasedDist;
 function updateIndexHtml(project) {
-    var moduleNames = Object.keys(project.moduleMap);
-    var moduleMap = Object.create(null);
-    for (var i = 0; i < moduleNames.length; i++) {
-        var name_1 = moduleNames[i];
-        if (project.moduleMap[name_1].internalModule)
-            continue;
-        moduleMap[name_1] = project.moduleMap[name_1].jsFile;
+    var newIndexHtml;
+    if (project.totalBundle) {
+        newIndexHtml = bundleBasedIndexHtml(project.htmlTitle);
     }
-    var newIndexHtml = systemJsBasedIndexHtml(project.mainJsFile, moduleMap, project.htmlTitle);
+    else {
+        var moduleNames = Object.keys(project.moduleMap);
+        var moduleMap = Object.create(null);
+        for (var i = 0; i < moduleNames.length; i++) {
+            var name_1 = moduleNames[i];
+            if (project.moduleMap[name_1].internalModule)
+                continue;
+            moduleMap[name_1] = project.moduleMap[name_1].jsFile;
+        }
+        newIndexHtml = systemJsBasedIndexHtml(project.mainJsFile, moduleMap, project.htmlTitle);
+    }
     if (newIndexHtml !== project.lastwrittenIndexHtml) {
         project.writeFileCallback('index.html', new Buffer(newIndexHtml));
         project.lastwrittenIndexHtml = newIndexHtml;

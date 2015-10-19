@@ -62,7 +62,15 @@ export interface IProject {
     textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
     htmlTitle?: string;
     mainJsFile?: string;
+    // default false
     totalBundle?: boolean;
+    // default true
+    compress?: boolean;
+    // default true
+    mangle?: boolean;
+    // default false
+    beautify?: boolean;
+    defines?: { [name: string]: any };
 
     lastwrittenIndexHtml?: string;
     imgBundleCache?: imgCache.ImgBundleCache;
@@ -112,12 +120,11 @@ export class CompilationCache {
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
+        let jsWriteFileCallback = project.writeFileCallback;
         if (project.totalBundle) {
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
-            let prevWriteFileCallback = project.writeFileCallback;
-            project.writeFileCallback = (filename: string, content: Buffer) => {
+            jsWriteFileCallback = (filename: string, content: Buffer) => {
                 project.commonJsTemp[filename] = content;
-                prevWriteFileCallback(filename, content);
             };
         }
         project.moduleMap = project.moduleMap || Object.create(null);
@@ -134,7 +141,7 @@ export class CompilationCache {
         if (mainChangedList.length === 0) {
             return Promise.resolve(null);
         }
-        let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
+        let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
@@ -297,23 +304,36 @@ export class CompilationCache {
                         project.logCallback('Error: Dependent ' + jsFile + ' failed to load');
                         continue;
                     }
-                    project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    cached.outputTime = cached.textTime;
                 }
             }
             if (project.totalBundle) {
                 let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
                 let that = this;
                 let bp: bundler.IBundleProject = {
+                    compress: project.compress,
+                    mangle: project.mangle,
+                    beautify: project.beautify,
+                    defines: project.defines,
                     getMainFiles() { return mainJsList; },
                     checkFileModification(name: string):number {
                         if (/\.js$/.test(name)) {
                             let cached = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
-                            return cached.outputTime;
+                            if (cached.curTime!=null)
+                                return cached.outputTime;
                         }
-                        return null;
+                        let cached = that.getCachedFileContent(name, project.dir);
+                        return cached.curTime;
                     },
                     readContent(name: string) {
-                        return project.commonJsTemp[name].toString('utf-8');
+                        let jsout = project.commonJsTemp[name];
+                        if (jsout !== undefined)
+                            return jsout.toString('utf-8');
+                        let cached = that.getCachedFileContent(name, project.dir);
+                        if (cached.textTime == null)
+                            throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                        return cached.text;
                     },
                     writeBundle(content: string) {
                         project.writeFileCallback('bundle.js', new Buffer(content));

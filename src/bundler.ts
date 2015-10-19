@@ -24,12 +24,20 @@ export interface IBundleProject {
     getMainFiles(): string[];
     writeBundle(content: string);
     resolveRequire?(name: string, from: string, fileExists: (name: string) => boolean, readFile: (name: string) => string): string;
+    // default true
+    compress?: boolean;
+    // default true
+    mangle?: boolean;
+    // default false
+    beautify?: boolean;
+    defines?: { [name: string]: any };
 
     cache?: { [name: string]: IFileForBundle };
 }
 
 interface ISymbolDef extends uglify.ISymbolDef {
     bbRequirePath?: string;
+    bbRename?: string;
 }
 
 function defaultResolveRequire(name: string, from: string, fileExists: (name: string) => boolean, readFile: (name: string) => string): string {
@@ -151,10 +159,10 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         ast.figure_out_scope();
         cached = { name, astTime: mod, ast, requires: [], selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
         let exportsSymbol = ast.globals['exports'];
-        let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: ()=>void) => {
+        let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Block) {
                 descend();
-                (<uglify.IAstBlock>node).body = (<uglify.IAstBlock>node).body.filter((stm) => {
+                (<uglify.IAstBlock>node).body = (<uglify.IAstBlock>node).body.map((stm): uglify.IAstNode => {
                     if (stm instanceof uglify.AST_SimpleStatement) {
                         let stmbody = (<uglify.IAstSimpleStatement>stm).body;
                         let pea = paternAssignExports(stmbody);
@@ -173,18 +181,31 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
                                         let extn = matchPropKey(propAccess);
                                         if (extn) {
                                             extf[pea.name] = extn;
-                                            return false;
+                                            return null;
                                         }
                                     }
                                 }
                             }
+                            if (!(pea.value instanceof uglify.AST_SymbolRef)) {
+                                let newName = '__export_' + pea.name;
+                                let newVar = new uglify.AST_Var({
+                                    start: stmbody.start,
+                                    end: stmbody.end,
+                                    definitions: [
+                                        new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
+                                    ]
+                                });
+                                (<uglify.IAstSimpleStatement>stm).body = newVar;
+                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName });
+                                return newVar;
+                            }
                             cached.selfexports[pea.name] = pea.value;
-                            return false;
+                            return null;
                         }
                         if (stmbody instanceof uglify.AST_Call) {
                             let call = <uglify.IAstCall>stmbody;
                             if (patternDefinePropertyExportsEsModule(call))
-                                return false;
+                                return null;
                             if (call.args.length === 1 && call.expression instanceof uglify.AST_SymbolRef) {
                                 let symb = <uglify.IAstSymbolRef>call.expression;
                                 if (symb.thedef === reexportDef) {
@@ -198,7 +219,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
                                             cached.requires.push(reqr);
                                         if (cached.reexportAll.indexOf(reqr) < 0)
                                             cached.reexportAll.push(reqr);
-                                        return false;
+                                        return null;
                                     }
                                 }
                             }
@@ -207,10 +228,12 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
                         let fnc = <uglify.IAstFunction>stm;
                         if (fnc.name.name === '__export') {
                             reexportDef = fnc.name.thedef;
-                            return false;
+                            return null;
                         }
                     }
-                    return true;
+                    return stm;
+                }).filter((stm) => {
+                    return stm != null;
                 });
                 return true;
             }
@@ -266,9 +289,57 @@ export function bundle(project: IBundleProject) {
     let order = <IFileForBundle[]>[];
     let stack = [];
     project.getMainFiles().forEach((val) => check(val, order, stack, project, resolveRequire));
-    let bundleAst = new uglify.AST_Toplevel({ body: [] });
+    let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){})()');
+    let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
+    let topLevelNames = Object.create(null);
     order.forEach((f) => {
-        let transformer = new uglify.TreeTransformer(null, (node) => {
+        let suffix = f.name;
+        if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
+        if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
+        f.ast.variables.each((symb, name) => {
+            let newname = name;
+            if (topLevelNames[name] !== undefined) {
+                let index = 0;
+                do {
+                    index++;
+                    newname = name + "_" + suffix;
+                    if (index > 1) newname += '' + index;
+                } while (topLevelNames[newname] !== undefined);
+                (<ISymbolDef>symb).bbRename = newname;
+            } else {
+                (<ISymbolDef>symb).bbRename = undefined;
+            }
+            topLevelNames[newname] = true;
+        });
+        let transformer = new uglify.TreeTransformer((node): uglify.IAstNode => {
+            if (node instanceof uglify.AST_Label) {
+                return node;
+            }
+            if (node instanceof uglify.AST_Symbol) {
+                let symb = <uglify.IAstSymbol>node;
+                if (symb.thedef == null) return undefined;
+                let rename = (<ISymbolDef>symb.thedef).bbRename;
+                if (rename !== undefined) {
+                    symb = <uglify.IAstSymbol>symb.clone();
+                    symb.name = rename;
+                    symb.thedef = undefined;
+                    symb.scope = undefined;
+                    return symb;
+                }
+            }
+            if (node instanceof uglify.AST_PropAccess) {
+                let propAccess = (<uglify.IAstPropAccess>node);
+                if (isExports(propAccess.expression)) {
+                    let key = matchPropKey(propAccess);
+                    if (key) {
+                        let symb = f.selfexports[key];
+                        if (symb)
+                            return symb;
+                    }
+                }
+            }
+            return undefined;
+        }, (node) => {
             if (node instanceof uglify.AST_Block) {
                 let block = <uglify.IAstBlock>node;
                 block.body = block.body.filter((stm) => {
@@ -280,7 +351,8 @@ export function bundle(project: IBundleProject) {
                 });
             }
             if (node instanceof uglify.AST_Toplevel) {
-                bundleAst.body.push(...(<uglify.IAstToplevel>node).body);
+                let topLevel = <uglify.IAstToplevel>node;
+                bodyAst.push(...topLevel.body);
             } else if (node instanceof uglify.AST_Var) {
                 let varn = <uglify.IAstVar>node;
                 varn.definitions = varn.definitions.filter((vd) => {
@@ -289,7 +361,7 @@ export function bundle(project: IBundleProject) {
             } else if (node instanceof uglify.AST_VarDef) {
                 let vardef = <uglify.IAstVarDef>node;
                 let thedef = <ISymbolDef>vardef.name.thedef;
-                if (thedef.bbRequirePath) {
+                if (thedef && thedef.bbRequirePath) {
                     vardef.value = null;
                     vardef.name = null;
                 }
@@ -298,7 +370,7 @@ export function bundle(project: IBundleProject) {
                 if (propAccess.expression instanceof uglify.AST_SymbolRef) {
                     let symb = <uglify.IAstSymbolRef>propAccess.expression;
                     let thedef = <ISymbolDef>symb.thedef;
-                    if (thedef.bbRequirePath) {
+                    if (thedef && thedef.bbRequirePath) {
                         let extf = project.cache[thedef.bbRequirePath];
                         let extn = matchPropKey(propAccess);
                         if (extn) {
@@ -313,8 +385,18 @@ export function bundle(project: IBundleProject) {
         });
         f.ast.transform(transformer);
     });
+    if (project.compress !== false) {
+        bundleAst.figure_out_scope();
+        let compressor = uglify.Compressor({ warnings: false, global_defs: project.defines });
+        bundleAst = bundleAst.transform(compressor);
+        // in future to make another pass with removing function calls with empty body
+    }
+    if (project.mangle !== false) {
+        bundleAst.figure_out_scope();
+        bundleAst.mangle_names();
+    }
     let os = uglify.OutputStream({
-        beautify: true
+        beautify: project.beautify === true
     });
     bundleAst.print(os);
     project.writeBundle(os.toString());

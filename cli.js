@@ -15,15 +15,23 @@ var translationDb = new bb.TranslationDb();
 var memoryFs = Object.create(null);
 var project;
 function write(fn, b) {
-    console.log(fn);
+    console.log('Memory write ' + fn);
     memoryFs[fn] = b;
+}
+function writeDist(fn, b) {
+    var ofn = path.join('dist', fn);
+    console.log('Writting ' + ofn);
+    memoryFs[fn] = b;
+    bb.mkpathsync(path.dirname(ofn));
+    fs.writeFileSync(ofn, b);
 }
 function compile() {
     console.log('Compiling ...');
     var startCompilation = Date.now();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(function () {
-        bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+        if (!project.totalBundle)
+            bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
         bb.updateIndexHtml(project);
     }).then(function () {
         console.log('Compiled in ' + (Date.now() - startCompilation) + 'ms');
@@ -64,11 +72,7 @@ function createProjectFromPackageJson() {
         dir: process.cwd().replace(/\\/g, '/'),
         main: 'src/app.ts',
         mainJsFile: 'src/app.js',
-        options: { module: 1 /* CommonJS */, target: 1 /* ES5 */, skipDefaultLibCheck: true },
-        debugStyleDefs: true,
-        releaseStyleDefs: false,
-        spriteMerge: false,
-        writeFileCallback: write
+        options: { module: 1 /* CommonJS */, target: 1 /* ES5 */, skipDefaultLibCheck: true }
     };
     var packageJson = null;
     try {
@@ -109,11 +113,35 @@ function createProjectFromPackageJson() {
     }
     return project;
 }
+function presetDebugProject(project) {
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.totalBundle = false;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+    project.writeFileCallback = write;
+}
+function presetReleaseProject(project) {
+    project.debugStyleDefs = false;
+    project.releaseStyleDefs = true;
+    project.spriteMerge = true;
+    project.totalBundle = true;
+    project.compress = true;
+    project.mangle = true;
+    project.beautify = false;
+    project.defines = { DEBUG: false };
+    project.writeFileCallback = writeDist;
+}
 function run() {
     printIntroLine();
     project = createProjectFromPackageJson();
     if (project == null)
         return;
+    //presetDebugProject(project);
+    presetReleaseProject(project);
     var startWatching = Date.now();
     chokidar.watch(['**/*.ts', '**/tsconfig.json', '**/package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', function () {
         console.log('Watching in ' + (Date.now() - startWatching).toFixed(0) + 'ms');

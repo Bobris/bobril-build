@@ -56,12 +56,11 @@ var CompilationCache = (function () {
         project.logCallback = project.logCallback || (function (text) { return console.log(text); });
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
+        var jsWriteFileCallback = project.writeFileCallback;
         if (project.totalBundle) {
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
-            var prevWriteFileCallback = project.writeFileCallback;
-            project.writeFileCallback = function (filename, content) {
+            jsWriteFileCallback = function (filename, content) {
                 project.commonJsTemp[filename] = content;
-                prevWriteFileCallback(filename, content);
             };
         }
         project.moduleMap = project.moduleMap || Object.create(null);
@@ -78,7 +77,7 @@ var CompilationCache = (function () {
         if (mainChangedList.length === 0) {
             return Promise.resolve(null);
         }
-        var program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
+        var program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         var diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
@@ -241,23 +240,36 @@ var CompilationCache = (function () {
                         project.logCallback('Error: Dependent ' + jsFile + ' failed to load');
                         continue;
                     }
-                    project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    cached.outputTime = cached.textTime;
                 }
             }
             if (project.totalBundle) {
                 var mainJsList = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
                 var that = _this;
                 var bp = {
+                    compress: project.compress,
+                    mangle: project.mangle,
+                    beautify: project.beautify,
+                    defines: project.defines,
                     getMainFiles: function () { return mainJsList; },
                     checkFileModification: function (name) {
                         if (/\.js$/.test(name)) {
-                            var cached = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
-                            return cached.outputTime;
+                            var cached_1 = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
+                            if (cached_1.curTime != null)
+                                return cached_1.outputTime;
                         }
-                        return null;
+                        var cached = that.getCachedFileContent(name, project.dir);
+                        return cached.curTime;
                     },
                     readContent: function (name) {
-                        return project.commonJsTemp[name].toString('utf-8');
+                        var jsout = project.commonJsTemp[name];
+                        if (jsout !== undefined)
+                            return jsout.toString('utf-8');
+                        var cached = that.getCachedFileContent(name, project.dir);
+                        if (cached.textTime == null)
+                            throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                        return cached.text;
                     },
                     writeBundle: function (content) {
                         project.writeFileCallback('bundle.js', new Buffer(content));

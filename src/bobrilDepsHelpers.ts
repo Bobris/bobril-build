@@ -51,6 +51,20 @@ export function systemJsBasedIndexHtml(mainRequire: string, moduleMap: { [name: 
 `;
 }
 
+export function bundleBasedIndexHtml(title?: string) {
+    title = title || 'Bobril Application';
+    return `<html>
+    <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+    </head>
+    <body>
+        <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+    </body>
+</html>
+`;
+}
+
 function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
@@ -66,15 +80,20 @@ export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, m
 }
 
 export function updateIndexHtml(project: compilationCache.IProject) {
-    let moduleNames = Object.keys(project.moduleMap);
-    let moduleMap = <{ [name: string]: string }>Object.create(null);
-    for (let i = 0; i < moduleNames.length; i++) {
-        let name = moduleNames[i];
-        if (project.moduleMap[name].internalModule)
-            continue;
-        moduleMap[name] = project.moduleMap[name].jsFile;
+    let newIndexHtml: string;
+    if (project.totalBundle) {
+        newIndexHtml = bundleBasedIndexHtml(project.htmlTitle);
+    } else {
+        let moduleNames = Object.keys(project.moduleMap);
+        let moduleMap = <{ [name: string]: string }>Object.create(null);
+        for (let i = 0; i < moduleNames.length; i++) {
+            let name = moduleNames[i];
+            if (project.moduleMap[name].internalModule)
+                continue;
+            moduleMap[name] = project.moduleMap[name].jsFile;
+        }
+        newIndexHtml = systemJsBasedIndexHtml(project.mainJsFile, moduleMap, project.htmlTitle);
     }
-    let newIndexHtml = systemJsBasedIndexHtml(project.mainJsFile, moduleMap, project.htmlTitle);
     if (newIndexHtml !== project.lastwrittenIndexHtml) {
         project.writeFileCallback('index.html', new Buffer(newIndexHtml));
         project.lastwrittenIndexHtml = newIndexHtml;
