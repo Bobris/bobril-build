@@ -113,7 +113,7 @@ function matchPropKey(propAccess: uglify.IAstPropAccess): string {
 function paternAssignExports(node: uglify.IAstNode): { name: string, value: uglify.IAstNode } {
     if (node instanceof uglify.AST_Assign) {
         let assign = <uglify.IAstAssign>node;
-        if (assign.operator = "=") {
+        if (assign.operator === "=") {
             if (assign.left instanceof uglify.AST_PropAccess) {
                 let propAccess = (<uglify.IAstPropAccess>assign.left);
                 if (isExports(propAccess.expression)) {
@@ -195,8 +195,12 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
                                         new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
                                     ]
                                 });
+                                let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                                symb.undeclared = false;
+                                ast.variables.set(newName, symb);
+                                newVar.definitions[0].name.thedef = symb;
                                 (<uglify.IAstSimpleStatement>stm).body = newVar;
-                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName });
+                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
                                 return newVar;
                             }
                             cached.selfexports[pea.name] = pea.value;
@@ -278,6 +282,21 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
     order.push(cached);
 }
 
+function renameSymbol(node: uglify.IAstNode): uglify.IAstNode {
+    if (node instanceof uglify.AST_Symbol) {
+        let symb = <uglify.IAstSymbol>node;
+        if (symb.thedef == null) return node;
+        let rename = (<ISymbolDef>symb.thedef).bbRename;
+        if (rename !== undefined) {
+            symb = <uglify.IAstSymbol>symb.clone();
+            symb.name = rename;
+            symb.thedef = undefined;
+            symb.scope = undefined;
+            return symb;
+        }
+    }
+    return node;
+}
 export function bundle(project: IBundleProject) {
     project.cache = project.cache || Object.create(null);
     let fileExists = (name: string) => project.checkFileModification(name) != null;
@@ -297,6 +316,7 @@ export function bundle(project: IBundleProject) {
         if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
         f.ast.variables.each((symb, name) => {
+            if ((<ISymbolDef>symb).bbRequirePath) return;
             let newname = name;
             if (topLevelNames[name] !== undefined) {
                 let index = 0;
@@ -334,7 +354,7 @@ export function bundle(project: IBundleProject) {
                     if (key) {
                         let symb = f.selfexports[key];
                         if (symb)
-                            return symb;
+                            return renameSymbol(symb);
                     }
                 }
             }
@@ -375,7 +395,9 @@ export function bundle(project: IBundleProject) {
                         let extn = matchPropKey(propAccess);
                         if (extn) {
                             let asts = extf.exports[extn];
-                            if (asts) return asts;
+                            if (asts) {
+                                return renameSymbol(asts);
+                            }
                             throw new Error('In ' + thedef.bbRequirePath + ' cannot find ' + extn);
                         }
                     }

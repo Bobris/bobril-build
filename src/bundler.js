@@ -74,7 +74,7 @@ function matchPropKey(propAccess) {
 function paternAssignExports(node) {
     if (node instanceof uglify.AST_Assign) {
         var assign = node;
-        if (assign.operator = "=") {
+        if (assign.operator === "=") {
             if (assign.left instanceof uglify.AST_PropAccess) {
                 var propAccess = assign.left;
                 if (isExports(propAccess.expression)) {
@@ -154,8 +154,12 @@ function check(name, order, stack, project, resolveRequire) {
                                         new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
                                     ]
                                 });
+                                var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                                symb.undeclared = false;
+                                ast.variables.set(newName, symb);
+                                newVar.definitions[0].name.thedef = symb;
                                 stm.body = newVar;
-                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName });
+                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
                                 return newVar;
                             }
                             cached.selfexports[pea.name] = pea.value;
@@ -237,6 +241,22 @@ function check(name, order, stack, project, resolveRequire) {
     });
     order.push(cached);
 }
+function renameSymbol(node) {
+    if (node instanceof uglify.AST_Symbol) {
+        var symb = node;
+        if (symb.thedef == null)
+            return node;
+        var rename = symb.thedef.bbRename;
+        if (rename !== undefined) {
+            symb = symb.clone();
+            symb.name = rename;
+            symb.thedef = undefined;
+            symb.scope = undefined;
+            return symb;
+        }
+    }
+    return node;
+}
 function bundle(project) {
     project.cache = project.cache || Object.create(null);
     var fileExists = function (name) { return project.checkFileModification(name) != null; };
@@ -258,6 +278,8 @@ function bundle(project) {
         if (suffix.indexOf('.') >= 0)
             suffix = suffix.substr(0, suffix.indexOf('.'));
         f.ast.variables.each(function (symb, name) {
+            if (symb.bbRequirePath)
+                return;
             var newname = name;
             if (topLevelNames[name] !== undefined) {
                 var index = 0;
@@ -298,7 +320,7 @@ function bundle(project) {
                     if (key) {
                         var symb = f.selfexports[key];
                         if (symb)
-                            return symb;
+                            return renameSymbol(symb);
                     }
                 }
             }
@@ -343,8 +365,9 @@ function bundle(project) {
                         var extn = matchPropKey(propAccess);
                         if (extn) {
                             var asts = extf.exports[extn];
-                            if (asts)
-                                return asts;
+                            if (asts) {
+                                return renameSymbol(asts);
+                            }
                             throw new Error('In ' + thedef.bbRequirePath + ' cannot find ' + extn);
                         }
                     }

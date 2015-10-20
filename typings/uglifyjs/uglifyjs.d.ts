@@ -37,6 +37,10 @@ declare module "uglifyjs" {
         mangled_name?: string;
     }
 
+    interface ISymbolDefNew {
+        new (scope: IAstScope, index: number, orig: IAstSymbolDeclaration): ISymbolDef;
+    }
+    const SymbolDef: ISymbolDefNew;
 
     /// Base class of all AST nodes
     interface IAstNode {
