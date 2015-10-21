@@ -122,9 +122,11 @@ export class CompilationCache {
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
         if (project.totalBundle) {
+            if (project.options.module != ts.ModuleKind.CommonJS)
+                throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = (filename: string, content: Buffer) => {
-                project.commonJsTemp[filename] = content;
+                project.commonJsTemp[filename.toLowerCase()] = content;
             };
         }
         project.moduleMap = project.moduleMap || Object.create(null);
@@ -318,8 +320,8 @@ export class CompilationCache {
                     defines: project.defines,
                     getMainFiles() { return mainJsList; },
                     checkFileModification(name: string):number {
-                        if (/\.js$/.test(name)) {
-                            let cached = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
+                        if (/\.js$/i.test(name)) {
+                            let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
                             if (cached.curTime!=null)
                                 return cached.outputTime;
                         }
@@ -327,7 +329,7 @@ export class CompilationCache {
                         return cached.curTime;
                     },
                     readContent(name: string) {
-                        let jsout = project.commonJsTemp[name];
+                        let jsout = project.commonJsTemp[name.toLowerCase()];
                         if (jsout !== undefined)
                             return jsout.toString('utf-8');
                         let cached = that.getCachedFileContent(name, project.dir);

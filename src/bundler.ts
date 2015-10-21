@@ -42,6 +42,8 @@ export interface IFileForBundle {
     astTime: number;
     ast: uglify.IAstToplevel;
     requires: string[];
+    // it is not really TypeScript converted to commonjs
+    difficult: boolean;
     selfexports: { [name: string]: uglify.IAstNode };
     exports: { [name: string]: uglify.IAstNode };
     reexportAll: string[];
@@ -181,7 +183,7 @@ function patternDefinePropertyExportsEsModule(call: uglify.IAstCall) {
 }
 
 function check(name: string, order: IFileForBundle[], stack: string[], project: IBundleProject, resolveRequire: (name: string, from: string) => string) {
-    let cached: IFileForBundle = project.cache[name];
+    let cached: IFileForBundle = project.cache[name.toLowerCase()];
     let mod = project.checkFileModification(name);
     let reexportDef: uglify.ISymbolDef = null;
     if (cached === undefined || cached.astTime !== mod) {
@@ -190,7 +192,16 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         }
         let ast = uglify.parse(project.readContent(name));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult:false, selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
+        if (ast.globals.has('module')) {
+            cached.difficult = true;
+            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name)}
+__bbe['${name}']=module.exports; })();`);
+            cached.ast = ast;
+            project.cache[name.toLowerCase()] = cached;
+            order.push(cached);
+            return;
+        }
         let exportsSymbol = ast.globals['exports'];
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Block) {
@@ -206,10 +217,10 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
                                     let symb = <uglify.IAstSymbolRef>propAccess.expression;
                                     let thedef = <ISymbolDef>symb.thedef;
                                     if (thedef.bbRequirePath) {
-                                        let extf = cached.reexport[thedef.bbRequirePath];
+                                        let extf = cached.reexport[thedef.bbRequirePath.toLowerCase()];
                                         if (extf === undefined) {
                                             extf = Object.create(null);
-                                            cached.reexport[thedef.bbRequirePath] = extf;
+                                            cached.reexport[thedef.bbRequirePath.toLowerCase()] = extf;
                                         }
                                         let extn = matchPropKey(propAccess);
                                         if (extn) {
@@ -291,7 +302,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
             return false;
         });
         ast.walk(walker);
-        project.cache[name] = cached;
+        project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {
         if (stack.indexOf(r) >= 0)
@@ -301,6 +312,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
     });
     cached.exports = Object.assign(Object.create(null), cached.selfexports);
     cached.reexportAll.forEach(exp=> {
+        exp = exp.toLowerCase();
         Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
     });
     let reex = Object.keys(cached.reexport);
@@ -344,7 +356,17 @@ export function bundle(project: IBundleProject) {
     let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
     let topLevelNames = Object.create(null);
+    let wasSomeDifficult = false;
     order.forEach((f) => {
+        if (f.difficult) {
+            if (!wasSomeDifficult) {
+                let ast = uglify.parse('var __bbe={};');
+                bodyAst.push(...ast.body);
+                wasSomeDifficult = true;
+            }
+            bodyAst.push(...f.ast.body);
+            return;
+        }
         let suffix = f.name;
         if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
@@ -415,8 +437,13 @@ export function bundle(project: IBundleProject) {
                 let vardef = <uglify.IAstVarDef>node;
                 let thedef = <ISymbolDef>vardef.name.thedef;
                 if (thedef && thedef.bbRequirePath) {
-                    vardef.value = null;
-                    vardef.name = null;
+                    let extf = project.cache[thedef.bbRequirePath.toLowerCase()];
+                    if (extf.difficult) {
+                        vardef.value = (<uglify.IAstSimpleStatement>uglify.parse(`__bbe['${thedef.bbRequirePath}']`).body[0]).body;
+                    } else {
+                        vardef.value = null;
+                        vardef.name = null;
+                    }
                 }
             } else if (node instanceof uglify.AST_PropAccess) {
                 let propAccess = <uglify.IAstPropAccess>node;
@@ -424,14 +451,16 @@ export function bundle(project: IBundleProject) {
                     let symb = <uglify.IAstSymbolRef>propAccess.expression;
                     let thedef = <ISymbolDef>symb.thedef;
                     if (thedef && thedef.bbRequirePath) {
-                        let extf = project.cache[thedef.bbRequirePath];
-                        let extn = matchPropKey(propAccess);
-                        if (extn) {
-                            let asts = extf.exports[extn];
-                            if (asts) {
-                                return renameSymbol(asts);
+                        let extf = project.cache[thedef.bbRequirePath.toLowerCase()];
+                        if (!extf.difficult) {
+                            let extn = matchPropKey(propAccess);
+                            if (extn) {
+                                let asts = extf.exports[extn];
+                                if (asts) {
+                                    return renameSymbol(asts);
+                                }
+                                throw new Error('In ' + thedef.bbRequirePath + ' cannot find ' + extn);
                             }
-                            throw new Error('In ' + thedef.bbRequirePath + ' cannot find ' + extn);
                         }
                     }
                 }

@@ -11,6 +11,7 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "bobril": "*"
+    "bobril": "*",
+    "bobril-g11n": "^0.4.3"
   }
 }

@@ -58,9 +58,11 @@ var CompilationCache = (function () {
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
         var jsWriteFileCallback = project.writeFileCallback;
         if (project.totalBundle) {
+            if (project.options.module != 1 /* CommonJS */)
+                throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
-                project.commonJsTemp[filename] = content;
+                project.commonJsTemp[filename.toLowerCase()] = content;
             };
         }
         project.moduleMap = project.moduleMap || Object.create(null);
@@ -254,8 +256,8 @@ var CompilationCache = (function () {
                     defines: project.defines,
                     getMainFiles: function () { return mainJsList; },
                     checkFileModification: function (name) {
-                        if (/\.js$/.test(name)) {
-                            var cached_1 = that.getCachedFileContent(name.replace(/\.js$/, '.ts'), project.dir);
+                        if (/\.js$/i.test(name)) {
+                            var cached_1 = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
                             if (cached_1.curTime != null)
                                 return cached_1.outputTime;
                         }
@@ -263,7 +265,7 @@ var CompilationCache = (function () {
                         return cached.curTime;
                     },
                     readContent: function (name) {
-                        var jsout = project.commonJsTemp[name];
+                        var jsout = project.commonJsTemp[name.toLowerCase()];
                         if (jsout !== undefined)
                             return jsout.toString('utf-8');
                         var cached = that.getCachedFileContent(name, project.dir);
