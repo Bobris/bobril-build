@@ -145,6 +145,7 @@ function check(name, order, stack, project, resolveRequire) {
             throw new Error('Cannot open ' + name);
         }
         var ast = uglify.parse(project.readContent(name));
+        //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
         cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
         if (ast.globals.has('module')) {
@@ -238,6 +239,34 @@ function check(name, order, stack, project, resolveRequire) {
                     return stm != null;
                 });
                 return true;
+            }
+            if (node instanceof uglify.AST_PropAccess) {
+                if (!(walker.parent() instanceof uglify.AST_Assign) || !(walker.parent(1) instanceof uglify.AST_SimpleStatement)) {
+                    var propAccess = node;
+                    if (isExports(propAccess.expression)) {
+                        var key = matchPropKey(propAccess);
+                        if (key) {
+                            if (cached.selfexports[key])
+                                return true;
+                            var newName = '__export_' + key;
+                            var newVar = new uglify.AST_Var({
+                                start: node.start,
+                                end: node.end,
+                                definitions: [
+                                    new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end }), value: null })
+                                ]
+                            });
+                            var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            symb.undeclared = false;
+                            ast.variables.set(newName, symb);
+                            newVar.definitions[0].name.thedef = symb;
+                            var newStm = new uglify.AST_SimpleStatement({ body: newVar });
+                            ast.body.unshift(newStm);
+                            cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            return true;
+                        }
+                    }
+                }
             }
             var req = constParamOfCallRequire(node);
             if (req != null) {
