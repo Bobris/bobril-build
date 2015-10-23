@@ -53,7 +53,7 @@ export interface IFileForBundle {
 }
 
 export interface IBundleProject {
-    // return in Date.now() units or null if does not exist 
+    // return in Date.now() units or null if does not exist
     checkFileModification(name: string): number;
     readContent(name: string): string;
     getMainFiles(): string[];
@@ -204,6 +204,7 @@ __bbe['${name}']=module.exports; })();`);
             return;
         }
         let exportsSymbol = ast.globals['exports'];
+        let unshiftToBody = [];
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Block) {
                 descend();
@@ -293,7 +294,7 @@ __bbe['${name}']=module.exports; })();`);
                         let key = matchPropKey(propAccess);
                         if (key) {
                             if (cached.selfexports[key])
-                                return true;
+                                return false;
                             let newName = '__export_' + key;
                             let newVar = new uglify.AST_Var({
                                 start: node.start,
@@ -307,9 +308,9 @@ __bbe['${name}']=module.exports; })();`);
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
                             let newStm = new uglify.AST_SimpleStatement({ body: newVar });
-                            ast.body.unshift(newStm);
+                            unshiftToBody.push(newStm);
                             cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
-                            return true;
+                            return false;
                         }
                     }
                 }
@@ -331,6 +332,7 @@ __bbe['${name}']=module.exports; })();`);
             return false;
         });
         ast.walk(walker);
+        ast.body.unshift(...unshiftToBody);
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {

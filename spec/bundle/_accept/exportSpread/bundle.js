@@ -1,0 +1,1 @@
+!function(){function a(){return{f1:function(){return"a"},f2:function(){return"b"},f3:function(){return"c"}}}var b;,var c;,var d;,var e;,var f;,var g;,h=a(),b=h.f1,c=h.f2,d=h.f3,i=a(),e=i.f1,f=i.f2,g=i.f3;var h,i;console.log(b()),console.log(c()),console.log(d()),console.log(e()),console.log(f()),console.log(g())}();

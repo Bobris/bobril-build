@@ -157,6 +157,7 @@ function check(name, order, stack, project, resolveRequire) {
             return;
         }
         var exportsSymbol = ast.globals['exports'];
+        var unshiftToBody = [];
         var walker = new uglify.TreeWalker(function (node, descend) {
             if (node instanceof uglify.AST_Block) {
                 descend();
@@ -247,7 +248,7 @@ function check(name, order, stack, project, resolveRequire) {
                         var key = matchPropKey(propAccess);
                         if (key) {
                             if (cached.selfexports[key])
-                                return true;
+                                return false;
                             var newName = '__export_' + key;
                             var newVar = new uglify.AST_Var({
                                 start: node.start,
@@ -261,9 +262,9 @@ function check(name, order, stack, project, resolveRequire) {
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
                             var newStm = new uglify.AST_SimpleStatement({ body: newVar });
-                            ast.body.unshift(newStm);
+                            unshiftToBody.push(newStm);
                             cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
-                            return true;
+                            return false;
                         }
                     }
                 }
@@ -285,6 +286,7 @@ function check(name, order, stack, project, resolveRequire) {
             return false;
         });
         ast.walk(walker);
+        (_a = ast.body).unshift.apply(_a, unshiftToBody);
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach(function (r) {
@@ -308,6 +310,7 @@ function check(name, order, stack, project, resolveRequire) {
         });
     });
     order.push(cached);
+    var _a;
 }
 function renameSymbol(node) {
     if (node instanceof uglify.AST_Symbol) {
