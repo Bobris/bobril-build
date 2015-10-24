@@ -1,5 +1,7448 @@
-!function(){function a(a,b){}function b(a){return document.createTextNode(a)}function c(a){return document.createElement(a)}function d(a){return"object"==typeof a}function e(a){var b=ac;return ac=a,b}function f(){return Object.create(null)}function g(a){return"string"==typeof cc[a]}function h(a){return function(b,c,d){b[a]=c,b[d]=void 0}}function i(a){return function(b,c,d){b[a]="number"==typeof c?c+"px":c,b[d]=void 0}}function j(a,b,c){"number"==typeof b&&(a[c]=b+"px")}function k(){return document.documentMode}function l(a){for(var b=Object.keys(a),c=0,d=b.length;d>c;c++){var e=b[c],f=dc[e],k=a[e];if(void 0!==k){if(void 0===f){if(g(e))f=ec[e]===!0?null:j;else{for(var l=e.replace(/^\w/,function(a){return a.toUpperCase()}),m=0;m<bc.length;m++)if(g(bc[m]+l)){f=(ec[e]===!0?h:i)(bc[m]+l);break}void 0===f&&(f=ec[e]===!0?null:j)}dc[e]=f}null!==f&&f(a,k,e)}}}function m(a,b){a[b]=""}function n(a,b,c,e){var f=b.style;if(d(c)){l(c);var g;if(d(e)){for(g in e)g in c||m(f,g);for(g in c){var h=c[g];void 0!==h?e[g]!==h&&(f[g]=h):m(f,g)}}else{e&&(f.cssText="");for(g in c){var h=c[g];void 0!==h&&(f[g]=h)}}}else if(c)f.cssText=c;else if(d(e))for(g in e)m(f,g);else e&&(f.cssText="")}function o(a,b){Zb?a.setAttribute("class",b):a.className=b}function p(a,b,c,d){var e,f,g,h,i;for(e in c)f=c[e],g=d[e],"value"!==e||Zb?g!==f&&(d[e]=f,Zb?"href"===e?b.setAttributeNS("http://www.w3.org/1999/xlink","href",f):b.setAttribute(e,f):e in b&&"list"!==e&&"form"!==e?b[e]=f:b.setAttribute(e,f)):(h=g,i=f,d[e]=f);for(e in d)void 0===d[e]||e in c||(d[e]=void 0,b.removeAttribute(e));return void 0!==i&&ac(b,a,i,h),d}function q(a,b){var c=a.component;c&&c[b?"postUpdateDom":"postInitDom"]&&($b.push(b),_b.push(a))}function r(a){for(var b;a&&(b=a.cfg,void 0===b);){if(a.ctx){b=a.ctx.cfg;break}a=a.parent}return b}function s(a,b){if(null!=a){if("function"==typeof a)return void a(b);var c=a[0],d=c.refs;d||(d=f(),c.refs=d),d[a[1]]=b}}function t(a,d,e,f){var g,h={tag:a.tag,key:a.key,ref:a.ref,className:a.className,style:a.style,attrs:a.attrs,children:a.children,component:a.component,data:a.data,cfg:a.cfg,parent:d,element:void 0,ctx:void 0},i=Zb,j=h.component;if(s(h.ref,h),j){var k={data:h.data||{},me:h,cfg:r(d)};h.ctx=k,j.init&&j.init(k,h),j.render&&j.render(k,h)}var l=h.tag,m=h.children;if(void 0===l)return"string"==typeof m?(g=b(m),h.element=g,e.insertBefore(g,f)):v(h,e,f),j&&(j.postRender&&j.postRender(h.ctx,h),q(h,!1)),h;if("/"===l){var t=m;if(""===t);else if(null==f){var u=e.lastChild;for(e.insertAdjacentHTML("beforeend",t),h.element=[],u=u?u.nextSibling:e.firstChild;u;)h.element.push(u),u=u.nextSibling}else{g=f;var w=f.previousSibling,x=!1,y=e;g.insertAdjacentHTML||(g=y.insertBefore(c("i"),g),x=!0),g.insertAdjacentHTML("beforebegin",t),w=w?w.nextSibling:y.firstChild;for(var z=[];w!==g;)z.push(w),w=w.nextSibling;a.element=z,x&&y.removeChild(g)}return j&&(j.postRender&&j.postRender(h.ctx,h),q(h,!1)),h}Zb||"svg"===l?(g=document.createElementNS("http://www.w3.org/2000/svg",l),Zb=!0):g||(g=c(l)),e.insertBefore(g,f),h.element=g,v(h,g,null),j&&j.postRender&&j.postRender(h.ctx,h),h.attrs&&(h.attrs=p(h,g,h.attrs,{})),h.style&&n(h,g,h.style,void 0);var A=h.className;return A&&o(g,A),Zb=i,q(h,!1),h}function u(a){var b=typeof a;return"string"===b?{children:a}:"boolean"===b?null:a}function v(a,b,c){var d=a.children;if(d){if(!Xb(d)){if("string"==typeof d)return void(Yb?b.textContent=d:b.innerText=d);d=[d]}d=d.slice(0);for(var e=0,f=d.length;f>e;){var g=d[e];Xb(g)?(d.splice.apply(d,[e,1].concat(g)),f=d.length):(g=u(g),null!=g?(d[e]=t(g,a,b,c),e++):(d.splice(e,1),f--))}a.children=d}}function w(a){s(a.ref,null);var b=a.children;if(Xb(b))for(var c=0,d=b.length;d>c;c++)w(b[c]);var e=a.component;e&&e.destroy&&e.destroy(a.ctx,a,a.element)}function x(a){var b=a.element;if(Xb(b)){var c=b[0].parentNode;if(c)for(var d=0;d<b.length;d++)c.removeChild(b[d])}else if(null!=b){var e=b.parentNode;e&&e.removeChild(b)}else{var f=a.children;if(Xb(f))for(var g=0,h=f.length;h>g;g++)x(f[g])}}function y(a){w(a),x(a)}function z(a,b,c,d){var e=a.element,f=a.children;if(Xb(e)){for(var g=0;g<e.length;g++)if(e[g]===b)return d.push(a),Xb(f)?f:null}else if(null==e){if(Xb(f))for(var h=0;h<f.length;h++){var i=z(f[h],b,c,d);if(void 0!==i)return d.splice(c,0,a),i}}else if(e===b)return d.push(a),Xb(f)?f:null;return void 0}function A(a){var b=[];if(null==a)return b;var c=Object.keys(fc),d=c.map(function(a){return fc[a].e||document.body}),e=[];a:for(;a;){for(var f=0;f<d.length;f++)if(a===d[f])break a;e.push(a),a=a.parentNode}if(!a||0===e.length)return b;var g=null,h=e.pop();a:for(f=0;f<d.length;f++)if(a===d[f])for(var i=fc[c[f]].c,j=0;j<i.length;j++){var k=i[j],l=z(k,h,b.length,b);if(void 0!==l){g=l;break a}}for(;e.length;){if(h=e.pop(),g&&g.length)for(var m=0,n=g.length;n>m;m++){var o=g[m],l=z(o,h,b.length,b);if(void 0!==l){g=l,h=null;break}}if(h){b.push(null);break}}return b}function B(a){var b=A(a);return 0==b.length?null:b[b.length-1]}function C(a,b,c){c&&c.postRender&&c.postRender(b.ctx,a,b),b.data=a.data,q(b,!0)}function D(a,b,c,d,e){var f=a.component,g=Zb,h=!1,i=b.ctx;if(f&&null!=i)if(i[lc]===qc&&(e=Math.max(e,i[mc])),f.id!==b.component.id)h=!0;else{if(void 0!=b.parent&&(i.cfg=r(b.parent)),f.shouldChange&&!f.shouldChange(i,a,b)&&!zc)return b;i.data=a.data||{},b.component=f,f.render&&(a=fa({},a),f.render(i,a,b)),b.cfg=a.cfg}var j=a.children,k=b.children,l=a.tag;if(h||f&&null==i);else if("/"===l){if("/"===b.tag&&k===j)return C(a,b,f),b}else if(l===b.tag){if(void 0===l){if("string"==typeof j&&"string"==typeof k){if(j!==k){var m=b.element;Yb?m.textContent=j:m.nodeValue=j,b.children=j}}else 0>=e?Xb(k)&&R(b.children,c,d):b.children=L(c,j,k,b,d,e-1);return C(a,b,f),b}"svg"===l&&(Zb=!0);var m=b.element;"string"!=typeof j||Xb(k)?0>=e?Xb(k)&&R(b.children,m,d):k=L(m,j,k,b,null,e-1):j!==k&&(Yb?m.textContent=j:m.innerText=j,k=j),b.children=k,C(a,b,f),(b.attrs||a.attrs)&&(b.attrs=p(b,m,a.attrs||{},b.attrs||{})),n(b,m,a.style,b.style),b.style=a.style;var q=a.className;return q!==b.className&&(o(m,q||""),b.className=q),Zb=g,b}var s=b.element;Xb(s)&&(s=s[0]),s=null==s?c:s.parentNode;var u=t(a,b.parent,s,E(b));return y(b),u}function E(a){var b=a.element;if(null!=b)return Xb(b)?b[0]:b;var c=a.children;if(!Xb(c))return null;for(var d=0;d<c.length;d++)if(b=E(c[d]))return b;return null}function F(a,b,c,d){for(;++b<c;){var e=a[b];if(null!=e){var f=E(e);if(null!=f)return f}}return d}function G(){for(var a=_b.length,b=0;a>b;b++){var c=_b[b];$b[b]?c.component.postUpdateDom(c.ctx,c,c.element):c.component.postInitDom(c.ctx,c,c.element)}$b=[],_b=[]}function H(a,b,c,d,e,f,g){b[c]=D(a,b[c],f,F(b,c,d,e),g)}function I(a,b,c){var d=a.element;if(null==d){var e=a.children;if(!Xb(e))return null;for(var f=0;f<e.length;f++)I(e[f],b,c)}else if(Xb(d))for(var f=0;f<d.length;f++)b.insertBefore(d[f],c);else b.insertBefore(d,c)}function J(a,b,c,d,e){var f=F(a,b,c,d),g=a[b],h=E(g);null!=h&&h!==f&&I(g,e,f)}function K(a,b,c,d,e,f,g){var h=F(b,c,d,e),i=b[c],j=E(i);null!=j&&j!==h&&I(i,f,h),b[c]=D(a,i,f,h,g)}function L(b,c,d,e,g,h){null==c&&(c=[]),Xb(c)||(c=[c]),null==d&&(d=[]),Xb(d)||(b.firstChild&&b.removeChild(b.firstChild),d=[]),c=c.slice(0);var i,j=c.length,k=d.length;for(i=0;j>i;){var l=c[i];Xb(l)?(c.splice.apply(c,[i,1].concat(l)),j=c.length):(l=u(l),null!=l?(c[i]=l,i++):(c.splice(i,1),j--))}var m=j,n=k;i=0;for(var o=0;m>i&&n>o;){if(c[i].key!==d[o].key){for(;;)if(!(c[m-1].key===d[n-1].key&&(m--,n--,H(c[m],d,n,k,g,b,h),m>i&&n>o)))break;if(m>i&&n>o){if(c[i].key===d[n-1].key){d.splice(o,0,d[n-1]),d.splice(n,1),K(c[i],d,o,k,g,b,h),i++,o++;continue}if(c[m-1].key===d[o].key){d.splice(n,0,d[o]),d.splice(o,1),n--,m--,K(c[m],d,n,k,g,b,h);continue}}break}H(c[i],d,o,k,g,b,h),i++,o++}if(o===n){if(i===m)return d;for(;m>i;)d.splice(o,0,t(c[i],e,b,F(d,o-1,k,g))),o++,n++,k++,i++;return d}if(i===m){for(;n>o;)n--,y(d[n]),d.splice(n,1);return d}for(var p,q,r=f(),s=f(),v=i,w=o,x=0;n>o;o++)q=d[o],p=q.key,null!=p?(a(!(p in r)),r[p]=o):x--;for(var z=-x-x;m>i;i++)q=c[i],p=q.key,null!=p?(a(!(p in s)),s[p]=i):x++;z+=x;var A=0;i=v,o=w;for(var B;n>o&&m>i;)if(null!==d[o])if(B=d[o].key,null!=B){if(p=c[i].key,null==p){for(i++;m>i&&(p=c[i].key,null==p);)i++;if(null==p)break}var C=r[p];void 0!==C?B in s?o===C+A?(H(c[i],d,o,k,g,b,h),i++,o++):(d.splice(o,0,d[C+A]),A++,d[C+A]=null,K(c[i],d,o,k,g,b,h),o++,n++,k++,i++):(y(d[o]),d.splice(o,1),A--,n--,k--):(d.splice(o,0,t(c[i],e,b,F(d,o-1,k,g))),A++,i++,o++,n++,k++)}else o++;else d.splice(o,1),n--,k--,A--;for(;n>o;)null!==d[o]?null==d[o].key?o++:(y(d[o]),d.splice(o,1),n--,k--):(d.splice(o,1),n--,k--);for(;m>i;)p=c[i].key,null!=p&&(d.splice(o,0,t(c[i],e,b,F(d,o-1,k,g))),n++,k++,A++,o++),i++;if(!z)return d;for(z=z-Math.abs(x)>>1,i=v,o=w;m>i;)if(n>o&&(B=d[o].key,null!=B))o++;else if(p=c[i].key,n>i&&p===d[i].key){if(null!=p){i++;continue}H(c[i],d,i,k,g,b,h),z--,i++,o=i}else if(null==p)n>o?(d.splice(i,0,d[o]),d.splice(o+1,1),K(c[i],d,i,k,g,b,h),z--,i++,o++):(d.splice(i,0,t(c[i],e,b,F(d,i-1,k,g))),n++,k++,i++,o++);else{if(a(i===o),0===z&&0>x){for(;;)if(y(d[o]),d.splice(o,1),n--,k--,x++,a(o!==n,"there still need to exist key node"),null!=d[o].key)break;continue}for(;null==d[o].key;)o++;a(p===d[o].key),d.splice(i,0,d[o]),d.splice(o+1,1),J(d,i,k,g,b),i++,o=i}for(;n>i;)n--,y(d[n]),d.splice(n,1);return d}function M(a){if(gc)hc(a);else{var b=50/3+kc-ic();0>b&&(b=0),window.setTimeout(function(){kc=ic(),a(kc-jc)},b)}}function N(a,b,c){var d=uc[a]||[];d.push({priority:b,callback:c}),uc[a]=d}function O(a,b,c,d){var e=tc[a];if(e)for(var f=0;f<e.length;f++)if(e[f](b,c,d))return!0;return!1}function P(a,b){function c(c){c=c||window.event;var d=c.target||c.srcElement||a,e=B(d);O(b,c,d,e)}if("!"!=b[0]){var d="^"==b[0],e=b;d&&(e=b.slice(1)),"on"+e in window&&(a=window),a.addEventListener(e,c,d)}}function Q(){if(!vc){vc=!0;for(var a=Object.keys(uc),b=0;b<a.length;b++){var c=a[b],d=uc[c];d=d.sort(function(a,b){return a.priority-b.priority}),tc[c]=d.map(function(a){return a.callback})}uc=null;for(var e=document.body,f=0;f<a.length;f++)P(e,a[f])}}function R(a,b,c){for(var d=a.length,e=0;d>e;e++){var f=a[e],g=f.ctx;if(null!=g&&g[lc]===qc){var h={data:g.data,component:f.component};a[e]=D(h,f,b,c,g[mc])}else if(Xb(f.children)){var i=Zb;"svg"===f.tag&&(Zb=!0),R(f.children,f.element||b,F(a,e,d,c)),Zb=i}}}function S(a){var b=wc;return wc=a,b}function T(a){var b=xc;return xc=a,b}function U(a){for(var b=a.length-1;b>=0;b--){var c=a[b],d=c.element;if(null!=d){if(Xb(d)){var e=d.length;if(0===e)continue;return d[e-1]}return d}var f=c.children;if(Xb(f)){var g=U(f);if(null!=g)return g}}return null}function V(a){sc=ic(),Q(),qc++,zc=yc,yc=!1,pc=a,oc=!1,wc();var b=!1;nc&&(nc=!1,b=!0);for(var c=Object.keys(fc),d=0;d<c.length;d++){var e=fc[c[d]];if(e){var f=e.c,g=U(f);if(null!=g&&(g=g.nextSibling),b){var h=e.f();e.e=e.e||document.body,e.c=L(e.e,h,f,null,g,1e6)}else R(f,e.e,g)}}G();var i=fc[0];xc(i?i.c:null),rc=ic()-sc}function W(){yc=!0,Ac()}function X(){var a=Ac;return a}function Y(){oc||(nc=!1),Ac()}function Z(a,b,c){Bc++;var d=""+Bc;return fc[d]={f:a,e:b,c:[],p:c},Y(),d}function $(a){var b=fc[a];b&&(b.c.length&&(b.c=L(b.e,[],b.c,null,null,1e9)),delete fc[a])}function _(){return fc}function aa(a,b){$("0"),fc[0]={f:a,e:b,c:[],p:void 0},Cc(),Cc=Y}function ba(a){var b=Cc;Cc=function(){a(b)}}function ca(a,b,c){for(;a;){var d=a.component;if(d){var e=a.ctx,f=d[b];if(f&&f.call(d,e,c))return e;if(f=d.shouldStopBubble,f&&f.call(d,e,b,c))break}a=a.parent}return null}function da(a,b,c){if(!a)return null;var d=a.component;if(d){var e=a.ctx,f=d[b];if(f&&f.call(d,e,c))return e;if(f=d.shouldStopBroadcast,f&&f.call(d,e,b,c))return null}var g=a.children;if(!Xb(g))return da(g,b,c);for(var h=0;h<g.length;h++){var i=da(g[h],b,c);if(null!=i)return i}}function ea(a,b){for(var c=Object.keys(fc),d=0;d<c.length;d++){var e=fc[c[d]].c;if(null!=e)for(var f=0;f<e.length;f++){var g=da(e[f],a,b);if(null!=g)return g}}return null}function fa(a){for(var b=[],c=1;c<arguments.length;c++)b[c-1]=arguments[c];null==a&&(a={});for(var d=arguments.length,e=1;d>e;e++){var f=arguments[e];if(null!=f)for(var g=Object.keys(f),h=g.length,i=0;h>i;i++){var j=g[i];a[j]=f[j]}}return a}function ga(a){var b=a.preventDefault;b?b.call(a):a.returnValue=!1}function ha(a,b){dc[a]=b}function ia(){return Dc=null,Ac(),!1}function ja(){if(null==Dc){var a=Hc.clientWidth,b=Hc.clientHeight,c=window.orientation,d=b>=a;null==c&&(c=d?0:90);for(var e=0;a>Ec[+!d][e];)e++;Dc={width:a,height:b,orientation:c,deviceCategory:e,portrait:d}}return Dc}function ka(a,b){null==a.zoom&&(a.zoom="1");var c=a.filter;a.filter=null==c?b:c+" "+b}function la(a,b,c){if(Lc.test(b)){var d=b.indexOf("(to ");if(d>0){d+=4;var e=b.indexOf(",",d),f=b.slice(d,e);f=f.split(" ").map(function(a){return Mc[a]||a}).join(" "),b=b.slice(0,d-3)+f+b.slice(e)}b="-webkit-"+b}a[c]=b}function ma(a){var b=a.type;return"checkbox"===b||"radio"===b}function na(a,b){var c=a.length;if(c!==b.length)return!1;for(var d=0;c>d;d++)if(a[d]!==b[d])return!1;return!0}function oa(a,b){for(var c=0;c<a.length;c++)if(a[c]===b)return!0;return!1}function pa(a){for(var b=[],c=0;c<a.length;c++)a[c].selected&&b.push(a[c].value);return b}function qa(a,b,c){if(b&&"OPTION"===b.nodeName&&(b=document.activeElement,c=B(b)),!c)return!1;var d=c.component;if(!d)return!1;if(!d.onChange)return!1;var e=c.ctx,f=b.tagName,g="SELECT"===f,h=g&&b.multiple;if(h){var i=pa(b.options);na(e[Nc],i)||(e[Nc]=i,d.onChange(e,i))}else if(ma(b)){if(a&&"change"===a.type)return setTimeout(function(){qa(null,b,c)},10),!1;if("radio"===b.type)for(var j=document.getElementsByName(b.name),k=0;k<j.length;k++){var l=j[k],m=B(l);if(m){var n=m.component;if(n&&n.onChange){var o=m.ctx,p=l.checked;o[Nc]!==p&&(o[Nc]=p,n.onChange(o,p))}}}else{var q=b.checked;e[Nc]!==q&&(e[Nc]=q,d.onChange(e,q))}}else{var r=b.value;e[Nc]!==r&&(e[Nc]=r,d.onChange(e,r))}return!1}function ra(a){return{shift:a.shiftKey,ctrl:a.ctrlKey,alt:a.altKey,meta:a.metaKey||!1,which:a.which||a.keyCode}}function sa(a,b,c){if(!c)return!1;var d=ra(a);return ca(c,"onKeyDown",d)?(ga(a),!0):!1}function ta(a,b,c){if(!c)return!1;var d=ra(a);return ca(c,"onKeyUp",d)?(ga(a),!0):!1}function ua(a,b,c){if(!c)return!1;if(0===a.which)return!1;var d={charCode:a.which||a.keyCode};return ca(c,"onKeyPress",d)?(ga(a),!0):!1}function va(a,b){if(null==Rc)return!1;var c=Rc.me.component[a];if(!c)return!1;Qc=!0;var d=c(Rc,b);return Qc=!1,d}function wa(a){for(;a;){var b=a.style;if(b){var c=b.pointerEvents;if(void 0!==c)return"none"===c?!0:!1}a=a.parent}return!1}function xa(a){var b=B(a);return wa(b)}function ya(a){if(a.length){for(var b=a.length-1;b>=0;--b)a[b].t.style.visibility=a[b].p;return!0}return!1}function za(a,b){a.push({t:b,p:b.style.visibility}),b.style.visibility="hidden"}function Aa(a,b){for(var c=[],d=b;xa(d);)za(c,d),d=document.elementFromPoint(a.x,a.y);if(ya(c)){try{d.dispatchEvent(a)}catch(e){return!1}return ga(a),!0}return!1}function Ba(a,b){N(a,5,b)}function Ca(a){return"mouse"==a?0:"pen"==a?2:1}function Da(a,b,c,d){for(var e=[],f=c;wa(d);)za(e,f),f=document.elementFromPoint(a,b),d=B(f);return ya(e),[f,d]}function Ea(a){return function(b,c,d){if(wa(d)){var e=Da(b.x,b.y,c,d);c=e[0],d=e[1]}var f=b.button+1,g=Ca(b.pointerType),h=b.buttons;if(0===f&&0===g&&h)for(f=1;!(1&h);)h>>=1,f++;var i={id:b.pointerId,type:g,x:b.clientX,y:b.clientY,button:f,shift:b.shiftKey,ctrl:b.ctrlKey,alt:b.altKey,meta:b.metaKey||!1};return O("!"+a,i,c,d)?(ga(b),!0):!1}}function Fa(a){return function(b,c,d){for(var e=!1,f=0;f<b.changedTouches.length;f++){var g=b.changedTouches[f];c=document.elementFromPoint(g.clientX,g.clientY),d=B(c);var h={id:g.identifier+2,type:1,x:g.clientX,y:g.clientY,button:1,shift:b.shiftKey,ctrl:b.ctrlKey,alt:b.altKey,meta:b.metaKey||!1};O("!"+a,h,c,d)&&(e=!0)}return e?(ga(b),!0):!1}}function Ga(a){return function(b,c,d){if(c=document.elementFromPoint(b.clientX,b.clientY),d=B(c),wa(d)){var e=Da(b.clientX,b.clientY,c,d);c=e[0],d=e[1]}var f={id:1,type:0,x:b.clientX,y:b.clientY,button:Qa(b),shift:b.shiftKey,ctrl:b.ctrlKey,alt:b.altKey,meta:b.metaKey||!1};return O("!"+a,f,c,d)?(ga(b),!0):!1}}function Ha(a,b,c){return Math.abs(a-b)<c}function Ia(a){var b=document.elementFromPoint(a.x,a.y),c=A(b),d=0==c.length?null:c[c.length-1];if(wa(d)){var e=Da(a.x,a.y,b,d);b=e[0],c=A(b)}ca(d,"onMouseOver",a);for(var f=0;f<cd.length&&f<c.length&&cd[f]===c[f];)f++;for(var g,h,i=cd.length;i>f;)i--,g=cd[i],g&&(h=g.component,h&&h.onMouseLeave&&h.onMouseLeave(g.ctx,a));for(;i<c.length;)g=c[i],g&&(h=g.component,h&&h.onMouseEnter&&h.onMouseEnter(g.ctx,a)),i++;return cd=c,!1}function Ja(){return 0===Object.keys(Xc).length}function Ka(a){return-1===Zc&&Ja()&&(Zc=a.id,$c=ic(),_c=a.x,ad=a.y,bd=!1,Ia(a)),Xc[a.id]=a.type,Zc!==a.id&&(bd=!0),!1}function La(a,b,c){return 0===a.type&&0===a.button&&null!=Xc[a.id]&&(a.button=1,O("!PointerUp",a,b,c),a.button=0),Zc===a.id?(Ia(a),Ha(_c,a.x,13)&&Ha(ad,a.y,13)||(bd=!0)):Ja()&&Ia(a),!1}function Ma(a,b,c){if(delete Xc[a.id],Zc==a.id&&(Ia(a),Zc=-1,1==a.type&&!bd&&ic()-$c<750)){O("!PointerCancel",a,b,c);var d=va(Sc,a)||null!=ca(c,Sc,a),e=k()?800:500;return Yc.push([a.x,a.y,ic()+e,d?1:0]),d}return!1}function Na(a){return delete Xc[a.id],Zc==a.id&&(Zc=-1),!1}function Oa(a){for(var b=ic(),c=0;c<Yc.length;c++){var d=Yc[c];if(d[2]<b)Yc.splice(c,1),c--;else if(Ha(d[0],a.clientX,50)&&Ha(d[1],a.clientY,50))return Yc.splice(c,1),d[3]&&ga(a),!0}return!1}function Pa(a){return function(b,c,d){return(Zc==b.id||Ja())&&(va(a,b)||ca(d,a,b))?!0:!1}}function Qa(a){return a.which||a.button}function Ra(a){return function(b,c,d){var e=Qa(b)||1;if(1!==e)return!1;var f={x:b.clientX,y:b.clientY,button:e,shift:b.shiftKey,ctrl:b.ctrlKey,alt:b.altKey,meta:b.metaKey||!1};return va(a,f)||ca(d,a,f)?(ga(b),!0):!1}}function Sa(a,b){var c=document.elementFromPoint(a,b),d=B(c);if(wa(d)){var e=Da(a,b,c,d);d=e[1]}return d}function Ta(a,b,c){for(;c;){var d=c.style;if(d){var e=d.userSelect;if("none"===e)return ga(a),!0;if(e)break}c=c.parent}return!1}function Ua(){var a=document.hasFocus()?document.activeElement:null;if(a!==hd){hd=a;for(var b=A(hd),c=0;c<jd.length&&c<b.length&&jd[c]===b[c];)c++;var d,e,f=jd.length-1;for(f>=c&&(d=jd[f],d&&(e=d.component,e&&e.onBlur&&e.onBlur(d.ctx)),f--);f>=c;)d=jd[f],d&&(e=d.component,e&&e.onFocusOut&&e.onFocusOut(d.ctx)),f--;for(f=c;f+1<b.length;)d=b[f],d&&(e=d.component,e&&e.onFocusIn&&e.onFocusIn(d.ctx)),f++;f<b.length&&(d=b[f],d&&(e=d.component,e&&e.onFocus&&e.onFocus(d.ctx)),f++),jd=b,id=0==jd.length?null:jd[jd.length-1]}}function Va(){setTimeout(Ua,10),Ua()}function Wa(){for(var a=0;a<kd.length;a++)kd[a]();return!1}function Xa(){if(null==qd){var a=document.body.style;ld=a.cursor,md=a[td],a[td]="none",qd=Z(Za)}}function Ya(){var a="no-drop";if(0!==od.length){var b=od[0];if(b.beforeDrag)return"";if(null!=b.cursor)return b.cursor;if(b.system)return"";switch(b.operation){case 3:a="move";break;case 1:a="alias";break;case 2:a="copy"}}return a}function Za(){return{component:wd}}function $a(a,b,c){var d=yd[a.id];if(d&&d.cancelDnd(),a.button<=1){d=new ud(a.id),d.startX=a.x,d.startY=a.y,d.lastX=a.x,d.lastY=a.y,d.overNode=c,ab(d,a);var e=ca(c,"onDragStart",d);if(e){var f=E(e.me);if(null==f)return d.destroy(),!1;d.started=!0;var g=f.getBoundingClientRect;if(g){var h=g.call(f);d.deltaX=h.left-a.x,d.deltaY=h.top-a.y}d.distanceToStart<=0&&(d.beforeDrag=!1,_a(c,d)),Xa()}else d.destroy()}return!1}function _a(a,b){b.overNode=a,b.targetCtx=ca(a,"onDragOver",b),null==b.targetCtx&&(b.operation=0),ea("onDrag",b)}function ab(a,b){a.shift=b.shift,a.ctrl=b.ctrl,a.alt=b.alt,a.meta=b.meta,a.x=b.x,a.y=b.y}function bb(a,b,c){var d=yd[a.id];if(!d)return!1;if(d.totalX+=Math.abs(a.x-d.lastX),d.totalY+=Math.abs(a.y-d.lastY),d.beforeDrag){if(d.totalX+d.totalY<=d.distanceToStart)return d.lastX=a.x,d.lastY=a.y,!1;d.beforeDrag=!1}return ab(d,a),_a(c,d),d.lastX=a.x,d.lastY=a.y,!0}function cb(a,b,c){var d=yd[a.id];if(!d)return!1;if(!d.beforeDrag){ab(d,a),_a(c,d);var e=d.targetCtx;return e&&ca(e.me,"onDrop",d)?d.destroy():d.cancelDnd(),gd(a.x,a.y),!0}return d.destroy(),!1}function db(a){var b=yd[a.id];return b?(b.beforeDrag?b.destroy():b.cancelDnd(),!1):!1}function eb(a,b){a.shift=b.shiftKey,a.ctrl=b.ctrlKey,a.alt=b.altKey,a.meta=b.metaKey,a.x=b.clientX,a.y=b.clientY,a.totalX+=Math.abs(a.x-a.lastX),a.totalY+=Math.abs(a.y-a.lastY);var c=Sa(a.x,a.y);_a(c,a),a.lastX=a.x,a.lastY=a.y}function fb(a,b,c){var d=pd;null!=d&&d.destroy();var e=Object.keys(yd);if(e.length>0)d=yd[e[0]],d.system=!0,pd=d;else{var f=a.clientX,g=a.clientY;d=new ud(-1),d.system=!0,pd=d,d.x=f,d.y=g,d.lastX=f,d.lastY=g,d.startX=f,d.startY=g;var h=ca(c,"onDragStart",d);if(!h)return d.destroy(),!1;var i=E(h.me);if(null==i)return d.destroy(),!1;d.started=!0;var j=i.getBoundingClientRect;if(j){var k=j.call(i);d.deltaX=k.left-f,d.deltaY=k.top-g}Xa()}d.beforeDrag=!1;var l=zd[d.enabledOperations],m=a.dataTransfer;if(m.effectAllowed=l,m.setDragImage){var n=document.createElement("div");n.style.pointerEvents="none",m.setDragImage(n,0,0)}else{var o=a.target.style,p=o.opacity,q=o.width,r=o.height,s=o.padding;o.opacity="0",o.width="0",o.height="0",o.padding="0",window.setTimeout(function(){o.opacity=p,o.width=q,o.height=r,o.padding=s},0)}for(var t=d.data,u=Object.keys(t),v=0;v<u.length;v++)try{var w=u[v],x=t[w];"string"!=typeof x&&(x=JSON.stringify(x)),a.dataTransfer.setData(w,x)}catch(y){}return eb(d,a),!1}function gb(a,b){a.dataTransfer.dropEffect=["none","link","copy","move"][b]}function hb(a){var b=pd;if(null==b){b=new ud(-1),b.system=!0,pd=b,b.x=a.clientX,b.y=a.clientY,b.startX=b.x,b.startY=b.y,b.local=!1;var c=a.dataTransfer,d=0;try{var e=c.effectAllowed}catch(f){}for(;7>d&&zd[d]!==e;d++);b.enabledOperations=d;var g=c.types;if(g)for(var h=0;h<g.length;h++){var i=g[h];"text/plain"===i?i="Text":"text/uri-list"===i&&(i="Url"),b.data[i]=null}else void 0!==c.getData("Text")&&(b.data.Text=null)}return eb(b,a),gb(a,b.operation),0!=b.operation?(ga(a),!0):!1}function ib(a){var b=a.clientX,c=a.clientY,d=ja();return null!=pd&&(0===b&&0===c||0>b||0>c||b>=d.width||c>=d.height)&&(pd.x=0,pd.y=0,pd.operation=0,ea("onDrag",pd)),!1}function jb(){return null!=pd&&pd.destroy(),!1}function kb(a){var b=pd;if(null==b)return!1;if(b.x=a.clientX,b.y=a.clientY,!b.local)for(var c=Object.keys(b.data),d=a.dataTransfer,e=0;e<c.length;e++){var f,g=c[e];f="Files"===g?[].slice.call(d.files,0):d.getData(g),b.data[g]=f}eb(b,a);var h=b.targetCtx;return h&&ca(h.me,"onDrop",b)?(gb(a,b.operation),b.destroy(),ga(a)):b.cancelDnd(),!0}function lb(a){return ga(a),!0}function mb(a){return 0===od.length?!1:(ga(a),!0)}function nb(){return Ac(),!1}function ob(a){var b=Ld.exec(a);if(!b)return Bd[a].name;var c=b.index;return Bd[a.substring(0,c)].name+a.substring(c)}function pb(a,b){var c="";if(a)if(Xb(a))for(var d=0;d<a.length;d++)d>0&&(c+=","),c+="."+ob(a[d])+"."+b;else c="."+ob(a)+"."+b;else c="."+b;return c}function qb(a,b,c,d){if("string"==typeof c){var e=Bd[c];if(void 0===e)throw new Error("uknown style "+c);qb(a,b,e.style,e.pseudo)}else if("function"==typeof c)c(a,b);else if(Xb(c))for(var g=0;g<c.length;g++)qb(a,b,c[g],void 0);else if("object"==typeof c)for(var h in c)if(Object.prototype.hasOwnProperty.call(c,h)){var i=c[h];"function"==typeof i&&(i=i(a,h)),a[h]=i}if(null!=d&&null!=b)for(var j in d){var k=b[j];void 0===k&&(k=f(),b[j]=k),qb(k,void 0,d[j],void 0)}}function rb(){if(Gd){for(var a=0;a<Ed.length;a++){var b=Ed[a],c=Fd[b.url];if(null!=c){var d=b.color();if(d!==b.lastColor){b.lastColor=d,null==b.width&&(b.width=c.width),null==b.height&&(b.height=c.height);var e=zb(c,d,b.width,b.height,b.left,b.top),g=Bd[b.styleid];g.style={backgroundImage:"url("+e+")",width:b.width,height:b.height}}}}var h="";for(var i in Bd){var j=Bd[i],k=j.parent,m=j.name,n=f(),o=f();qb(void 0,o,void 0,j.pseudo),qb(n,o,j.style,void 0);var p=null;n.pointerEvents&&(p=f(),p.pointerEvents=n.pointerEvents),Jd&&n.userSelect&&(null==p&&(p=f()),p.userSelect=n.userSelect,delete n.userSelect),j.inlStyle=p,l(n);var q=ub(n);q.length>0&&(h+=pb(k,m)+" {"+q+"}\n");for(var r in o){var s=o[r];l(s),h+=pb(k,m+":"+r)+" {"+ub(s)+"}\n"}}var t=document.createElement("style");t.type="text/css",t.styleSheet?t.styleSheet.cssText=h:t.appendChild(document.createTextNode(h));var u=document.head||document.getElementsByTagName("head")[0];null!=Hd?u.replaceChild(t,Hd):u.appendChild(t),Hd=t,Gd=!1}Kd()}function sb(a){for(var b=[],c=1;c<arguments.length;c++)b[c-1]=arguments[c];for(var d=a.className,e=a.style,f=null,g=0,h=b;;)if(h.length!==g){var i=h[g];if(null==i||"boolean"==typeof i||""===i);else if("string"==typeof i){var j=Bd[i];d=null==d?j.name:d+" "+j.name;var k=j.inlStyle;k&&(e=fa(e,k))}else{if(Xb(i)){h.length>g+1&&(null==f&&(f=[]),f.push(g),f.push(h)),h=i,g=0;continue}e=fa(e,i)}g++}else{if(null===f||0===f.length)break;h=f.pop(),g=f.pop()+1}return a.className=d,a.style=e,a}function tb(a){return"cssFloat"===a?"float":a.replace(Md,"-$1").toLowerCase().replace(Nd,"-ms-")}function ub(a){var b="";for(var c in a){var d=a[c];void 0!==d&&(b+=tb(c)+":"+(""===d?'""':d)+";")}return b=b.slice(0,-1)}function vb(a,b,c){return wb(null,a,b,c)}function wb(a,b,c,d){if(d&&"b-"!==d){if(Dd[d]){for(var e=1;Dd[d+e];)e++;d+=e}Dd[d]=!0}else d="b-"+Id++;return Bd[d]={name:d,parent:a,style:b,inlStyle:null,pseudo:c},xb(),d}function xb(){Gd=!0,Ac()}function yb(a){var b=Bd[a.styleid],c={backgroundImage:"url("+a.url+")",width:a.width,height:a.height};(a.left||a.top)&&(c.backgroundPosition=-a.left+"px "+-a.top+"px"),b.style=c,xb()}function zb(a,b,c,d,e,f){var g=document.createElement("canvas");g.width=c,g.height=d;var h=g.getContext("2d");h.drawImage(a,-e,-f);var i,j,k,l,m=h.getImageData(0,0,c,d),n=m.data,o=Od.exec(b);if(o?(i=parseInt(o[1],10),j=parseInt(o[2],10),k=parseInt(o[3],10),l=Math.round(255*parseFloat(o[4]))):(i=parseInt(b.substr(1,2),16),j=parseInt(b.substr(3,2),16),k=parseInt(b.substr(5,2),16),l=parseInt(b.substr(7,2),16)||255),255===l)for(var p=0;p<n.length;p+=4){var q=n[p];q===n[p+1]&&q===n[p+2]&&(128===q||n[p+3]<255&&q>112)&&(n[p]=i,n[p+1]=j,n[p+2]=k)}else for(var p=0;p<n.length;p+=4){var q=n[p],r=n[p+3];q===n[p+1]&&q===n[p+2]&&(128===q||255>r&&q>112)&&(255===r?(n[p]=i,n[p+1]=j,n[p+2]=k,n[p+3]=l):(r*=1/255,n[p]=Math.round(i*r),n[p+1]=Math.round(j*r),n[p+2]=Math.round(k*r),n[p+3]=Math.round(l*r)))}return h.putImageData(m,0,0),g.toDataURL()}function Ab(a,b,c,d){var e=Pd,f=e+"::"+a+":"+b+":"+c+":"+d,g=Cd[f];if(g)return g.styleid;var h=vb({width:0,height:0});return g={styleid:h,url:e,width:a,height:b,left:c,top:d},yb(g),Cd[f]=g,h}function Bb(a){var b=a.render;return a.render=b?function(c,d,e){return d.tag="div",b.call(a,c,d,e)}:function(a,b){b.tag="div"},function(b,c){return void 0!==c&&(b.children=c),{data:b,component:a}}}function Cb(){if(Td=Vd,Ud=Wd,Rd===Sd)return void(Xd=Zd);var a=Qd.charCodeAt(Rd++);if(13===a||10===a)return Vd++,Wd=1,13===a&&Sd>Rd&&10===Qd.charCodeAt(Rd)&&Rd++,void(Xd=13);if(Wd++,92===a){if(Rd===Sd)return void(Xd=92);if(a=Qd.charCodeAt(Rd++),Wd++,92===a||123===a||125===a||35===a)return void(Xd=a);if(117===a){if(Sd>=Rd+4){var b=Qd.substr(Rd,4);if(/^[0-9a-f]+$/gi.test(b))return Xd=parseInt(b,16),Rd+=4,void(Wd+=4)}return Yd="After \\u there must be 4 hex characters",void(Xd=$d)}return Yd="After \\ there coud be only one of \\{}#u characters",void(Xd=$d)}Xd=123===a?_d:125===a?ae:35===a?be:a}function Db(a){return null!=a&&"object"==typeof a&&"error"===a.type}function Eb(a){return void 0===a&&(a=Yd),{type:"error",msg:a,pos:Rd-1,line:Td,col:Ud}}function Fb(){for(;9===Xd||10===Xd||13===Xd||32===Xd;)Cb()}function Gb(){var a="";if(!(Xd>=65&&90>=Xd||Xd>=97&&122>=Xd||95===Xd))return Eb("Expecting identifier [a-zA-Z_]");do a+=String.fromCharCode(Xd),Cb();while(Xd>=65&&90>=Xd||Xd>=97&&122>=Xd||95===Xd||Xd>=48&&57>=Xd);return a}function Hb(){var a="";do a+=String.fromCharCode(Xd),Cb();while(Xd>=0&&9!==Xd&&10!==Xd&&13!==Xd&&32!==Xd);return a}function Ib(){var a="";do a+=String.fromCharCode(Xd),Cb();while(Xd>=48&&57>=Xd);return parseInt(a,10)}function Jb(){if(Fb(),Xd===$d)return Eb();var a=Gb();if(Db(a))return a;if(Fb(),Xd===$d)return Eb();if(Xd===ae)return Cb(),{type:"arg",id:a};if(44!==Xd)return Eb('Expecting "}" or ","');Cb(),Fb();var b={type:void 0},c={type:"format",id:a,format:b},d=Gb();if(Db(d))return d;if(Fb(),Xd===$d)return Eb();if("number"===d||"time"===d||"date"===d){if(b.type=d,b.style=null,b.options=null,Xd===ae)return Cb(),c;if(44===Xd){Cb(),Fb();var e=Gb();if(Db(e))return d;for(b.style=e,b.options=[];;){if(Fb(),Xd===$d)return Eb();if(Xd===ae)return Cb(),c;if(44!==Xd)break;Cb(),Fb();var f=Gb();if(Db(f))return f;if(58===Xd){Cb(),Fb();var g=void 0;if(Xd>=48&&57>=Xd?g=Ib():Xd===_d?(Cb(),g=Kb(!1)):g=Gb(),Db(g))return g;b.options.push({key:f,value:g})}else b.options.push({key:f})}}return Eb('Expecting "," or "}"')}if("plural"===d||"selectordinal"===d){var h=[];if(b.type="plural",b.ordinal="plural"!==d,b.offset=0,b.options=h,44!==Xd)return Eb('Expecting ","');Cb(),Fb();for(var i=!0;Xd!==ae;){if(0>Xd)return Eb('Expecting characters except "{", "#"');var j=Hb();if(Fb(),i&&/^offset:/.test(j)){var k=/^offset:*([0-9]+)$/.exec(j);if(k)b.offset=parseInt(k[1],10);else{if("offset:"!==j)return Eb('After "offset:" there must be number');if(Fb(),48>Xd||Xd>57)return Eb("Expecting number");b.offset=parseInt(Ib(),10)}i=!1}else{i=!1;var l=void 0;if(l=/^=[0-9]+$/.test(j)?parseInt(j.substring(1),10):j,Xd!==_d)return Eb('Expecting "{"');Cb();var m=Kb(!1);if(Db(m))return m;h.push({selector:l,value:m}),Fb()}}return Cb(),c}if("select"===d){var h=[];if(b.type="select",b.options=h,44!==Xd)return Eb('Expecting ","');for(Cb(),Fb();Xd!==ae;){if(0>Xd)return Eb('Expecting characters except "{", "#"');var j=Hb();Fb();var l=void 0;if(l=/^=[0-9]+$/.test(j)?parseInt(j.substring(1),10):j,Xd!==_d)return Eb('Expecting "{"');Cb();var m=Kb(!1);if(Db(m))return m;h.push({selector:l,value:m}),Fb()}return Cb(),c}return Eb('Expecting one of "number", "time", "date", "plural", "selectordinal", "select".')}function Kb(a){for(var b=null;;){if(Xd===$d)return Eb();if(Xd===Zd)return a?null===b?"":b:Eb('Unexpected end of message missing "}"');var c=void 0;if(Xd===_d)Cb(),c=Jb();else if(Xd===be)Cb(),c={type:"hash"};else{if(Xd===ae)return a?Eb('Unexpected "}". Maybe you forgot to prefix it with "\\".'):(Cb(),null===b?"":b);for(c="";Xd>=0;)c+=String.fromCharCode(Xd),Cb()}if(Db(c))return c;null===b?b=c:Array.isArray(b)?b.push(c):b=[b,c]}}function Lb(a){return Rd=0,Qd=a,Sd=a.length,Vd=1,Wd=1,Cb(),Kb(!0)}function Mb(a,b){var c=de[a];void 0===c&&(c={}),c.pluralFn=b,de[a]=c}function Nb(a){var b=a.indexOf("-");return b>=0?a.substr(0,b):a}function Ob(a){var b=de[a];return b||(b=de[Nb(a)],b||(b=de.en)),b.pluralFn}function Pb(a,b,c,d){var e=Nb(a);switch(b){case"number":if("custom"===c&&"format"in d)return function(a,b){return fe.language(e),fe(a).format(b.format)};if("default"===c)return function(a){return fe.language(e),fe(a).format("0,0.[0000]")};if("percent"===c)return function(a){return fe.language(e),fe(a).format("0%")};if("bytes"===c)return function(a){return fe.language(e),fe(a).format("0b")};break;case"date":case"time":return"relative"===c?d.noago===!0?function(a){return ge(a).locale(e).fromNow(!0)}:null===d.noago?function(a,b){return ge(a).locale(e).fromNow(b.noago)}:function(a){return ge(a).locale(e).fromNow(!1)}:"calendar"===c?function(a){return ge(a).locale(e).calendar()}:"custom"===c&&"format"in d?function(a,b){return ge(a).locale(e).format(b.format)}:function(a){return ge(a).locale(e).format(c)}}}function Qb(a,b){if("string"==typeof b)return function(){return b};if(Array.isArray(b)){if(0===b.length)return function(){return""};var c=new ce,d=c.addArg(0),e=c.addArg(1);c.addBody("return ");for(var f=0;f<b.length;f++){f>0&&c.addBody("+");var g=b[f];c.addBody("string"==typeof g?c.addConstant(g):c.addConstant(Qb(a,g))+("("+d+","+e+")"))}return c.addBody(";"),c.build()}switch(b.type){case"arg":return function(a){return function(b){return b[a]}}(b.id);case"hash":return function(a,b){return void 0===b?"#":b};case"format":var c=new ce,d=c.addArg(0),h=c.addLocal();c.addBody("var "+h+"="+d+"["+c.addConstant(b.id)+"];");var i=b.format.type;switch(i){case"plural":var j=c.addLocal();c.addBody("var "+j+"="+h+"-"+b.format.offset+";");
+(function() {
+    var __export_now;;
+    var __export_invalidate;;
+    var __export_asap;;
+    var __export_ignoreClick;;
+    var __export_getDnds;;
+    if (typeof DEBUG === "undefined") DEBUG = true;
+    function assert(shoudBeTrue, messageIfFalse) {
+        if (DEBUG && !shoudBeTrue) throw Error(messageIfFalse || "assertion failed");
+    }
+    var isArray = Array.isArray;
+    function createTextNode(content) {
+        return document.createTextNode(content);
+    }
+    function createElement(name) {
+        return document.createElement(name);
+    }
+    var hasTextContent = "textContent" in createTextNode("");
+    function isObject(value) {
+        return typeof value === "object";
+    }
+    function flatten(a) {
+        if (!isArray(a)) {
+            if (a == null || a === false || a === true) return [];
+            return [ a ];
+        }
+        a = a.slice(0);
+        var alen = a.length;
+        for (var i_1 = 0; i_1 < alen; ) {
+            var item = a[i_1];
+            if (isArray(item)) {
+                a.splice.apply(a, [ i_1, 1 ].concat(item));
+                alen = a.length;
+                continue;
+            }
+            if (item == null || item === false || item === true) {
+                a.splice(i_1, 1);
+                alen--;
+                continue;
+            }
+            i_1++;
+        }
+        return a;
+    }
+    var inSvg = false;
+    var updateCall = [];
+    var updateInstance = [];
+    var setValueCallback = function(el, node, newValue, oldValue) {
+        if (newValue !== oldValue) el["value"] = newValue;
+    };
+    function setSetValue(callback) {
+        var prev = setValueCallback;
+        setValueCallback = callback;
+        return prev;
+    }
+    function newHashObj() {
+        return Object.create(null);
+    }
+    var vendors = [ "Webkit", "Moz", "ms", "O" ];
+    var testingDivStyle = document.createElement("div").style;
+    function testPropExistence(name) {
+        return typeof testingDivStyle[name] === "string";
+    }
+    var mapping = newHashObj();
+    var isUnitlessNumber = {
+        boxFlex: true,
+        boxFlexGroup: true,
+        columnCount: true,
+        flex: true,
+        flexGrow: true,
+        flexNegative: true,
+        flexPositive: true,
+        flexShrink: true,
+        fontWeight: true,
+        lineClamp: true,
+        lineHeight: true,
+        opacity: true,
+        order: true,
+        orphans: true,
+        strokeDashoffset: true,
+        widows: true,
+        zIndex: true,
+        zoom: true
+    };
+    function renamer(newName) {
+        return function(style, value, oldName) {
+            style[newName] = value;
+            style[oldName] = undefined;
+        };
+    }
+    function renamerpx(newName) {
+        return function(style, value, oldName) {
+            if (typeof value === "number") {
+                style[newName] = value + "px";
+            } else {
+                style[newName] = value;
+            }
+            style[oldName] = undefined;
+        };
+    }
+    function pxadder(style, value, name) {
+        if (typeof value === "number") style[name] = value + "px";
+    }
+    function ieVersion() {
+        return document.documentMode;
+    }
+    function shimStyle(newValue) {
+        var k = Object.keys(newValue);
+        for (var i = 0, l = k.length; i < l; i++) {
+            var ki = k[i];
+            var mi = mapping[ki];
+            var vi = newValue[ki];
+            if (vi === undefined) continue;
+            if (mi === undefined) {
+                if (DEBUG) {
+                    if (ki === "float" && window.console && console.error) console.error("In style instead of 'float' you have to use 'cssFloat'");
+                    if (/-/.test(ki) && window.console && console.warn) console.warn("Style property " + ki + " contains dash (must use JS props instead of css names)");
+                }
+                if (testPropExistence(ki)) {
+                    mi = isUnitlessNumber[ki] === true ? null : pxadder;
+                } else {
+                    var titleCaseKi = ki.replace(/^\w/, function(match) {
+                        return match.toUpperCase();
+                    });
+                    for (var j = 0; j < vendors.length; j++) {
+                        if (testPropExistence(vendors[j] + titleCaseKi)) {
+                            mi = (isUnitlessNumber[ki] === true ? renamer : renamerpx)(vendors[j] + titleCaseKi);
+                            break;
+                        }
+                    }
+                    if (mi === undefined) {
+                        mi = isUnitlessNumber[ki] === true ? null : pxadder;
+                        if (DEBUG && window.console && console.warn) console.warn("Style property " + ki + " is not supported in this browser");
+                    }
+                }
+                mapping[ki] = mi;
+            }
+            if (mi !== null) mi(newValue, vi, ki);
+        }
+    }
+    function removeProperty(s, name) {
+        s[name] = "";
+    }
+    function updateStyle(n, el, newStyle, oldStyle) {
+        var s = el.style;
+        if (isObject(newStyle)) {
+            shimStyle(newStyle);
+            var rule;
+            if (isObject(oldStyle)) {
+                for (rule in oldStyle) {
+                    if (!(rule in newStyle)) removeProperty(s, rule);
+                }
+                for (rule in newStyle) {
+                    var v = newStyle[rule];
+                    if (v !== undefined) {
+                        if (oldStyle[rule] !== v) s[rule] = v;
+                    } else {
+                        removeProperty(s, rule);
+                    }
+                }
+            } else {
+                if (oldStyle) s.cssText = "";
+                for (rule in newStyle) {
+                    var v = newStyle[rule];
+                    if (v !== undefined) s[rule] = v;
+                }
+            }
+        } else if (newStyle) {
+            s.cssText = newStyle;
+        } else {
+            if (isObject(oldStyle)) {
+                for (rule in oldStyle) {
+                    removeProperty(s, rule);
+                }
+            } else if (oldStyle) {
+                s.cssText = "";
+            }
+        }
+    }
+    function setClassName(el, className) {
+        if (inSvg) el.setAttribute("class", className); else el.className = className;
+    }
+    function updateElement(n, el, newAttrs, oldAttrs) {
+        var attrName, newAttr, oldAttr, valueOldAttr, valueNewAttr;
+        for (attrName in newAttrs) {
+            newAttr = newAttrs[attrName];
+            oldAttr = oldAttrs[attrName];
+            if (attrName === "value" && !inSvg) {
+                valueOldAttr = oldAttr;
+                valueNewAttr = newAttr;
+                oldAttrs[attrName] = newAttr;
+                continue;
+            }
+            if (oldAttr !== newAttr) {
+                oldAttrs[attrName] = newAttr;
+                if (inSvg) {
+                    if (attrName === "href") el.setAttributeNS("http://www.w3.org/1999/xlink", "href", newAttr); else el.setAttribute(attrName, newAttr);
+                } else if (attrName in el && !(attrName === "list" || attrName === "form")) {
+                    el[attrName] = newAttr;
+                } else el.setAttribute(attrName, newAttr);
+            }
+        }
+        for (attrName in oldAttrs) {
+            if (oldAttrs[attrName] !== undefined && !(attrName in newAttrs)) {
+                oldAttrs[attrName] = undefined;
+                el.removeAttribute(attrName);
+            }
+        }
+        if (valueNewAttr !== undefined) {
+            setValueCallback(el, n, valueNewAttr, valueOldAttr);
+        }
+        return oldAttrs;
+    }
+    function pushInitCallback(c, aupdate) {
+        var cc = c.component;
+        if (cc) {
+            if (cc[aupdate ? "postUpdateDom" : "postInitDom"]) {
+                updateCall.push(aupdate);
+                updateInstance.push(c);
+            }
+        }
+    }
+    function findCfg(parent) {
+        var cfg;
+        while (parent) {
+            cfg = parent.cfg;
+            if (cfg !== undefined) break;
+            if (parent.ctx) {
+                cfg = parent.ctx.cfg;
+                break;
+            }
+            parent = parent.parent;
+        }
+        return cfg;
+    }
+    function setRef(ref, value) {
+        if (ref == null) return;
+        if (typeof ref === "function") {
+            ref(value);
+            return;
+        }
+        var ctx = ref[0];
+        var refs = ctx.refs;
+        if (!refs) {
+            refs = newHashObj();
+            ctx.refs = refs;
+        }
+        refs[ref[1]] = value;
+    }
+    function createNode(n, parentNode, createInto, createBefore) {
+        var c = {
+            tag: n.tag,
+            key: n.key,
+            ref: n.ref,
+            className: n.className,
+            style: n.style,
+            attrs: n.attrs,
+            children: n.children,
+            component: n.component,
+            data: n.data,
+            cfg: n.cfg,
+            parent: parentNode,
+            element: undefined,
+            ctx: undefined
+        };
+        var backupInSvg = inSvg;
+        var component = c.component;
+        var el;
+        setRef(c.ref, c);
+        if (component) {
+            var ctx = {
+                data: c.data || {},
+                me: c,
+                cfg: findCfg(parentNode)
+            };
+            c.ctx = ctx;
+            if (component.init) {
+                component.init(ctx, c);
+            }
+            if (component.render) {
+                component.render(ctx, c);
+            }
+        }
+        var tag = c.tag;
+        var children = c.children;
+        if (tag === undefined) {
+            if (typeof children === "string") {
+                el = createTextNode(children);
+                c.element = el;
+                createInto.insertBefore(el, createBefore);
+            } else {
+                createChildren(c, createInto, createBefore);
+            }
+            if (component) {
+                if (component.postRender) {
+                    component.postRender(c.ctx, c);
+                }
+                pushInitCallback(c, false);
+            }
+            return c;
+        } else if (tag === "/") {
+            var htmltext = children;
+            if (htmltext === "") {} else if (createBefore == null) {
+                var before = createInto.lastChild;
+                createInto.insertAdjacentHTML("beforeend", htmltext);
+                c.element = [];
+                if (before) {
+                    before = before.nextSibling;
+                } else {
+                    before = createInto.firstChild;
+                }
+                while (before) {
+                    c.element.push(before);
+                    before = before.nextSibling;
+                }
+            } else {
+                el = createBefore;
+                var elprev = createBefore.previousSibling;
+                var removeEl = false;
+                var parent = createInto;
+                if (!el.insertAdjacentHTML) {
+                    el = parent.insertBefore(createElement("i"), el);
+                    removeEl = true;
+                }
+                el.insertAdjacentHTML("beforebegin", htmltext);
+                if (elprev) {
+                    elprev = elprev.nextSibling;
+                } else {
+                    elprev = parent.firstChild;
+                }
+                var newElements = [];
+                while (elprev !== el) {
+                    newElements.push(elprev);
+                    elprev = elprev.nextSibling;
+                }
+                n.element = newElements;
+                if (removeEl) {
+                    parent.removeChild(el);
+                }
+            }
+            if (component) {
+                if (component.postRender) {
+                    component.postRender(c.ctx, c);
+                }
+                pushInitCallback(c, false);
+            }
+            return c;
+        } else if (inSvg || tag === "svg") {
+            el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+            inSvg = true;
+        } else if (!el) {
+            el = createElement(tag);
+        }
+        createInto.insertBefore(el, createBefore);
+        c.element = el;
+        createChildren(c, el, null);
+        if (component) {
+            if (component.postRender) {
+                component.postRender(c.ctx, c);
+            }
+        }
+        if (c.attrs) c.attrs = updateElement(c, el, c.attrs, {});
+        if (c.style) updateStyle(c, el, c.style, undefined);
+        var className = c.className;
+        if (className) setClassName(el, className);
+        inSvg = backupInSvg;
+        pushInitCallback(c, false);
+        return c;
+    }
+    function normalizeNode(n) {
+        var t = typeof n;
+        if (t === "string") {
+            return {
+                children: n
+            };
+        }
+        if (t === "boolean") return null;
+        return n;
+    }
+    function createChildren(c, createInto, createBefore) {
+        var ch = c.children;
+        if (!ch) return;
+        if (!isArray(ch)) {
+            if (typeof ch === "string") {
+                if (hasTextContent) {
+                    createInto.textContent = ch;
+                } else {
+                    createInto.innerText = ch;
+                }
+                return;
+            }
+            ch = [ ch ];
+        }
+        ch = ch.slice(0);
+        var i = 0, l = ch.length;
+        while (i < l) {
+            var item = ch[i];
+            if (isArray(item)) {
+                ch.splice.apply(ch, [ i, 1 ].concat(item));
+                l = ch.length;
+                continue;
+            }
+            item = normalizeNode(item);
+            if (item == null) {
+                ch.splice(i, 1);
+                l--;
+                continue;
+            }
+            ch[i] = createNode(item, c, createInto, createBefore);
+            i++;
+        }
+        c.children = ch;
+    }
+    function destroyNode(c) {
+        setRef(c.ref, null);
+        var ch = c.children;
+        if (isArray(ch)) {
+            for (var i = 0, l = ch.length; i < l; i++) {
+                destroyNode(ch[i]);
+            }
+        }
+        var component = c.component;
+        if (component) {
+            if (component.destroy) component.destroy(c.ctx, c, c.element);
+        }
+    }
+    function removeNodeRecursive(c) {
+        var el = c.element;
+        if (isArray(el)) {
+            var pa = el[0].parentNode;
+            if (pa) {
+                for (var i_2 = 0; i_2 < el.length; i_2++) {
+                    pa.removeChild(el[i_2]);
+                }
+            }
+        } else if (el != null) {
+            var p = el.parentNode;
+            if (p) p.removeChild(el);
+        } else {
+            var ch = c.children;
+            if (isArray(ch)) {
+                for (var i = 0, l = ch.length; i < l; i++) {
+                    removeNodeRecursive(ch[i]);
+                }
+            }
+        }
+    }
+    function removeNode(c) {
+        destroyNode(c);
+        removeNodeRecursive(c);
+    }
+    var roots = newHashObj();
+    function nodeContainsNode(c, n, resIndex, res) {
+        var el = c.element;
+        var ch = c.children;
+        if (isArray(el)) {
+            for (var ii = 0; ii < el.length; ii++) {
+                if (el[ii] === n) {
+                    res.push(c);
+                    if (isArray(ch)) {
+                        return ch;
+                    }
+                    return null;
+                }
+            }
+        } else if (el == null) {
+            if (isArray(ch)) {
+                for (var i = 0; i < ch.length; i++) {
+                    var result = nodeContainsNode(ch[i], n, resIndex, res);
+                    if (result !== undefined) {
+                        res.splice(resIndex, 0, c);
+                        return result;
+                    }
+                }
+            }
+        } else if (el === n) {
+            res.push(c);
+            if (isArray(ch)) {
+                return ch;
+            }
+            return null;
+        }
+        return undefined;
+    }
+    function vdomPath(n) {
+        var res = [];
+        if (n == null) return res;
+        var rootIds = Object.keys(roots);
+        var rootElements = rootIds.map(function(i) {
+            return roots[i].e || document.body;
+        });
+        var nodeStack = [];
+        rootFound: while (n) {
+            for (var j = 0; j < rootElements.length; j++) {
+                if (n === rootElements[j]) break rootFound;
+            }
+            nodeStack.push(n);
+            n = n.parentNode;
+        }
+        if (!n || nodeStack.length === 0) return res;
+        var currentCacheArray = null;
+        var currentNode = nodeStack.pop();
+        rootFound2: for (j = 0; j < rootElements.length; j++) {
+            if (n === rootElements[j]) {
+                var rc = roots[rootIds[j]].c;
+                for (var k = 0; k < rc.length; k++) {
+                    var rck = rc[k];
+                    var findResult = nodeContainsNode(rck, currentNode, res.length, res);
+                    if (findResult !== undefined) {
+                        currentCacheArray = findResult;
+                        break rootFound2;
+                    }
+                }
+            }
+        }
+        while (nodeStack.length) {
+            currentNode = nodeStack.pop();
+            if (currentCacheArray && currentCacheArray.length) for (var i = 0, l = currentCacheArray.length; i < l; i++) {
+                var bn = currentCacheArray[i];
+                var findResult = nodeContainsNode(bn, currentNode, res.length, res);
+                if (findResult !== undefined) {
+                    currentCacheArray = findResult;
+                    currentNode = null;
+                    break;
+                }
+            }
+            if (currentNode) {
+                res.push(null);
+                break;
+            }
+        }
+        return res;
+    }
+    function deref(n) {
+        var s = vdomPath(n);
+        if (s.length == 0) return null;
+        return s[s.length - 1];
+    }
+    function finishUpdateNode(n, c, component) {
+        if (component) {
+            if (component.postRender) {
+                component.postRender(c.ctx, n, c);
+            }
+        }
+        c.data = n.data;
+        pushInitCallback(c, true);
+    }
+    function updateNode(n, c, createInto, createBefore, deepness) {
+        var component = n.component;
+        var backupInSvg = inSvg;
+        var bigChange = false;
+        var ctx = c.ctx;
+        if (component && ctx != null) {
+            if (ctx[ctxInvalidated] === frameCounter) {
+                deepness = Math.max(deepness, ctx[ctxDeepness]);
+            }
+            if (component.id !== c.component.id) {
+                bigChange = true;
+            } else {
+                if (c.parent != undefined) ctx.cfg = findCfg(c.parent);
+                if (component.shouldChange) if (!component.shouldChange(ctx, n, c) && !ignoringShouldChange) return c;
+                ctx.data = n.data || {};
+                c.component = component;
+                if (component.render) {
+                    n = assign({}, n);
+                    component.render(ctx, n, c);
+                }
+                c.cfg = n.cfg;
+            }
+        }
+        if (DEBUG) {
+            if (!(n.ref == null && c.ref == null || n.ref != null && c.ref != null && (typeof n.ref === "function" || typeof c.ref === "function" || n.ref[0] === c.ref[0] && n.ref[1] === c.ref[1]))) {
+                if (window.console && console.warn) console.warn("ref changed in child in update");
+            }
+        }
+        var newChildren = n.children;
+        var cachedChildren = c.children;
+        var tag = n.tag;
+        if (bigChange || component && ctx == null) {} else if (tag === "/") {
+            if (c.tag === "/" && cachedChildren === newChildren) {
+                finishUpdateNode(n, c, component);
+                return c;
+            }
+        } else if (tag === c.tag) {
+            if (tag === undefined) {
+                if (typeof newChildren === "string" && typeof cachedChildren === "string") {
+                    if (newChildren !== cachedChildren) {
+                        var el = c.element;
+                        if (hasTextContent) {
+                            el.textContent = newChildren;
+                        } else {
+                            el.nodeValue = newChildren;
+                        }
+                        c.children = newChildren;
+                    }
+                } else {
+                    if (deepness <= 0) {
+                        if (isArray(cachedChildren)) selectedUpdate(c.children, createInto, createBefore);
+                    } else {
+                        c.children = updateChildren(createInto, newChildren, cachedChildren, c, createBefore, deepness - 1);
+                    }
+                }
+                finishUpdateNode(n, c, component);
+                return c;
+            } else {
+                if (tag === "svg") {
+                    inSvg = true;
+                }
+                var el = c.element;
+                if (typeof newChildren === "string" && !isArray(cachedChildren)) {
+                    if (newChildren !== cachedChildren) {
+                        if (hasTextContent) {
+                            el.textContent = newChildren;
+                        } else {
+                            el.innerText = newChildren;
+                        }
+                        cachedChildren = newChildren;
+                    }
+                } else {
+                    if (deepness <= 0) {
+                        if (isArray(cachedChildren)) selectedUpdate(c.children, el, createBefore);
+                    } else {
+                        cachedChildren = updateChildren(el, newChildren, cachedChildren, c, null, deepness - 1);
+                    }
+                }
+                c.children = cachedChildren;
+                finishUpdateNode(n, c, component);
+                if (c.attrs || n.attrs) c.attrs = updateElement(c, el, n.attrs || {}, c.attrs || {});
+                updateStyle(c, el, n.style, c.style);
+                c.style = n.style;
+                var className = n.className;
+                if (className !== c.className) {
+                    setClassName(el, className || "");
+                    c.className = className;
+                }
+                inSvg = backupInSvg;
+                return c;
+            }
+        }
+        var parEl = c.element;
+        if (isArray(parEl)) parEl = parEl[0];
+        if (parEl == null) parEl = createInto; else parEl = parEl.parentNode;
+        var r = createNode(n, c.parent, parEl, getDomNode(c));
+        removeNode(c);
+        return r;
+    }
+    function getDomNode(c) {
+        var el = c.element;
+        if (el != null) {
+            if (isArray(el)) return el[0];
+            return el;
+        }
+        var ch = c.children;
+        if (!isArray(ch)) return null;
+        for (var i = 0; i < ch.length; i++) {
+            el = getDomNode(ch[i]);
+            if (el) return el;
+        }
+        return null;
+    }
+    function findNextNode(a, i, len, def) {
+        while (++i < len) {
+            var ai = a[i];
+            if (ai == null) continue;
+            var n = getDomNode(ai);
+            if (n != null) return n;
+        }
+        return def;
+    }
+    function callPostCallbacks() {
+        var count = updateInstance.length;
+        for (var i = 0; i < count; i++) {
+            var n = updateInstance[i];
+            if (updateCall[i]) {
+                n.component.postUpdateDom(n.ctx, n, n.element);
+            } else {
+                n.component.postInitDom(n.ctx, n, n.element);
+            }
+        }
+        updateCall = [];
+        updateInstance = [];
+    }
+    function updateNodeInUpdateChildren(newNode, cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness) {
+        cachedChildren[cachedIndex] = updateNode(newNode, cachedChildren[cachedIndex], element, findNextNode(cachedChildren, cachedIndex, cachedLength, createBefore), deepness);
+    }
+    function reorderInUpdateChildrenRec(c, element, before) {
+        var el = c.element;
+        if (el != null) {
+            if (isArray(el)) {
+                for (var i = 0; i < el.length; i++) {
+                    element.insertBefore(el[i], before);
+                }
+            } else element.insertBefore(el, before);
+            return;
+        }
+        var ch = c.children;
+        if (!isArray(ch)) return null;
+        for (var i = 0; i < ch.length; i++) {
+            reorderInUpdateChildrenRec(ch[i], element, before);
+        }
+    }
+    function reorderInUpdateChildren(cachedChildren, cachedIndex, cachedLength, createBefore, element) {
+        var before = findNextNode(cachedChildren, cachedIndex, cachedLength, createBefore);
+        var cur = cachedChildren[cachedIndex];
+        var what = getDomNode(cur);
+        if (what != null && what !== before) {
+            reorderInUpdateChildrenRec(cur, element, before);
+        }
+    }
+    function reorderAndUpdateNodeInUpdateChildren(newNode, cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness) {
+        var before = findNextNode(cachedChildren, cachedIndex, cachedLength, createBefore);
+        var cur = cachedChildren[cachedIndex];
+        var what = getDomNode(cur);
+        if (what != null && what !== before) {
+            reorderInUpdateChildrenRec(cur, element, before);
+        }
+        cachedChildren[cachedIndex] = updateNode(newNode, cur, element, before, deepness);
+    }
+    function updateChildren(element, newChildren, cachedChildren, parentNode, createBefore, deepness) {
+        if (newChildren == null) newChildren = [];
+        if (!isArray(newChildren)) {
+            newChildren = [ newChildren ];
+        }
+        if (cachedChildren == null) cachedChildren = [];
+        if (!isArray(cachedChildren)) {
+            if (element.firstChild) element.removeChild(element.firstChild);
+            cachedChildren = [];
+        }
+        newChildren = newChildren.slice(0);
+        var newLength = newChildren.length;
+        var cachedLength = cachedChildren.length;
+        var newIndex;
+        for (newIndex = 0; newIndex < newLength; ) {
+            var item = newChildren[newIndex];
+            if (isArray(item)) {
+                newChildren.splice.apply(newChildren, [ newIndex, 1 ].concat(item));
+                newLength = newChildren.length;
+                continue;
+            }
+            item = normalizeNode(item);
+            if (item == null) {
+                newChildren.splice(newIndex, 1);
+                newLength--;
+                continue;
+            }
+            newChildren[newIndex] = item;
+            newIndex++;
+        }
+        var newEnd = newLength;
+        var cachedEnd = cachedLength;
+        newIndex = 0;
+        var cachedIndex = 0;
+        while (newIndex < newEnd && cachedIndex < cachedEnd) {
+            if (newChildren[newIndex].key === cachedChildren[cachedIndex].key) {
+                updateNodeInUpdateChildren(newChildren[newIndex], cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness);
+                newIndex++;
+                cachedIndex++;
+                continue;
+            }
+            while (true) {
+                if (newChildren[newEnd - 1].key === cachedChildren[cachedEnd - 1].key) {
+                    newEnd--;
+                    cachedEnd--;
+                    updateNodeInUpdateChildren(newChildren[newEnd], cachedChildren, cachedEnd, cachedLength, createBefore, element, deepness);
+                    if (newIndex < newEnd && cachedIndex < cachedEnd) continue;
+                }
+                break;
+            }
+            if (newIndex < newEnd && cachedIndex < cachedEnd) {
+                if (newChildren[newIndex].key === cachedChildren[cachedEnd - 1].key) {
+                    cachedChildren.splice(cachedIndex, 0, cachedChildren[cachedEnd - 1]);
+                    cachedChildren.splice(cachedEnd, 1);
+                    reorderAndUpdateNodeInUpdateChildren(newChildren[newIndex], cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness);
+                    newIndex++;
+                    cachedIndex++;
+                    continue;
+                }
+                if (newChildren[newEnd - 1].key === cachedChildren[cachedIndex].key) {
+                    cachedChildren.splice(cachedEnd, 0, cachedChildren[cachedIndex]);
+                    cachedChildren.splice(cachedIndex, 1);
+                    cachedEnd--;
+                    newEnd--;
+                    reorderAndUpdateNodeInUpdateChildren(newChildren[newEnd], cachedChildren, cachedEnd, cachedLength, createBefore, element, deepness);
+                    continue;
+                }
+            }
+            break;
+        }
+        if (cachedIndex === cachedEnd) {
+            if (newIndex === newEnd) {
+                return cachedChildren;
+            }
+            while (newIndex < newEnd) {
+                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex], parentNode, element, findNextNode(cachedChildren, cachedIndex - 1, cachedLength, createBefore)));
+                cachedIndex++;
+                cachedEnd++;
+                cachedLength++;
+                newIndex++;
+            }
+            return cachedChildren;
+        }
+        if (newIndex === newEnd) {
+            while (cachedIndex < cachedEnd) {
+                cachedEnd--;
+                removeNode(cachedChildren[cachedEnd]);
+                cachedChildren.splice(cachedEnd, 1);
+            }
+            return cachedChildren;
+        }
+        var cachedKeys = newHashObj();
+        var newKeys = newHashObj();
+        var key;
+        var node;
+        var backupNewIndex = newIndex;
+        var backupCachedIndex = cachedIndex;
+        var deltaKeyless = 0;
+        for (;cachedIndex < cachedEnd; cachedIndex++) {
+            node = cachedChildren[cachedIndex];
+            key = node.key;
+            if (key != null) {
+                assert(!(key in cachedKeys));
+                cachedKeys[key] = cachedIndex;
+            } else deltaKeyless--;
+        }
+        var keyLess = -deltaKeyless - deltaKeyless;
+        for (;newIndex < newEnd; newIndex++) {
+            node = newChildren[newIndex];
+            key = node.key;
+            if (key != null) {
+                assert(!(key in newKeys));
+                newKeys[key] = newIndex;
+            } else deltaKeyless++;
+        }
+        keyLess += deltaKeyless;
+        var delta = 0;
+        newIndex = backupNewIndex;
+        cachedIndex = backupCachedIndex;
+        var cachedKey;
+        while (cachedIndex < cachedEnd && newIndex < newEnd) {
+            if (cachedChildren[cachedIndex] === null) {
+                cachedChildren.splice(cachedIndex, 1);
+                cachedEnd--;
+                cachedLength--;
+                delta--;
+                continue;
+            }
+            cachedKey = cachedChildren[cachedIndex].key;
+            if (cachedKey == null) {
+                cachedIndex++;
+                continue;
+            }
+            key = newChildren[newIndex].key;
+            if (key == null) {
+                newIndex++;
+                while (newIndex < newEnd) {
+                    key = newChildren[newIndex].key;
+                    if (key != null) break;
+                    newIndex++;
+                }
+                if (key == null) break;
+            }
+            var akpos = cachedKeys[key];
+            if (akpos === undefined) {
+                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex], parentNode, element, findNextNode(cachedChildren, cachedIndex - 1, cachedLength, createBefore)));
+                delta++;
+                newIndex++;
+                cachedIndex++;
+                cachedEnd++;
+                cachedLength++;
+                continue;
+            }
+            if (!(cachedKey in newKeys)) {
+                removeNode(cachedChildren[cachedIndex]);
+                cachedChildren.splice(cachedIndex, 1);
+                delta--;
+                cachedEnd--;
+                cachedLength--;
+                continue;
+            }
+            if (cachedIndex === akpos + delta) {
+                updateNodeInUpdateChildren(newChildren[newIndex], cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness);
+                newIndex++;
+                cachedIndex++;
+            } else {
+                cachedChildren.splice(cachedIndex, 0, cachedChildren[akpos + delta]);
+                delta++;
+                cachedChildren[akpos + delta] = null;
+                reorderAndUpdateNodeInUpdateChildren(newChildren[newIndex], cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness);
+                cachedIndex++;
+                cachedEnd++;
+                cachedLength++;
+                newIndex++;
+            }
+        }
+        while (cachedIndex < cachedEnd) {
+            if (cachedChildren[cachedIndex] === null) {
+                cachedChildren.splice(cachedIndex, 1);
+                cachedEnd--;
+                cachedLength--;
+                continue;
+            }
+            if (cachedChildren[cachedIndex].key != null) {
+                removeNode(cachedChildren[cachedIndex]);
+                cachedChildren.splice(cachedIndex, 1);
+                cachedEnd--;
+                cachedLength--;
+                continue;
+            }
+            cachedIndex++;
+        }
+        while (newIndex < newEnd) {
+            key = newChildren[newIndex].key;
+            if (key != null) {
+                cachedChildren.splice(cachedIndex, 0, createNode(newChildren[newIndex], parentNode, element, findNextNode(cachedChildren, cachedIndex - 1, cachedLength, createBefore)));
+                cachedEnd++;
+                cachedLength++;
+                delta++;
+                cachedIndex++;
+            }
+            newIndex++;
+        }
+        if (!keyLess) return cachedChildren;
+        keyLess = keyLess - Math.abs(deltaKeyless) >> 1;
+        newIndex = backupNewIndex;
+        cachedIndex = backupCachedIndex;
+        while (newIndex < newEnd) {
+            if (cachedIndex < cachedEnd) {
+                cachedKey = cachedChildren[cachedIndex].key;
+                if (cachedKey != null) {
+                    cachedIndex++;
+                    continue;
+                }
+            }
+            key = newChildren[newIndex].key;
+            if (newIndex < cachedEnd && key === cachedChildren[newIndex].key) {
+                if (key != null) {
+                    newIndex++;
+                    continue;
+                }
+                updateNodeInUpdateChildren(newChildren[newIndex], cachedChildren, newIndex, cachedLength, createBefore, element, deepness);
+                keyLess--;
+                newIndex++;
+                cachedIndex = newIndex;
+                continue;
+            }
+            if (key != null) {
+                assert(newIndex === cachedIndex);
+                if (keyLess === 0 && deltaKeyless < 0) {
+                    while (true) {
+                        removeNode(cachedChildren[cachedIndex]);
+                        cachedChildren.splice(cachedIndex, 1);
+                        cachedEnd--;
+                        cachedLength--;
+                        deltaKeyless++;
+                        assert(cachedIndex !== cachedEnd, "there still need to exist key node");
+                        if (cachedChildren[cachedIndex].key != null) break;
+                    }
+                    continue;
+                }
+                while (cachedChildren[cachedIndex].key == null) cachedIndex++;
+                assert(key === cachedChildren[cachedIndex].key);
+                cachedChildren.splice(newIndex, 0, cachedChildren[cachedIndex]);
+                cachedChildren.splice(cachedIndex + 1, 1);
+                reorderInUpdateChildren(cachedChildren, newIndex, cachedLength, createBefore, element);
+                newIndex++;
+                cachedIndex = newIndex;
+                continue;
+            }
+            if (cachedIndex < cachedEnd) {
+                cachedChildren.splice(newIndex, 0, cachedChildren[cachedIndex]);
+                cachedChildren.splice(cachedIndex + 1, 1);
+                reorderAndUpdateNodeInUpdateChildren(newChildren[newIndex], cachedChildren, newIndex, cachedLength, createBefore, element, deepness);
+                keyLess--;
+                newIndex++;
+                cachedIndex++;
+            } else {
+                cachedChildren.splice(newIndex, 0, createNode(newChildren[newIndex], parentNode, element, findNextNode(cachedChildren, newIndex - 1, cachedLength, createBefore)));
+                cachedEnd++;
+                cachedLength++;
+                newIndex++;
+                cachedIndex++;
+            }
+        }
+        while (cachedEnd > newIndex) {
+            cachedEnd--;
+            removeNode(cachedChildren[cachedEnd]);
+            cachedChildren.splice(cachedEnd, 1);
+        }
+        return cachedChildren;
+    }
+    var hasNativeRaf = false;
+    var nativeRaf = window.requestAnimationFrame;
+    if (nativeRaf) {
+        nativeRaf(function(param) {
+            if (param === +param) hasNativeRaf = true;
+        });
+    }
+    var __export_now = Date.now || function() {
+        return new Date().getTime();
+    };
+    var startTime = __export_now();
+    var lastTickTime = 0;
+    function requestAnimationFrame(callback) {
+        if (hasNativeRaf) {
+            nativeRaf(callback);
+        } else {
+            var delay = 50 / 3 + lastTickTime - __export_now();
+            if (delay < 0) delay = 0;
+            window.setTimeout(function() {
+                lastTickTime = __export_now();
+                callback(lastTickTime - startTime);
+            }, delay);
+        }
+    }
+    var ctxInvalidated = "$invalidated";
+    var ctxDeepness = "$deepness";
+    var fullRecreateRequested = true;
+    var scheduled = false;
+    var uptimeMs = 0;
+    var frameCounter = 0;
+    var lastFrameDurationMs = 0;
+    var renderFrameBegin = 0;
+    var regEvents = {};
+    var registryEvents = {};
+    function addEvent(name, priority, callback) {
+        var list = registryEvents[name] || [];
+        list.push({
+            priority: priority,
+            callback: callback
+        });
+        registryEvents[name] = list;
+    }
+    function emitEvent(name, ev, target, node) {
+        var events = regEvents[name];
+        if (events) for (var i = 0; i < events.length; i++) {
+            if (events[i](ev, target, node)) return true;
+        }
+        return false;
+    }
+    function addListener(el, name) {
+        if (name[0] == "!") return;
+        var capture = name[0] == "^";
+        var eventName = name;
+        if (capture) {
+            eventName = name.slice(1);
+        }
+        function enhanceEvent(ev) {
+            ev = ev || window.event;
+            var t = ev.target || ev.srcElement || el;
+            var n = deref(t);
+            emitEvent(name, ev, t, n);
+        }
+        if ("on" + eventName in window) el = window;
+        el.addEventListener(eventName, enhanceEvent, capture);
+    }
+    var eventsCaptured = false;
+    function initEvents() {
+        if (eventsCaptured) return;
+        eventsCaptured = true;
+        var eventNames = Object.keys(registryEvents);
+        for (var j = 0; j < eventNames.length; j++) {
+            var eventName = eventNames[j];
+            var arr = registryEvents[eventName];
+            arr = arr.sort(function(a, b) {
+                return a.priority - b.priority;
+            });
+            regEvents[eventName] = arr.map(function(v) {
+                return v.callback;
+            });
+        }
+        registryEvents = null;
+        var body = document.body;
+        for (var i = 0; i < eventNames.length; i++) {
+            addListener(body, eventNames[i]);
+        }
+    }
+    function selectedUpdate(cache, element, createBefore) {
+        var len = cache.length;
+        for (var i = 0; i < len; i++) {
+            var node = cache[i];
+            var ctx = node.ctx;
+            if (ctx != null && ctx[ctxInvalidated] === frameCounter) {
+                var cloned = {
+                    data: ctx.data,
+                    component: node.component
+                };
+                cache[i] = updateNode(cloned, node, element, createBefore, ctx[ctxDeepness]);
+            } else if (isArray(node.children)) {
+                var backupInSvg = inSvg;
+                if (node.tag === "svg") inSvg = true;
+                selectedUpdate(node.children, node.element || element, findNextNode(cache, i, len, createBefore));
+                inSvg = backupInSvg;
+            }
+        }
+    }
+    var beforeFrameCallback = function() {};
+    var afterFrameCallback = function() {};
+    function setBeforeFrame(callback) {
+        var res = beforeFrameCallback;
+        beforeFrameCallback = callback;
+        return res;
+    }
+    function setAfterFrame(callback) {
+        var res = afterFrameCallback;
+        afterFrameCallback = callback;
+        return res;
+    }
+    function findLastNode(children) {
+        for (var i = children.length - 1; i >= 0; i--) {
+            var c = children[i];
+            var el = c.element;
+            if (el != null) {
+                if (isArray(el)) {
+                    var l = el.length;
+                    if (l === 0) continue;
+                    return el[l - 1];
+                }
+                return el;
+            }
+            var ch = c.children;
+            if (!isArray(ch)) continue;
+            var res = findLastNode(ch);
+            if (res != null) return res;
+        }
+        return null;
+    }
+    function update(time) {
+        renderFrameBegin = __export_now();
+        initEvents();
+        frameCounter++;
+        ignoringShouldChange = nextIgnoreShouldChange;
+        nextIgnoreShouldChange = false;
+        uptimeMs = time;
+        scheduled = false;
+        beforeFrameCallback();
+        var fullRefresh = false;
+        if (fullRecreateRequested) {
+            fullRecreateRequested = false;
+            fullRefresh = true;
+        }
+        var rootIds = Object.keys(roots);
+        for (var i = 0; i < rootIds.length; i++) {
+            var r = roots[rootIds[i]];
+            if (!r) continue;
+            var rc = r.c;
+            var insertBefore = findLastNode(rc);
+            if (insertBefore != null) insertBefore = insertBefore.nextSibling;
+            if (fullRefresh) {
+                var newChildren = r.f();
+                r.e = r.e || document.body;
+                r.c = updateChildren(r.e, newChildren, rc, null, insertBefore, 1e6);
+            } else {
+                selectedUpdate(rc, r.e, insertBefore);
+            }
+        }
+        callPostCallbacks();
+        var r0 = roots["0"];
+        afterFrameCallback(r0 ? r0.c : null);
+        lastFrameDurationMs = __export_now() - renderFrameBegin;
+    }
+    var nextIgnoreShouldChange = false;
+    var ignoringShouldChange = false;
+    function ignoreShouldChange() {
+        nextIgnoreShouldChange = true;
+        __export_invalidate();
+    }
+    function setInvalidate(inv) {
+        var prev = __export_invalidate;
+        return prev;
+    }
+    var __export_invalidate = function(ctx, deepness) {
+        if (fullRecreateRequested) return;
+        if (ctx != null) {
+            if (deepness == undefined) deepness = 1e6;
+            if (ctx[ctxInvalidated] !== frameCounter + 1) {
+                ctx[ctxInvalidated] = frameCounter + 1;
+                ctx[ctxDeepness] = deepness;
+            } else {
+                if (deepness > ctx[ctxDeepness]) ctx[ctxDeepness] = deepness;
+            }
+        } else {
+            fullRecreateRequested = true;
+        }
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(update);
+    };
+    function forceInvalidate() {
+        if (!scheduled) fullRecreateRequested = false;
+        __export_invalidate();
+    }
+    var lastRootId = 0;
+    function addRoot(factory, element, parent) {
+        lastRootId++;
+        var rootId = "" + lastRootId;
+        roots[rootId] = {
+            f: factory,
+            e: element,
+            c: [],
+            p: parent
+        };
+        forceInvalidate();
+        return rootId;
+    }
+    function removeRoot(id) {
+        var root = roots[id];
+        if (!root) return;
+        if (root.c.length) {
+            root.c = updateChildren(root.e, [], root.c, null, null, 1e9);
+        }
+        delete roots[id];
+    }
+    function getRoots() {
+        return roots;
+    }
+    var beforeInit = forceInvalidate;
+    function init(factory, element) {
+        removeRoot("0");
+        roots["0"] = {
+            f: factory,
+            e: element,
+            c: [],
+            p: undefined
+        };
+        beforeInit();
+        beforeInit = forceInvalidate;
+    }
+    function setBeforeInit(callback) {
+        var prevBeforeInit = beforeInit;
+        beforeInit = function() {
+            callback(prevBeforeInit);
+        };
+    }
+    function bubble(node, name, param) {
+        while (node) {
+            var c = node.component;
+            if (c) {
+                var ctx = node.ctx;
+                var m = c[name];
+                if (m) {
+                    if (m.call(c, ctx, param)) return ctx;
+                }
+                m = c.shouldStopBubble;
+                if (m) {
+                    if (m.call(c, ctx, name, param)) break;
+                }
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+    function broadcastEventToNode(node, name, param) {
+        if (!node) return null;
+        var c = node.component;
+        if (c) {
+            var ctx = node.ctx;
+            var m = c[name];
+            if (m) {
+                if (m.call(c, ctx, param)) return ctx;
+            }
+            m = c.shouldStopBroadcast;
+            if (m) {
+                if (m.call(c, ctx, name, param)) return null;
+            }
+        }
+        var ch = node.children;
+        if (isArray(ch)) {
+            for (var i = 0; i < ch.length; i++) {
+                var res = broadcastEventToNode(ch[i], name, param);
+                if (res != null) return res;
+            }
+        } else {
+            return broadcastEventToNode(ch, name, param);
+        }
+    }
+    function broadcast(name, param) {
+        var k = Object.keys(roots);
+        for (var i = 0; i < k.length; i++) {
+            var ch = roots[k[i]].c;
+            if (ch != null) {
+                for (var j = 0; j < ch.length; j++) {
+                    var res = broadcastEventToNode(ch[j], name, param);
+                    if (res != null) return res;
+                }
+            }
+        }
+        return null;
+    }
+    function merge(f1, f2) {
+        var _this = this;
+        return function() {
+            var params = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                params[_i - 0] = arguments[_i];
+            }
+            var result = f1.apply(_this, params);
+            if (result) return result;
+            return f2.apply(_this, params);
+        };
+    }
+    var emptyObject = {};
+    function mergeComponents(c1, c2) {
+        var res = Object.create(c1);
+        for (var i in c2) {
+            if (!(i in emptyObject)) {
+                var m = c2[i];
+                var origM = c1[i];
+                if (i === "id") {
+                    res[i] = (origM != null ? origM : "") + "/" + m;
+                } else if (typeof m === "function" && origM != null && typeof origM === "function") {
+                    res[i] = merge(origM, m);
+                } else {
+                    res[i] = m;
+                }
+            }
+        }
+        return res;
+    }
+    function preEnhance(node, methods) {
+        var comp = node.component;
+        if (!comp) {
+            node.component = methods;
+            return node;
+        }
+        node.component = mergeComponents(methods, comp);
+        return node;
+    }
+    function postEnhance(node, methods) {
+        var comp = node.component;
+        if (!comp) {
+            node.component = methods;
+            return node;
+        }
+        node.component = mergeComponents(comp, methods);
+        return node;
+    }
+    function assign(target) {
+        var sources = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            sources[_i - 1] = arguments[_i];
+        }
+        if (target == null) target = {};
+        var totalArgs = arguments.length;
+        for (var i_3 = 1; i_3 < totalArgs; i_3++) {
+            var source = arguments[i_3];
+            if (source == null) continue;
+            var keys = Object.keys(source);
+            var totalKeys = keys.length;
+            for (var j_1 = 0; j_1 < totalKeys; j_1++) {
+                var key = keys[j_1];
+                target[key] = source[key];
+            }
+        }
+        return target;
+    }
+    function preventDefault(event) {
+        var pd = event.preventDefault;
+        if (pd) pd.call(event); else event.returnValue = false;
+    }
+    function cloneNodeArray(a) {
+        a = a.slice(0);
+        for (var i = 0; i < a.length; i++) {
+            var n = a[i];
+            if (isArray(n)) {
+                a[i] = cloneNodeArray(n);
+            } else if (isObject(n)) {
+                a[i] = cloneNode(n);
+            }
+        }
+        return a;
+    }
+    function cloneNode(node) {
+        var r = assign({}, node);
+        if (r.attrs) {
+            r.attrs = assign({}, r.attrs);
+        }
+        if (isObject(r.style)) {
+            r.style = assign({}, r.style);
+        }
+        var ch = r.children;
+        if (ch) {
+            if (isArray(ch)) {
+                r.children = cloneNodeArray(ch);
+            } else if (isObject(ch)) {
+                r.children = cloneNode(ch);
+            }
+        }
+        return r;
+    }
+    function setStyleShim(name, action) {
+        mapping[name] = action;
+    }
+    function uptime() {
+        return uptimeMs;
+    }
+    function lastFrameDuration() {
+        return lastFrameDurationMs;
+    }
+    function frame() {
+        return frameCounter;
+    }
+    function invalidated() {
+        return scheduled;
+    }
+    var media = null;
+    var breaks = [ [ 414, 800, 900 ], [ 736, 1280, 1440 ] ];
+    function emitOnMediaChange() {
+        media = null;
+        __export_invalidate();
+        return false;
+    }
+    var events = [ "resize", "orientationchange" ];
+    for (var i = 0; i < events.length; i++) addEvent(events[i], 10, emitOnMediaChange);
+    function accDeviceBreaks(newBreaks) {
+        if (newBreaks != null) {
+            breaks = newBreaks;
+            emitOnMediaChange();
+        }
+        return breaks;
+    }
+    var viewport = window.document.documentElement;
+    function getMedia() {
+        if (media == null) {
+            var w = viewport.clientWidth;
+            var h = viewport.clientHeight;
+            var o = window.orientation;
+            var p = h >= w;
+            if (o == null) o = p ? 0 : 90;
+            var device = 0;
+            while (w > breaks[+!p][device]) device++;
+            media = {
+                width: w,
+                height: h,
+                orientation: o,
+                deviceCategory: device,
+                portrait: p
+            };
+        }
+        return media;
+    }
+    var __export_asap = function() {
+        var callbacks = [];
+        function executeCallbacks() {
+            var cbList = callbacks;
+            callbacks = [];
+            for (var i = 0, len = cbList.length; i < len; i++) {
+                cbList[i]();
+            }
+        }
+        var onreadystatechange = "onreadystatechange";
+        if (window.MutationObserver) {
+            var hiddenDiv = document.createElement("div");
+            new MutationObserver(executeCallbacks).observe(hiddenDiv, {
+                attributes: true
+            });
+            return function(callback) {
+                if (!callbacks.length) {
+                    hiddenDiv.setAttribute("yes", "no");
+                }
+                callbacks.push(callback);
+            };
+        } else if (!window.setImmediate && window.postMessage && window.addEventListener) {
+            var MESSAGE_PREFIX = "basap" + Math.random(), hasPostMessage = false;
+            var onGlobalMessage = function(event) {
+                if (event.source === window && event.data === MESSAGE_PREFIX) {
+                    hasPostMessage = false;
+                    executeCallbacks();
+                }
+            };
+            window.addEventListener("message", onGlobalMessage, false);
+            return function(fn) {
+                callbacks.push(fn);
+                if (!hasPostMessage) {
+                    hasPostMessage = true;
+                    window.postMessage(MESSAGE_PREFIX, "*");
+                }
+            };
+        } else if (!window.setImmediate && onreadystatechange in document.createElement("script")) {
+            var scriptEl;
+            return function(callback) {
+                callbacks.push(callback);
+                if (!scriptEl) {
+                    scriptEl = document.createElement("script");
+                    scriptEl[onreadystatechange] = function() {
+                        scriptEl[onreadystatechange] = null;
+                        scriptEl.parentNode.removeChild(scriptEl);
+                        scriptEl = null;
+                        executeCallbacks();
+                    };
+                    document.body.appendChild(scriptEl);
+                }
+            };
+        } else {
+            var timeout;
+            var timeoutFn = window.setImmediate || setTimeout;
+            return function(callback) {
+                callbacks.push(callback);
+                if (!timeout) {
+                    timeout = timeoutFn(function() {
+                        timeout = undefined;
+                        executeCallbacks();
+                    }, 0);
+                }
+            };
+        }
+    }();
+    (function() {
+        if (!window.Promise) {
+            function bind(fn, thisArg) {
+                return function() {
+                    fn.apply(thisArg, arguments);
+                };
+            }
+            function handle(deferred) {
+                var _this = this;
+                if (this.s === null) {
+                    this.d.push(deferred);
+                    return;
+                }
+                __export_asap(function() {
+                    var cb = _this.s ? deferred[0] : deferred[1];
+                    if (cb == null) {
+                        (_this.s ? deferred[2] : deferred[3])(_this.v);
+                        return;
+                    }
+                    var ret;
+                    try {
+                        ret = cb(_this.v);
+                    } catch (e) {
+                        deferred[3](e);
+                        return;
+                    }
+                    deferred[2](ret);
+                });
+            }
+            function finale() {
+                for (var i = 0, len = this.d.length; i < len; i++) {
+                    handle.call(this, this.d[i]);
+                }
+                this.d = null;
+            }
+            function reject(newValue) {
+                this.s = false;
+                this.v = newValue;
+                finale.call(this);
+            }
+            function doResolve(fn, onFulfilled, onRejected) {
+                var done = false;
+                try {
+                    fn(function(value) {
+                        if (done) return;
+                        done = true;
+                        onFulfilled(value);
+                    }, function(reason) {
+                        if (done) return;
+                        done = true;
+                        onRejected(reason);
+                    });
+                } catch (ex) {
+                    if (done) return;
+                    done = true;
+                    onRejected(ex);
+                }
+            }
+            function resolve(newValue) {
+                try {
+                    if (newValue === this) throw new TypeError("Promise selfresolve");
+                    if (Object(newValue) === newValue) {
+                        var then = newValue.then;
+                        if (typeof then === "function") {
+                            doResolve(bind(then, newValue), bind(resolve, this), bind(reject, this));
+                            return;
+                        }
+                    }
+                    this.s = true;
+                    this.v = newValue;
+                    finale.call(this);
+                } catch (e) {
+                    reject.call(this, e);
+                }
+            }
+            function Promise(fn) {
+                this.s = null;
+                this.v = null;
+                this.d = [];
+                doResolve(fn, bind(resolve, this), bind(reject, this));
+            }
+            Promise.prototype.then = function(onFulfilled, onRejected) {
+                var me = this;
+                return new Promise(function(resolve, reject) {
+                    handle.call(me, [ onFulfilled, onRejected, resolve, reject ]);
+                });
+            };
+            Promise.all = function() {
+                var args = [].slice.call(arguments.length === 1 && isArray(arguments[0]) ? arguments[0] : arguments);
+                return new Promise(function(resolve, reject) {
+                    if (args.length === 0) {
+                        resolve(args);
+                        return;
+                    }
+                    var remaining = args.length;
+                    function res(i, val) {
+                        try {
+                            if (val && (typeof val === "object" || typeof val === "function")) {
+                                var then = val.then;
+                                if (typeof then === "function") {
+                                    then.call(val, function(val) {
+                                        res(i, val);
+                                    }, reject);
+                                    return;
+                                }
+                            }
+                            args[i] = val;
+                            if (--remaining === 0) {
+                                resolve(args);
+                            }
+                        } catch (ex) {
+                            reject(ex);
+                        }
+                    }
+                    for (var i = 0; i < args.length; i++) {
+                        res(i, args[i]);
+                    }
+                });
+            };
+            Promise.resolve = function(value) {
+                if (value && typeof value === "object" && value.constructor === Promise) {
+                    return value;
+                }
+                return new Promise(function(resolve) {
+                    resolve(value);
+                });
+            };
+            Promise.reject = function(value) {
+                return new Promise(function(resolve, reject) {
+                    reject(value);
+                });
+            };
+            Promise.race = function(values) {
+                return new Promise(function(resolve, reject) {
+                    for (var i = 0, len = values.length; i < len; i++) {
+                        values[i].then(resolve, reject);
+                    }
+                });
+            };
+            window["Promise"] = Promise;
+        }
+    })();
+    if (ieVersion() === 9) {
+        function addFilter(s, v) {
+            if (s.zoom == null) s.zoom = "1";
+            var f = s.filter;
+            s.filter = f == null ? v : f + " " + v;
+        }
+        var simpleLinearGradient = /^linear\-gradient\(to (.+?),(.+?),(.+?)\)/gi;
+        setStyleShim("background", function(s, v, oldName) {
+            var match = simpleLinearGradient.exec(v);
+            if (match == null) return;
+            var dir = match[1];
+            var color1 = match[2];
+            var color2 = match[3];
+            var tmp;
+            switch (dir) {
+              case "top":
+                dir = "0";
+                tmp = color1;
+                color1 = color2;
+                color2 = tmp;
+                break;
 
-for(var k=b.format.options,f=0;f<k.length;f++){var l=k[f];if("number"==typeof l.selector){var m=c.addConstant(Qb(a,l.value));c.addBody("if ("+j+"==="+l.selector+") return "+m+"("+d+",''+"+j+");")}}var n=c.addLocal(),o=c.addConstant(Ob(a));c.addBody("var "+n+"="+o+"("+j+","+(b.format.ordinal?"true":"false")+");");for(var f=0;f<k.length;f++){var l=k[f];if("string"==typeof l.selector&&"other"!==l.selector){var m=c.addConstant(Qb(a,l.value));c.addBody("if ("+n+"==="+c.addConstant(l.selector)+") return "+m+"("+d+",''+"+j+");")}}for(var f=0;f<k.length;f++){var l=k[f];if("other"===l.selector){var m=c.addConstant(Qb(a,l.value));c.addBody("return "+m+"("+d+",''+"+j+");")}}break;case"select":for(var k=b.format.options,f=0;f<k.length;f++){var l=k[f];if("string"==typeof l.selector&&"other"!==l.selector){var m=c.addConstant(Qb(a,l.value));c.addBody("if ("+h+"==="+c.addConstant(l.selector)+") return "+m+"("+d+","+h+");")}}for(var f=0;f<k.length;f++){var l=k[f];if("other"===l.selector){var m=c.addConstant(Qb(a,l.value));c.addBody("return "+m+"("+d+","+h+");")}}break;case"number":case"date":case"time":var p=b.format.style||"default",k=b.format.options;if(k){for(var l={},q=!1,f=0;f<k.length;f++)if("object"==typeof k[f].value)q=!0,l[k[f].key]=null;else{var r=k[f].value;void 0===r&&(r=!0),l[k[f].key]=r}var s=c.addConstant(Pb(a,i,p,l));if(q){var t=c.addConstant(l),u=c.addLocal(),v=c.addArg(1);c.addBody("var "+u+"="+t+";");for(var f=0;f<k.length;f++)if("object"==typeof k[f].value){var w=c.addConstant(Qb(a,k[f].value));c.addBody(u+"["+c.addConstant(k[f].key)+"]="+w+"("+d+","+v+");")}c.addBody("return "+s+"("+h+","+u+");")}else c.addBody("return "+s+"("+h+","+c.addConstant(l)+");")}else{var s=c.addConstant(Pb(a,i,p,null));c.addBody("return "+s+"("+h+");")}}return c.build()}}function Rb(a){return new Promise(function(b,c){var d=document.createElement("script");d.type="text/javascript",d.charset="utf-8",d.onload=function(){b()},d.onerror=function(){c("Failed to load "+a)},d.src=a,document.head.appendChild(d)})}function Sb(a){var b=me[a];if(void 0===b)throw new Error("message "+a+" is not defined");return b}function Tb(a,b){if(0===le.length)throw new Error("before using t you need to wait for initialization of g11n");var c;if("number"==typeof a){if(null==b)return Sb(a);if(c=ne[a],void 0===c){var d=Lb(Sb(a));if("error"===d.type)throw new Error("message "+a+" in "+le+" has error: "+d.msg);c=Qb(le,d),ne[a]=c}}else{if(null==b)return a;if(c=oe[a],void 0===c){var d=Lb(a);if("error"===d.type)throw new Error('message "'+a+'" has error: '+d.msg+" on position: "+d.pos);c=Qb(le,d),oe[a]=c}}return c(b)}function Ub(a){if(ke)throw new Error("initLocalization must be called only once");he=a,ke=!0;var b=Promise.resolve(null);return b=b.then(function(){return Vb(a.defaultLocale||"en")}),ba(function(a){b.then(a)}),b}function Vb(a){var b=Promise.resolve(null);if(le===a)return b;if(!ie[a]){ie[a]=!0;var c=he.pathToTranslation;if(c){var d=c(a);d&&(b=b.then(function(){return Rb(d)}))}}return b=b.then(function(){le=a,me=je[a]||[],ne=[],ne.length=me.length,W()})}function Wb(a,b,c){Array.isArray(b)&&b.length>=1&&Mb(a,b[0]),Array.isArray(c)&&(je[a]=c),ie[a]=!0}var Xb=Array.isArray,Yb="textContent"in b(""),Zb=!1,$b=[],_b=[],ac=function(a,b,c,d){c!==d&&(a.value=c)},bc=["Webkit","Moz","ms","O"],cc=document.createElement("div").style,dc=f(),ec={boxFlex:!0,boxFlexGroup:!0,columnCount:!0,flex:!0,flexGrow:!0,flexNegative:!0,flexPositive:!0,flexShrink:!0,fontWeight:!0,lineClamp:!0,lineHeight:!0,opacity:!0,order:!0,orphans:!0,strokeDashoffset:!0,widows:!0,zIndex:!0,zoom:!0},fc=f(),gc=!1,hc=window.requestAnimationFrame;hc&&hc(function(a){a===+a&&(gc=!0)});for(var ic=Date.now||function(){return(new Date).getTime()},jc=ic(),kc=0,lc="$invalidated",mc="$deepness",nc=!0,oc=!1,pc=0,qc=0,rc=0,sc=0,tc={},uc={},vc=!1,wc=function(){},xc=function(){},yc=!1,zc=!1,Ac=function(a,b){nc||(null!=a?(void 0==b&&(b=1e6),a[lc]!==qc+1?(a[lc]=qc+1,a[mc]=b):b>a[mc]&&(a[mc]=b)):nc=!0,oc||(oc=!0,M(V)))},Bc=0,Cc=Y,Dc=null,Ec=[[414,800,900],[736,1280,1440]],Fc=["resize","orientationchange"],Gc=0;Gc<Fc.length;Gc++)N(Fc[Gc],10,ia);var Hc=window.document.documentElement,Ic=function(){function a(){var a=b;b=[];for(var c=0,d=a.length;d>c;c++)a[c]()}var b=[],c="onreadystatechange";if(window.MutationObserver){var d=document.createElement("div");return new MutationObserver(a).observe(d,{attributes:!0}),function(a){b.length||d.setAttribute("yes","no"),b.push(a)}}if(!window.setImmediate&&window.postMessage&&window.addEventListener){var e="basap"+Math.random(),f=!1,g=function(b){b.source===window&&b.data===e&&(f=!1,a())};return window.addEventListener("message",g,!1),function(a){b.push(a),f||(f=!0,window.postMessage(e,"*"))}}if(!window.setImmediate&&c in document.createElement("script")){var h;return function(d){b.push(d),h||(h=document.createElement("script"),h[c]=function(){h[c]=null,h.parentNode.removeChild(h),h=null,a()},document.body.appendChild(h))}}var i,j=window.setImmediate||setTimeout;return function(c){b.push(c),i||(i=j(function(){i=void 0,a()},0))}}();if(function(){function a(a,b){return function(){a.apply(b,arguments)}}function b(a){var b=this;return null===this.s?void this.d.push(a):void Ic(function(){var c=b.s?a[0]:a[1];if(null==c)return void(b.s?a[2]:a[3])(b.v);var d;try{d=c(b.v)}catch(e){return void a[3](e)}a[2](d)})}function c(){for(var a=0,c=this.d.length;c>a;a++)b.call(this,this.d[a]);this.d=null}function d(a){this.s=!1,this.v=a,c.call(this)}function e(a,b,c){var d=!1;try{a(function(a){d||(d=!0,b(a))},function(a){d||(d=!0,c(a))})}catch(e){if(d)return;d=!0,c(e)}}function f(b){try{if(b===this)throw new TypeError("Promise selfresolve");if(Object(b)===b){var g=b.then;if("function"==typeof g)return void e(a(g,b),a(f,this),a(d,this))}this.s=!0,this.v=b,c.call(this)}catch(h){d.call(this,h)}}function g(b){this.s=null,this.v=null,this.d=[],e(b,a(f,this),a(d,this))}window.Promise||(g.prototype.then=function(a,c){var d=this;return new g(function(e,f){b.call(d,[a,c,e,f])})},g.all=function(){var a=[].slice.call(1===arguments.length&&Xb(arguments[0])?arguments[0]:arguments);return new g(function(b,c){function d(f,g){try{if(g&&("object"==typeof g||"function"==typeof g)){var h=g.then;if("function"==typeof h)return void h.call(g,function(a){d(f,a)},c)}a[f]=g,0===--e&&b(a)}catch(i){c(i)}}if(0===a.length)return void b(a);for(var e=a.length,f=0;f<a.length;f++)d(f,a[f])})},g.resolve=function(a){return a&&"object"==typeof a&&a.constructor===g?a:new g(function(b){b(a)})},g.reject=function(a){return new g(function(b,c){c(a)})},g.race=function(a){return new g(function(b,c){for(var d=0,e=a.length;e>d;d++)a[d].then(b,c)})},window.Promise=g)}(),9===k()){var Jc=/^linear\-gradient\(to (.+?),(.+?),(.+?)\)/gi;ha("background",function(a,b,c){var d=Jc.exec(b);if(null!=d){var e,f=d[1],g=d[2],h=d[3];switch(f){case"top":f="0",e=g,g=h,h=e;break;case"bottom":f="0";break;case"left":f="1",e=g,g=h,h=e;break;case"right":f="1";break;default:return}a[c]="none",ka(a,"progid:DXImageTransform.Microsoft.gradient(startColorstr='"+g+"',endColorstr='"+h+"', gradientType='"+f+"')")}})}else{var Kc=document.createElement("div").style;if(Kc.cssText="background:-webkit-linear-gradient(top,red,red)",Kc.background.length>0){var Lc=/^(?:repeating\-)?(?:linear|radial)\-gradient/gi,Mc={top:"bottom",bottom:"top",left:"right",right:"left"};ha("background",la)}}for(var Nc="b$value",Oc="value",Pc=e(function(a,b,c,d){var e=a.tagName,f="SELECT"===e,g="INPUT"===e||"TEXTAREA"===e;if(!g&&!f)return void Pc(a,b,c,d);void 0===b.ctx&&(b.ctx={}),void 0===d&&(b.ctx[Nc]=c);var h=f&&a.multiple,i=!1;if(h){var j=a.options,k=pa(j);if(!na(c,k))if(void 0===d||na(k,d)||!na(c,b.ctx[Nc])){for(var l=0;l<j.length;l++)j[l].selected=oa(c,j[l].value);k=pa(j),na(k,c)&&(i=!0)}else i=!0}else if(g||f)if(g&&ma(a)){var m=a.checked;c!==m&&(void 0===d||m===d||c!==b.ctx[Nc]?a.checked=c:i=!0)}else{var n=f&&a.size<2,o=a[Oc];c!==o&&(void 0===d||o===d||c!==b.ctx[Nc]?f?(""===c?a.selectedIndex=n?0:-1:a[Oc]=c,(""!==c||n)&&(o=a[Oc],c!==o&&(i=!0))):a[Oc]=c:i=!0)}i?qa(null,a,b):b.ctx[Nc]=c}),Fc=["input","cut","paste","keydown","keypress","keyup","click","change"],Gc=0;Gc<Fc.length;Gc++)N(Fc[Gc],10,qa);N("keydown",50,sa),N("keyup",50,ta),N("keypress",50,ua);var Qc,Gc,Rc=null,Sc="onClick",Tc=["PointerDown","PointerMove","PointerUp","PointerCancel"];if(k()&&k()<11){var Uc=["click","dblclick","drag","dragend","dragenter","dragleave","dragover","dragstart","drop","mousedown","mousemove","mouseout","mouseover","mouseup","mousewheel","scroll","wheel"];for(Gc=0;Gc<Uc.length;++Gc)N(Uc[Gc],1,Aa)}if(void 0!==window.onpointerdown)for(Gc=0;4>Gc;Gc++){var Vc=Tc[Gc];Ba(Vc.toLowerCase(),Ea(Vc))}else if(void 0!==window.onmspointerdown)for(Gc=0;4>Gc;Gc++){var Vc=Tc[Gc];Ba("MS"+Vc,Ea(Vc))}else void 0!==window.ontouchstart&&(Ba("touchstart",Fa(Tc[0])),Ba("touchmove",Fa(Tc[1])),Ba("touchend",Fa(Tc[2])),Ba("touchcancel",Fa(Tc[3]))),Ba("mousedown",Ga(Tc[0])),Ba("mousemove",Ga(Tc[1])),Ba("mouseup",Ga(Tc[2]));for(var Wc=0;4>Wc;Wc++)!function(a){var b="on"+a;N("!"+a,50,function(a,c,d){return va(b,a)||null!=ca(d,b,a)})}(Tc[Wc]);for(var Xc=f(),Yc=[],Zc=-1,$c=0,_c=0,ad=0,bd=!1,cd=[],dd=["!PointerDown","!PointerMove","!PointerUp","!PointerCancel","click"],ed=[Ka,La,Ma,Na,Oa],Gc=0;5>Gc;Gc++)N(dd[Gc],3,ed[Gc]);for(var fd=["Down","Move","Up","Up"],Gc=0;4>Gc;Gc++)N(dd[Gc],80,Pa("onMouse"+fd[Gc]));Ba("selectstart",Ta),Ba("click",Ra(Sc)),Ba("dblclick",Ra("onDoubleClick"));for(var gd=function(a,b){var c=k()?800:500;Yc.push([a,b,ic()+c,1])},hd=null,id=null,jd=[],Fc=["focus","blur","keydown","keyup","keypress","mousedown","mouseup","mousemove","touchstart","touchend"],Gc=0;Gc<Fc.length;Gc++)N(Fc[Gc],50,k()?Va:Ua);var kd=[];N("^scroll",10,Wa);var ld,md,nd=0,od=[],pd=null,qd=null,rd={userSelect:""};l(rd);var sd=Object.keys(rd),td=sd[sd.length-1],ud=function(a){this.id=++nd,this.pointerid=a,this.enabledOperations=7,this.operation=0,this.started=!1,this.beforeDrag=!0,this.local=!0,this.system=!1,this.ended=!1,this.cursor=null,this.overNode=null,this.targetCtx=null,this.dragView=null,this.startX=0,this.startY=0,this.distanceToStart=10,this.x=0,this.y=0,this.deltaX=0,this.deltaY=0,this.totalX=0,this.totalY=0,this.lastX=0,this.lastY=0,this.shift=!1,this.ctrl=!1,this.alt=!1,this.meta=!1,this.data=f(),a>=0&&(yd[a]=this),od.push(this)},vd={render:function(a,b){var c=a.data;b.tag="div",b.style={position:"absolute",left:c.x,top:c.y},b.children=c.dragView(c)}},wd={render:function(a,b){for(var c=[],d=0;d<od.length;d++){var e=od[d];e.beforeDrag||null==e.dragView||0==e.x&&0==e.y||c.push({key:""+e.id,data:e,component:vd})}b.tag="div",b.style={position:"fixed",pointerEvents:"none",userSelect:"none",left:0,top:0,right:0,bottom:0};var f=document.body.style,g=Ya();g&&f.cursor!==g&&(f.cursor=g),b.children=c},onDrag:function(a){return Ac(a),!1}},xd=ud.prototype;xd.setOperation=function(a){this.operation=a},xd.setDragNodeView=function(a){this.dragView=a},xd.addData=function(a,b){return this.data[a]=b,!0},xd.listData=function(){return Object.keys(this.data)},xd.hasData=function(a){return void 0!==this.data[a]},xd.getData=function(a){return this.data[a]},xd.setEnabledOps=function(a){this.enabledOperations=a},xd.cancelDnd=function(){_a(null,this),this.destroy()},xd.destroy=function(){this.ended=!0,this.started&&ea("onDragEnd",this),delete yd[this.pointerid];for(var a=0;a<od.length;a++)if(od[a]===this){od.splice(a,1);break}if(pd===this&&(pd=null),0===od.length&&null!=qd){$(qd),qd=null;var b=document.body.style;b.cursor=ld,b[td]=md}};var yd=f(),zd=["none","link","copy","copyLink","move","linkMove","copyMove","all"];N("!PointerDown",4,$a),N("!PointerMove",4,bb),N("!PointerUp",4,cb),N("!PointerCancel",4,db),N("selectstart",4,mb),N("dragstart",5,fb),N("dragover",5,hb),N("dragend",5,jb),N("drag",5,ib),N("drop",5,kb),N("dragenter",5,lb),N("dragleave",5,lb);var Ad=function(){return od};N("hashchange",10,nb);var Bd=(f(),f()),Cd=f(),Dd=f(),Ed=[],Fd=f(),Gd=!1,Hd=null,Id=0,Jd=9===k(),Kd=S(rb),Ld=/\:|\ |\>/,Md=/([A-Z])/g,Nd=/^ms-/,Od=/\s*rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d+|\d*\.\d+)\s*\)\s*/,Pd="bundle.png";window.b||(window.b={deref:B,getRoots:_,setInvalidate:X,setAfterFrame:T,setBeforeFrame:S,getDnds:Ad});var Qd,Rd,Sd,Td,Ud,Vd,Wd,Xd,Yd,Zd=-1,$d=-2,_d=-3,ae=-4,be=-5,ce=function(){function a(){this.constants=[],this.body="",this.argCount=0,this.localCount=0}return a.prototype.addConstant=function(a){for(var b=this.constants,c=0;c<b.length;c++)if(b[c]===a)return"c_"+c;return b.push(a),"c_"+(b.length-1)},a.prototype.addArg=function(a){return a>=this.argCount&&(this.argCount=a+1),"a_"+a},a.prototype.addBody=function(a){this.body+=a},a.prototype.addLocal=function(){return"l_"+this.localCount++},a.prototype.build=function(){for(var a=[],b=0;b<this.argCount;b++)a.push("a_"+b);if(this.constants.length>0){for(var c=[],b=0;b<this.constants.length;b++)c.push("c_"+b);return c.push("return function("+a.join(",")+") {\n"+this.body+"\n}"),Function.apply(null,c).apply(null,this.constants)}return a.push(this.body),Function.apply(null,a)},a}(),de=Object.create(null);de.en={pluralFn:function(a,b){var c=String(a).split("."),d=!c[1],e=Number(c[0])==a,f=e&&c[0].slice(-1),g=e&&c[0].slice(-2);return b?1==f&&11!=g?"one":2==f&&12!=g?"two":3==f&&13!=g?"few":"other":1==a&&d?"one":"other"}};var ee={};!function(){var a={},b={exports:a};(function(){function a(a){this._value=a}function c(a,b,c,d){var e,f,g=Math.pow(10,b);return f=(c(a*g)/g).toFixed(b),d&&(e=new RegExp("0{1,"+d+"}$"),f=f.replace(e,"")),f}function d(a,b,c){var d;return d=b.indexOf("$")>-1?f(a,b,c):b.indexOf("%")>-1?g(a,b,c):b.indexOf(":")>-1?h(a,b):j(a._value,b,c)}function e(a,b){var c,d,e,f,g,h=b,j=["KB","MB","GB","TB","PB","EB","ZB","YB"],k=!1;if(b.indexOf(":")>-1)a._value=i(b);else if(b===r)a._value=0;else{for("."!==p[q].delimiters.decimal&&(b=b.replace(/\./g,"").replace(p[q].delimiters.decimal,".")),c=new RegExp("[^a-zA-Z]"+p[q].abbreviations.thousand+"(?:\\)|(\\"+p[q].currency.symbol+")?(?:\\))?)?$"),d=new RegExp("[^a-zA-Z]"+p[q].abbreviations.million+"(?:\\)|(\\"+p[q].currency.symbol+")?(?:\\))?)?$"),e=new RegExp("[^a-zA-Z]"+p[q].abbreviations.billion+"(?:\\)|(\\"+p[q].currency.symbol+")?(?:\\))?)?$"),f=new RegExp("[^a-zA-Z]"+p[q].abbreviations.trillion+"(?:\\)|(\\"+p[q].currency.symbol+")?(?:\\))?)?$"),g=0;g<=j.length&&!(k=b.indexOf(j[g])>-1?Math.pow(1024,g+1):!1);g++);a._value=(k?k:1)*(h.match(c)?Math.pow(10,3):1)*(h.match(d)?Math.pow(10,6):1)*(h.match(e)?Math.pow(10,9):1)*(h.match(f)?Math.pow(10,12):1)*(b.indexOf("%")>-1?.01:1)*((b.split("-").length+Math.min(b.split("(").length-1,b.split(")").length-1))%2?1:-1)*Number(b.replace(/[^0-9\.]+/g,"")),a._value=k?Math.ceil(a._value):a._value}return a._value}function f(a,b,c){var d,e,f=b.indexOf("$"),g=b.indexOf("("),h=b.indexOf("-"),i="";return b.indexOf(" $")>-1?(i=" ",b=b.replace(" $","")):b.indexOf("$ ")>-1?(i=" ",b=b.replace("$ ","")):b=b.replace("$",""),e=j(a._value,b,c),1>=f?e.indexOf("(")>-1||e.indexOf("-")>-1?(e=e.split(""),d=1,(g>f||h>f)&&(d=0),e.splice(d,0,p[q].currency.symbol+i),e=e.join("")):e=p[q].currency.symbol+i+e:e.indexOf(")")>-1?(e=e.split(""),e.splice(-1,0,i+p[q].currency.symbol),e=e.join("")):e=e+i+p[q].currency.symbol,e}function g(a,b,c){var d,e="",f=100*a._value;return b.indexOf(" %")>-1?(e=" ",b=b.replace(" %","")):b=b.replace("%",""),d=j(f,b,c),d.indexOf(")")>-1?(d=d.split(""),d.splice(-1,0,e+"%"),d=d.join("")):d=d+e+"%",d}function h(a){var b=Math.floor(a._value/60/60),c=Math.floor((a._value-60*b*60)/60),d=Math.round(a._value-60*b*60-60*c);return b+":"+(10>c?"0"+c:c)+":"+(10>d?"0"+d:d)}function i(a){var b=a.split(":"),c=0;return 3===b.length?(c+=60*Number(b[0])*60,c+=60*Number(b[1]),c+=Number(b[2])):2===b.length&&(c+=60*Number(b[0]),c+=Number(b[1])),Number(c)}function j(a,b,d){var e,f,g,h,i,j,k=!1,l=!1,m=!1,n="",o=!1,s=!1,t=!1,u=!1,v=!1,w="",x="",y=Math.abs(a),z=["B","KB","MB","GB","TB","PB","EB","ZB","YB"],A="",B=!1;if(0===a&&null!==r)return r;if(b.indexOf("(")>-1?(k=!0,b=b.slice(1,-1)):b.indexOf("+")>-1&&(l=!0,b=b.replace(/\+/g,"")),b.indexOf("a")>-1&&(o=b.indexOf("aK")>=0,s=b.indexOf("aM")>=0,t=b.indexOf("aB")>=0,u=b.indexOf("aT")>=0,v=o||s||t||u,b.indexOf(" a")>-1?(n=" ",b=b.replace(" a","")):b=b.replace("a",""),y>=Math.pow(10,12)&&!v||u?(n+=p[q].abbreviations.trillion,a/=Math.pow(10,12)):y<Math.pow(10,12)&&y>=Math.pow(10,9)&&!v||t?(n+=p[q].abbreviations.billion,a/=Math.pow(10,9)):y<Math.pow(10,9)&&y>=Math.pow(10,6)&&!v||s?(n+=p[q].abbreviations.million,a/=Math.pow(10,6)):(y<Math.pow(10,6)&&y>=Math.pow(10,3)&&!v||o)&&(n+=p[q].abbreviations.thousand,a/=Math.pow(10,3))),b.indexOf("b")>-1)for(b.indexOf(" b")>-1?(w=" ",b=b.replace(" b","")):b=b.replace("b",""),g=0;g<=z.length;g++)if(e=Math.pow(1024,g),f=Math.pow(1024,g+1),a>=e&&f>a){w+=z[g],e>0&&(a/=e);break}return b.indexOf("o")>-1&&(b.indexOf(" o")>-1?(x=" ",b=b.replace(" o","")):b=b.replace("o",""),x+=p[q].ordinal(a)),b.indexOf("[.]")>-1&&(m=!0,b=b.replace("[.]",".")),h=a.toString().split(".")[0],i=b.split(".")[1],j=b.indexOf(","),i?(i.indexOf("[")>-1?(i=i.replace("]",""),i=i.split("["),A=c(a,i[0].length+i[1].length,d,i[1].length)):A=c(a,i.length,d),h=A.split(".")[0],A=A.split(".")[1].length?p[q].delimiters.decimal+A.split(".")[1]:"",m&&0===Number(A.slice(1))&&(A="")):h=c(a,null,d),h.indexOf("-")>-1&&(h=h.slice(1),B=!0),j>-1&&(h=h.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g,"$1"+p[q].delimiters.thousands)),0===b.indexOf(".")&&(h=""),(k&&B?"(":"")+(!k&&B?"-":"")+(!B&&l?"+":"")+h+A+(x?x:"")+(n?n:"")+(w?w:"")+(k&&B?")":"")}function k(a,b){p[a]=b}function l(a){var b=a.toString().split(".");return b.length<2?1:Math.pow(10,b[1].length)}function m(){var a=Array.prototype.slice.call(arguments);return a.reduce(function(a,b){var c=l(a),d=l(b);return c>d?c:d},-(1/0))}var n,o="1.5.3",p={},q="en",r=null,s="0,0",t="undefined"!=typeof b&&b.exports;n=function(b){return n.isNumeral(b)?b=b.value():0===b||"undefined"==typeof b?b=0:Number(b)||(b=n.fn.unformat(b)),new a(Number(b))},n.version=o,n.isNumeral=function(b){return b instanceof a},n.language=function(a,b){if(!a)return q;if(a&&!b){if(!p[a])throw new Error("Unknown language : "+a);q=a}return(b||!p[a])&&k(a,b),n},n.languageData=function(a){if(!a)return p[q];if(!p[a])throw new Error("Unknown language : "+a);return p[a]},n.language("en",{delimiters:{thousands:",",decimal:"."},abbreviations:{thousand:"k",million:"m",billion:"b",trillion:"t"},ordinal:function(a){var b=a%10;return 1===~~(a%100/10)?"th":1===b?"st":2===b?"nd":3===b?"rd":"th"},currency:{symbol:"$"}}),n.zeroFormat=function(a){r="string"==typeof a?a:null},n.defaultFormat=function(a){s="string"==typeof a?a:"0.0"},"function"!=typeof Array.prototype.reduce&&(Array.prototype.reduce=function(a,b){"use strict";if(null===this||"undefined"==typeof this)throw new TypeError("Array.prototype.reduce called on null or undefined");if("function"!=typeof a)throw new TypeError(a+" is not a function");var c,d,e=this.length>>>0,f=!1;for(1<arguments.length&&(d=b,f=!0),c=0;e>c;++c)this.hasOwnProperty(c)&&(f?d=a(d,this[c],c,this):(d=this[c],f=!0));if(!f)throw new TypeError("Reduce of empty array with no initial value");return d}),n.fn=a.prototype={clone:function(){return n(this)},format:function(a,b){return d(this,a?a:s,void 0!==b?b:Math.round)},unformat:function(a){return"[object Number]"===Object.prototype.toString.call(a)?a:e(this,a?a:s)},value:function(){return this._value},valueOf:function(){return this._value},set:function(a){return this._value=Number(a),this},add:function(a){function b(a,b){return a+c*b}var c=m.call(null,this._value,a);return this._value=[this._value,a].reduce(b,0)/c,this},subtract:function(a){function b(a,b){return a-c*b}var c=m.call(null,this._value,a);return this._value=[a].reduce(b,this._value*c)/c,this},multiply:function(a){function b(a,b){var c=m(a,b);return a*c*b*c/(c*c)}return this._value=[this._value,a].reduce(b,1),this},divide:function(a){function b(a,b){var c=m(a,b);return a*c/(b*c)}return this._value=[this._value,a].reduce(b),this},difference:function(a){return Math.abs(n(this._value).subtract(a).value())}},t&&(b.exports=n),"undefined"==typeof ender&&(this.numeral=n),"function"==typeof define&&define.amd&&define([],function(){return n})}).call(this),ee["node_modules/numeral/numeral.js"]=b.exports}(),function(){var a={},b={exports:a};!function(c,d){"object"==typeof a&&"undefined"!=typeof b?b.exports=d():"function"==typeof define&&define.amd?define(d):c.moment=d()}(this,function(){"use strict";function a(){return Ic.apply(null,arguments)}function c(a){Ic=a}function d(a){return"[object Array]"===Object.prototype.toString.call(a)}function e(a){return a instanceof Date||"[object Date]"===Object.prototype.toString.call(a)}function f(a,b){var c,d=[];for(c=0;c<a.length;++c)d.push(b(a[c],c));return d}function g(a,b){return Object.prototype.hasOwnProperty.call(a,b)}function h(a,b){for(var c in b)g(b,c)&&(a[c]=b[c]);return g(b,"toString")&&(a.toString=b.toString),g(b,"valueOf")&&(a.valueOf=b.valueOf),a}function i(a,b,c,d){return Da(a,b,c,d,!0).utc()}function j(){return{empty:!1,unusedTokens:[],unusedInput:[],overflow:-2,charsLeftOver:0,nullInput:!1,invalidMonth:null,invalidFormat:!1,userInvalidated:!1,iso:!1}}function k(a){return null==a._pf&&(a._pf=j()),a._pf}function l(a){if(null==a._isValid){var b=k(a);a._isValid=!(isNaN(a._d.getTime())||!(b.overflow<0)||b.empty||b.invalidMonth||b.invalidWeekday||b.nullInput||b.invalidFormat||b.userInvalidated),a._strict&&(a._isValid=a._isValid&&0===b.charsLeftOver&&0===b.unusedTokens.length&&void 0===b.bigHour)}return a._isValid}function m(a){var b=i(0/0);return null!=a?h(k(b),a):k(b).userInvalidated=!0,b}function n(a,b){var c,d,e;if("undefined"!=typeof b._isAMomentObject&&(a._isAMomentObject=b._isAMomentObject),"undefined"!=typeof b._i&&(a._i=b._i),"undefined"!=typeof b._f&&(a._f=b._f),"undefined"!=typeof b._l&&(a._l=b._l),"undefined"!=typeof b._strict&&(a._strict=b._strict),"undefined"!=typeof b._tzm&&(a._tzm=b._tzm),"undefined"!=typeof b._isUTC&&(a._isUTC=b._isUTC),"undefined"!=typeof b._offset&&(a._offset=b._offset),"undefined"!=typeof b._pf&&(a._pf=k(b)),"undefined"!=typeof b._locale&&(a._locale=b._locale),Kc.length>0)for(c in Kc)d=Kc[c],e=b[d],"undefined"!=typeof e&&(a[d]=e);return a}function o(b){n(this,b),this._d=new Date(null!=b._d?b._d.getTime():0/0),Lc===!1&&(Lc=!0,a.updateOffset(this),Lc=!1)}function p(a){return a instanceof o||null!=a&&null!=a._isAMomentObject}function q(a){return 0>a?Math.ceil(a):Math.floor(a)}function r(a){var b=+a,c=0;return 0!==b&&isFinite(b)&&(c=q(b)),c}function s(a,b,c){var d,e=Math.min(a.length,b.length),f=Math.abs(a.length-b.length),g=0;for(d=0;e>d;d++)(c&&a[d]!==b[d]||!c&&r(a[d])!==r(b[d]))&&g++;return g+f}function t(){}function u(a){return a?a.toLowerCase().replace("_","-"):a}function v(a){for(var b,c,d,e,f=0;f<a.length;){for(e=u(a[f]).split("-"),b=e.length,c=u(a[f+1]),c=c?c.split("-"):null;b>0;){if(d=w(e.slice(0,b).join("-")))return d;if(c&&c.length>=b&&s(e,c,!0)>=b-1)break;b--}f++}return null}function w(a){var c=null;if(!Mc[a]&&"undefined"!=typeof b&&b&&b.exports)try{c=Jc._abbr,require("./locale/"+a),x(c)}catch(d){}return Mc[a]}function x(a,b){var c;return a&&(c="undefined"==typeof b?z(a):y(a,b),c&&(Jc=c)),Jc._abbr}function y(a,b){return null!==b?(b.abbr=a,Mc[a]=Mc[a]||new t,Mc[a].set(b),x(a),Mc[a]):(delete Mc[a],null)}function z(a){var b;if(a&&a._locale&&a._locale._abbr&&(a=a._locale._abbr),!a)return Jc;if(!d(a)){if(b=w(a))return b;a=[a]}return v(a)}function A(a,b){var c=a.toLowerCase();Nc[c]=Nc[c+"s"]=Nc[b]=a}function B(a){return"string"==typeof a?Nc[a]||Nc[a.toLowerCase()]:void 0}function C(a){var b,c,d={};for(c in a)g(a,c)&&(b=B(c),b&&(d[b]=a[c]));return d}function D(b,c){return function(d){return null!=d?(F(this,b,d),a.updateOffset(this,c),this):E(this,b)}}function E(a,b){return a._d["get"+(a._isUTC?"UTC":"")+b]()}function F(a,b,c){return a._d["set"+(a._isUTC?"UTC":"")+b](c)}function G(a,b){var c;if("object"==typeof a)for(c in a)this.set(c,a[c]);else if(a=B(a),"function"==typeof this[a])return this[a](b);return this}function H(a,b,c){var d=""+Math.abs(a),e=b-d.length,f=a>=0;return(f?c?"+":"":"-")+Math.pow(10,Math.max(0,e)).toString().substr(1)+d}function I(a,b,c,d){var e=d;"string"==typeof d&&(e=function(){return this[d]()}),a&&(Rc[a]=e),b&&(Rc[b[0]]=function(){return H(e.apply(this,arguments),b[1],b[2])}),c&&(Rc[c]=function(){return this.localeData().ordinal(e.apply(this,arguments),a)})}function J(a){return a.match(/\[[\s\S]/)?a.replace(/^\[|\]$/g,""):a.replace(/\\/g,"")}function K(a){var b,c,d=a.match(Oc);for(b=0,c=d.length;c>b;b++)d[b]=Rc[d[b]]?Rc[d[b]]:J(d[b]);return function(e){var f="";for(b=0;c>b;b++)f+=d[b]instanceof Function?d[b].call(e,a):d[b];return f}}function L(a,b){return a.isValid()?(b=M(b,a.localeData()),Qc[b]=Qc[b]||K(b),Qc[b](a)):a.localeData().invalidDate()}function M(a,b){function c(a){return b.longDateFormat(a)||a}var d=5;for(Pc.lastIndex=0;d>=0&&Pc.test(a);)a=a.replace(Pc,c),Pc.lastIndex=0,d-=1;return a}function N(a){return"function"==typeof a&&"[object Function]"===Object.prototype.toString.call(a)}function O(a,b,c){ed[a]=N(b)?b:function(a){return a&&c?c:b}}function P(a,b){return g(ed,a)?ed[a](b._strict,b._locale):new RegExp(Q(a))}function Q(a){return a.replace("\\","").replace(/\\(\[)|\\(\])|\[([^\]\[]*)\]|\\(.)/g,function(a,b,c,d,e){return b||c||d||e}).replace(/[-\/\\^$*+?.()|[\]{}]/g,"\\$&")}function R(a,b){var c,d=b;for("string"==typeof a&&(a=[a]),"number"==typeof b&&(d=function(a,c){c[b]=r(a)}),c=0;c<a.length;c++)fd[a[c]]=d}function S(a,b){R(a,function(a,c,d,e){d._w=d._w||{},b(a,d._w,d,e)})}function T(a,b,c){null!=b&&g(fd,a)&&fd[a](b,c._a,c,a)}function U(a,b){return new Date(Date.UTC(a,b+1,0)).getUTCDate()}function V(a){return this._months[a.month()]}function W(a){return this._monthsShort[a.month()]}function X(a,b,c){var d,e,f;for(this._monthsParse||(this._monthsParse=[],this._longMonthsParse=[],this._shortMonthsParse=[]),d=0;12>d;d++){if(e=i([2e3,d]),c&&!this._longMonthsParse[d]&&(this._longMonthsParse[d]=new RegExp("^"+this.months(e,"").replace(".","")+"$","i"),this._shortMonthsParse[d]=new RegExp("^"+this.monthsShort(e,"").replace(".","")+"$","i")),c||this._monthsParse[d]||(f="^"+this.months(e,"")+"|^"+this.monthsShort(e,""),this._monthsParse[d]=new RegExp(f.replace(".",""),"i")),c&&"MMMM"===b&&this._longMonthsParse[d].test(a))return d;if(c&&"MMM"===b&&this._shortMonthsParse[d].test(a))return d;if(!c&&this._monthsParse[d].test(a))return d}}function Y(a,b){var c;return"string"==typeof b&&(b=a.localeData().monthsParse(b),"number"!=typeof b)?a:(c=Math.min(a.date(),U(a.year(),b)),a._d["set"+(a._isUTC?"UTC":"")+"Month"](b,c),a)}function Z(b){return null!=b?(Y(this,b),a.updateOffset(this,!0),this):E(this,"Month")}function $(){return U(this.year(),this.month())}function _(a){var b,c=a._a;return c&&-2===k(a).overflow&&(b=c[hd]<0||c[hd]>11?hd:c[id]<1||c[id]>U(c[gd],c[hd])?id:c[jd]<0||c[jd]>24||24===c[jd]&&(0!==c[kd]||0!==c[ld]||0!==c[md])?jd:c[kd]<0||c[kd]>59?kd:c[ld]<0||c[ld]>59?ld:c[md]<0||c[md]>999?md:-1,k(a)._overflowDayOfYear&&(gd>b||b>id)&&(b=id),k(a).overflow=b),a}function aa(b){a.suppressDeprecationWarnings===!1&&"undefined"!=typeof console&&console.warn&&console.warn("Deprecation warning: "+b)}function ba(a,b){var c=!0;return h(function(){return c&&(aa(a+"\n"+(new Error).stack),c=!1),b.apply(this,arguments)},b)}function ca(a,b){pd[a]||(aa(b),pd[a]=!0)}function da(a){var b,c,d=a._i,e=qd.exec(d);if(e){for(k(a).iso=!0,b=0,c=rd.length;c>b;b++)if(rd[b][1].exec(d)){a._f=rd[b][0];break}for(b=0,c=sd.length;c>b;b++)if(sd[b][1].exec(d)){a._f+=(e[6]||" ")+sd[b][0];break}d.match(bd)&&(a._f+="Z"),wa(a)}else a._isValid=!1}function ea(b){var c=td.exec(b._i);return null!==c?void(b._d=new Date(+c[1])):(da(b),void(b._isValid===!1&&(delete b._isValid,a.createFromInputFallback(b))))}function fa(a,b,c,d,e,f,g){var h=new Date(a,b,c,d,e,f,g);return 1970>a&&h.setFullYear(a),h}function ga(a){var b=new Date(Date.UTC.apply(null,arguments));return 1970>a&&b.setUTCFullYear(a),b}function ha(a){return ia(a)?366:365}function ia(a){return a%4===0&&a%100!==0||a%400===0}function ja(){return ia(this.year())}function ka(a,b,c){var d,e=c-b,f=c-a.day();return f>e&&(f-=7),e-7>f&&(f+=7),d=Ea(a).add(f,"d"),{week:Math.ceil(d.dayOfYear()/7),year:d.year()}}function la(a){return ka(a,this._week.dow,this._week.doy).week}function ma(){return this._week.dow}function na(){return this._week.doy}function oa(a){var b=this.localeData().week(this);return null==a?b:this.add(7*(a-b),"d")}function pa(a){var b=ka(this,1,4).week;return null==a?b:this.add(7*(a-b),"d")}function qa(a,b,c,d,e){var f,g=6+e-d,h=ga(a,0,1+g),i=h.getUTCDay();return e>i&&(i+=7),c=null!=c?1*c:e,f=1+g+7*(b-1)-i+c,{year:f>0?a:a-1,dayOfYear:f>0?f:ha(a-1)+f}}function ra(a){var b=Math.round((this.clone().startOf("day")-this.clone().startOf("year"))/864e5)+1;return null==a?b:this.add(a-b,"d")}function sa(a,b,c){return null!=a?a:null!=b?b:c}function ta(a){var b=new Date;return a._useUTC?[b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate()]:[b.getFullYear(),b.getMonth(),b.getDate()]}function ua(a){var b,c,d,e,f=[];if(!a._d){for(d=ta(a),a._w&&null==a._a[id]&&null==a._a[hd]&&va(a),a._dayOfYear&&(e=sa(a._a[gd],d[gd]),a._dayOfYear>ha(e)&&(k(a)._overflowDayOfYear=!0),c=ga(e,0,a._dayOfYear),a._a[hd]=c.getUTCMonth(),a._a[id]=c.getUTCDate()),b=0;3>b&&null==a._a[b];++b)a._a[b]=f[b]=d[b];for(;7>b;b++)a._a[b]=f[b]=null==a._a[b]?2===b?1:0:a._a[b];24===a._a[jd]&&0===a._a[kd]&&0===a._a[ld]&&0===a._a[md]&&(a._nextDay=!0,a._a[jd]=0),a._d=(a._useUTC?ga:fa).apply(null,f),null!=a._tzm&&a._d.setUTCMinutes(a._d.getUTCMinutes()-a._tzm),a._nextDay&&(a._a[jd]=24)}}function va(a){var b,c,d,e,f,g,h;b=a._w,null!=b.GG||null!=b.W||null!=b.E?(f=1,g=4,c=sa(b.GG,a._a[gd],ka(Ea(),1,4).year),d=sa(b.W,1),e=sa(b.E,1)):(f=a._locale._week.dow,g=a._locale._week.doy,c=sa(b.gg,a._a[gd],ka(Ea(),f,g).year),d=sa(b.w,1),null!=b.d?(e=b.d,f>e&&++d):e=null!=b.e?b.e+f:f),h=qa(c,d,e,g,f),a._a[gd]=h.year,a._dayOfYear=h.dayOfYear}function wa(b){if(b._f===a.ISO_8601)return void da(b);b._a=[],k(b).empty=!0;var c,d,e,f,g,h=""+b._i,i=h.length,j=0;for(e=M(b._f,b._locale).match(Oc)||[],c=0;c<e.length;c++)f=e[c],d=(h.match(P(f,b))||[])[0],d&&(g=h.substr(0,h.indexOf(d)),g.length>0&&k(b).unusedInput.push(g),h=h.slice(h.indexOf(d)+d.length),j+=d.length),Rc[f]?(d?k(b).empty=!1:k(b).unusedTokens.push(f),T(f,d,b)):b._strict&&!d&&k(b).unusedTokens.push(f);k(b).charsLeftOver=i-j,h.length>0&&k(b).unusedInput.push(h),k(b).bigHour===!0&&b._a[jd]<=12&&b._a[jd]>0&&(k(b).bigHour=void 0),b._a[jd]=xa(b._locale,b._a[jd],b._meridiem),ua(b),_(b)}function xa(a,b,c){var d;return null==c?b:null!=a.meridiemHour?a.meridiemHour(b,c):null!=a.isPM?(d=a.isPM(c),d&&12>b&&(b+=12),d||12!==b||(b=0),b):b}function ya(a){var b,c,d,e,f;if(0===a._f.length)return k(a).invalidFormat=!0,void(a._d=new Date(0/0));for(e=0;e<a._f.length;e++)f=0,b=n({},a),null!=a._useUTC&&(b._useUTC=a._useUTC),b._f=a._f[e],wa(b),l(b)&&(f+=k(b).charsLeftOver,f+=10*k(b).unusedTokens.length,k(b).score=f,(null==d||d>f)&&(d=f,c=b));h(a,c||b)}function za(a){if(!a._d){var b=C(a._i);a._a=[b.year,b.month,b.day||b.date,b.hour,b.minute,b.second,b.millisecond],ua(a)}}function Aa(a){var b=new o(_(Ba(a)));return b._nextDay&&(b.add(1,"d"),b._nextDay=void 0),b}function Ba(a){var b=a._i,c=a._f;return a._locale=a._locale||z(a._l),null===b||void 0===c&&""===b?m({nullInput:!0}):("string"==typeof b&&(a._i=b=a._locale.preparse(b)),p(b)?new o(_(b)):(d(c)?ya(a):c?wa(a):e(b)?a._d=b:Ca(a),a))}function Ca(b){var c=b._i;void 0===c?b._d=new Date:e(c)?b._d=new Date(+c):"string"==typeof c?ea(b):d(c)?(b._a=f(c.slice(0),function(a){return parseInt(a,10)}),ua(b)):"object"==typeof c?za(b):"number"==typeof c?b._d=new Date(c):a.createFromInputFallback(b)}function Da(a,b,c,d,e){var f={};return"boolean"==typeof c&&(d=c,c=void 0),f._isAMomentObject=!0,f._useUTC=f._isUTC=e,f._l=c,f._i=a,f._f=b,f._strict=d,Aa(f)}function Ea(a,b,c,d){return Da(a,b,c,d,!1)}function Fa(a,b){var c,e;if(1===b.length&&d(b[0])&&(b=b[0]),!b.length)return Ea();for(c=b[0],e=1;e<b.length;++e)(!b[e].isValid()||b[e][a](c))&&(c=b[e]);
+              case "bottom":
+                dir = "0";
+                break;
 
-return c}function Ga(){var a=[].slice.call(arguments,0);return Fa("isBefore",a)}function Ha(){var a=[].slice.call(arguments,0);return Fa("isAfter",a)}function Ia(a){var b=C(a),c=b.year||0,d=b.quarter||0,e=b.month||0,f=b.week||0,g=b.day||0,h=b.hour||0,i=b.minute||0,j=b.second||0,k=b.millisecond||0;this._milliseconds=+k+1e3*j+6e4*i+36e5*h,this._days=+g+7*f,this._months=+e+3*d+12*c,this._data={},this._locale=z(),this._bubble()}function Ja(a){return a instanceof Ia}function Ka(a,b){I(a,0,0,function(){var a=this.utcOffset(),c="+";return 0>a&&(a=-a,c="-"),c+H(~~(a/60),2)+b+H(~~a%60,2)})}function La(a){var b=(a||"").match(bd)||[],c=b[b.length-1]||[],d=(c+"").match(yd)||["-",0,0],e=+(60*d[1])+r(d[2]);return"+"===d[0]?e:-e}function Ma(b,c){var d,f;return c._isUTC?(d=c.clone(),f=(p(b)||e(b)?+b:+Ea(b))-+d,d._d.setTime(+d._d+f),a.updateOffset(d,!1),d):Ea(b).local()}function Na(a){return 15*-Math.round(a._d.getTimezoneOffset()/15)}function Oa(b,c){var d,e=this._offset||0;return null!=b?("string"==typeof b&&(b=La(b)),Math.abs(b)<16&&(b=60*b),!this._isUTC&&c&&(d=Na(this)),this._offset=b,this._isUTC=!0,null!=d&&this.add(d,"m"),e!==b&&(!c||this._changeInProgress?cb(this,Za(b-e,"m"),1,!1):this._changeInProgress||(this._changeInProgress=!0,a.updateOffset(this,!0),this._changeInProgress=null)),this):this._isUTC?e:Na(this)}function Pa(a,b){return null!=a?("string"!=typeof a&&(a=-a),this.utcOffset(a,b),this):-this.utcOffset()}function Qa(a){return this.utcOffset(0,a)}function Ra(a){return this._isUTC&&(this.utcOffset(0,a),this._isUTC=!1,a&&this.subtract(Na(this),"m")),this}function Sa(){return this._tzm?this.utcOffset(this._tzm):"string"==typeof this._i&&this.utcOffset(La(this._i)),this}function Ta(a){return a=a?Ea(a).utcOffset():0,(this.utcOffset()-a)%60===0}function Ua(){return this.utcOffset()>this.clone().month(0).utcOffset()||this.utcOffset()>this.clone().month(5).utcOffset()}function Va(){if("undefined"!=typeof this._isDSTShifted)return this._isDSTShifted;var a={};if(n(a,this),a=Ba(a),a._a){var b=a._isUTC?i(a._a):Ea(a._a);this._isDSTShifted=this.isValid()&&s(a._a,b.toArray())>0}else this._isDSTShifted=!1;return this._isDSTShifted}function Wa(){return!this._isUTC}function Xa(){return this._isUTC}function Ya(){return this._isUTC&&0===this._offset}function Za(a,b){var c,d,e,f=a,h=null;return Ja(a)?f={ms:a._milliseconds,d:a._days,M:a._months}:"number"==typeof a?(f={},b?f[b]=a:f.milliseconds=a):(h=zd.exec(a))?(c="-"===h[1]?-1:1,f={y:0,d:r(h[id])*c,h:r(h[jd])*c,m:r(h[kd])*c,s:r(h[ld])*c,ms:r(h[md])*c}):(h=Ad.exec(a))?(c="-"===h[1]?-1:1,f={y:$a(h[2],c),M:$a(h[3],c),d:$a(h[4],c),h:$a(h[5],c),m:$a(h[6],c),s:$a(h[7],c),w:$a(h[8],c)}):null==f?f={}:"object"==typeof f&&("from"in f||"to"in f)&&(e=ab(Ea(f.from),Ea(f.to)),f={},f.ms=e.milliseconds,f.M=e.months),d=new Ia(f),Ja(a)&&g(a,"_locale")&&(d._locale=a._locale),d}function $a(a,b){var c=a&&parseFloat(a.replace(",","."));return(isNaN(c)?0:c)*b}function _a(a,b){var c={milliseconds:0,months:0};return c.months=b.month()-a.month()+12*(b.year()-a.year()),a.clone().add(c.months,"M").isAfter(b)&&--c.months,c.milliseconds=+b-+a.clone().add(c.months,"M"),c}function ab(a,b){var c;return b=Ma(b,a),a.isBefore(b)?c=_a(a,b):(c=_a(b,a),c.milliseconds=-c.milliseconds,c.months=-c.months),c}function bb(a,b){return function(c,d){var e,f;return null===d||isNaN(+d)||(ca(b,"moment()."+b+"(period, number) is deprecated. Please use moment()."+b+"(number, period)."),f=c,c=d,d=f),c="string"==typeof c?+c:c,e=Za(c,d),cb(this,e,a),this}}function cb(b,c,d,e){var f=c._milliseconds,g=c._days,h=c._months;e=null==e?!0:e,f&&b._d.setTime(+b._d+f*d),g&&F(b,"Date",E(b,"Date")+g*d),h&&Y(b,E(b,"Month")+h*d),e&&a.updateOffset(b,g||h)}function db(a,b){var c=a||Ea(),d=Ma(c,this).startOf("day"),e=this.diff(d,"days",!0),f=-6>e?"sameElse":-1>e?"lastWeek":0>e?"lastDay":1>e?"sameDay":2>e?"nextDay":7>e?"nextWeek":"sameElse";return this.format(b&&b[f]||this.localeData().calendar(f,this,Ea(c)))}function eb(){return new o(this)}function fb(a,b){var c;return b=B("undefined"!=typeof b?b:"millisecond"),"millisecond"===b?(a=p(a)?a:Ea(a),+this>+a):(c=p(a)?+a:+Ea(a),c<+this.clone().startOf(b))}function gb(a,b){var c;return b=B("undefined"!=typeof b?b:"millisecond"),"millisecond"===b?(a=p(a)?a:Ea(a),+a>+this):(c=p(a)?+a:+Ea(a),+this.clone().endOf(b)<c)}function hb(a,b,c){return this.isAfter(a,c)&&this.isBefore(b,c)}function ib(a,b){var c;return b=B(b||"millisecond"),"millisecond"===b?(a=p(a)?a:Ea(a),+this===+a):(c=+Ea(a),+this.clone().startOf(b)<=c&&c<=+this.clone().endOf(b))}function jb(a,b,c){var d,e,f=Ma(a,this),g=6e4*(f.utcOffset()-this.utcOffset());return b=B(b),"year"===b||"month"===b||"quarter"===b?(e=kb(this,f),"quarter"===b?e/=3:"year"===b&&(e/=12)):(d=this-f,e="second"===b?d/1e3:"minute"===b?d/6e4:"hour"===b?d/36e5:"day"===b?(d-g)/864e5:"week"===b?(d-g)/6048e5:d),c?e:q(e)}function kb(a,b){var c,d,e=12*(b.year()-a.year())+(b.month()-a.month()),f=a.clone().add(e,"months");return 0>b-f?(c=a.clone().add(e-1,"months"),d=(b-f)/(f-c)):(c=a.clone().add(e+1,"months"),d=(b-f)/(c-f)),-(e+d)}function lb(){return this.clone().locale("en").format("ddd MMM DD YYYY HH:mm:ss [GMT]ZZ")}function mb(){var a=this.clone().utc();return 0<a.year()&&a.year()<=9999?"function"==typeof Date.prototype.toISOString?this.toDate().toISOString():L(a,"YYYY-MM-DD[T]HH:mm:ss.SSS[Z]"):L(a,"YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]")}function nb(b){var c=L(this,b||a.defaultFormat);return this.localeData().postformat(c)}function ob(a,b){return this.isValid()?Za({to:this,from:a}).locale(this.locale()).humanize(!b):this.localeData().invalidDate()}function pb(a){return this.from(Ea(),a)}function qb(a,b){return this.isValid()?Za({from:this,to:a}).locale(this.locale()).humanize(!b):this.localeData().invalidDate()}function rb(a){return this.to(Ea(),a)}function sb(a){var b;return void 0===a?this._locale._abbr:(b=z(a),null!=b&&(this._locale=b),this)}function tb(){return this._locale}function ub(a){switch(a=B(a)){case"year":this.month(0);case"quarter":case"month":this.date(1);case"week":case"isoWeek":case"day":this.hours(0);case"hour":this.minutes(0);case"minute":this.seconds(0);case"second":this.milliseconds(0)}return"week"===a&&this.weekday(0),"isoWeek"===a&&this.isoWeekday(1),"quarter"===a&&this.month(3*Math.floor(this.month()/3)),this}function vb(a){return a=B(a),void 0===a||"millisecond"===a?this:this.startOf(a).add(1,"isoWeek"===a?"week":a).subtract(1,"ms")}function wb(){return+this._d-6e4*(this._offset||0)}function xb(){return Math.floor(+this/1e3)}function yb(){return this._offset?new Date(+this):this._d}function zb(){var a=this;return[a.year(),a.month(),a.date(),a.hour(),a.minute(),a.second(),a.millisecond()]}function Ab(){var a=this;return{years:a.year(),months:a.month(),date:a.date(),hours:a.hours(),minutes:a.minutes(),seconds:a.seconds(),milliseconds:a.milliseconds()}}function Bb(){return l(this)}function Cb(){return h({},k(this))}function Db(){return k(this).overflow}function Eb(a,b){I(0,[a,a.length],0,b)}function Fb(a,b,c){return ka(Ea([a,11,31+b-c]),b,c).week}function Gb(a){var b=ka(this,this.localeData()._week.dow,this.localeData()._week.doy).year;return null==a?b:this.add(a-b,"y")}function Hb(a){var b=ka(this,1,4).year;return null==a?b:this.add(a-b,"y")}function Ib(){return Fb(this.year(),1,4)}function Jb(){var a=this.localeData()._week;return Fb(this.year(),a.dow,a.doy)}function Kb(a){return null==a?Math.ceil((this.month()+1)/3):this.month(3*(a-1)+this.month()%3)}function Lb(a,b){return"string"!=typeof a?a:isNaN(a)?(a=b.weekdaysParse(a),"number"==typeof a?a:null):parseInt(a,10)}function Mb(a){return this._weekdays[a.day()]}function Nb(a){return this._weekdaysShort[a.day()]}function Ob(a){return this._weekdaysMin[a.day()]}function Pb(a){var b,c,d;for(this._weekdaysParse=this._weekdaysParse||[],b=0;7>b;b++)if(this._weekdaysParse[b]||(c=Ea([2e3,1]).day(b),d="^"+this.weekdays(c,"")+"|^"+this.weekdaysShort(c,"")+"|^"+this.weekdaysMin(c,""),this._weekdaysParse[b]=new RegExp(d.replace(".",""),"i")),this._weekdaysParse[b].test(a))return b}function Qb(a){var b=this._isUTC?this._d.getUTCDay():this._d.getDay();return null!=a?(a=Lb(a,this.localeData()),this.add(a-b,"d")):b}function Rb(a){var b=(this.day()+7-this.localeData()._week.dow)%7;return null==a?b:this.add(a-b,"d")}function Sb(a){return null==a?this.day()||7:this.day(this.day()%7?a:a-7)}function Tb(a,b){I(a,0,0,function(){return this.localeData().meridiem(this.hours(),this.minutes(),b)})}function Ub(a,b){return b._meridiemParse}function Vb(a){return"p"===(a+"").toLowerCase().charAt(0)}function Wb(a,b,c){return a>11?c?"pm":"PM":c?"am":"AM"}function Xb(a,b){b[md]=r(1e3*("0."+a))}function Yb(){return this._isUTC?"UTC":""}function Zb(){return this._isUTC?"Coordinated Universal Time":""}function $b(a){return Ea(1e3*a)}function _b(){return Ea.apply(null,arguments).parseZone()}function ac(a,b,c){var d=this._calendar[a];return"function"==typeof d?d.call(b,c):d}function bc(a){var b=this._longDateFormat[a],c=this._longDateFormat[a.toUpperCase()];return b||!c?b:(this._longDateFormat[a]=c.replace(/MMMM|MM|DD|dddd/g,function(a){return a.slice(1)}),this._longDateFormat[a])}function cc(){return this._invalidDate}function dc(a){return this._ordinal.replace("%d",a)}function ec(a){return a}function fc(a,b,c,d){var e=this._relativeTime[c];return"function"==typeof e?e(a,b,c,d):e.replace(/%d/i,a)}function gc(a,b){var c=this._relativeTime[a>0?"future":"past"];return"function"==typeof c?c(b):c.replace(/%s/i,b)}function hc(a){var b,c;for(c in a)b=a[c],"function"==typeof b?this[c]=b:this["_"+c]=b;this._ordinalParseLenient=new RegExp(this._ordinalParse.source+"|"+/\d{1,2}/.source)}function ic(a,b,c,d){var e=z(),f=i().set(d,b);return e[c](f,a)}function jc(a,b,c,d,e){if("number"==typeof a&&(b=a,a=void 0),a=a||"",null!=b)return ic(a,b,c,e);var f,g=[];for(f=0;d>f;f++)g[f]=ic(a,f,c,e);return g}function kc(a,b){return jc(a,b,"months",12,"month")}function lc(a,b){return jc(a,b,"monthsShort",12,"month")}function mc(a,b){return jc(a,b,"weekdays",7,"day")}function nc(a,b){return jc(a,b,"weekdaysShort",7,"day")}function oc(a,b){return jc(a,b,"weekdaysMin",7,"day")}function pc(){var a=this._data;return this._milliseconds=Xd(this._milliseconds),this._days=Xd(this._days),this._months=Xd(this._months),a.milliseconds=Xd(a.milliseconds),a.seconds=Xd(a.seconds),a.minutes=Xd(a.minutes),a.hours=Xd(a.hours),a.months=Xd(a.months),a.years=Xd(a.years),this}function qc(a,b,c,d){var e=Za(b,c);return a._milliseconds+=d*e._milliseconds,a._days+=d*e._days,a._months+=d*e._months,a._bubble()}function rc(a,b){return qc(this,a,b,1)}function sc(a,b){return qc(this,a,b,-1)}function tc(a){return 0>a?Math.floor(a):Math.ceil(a)}function uc(){var a,b,c,d,e,f=this._milliseconds,g=this._days,h=this._months,i=this._data;return f>=0&&g>=0&&h>=0||0>=f&&0>=g&&0>=h||(f+=864e5*tc(wc(h)+g),g=0,h=0),i.milliseconds=f%1e3,a=q(f/1e3),i.seconds=a%60,b=q(a/60),i.minutes=b%60,c=q(b/60),i.hours=c%24,g+=q(c/24),e=q(vc(g)),h+=e,g-=tc(wc(e)),d=q(h/12),h%=12,i.days=g,i.months=h,i.years=d,this}function vc(a){return 4800*a/146097}function wc(a){return 146097*a/4800}function xc(a){var b,c,d=this._milliseconds;if(a=B(a),"month"===a||"year"===a)return b=this._days+d/864e5,c=this._months+vc(b),"month"===a?c:c/12;switch(b=this._days+Math.round(wc(this._months)),a){case"week":return b/7+d/6048e5;case"day":return b+d/864e5;case"hour":return 24*b+d/36e5;case"minute":return 1440*b+d/6e4;case"second":return 86400*b+d/1e3;case"millisecond":return Math.floor(864e5*b)+d;default:throw new Error("Unknown unit "+a)}}function yc(){return this._milliseconds+864e5*this._days+this._months%12*2592e6+31536e6*r(this._months/12)}function zc(a){return function(){return this.as(a)}}function Ac(a){return a=B(a),this[a+"s"]()}function Bc(a){return function(){return this._data[a]}}function Cc(){return q(this.days()/7)}function Dc(a,b,c,d,e){return e.relativeTime(b||1,!!c,a,d)}function Ec(a,b,c){var d=Za(a).abs(),e=le(d.as("s")),f=le(d.as("m")),g=le(d.as("h")),h=le(d.as("d")),i=le(d.as("M")),j=le(d.as("y")),k=e<me.s&&["s",e]||1===f&&["m"]||f<me.m&&["mm",f]||1===g&&["h"]||g<me.h&&["hh",g]||1===h&&["d"]||h<me.d&&["dd",h]||1===i&&["M"]||i<me.M&&["MM",i]||1===j&&["y"]||["yy",j];return k[2]=b,k[3]=+a>0,k[4]=c,Dc.apply(null,k)}function Fc(a,b){return void 0===me[a]?!1:void 0===b?me[a]:(me[a]=b,!0)}function Gc(a){var b=this.localeData(),c=Ec(this,!a,b);return a&&(c=b.pastFuture(+this,c)),b.postformat(c)}function Hc(){var a,b,c,d=ne(this._milliseconds)/1e3,e=ne(this._days),f=ne(this._months);a=q(d/60),b=q(a/60),d%=60,a%=60,c=q(f/12),f%=12;var g=c,h=f,i=e,j=b,k=a,l=d,m=this.asSeconds();return m?(0>m?"-":"")+"P"+(g?g+"Y":"")+(h?h+"M":"")+(i?i+"D":"")+(j||k||l?"T":"")+(j?j+"H":"")+(k?k+"M":"")+(l?l+"S":""):"P0D"}var Ic,Jc,Kc=a.momentProperties=[],Lc=!1,Mc={},Nc={},Oc=/(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g,Pc=/(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g,Qc={},Rc={},Sc=/\d/,Tc=/\d\d/,Uc=/\d{3}/,Vc=/\d{4}/,Wc=/[+-]?\d{6}/,Xc=/\d\d?/,Yc=/\d{1,3}/,Zc=/\d{1,4}/,$c=/[+-]?\d{1,6}/,_c=/\d+/,ad=/[+-]?\d+/,bd=/Z|[+-]\d\d:?\d\d/gi,cd=/[+-]?\d+(\.\d{1,3})?/,dd=/[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i,ed={},fd={},gd=0,hd=1,id=2,jd=3,kd=4,ld=5,md=6;I("M",["MM",2],"Mo",function(){return this.month()+1}),I("MMM",0,0,function(a){return this.localeData().monthsShort(this,a)}),I("MMMM",0,0,function(a){return this.localeData().months(this,a)}),A("month","M"),O("M",Xc),O("MM",Xc,Tc),O("MMM",dd),O("MMMM",dd),R(["M","MM"],function(a,b){b[hd]=r(a)-1}),R(["MMM","MMMM"],function(a,b,c,d){var e=c._locale.monthsParse(a,d,c._strict);null!=e?b[hd]=e:k(c).invalidMonth=a});var nd="January_February_March_April_May_June_July_August_September_October_November_December".split("_"),od="Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec".split("_"),pd={};a.suppressDeprecationWarnings=!1;var qd=/^\s*(?:[+-]\d{6}|\d{4})-(?:(\d\d-\d\d)|(W\d\d$)|(W\d\d-\d)|(\d\d\d))((T| )(\d\d(:\d\d(:\d\d(\.\d+)?)?)?)?([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/,rd=[["YYYYYY-MM-DD",/[+-]\d{6}-\d{2}-\d{2}/],["YYYY-MM-DD",/\d{4}-\d{2}-\d{2}/],["GGGG-[W]WW-E",/\d{4}-W\d{2}-\d/],["GGGG-[W]WW",/\d{4}-W\d{2}/],["YYYY-DDD",/\d{4}-\d{3}/]],sd=[["HH:mm:ss.SSSS",/(T| )\d\d:\d\d:\d\d\.\d+/],["HH:mm:ss",/(T| )\d\d:\d\d:\d\d/],["HH:mm",/(T| )\d\d:\d\d/],["HH",/(T| )\d\d/]],td=/^\/?Date\((\-?\d+)/i;a.createFromInputFallback=ba("moment construction falls back to js Date. This is discouraged and will be removed in upcoming major release. Please refer to https://github.com/moment/moment/issues/1407 for more info.",function(a){a._d=new Date(a._i+(a._useUTC?" UTC":""))}),I(0,["YY",2],0,function(){return this.year()%100}),I(0,["YYYY",4],0,"year"),I(0,["YYYYY",5],0,"year"),I(0,["YYYYYY",6,!0],0,"year"),A("year","y"),O("Y",ad),O("YY",Xc,Tc),O("YYYY",Zc,Vc),O("YYYYY",$c,Wc),O("YYYYYY",$c,Wc),R(["YYYYY","YYYYYY"],gd),R("YYYY",function(b,c){c[gd]=2===b.length?a.parseTwoDigitYear(b):r(b)}),R("YY",function(b,c){c[gd]=a.parseTwoDigitYear(b)}),a.parseTwoDigitYear=function(a){return r(a)+(r(a)>68?1900:2e3)};var ud=D("FullYear",!1);I("w",["ww",2],"wo","week"),I("W",["WW",2],"Wo","isoWeek"),A("week","w"),A("isoWeek","W"),O("w",Xc),O("ww",Xc,Tc),O("W",Xc),O("WW",Xc,Tc),S(["w","ww","W","WW"],function(a,b,c,d){b[d.substr(0,1)]=r(a)});var vd={dow:0,doy:6};I("DDD",["DDDD",3],"DDDo","dayOfYear"),A("dayOfYear","DDD"),O("DDD",Yc),O("DDDD",Uc),R(["DDD","DDDD"],function(a,b,c){c._dayOfYear=r(a)}),a.ISO_8601=function(){};var wd=ba("moment().min is deprecated, use moment.min instead. https://github.com/moment/moment/issues/1548",function(){var a=Ea.apply(null,arguments);return this>a?this:a}),xd=ba("moment().max is deprecated, use moment.max instead. https://github.com/moment/moment/issues/1548",function(){var a=Ea.apply(null,arguments);return a>this?this:a});Ka("Z",":"),Ka("ZZ",""),O("Z",bd),O("ZZ",bd),R(["Z","ZZ"],function(a,b,c){c._useUTC=!0,c._tzm=La(a)});var yd=/([\+\-]|\d\d)/gi;a.updateOffset=function(){};var zd=/(\-)?(?:(\d*)\.)?(\d+)\:(\d+)(?:\:(\d+)\.?(\d{3})?)?/,Ad=/^(-)?P(?:(?:([0-9,.]*)Y)?(?:([0-9,.]*)M)?(?:([0-9,.]*)D)?(?:T(?:([0-9,.]*)H)?(?:([0-9,.]*)M)?(?:([0-9,.]*)S)?)?|([0-9,.]*)W)$/;Za.fn=Ia.prototype;var Bd=bb(1,"add"),Cd=bb(-1,"subtract");a.defaultFormat="YYYY-MM-DDTHH:mm:ssZ";var Dd=ba("moment().lang() is deprecated. Instead, use moment().localeData() to get the language configuration. Use moment().locale() to change languages.",function(a){return void 0===a?this.localeData():this.locale(a)});I(0,["gg",2],0,function(){return this.weekYear()%100}),I(0,["GG",2],0,function(){return this.isoWeekYear()%100}),Eb("gggg","weekYear"),Eb("ggggg","weekYear"),Eb("GGGG","isoWeekYear"),Eb("GGGGG","isoWeekYear"),A("weekYear","gg"),A("isoWeekYear","GG"),O("G",ad),O("g",ad),O("GG",Xc,Tc),O("gg",Xc,Tc),O("GGGG",Zc,Vc),O("gggg",Zc,Vc),O("GGGGG",$c,Wc),O("ggggg",$c,Wc),S(["gggg","ggggg","GGGG","GGGGG"],function(a,b,c,d){b[d.substr(0,2)]=r(a)}),S(["gg","GG"],function(b,c,d,e){c[e]=a.parseTwoDigitYear(b)}),I("Q",0,0,"quarter"),A("quarter","Q"),O("Q",Sc),R("Q",function(a,b){b[hd]=3*(r(a)-1)}),I("D",["DD",2],"Do","date"),A("date","D"),O("D",Xc),O("DD",Xc,Tc),O("Do",function(a,b){return a?b._ordinalParse:b._ordinalParseLenient}),R(["D","DD"],id),R("Do",function(a,b){b[id]=r(a.match(Xc)[0],10)});var Ed=D("Date",!0);I("d",0,"do","day"),I("dd",0,0,function(a){return this.localeData().weekdaysMin(this,a)}),I("ddd",0,0,function(a){return this.localeData().weekdaysShort(this,a)}),I("dddd",0,0,function(a){return this.localeData().weekdays(this,a)}),I("e",0,0,"weekday"),I("E",0,0,"isoWeekday"),A("day","d"),A("weekday","e"),A("isoWeekday","E"),O("d",Xc),O("e",Xc),O("E",Xc),O("dd",dd),O("ddd",dd),O("dddd",dd),S(["dd","ddd","dddd"],function(a,b,c){var d=c._locale.weekdaysParse(a);null!=d?b.d=d:k(c).invalidWeekday=a}),S(["d","e","E"],function(a,b,c,d){b[d]=r(a)});var Fd="Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),Gd="Sun_Mon_Tue_Wed_Thu_Fri_Sat".split("_"),Hd="Su_Mo_Tu_We_Th_Fr_Sa".split("_");I("H",["HH",2],0,"hour"),I("h",["hh",2],0,function(){return this.hours()%12||12}),Tb("a",!0),Tb("A",!1),A("hour","h"),O("a",Ub),O("A",Ub),O("H",Xc),O("h",Xc),O("HH",Xc,Tc),O("hh",Xc,Tc),R(["H","HH"],jd),R(["a","A"],function(a,b,c){c._isPm=c._locale.isPM(a),c._meridiem=a}),R(["h","hh"],function(a,b,c){b[jd]=r(a),k(c).bigHour=!0});var Id=/[ap]\.?m?\.?/i,Jd=D("Hours",!0);I("m",["mm",2],0,"minute"),A("minute","m"),O("m",Xc),O("mm",Xc,Tc),R(["m","mm"],kd);var Kd=D("Minutes",!1);I("s",["ss",2],0,"second"),A("second","s"),O("s",Xc),O("ss",Xc,Tc),R(["s","ss"],ld);var Ld=D("Seconds",!1);I("S",0,0,function(){return~~(this.millisecond()/100)}),I(0,["SS",2],0,function(){return~~(this.millisecond()/10)}),I(0,["SSS",3],0,"millisecond"),I(0,["SSSS",4],0,function(){return 10*this.millisecond()}),I(0,["SSSSS",5],0,function(){return 100*this.millisecond()}),I(0,["SSSSSS",6],0,function(){return 1e3*this.millisecond()}),I(0,["SSSSSSS",7],0,function(){return 1e4*this.millisecond()}),I(0,["SSSSSSSS",8],0,function(){return 1e5*this.millisecond()}),I(0,["SSSSSSSSS",9],0,function(){return 1e6*this.millisecond()}),A("millisecond","ms"),O("S",Yc,Sc),O("SS",Yc,Tc),O("SSS",Yc,Uc);var Md;for(Md="SSSS";Md.length<=9;Md+="S")O(Md,_c);for(Md="S";Md.length<=9;Md+="S")R(Md,Xb);var Nd=D("Milliseconds",!1);I("z",0,0,"zoneAbbr"),I("zz",0,0,"zoneName");var Od=o.prototype;Od.add=Bd,Od.calendar=db,Od.clone=eb,Od.diff=jb,Od.endOf=vb,Od.format=nb,Od.from=ob,Od.fromNow=pb,Od.to=qb,Od.toNow=rb,Od.get=G,Od.invalidAt=Db,Od.isAfter=fb,Od.isBefore=gb,Od.isBetween=hb,Od.isSame=ib,Od.isValid=Bb,Od.lang=Dd,Od.locale=sb,Od.localeData=tb,Od.max=xd,Od.min=wd,Od.parsingFlags=Cb,Od.set=G,Od.startOf=ub,Od.subtract=Cd,Od.toArray=zb,Od.toObject=Ab,Od.toDate=yb,Od.toISOString=mb,Od.toJSON=mb,Od.toString=lb,Od.unix=xb,Od.valueOf=wb,Od.year=ud,Od.isLeapYear=ja,Od.weekYear=Gb,Od.isoWeekYear=Hb,Od.quarter=Od.quarters=Kb,Od.month=Z,Od.daysInMonth=$,Od.week=Od.weeks=oa,Od.isoWeek=Od.isoWeeks=pa,Od.weeksInYear=Jb,Od.isoWeeksInYear=Ib,Od.date=Ed,Od.day=Od.days=Qb,Od.weekday=Rb,Od.isoWeekday=Sb,Od.dayOfYear=ra,Od.hour=Od.hours=Jd,Od.minute=Od.minutes=Kd,Od.second=Od.seconds=Ld,Od.millisecond=Od.milliseconds=Nd,Od.utcOffset=Oa,Od.utc=Qa,Od.local=Ra,Od.parseZone=Sa,Od.hasAlignedHourOffset=Ta,Od.isDST=Ua,Od.isDSTShifted=Va,Od.isLocal=Wa,Od.isUtcOffset=Xa,Od.isUtc=Ya,Od.isUTC=Ya,Od.zoneAbbr=Yb,Od.zoneName=Zb,Od.dates=ba("dates accessor is deprecated. Use date instead.",Ed),Od.months=ba("months accessor is deprecated. Use month instead",Z),Od.years=ba("years accessor is deprecated. Use year instead",ud),Od.zone=ba("moment().zone is deprecated, use moment().utcOffset instead. https://github.com/moment/moment/issues/1779",Pa);var Pd=Od,Qd={sameDay:"[Today at] LT",nextDay:"[Tomorrow at] LT",nextWeek:"dddd [at] LT",lastDay:"[Yesterday at] LT",lastWeek:"[Last] dddd [at] LT",sameElse:"L"},Rd={LTS:"h:mm:ss A",LT:"h:mm A",L:"MM/DD/YYYY",LL:"MMMM D, YYYY",LLL:"MMMM D, YYYY h:mm A",LLLL:"dddd, MMMM D, YYYY h:mm A"},Sd="Invalid date",Td="%d",Ud=/\d{1,2}/,Vd={future:"in %s",past:"%s ago",s:"a few seconds",m:"a minute",mm:"%d minutes",h:"an hour",hh:"%d hours",d:"a day",dd:"%d days",M:"a month",MM:"%d months",y:"a year",yy:"%d years"},Wd=t.prototype;Wd._calendar=Qd,Wd.calendar=ac,Wd._longDateFormat=Rd,Wd.longDateFormat=bc,Wd._invalidDate=Sd,Wd.invalidDate=cc,Wd._ordinal=Td,Wd.ordinal=dc,Wd._ordinalParse=Ud,Wd.preparse=ec,Wd.postformat=ec,Wd._relativeTime=Vd,Wd.relativeTime=fc,Wd.pastFuture=gc,Wd.set=hc,Wd.months=V,Wd._months=nd,Wd.monthsShort=W,Wd._monthsShort=od,Wd.monthsParse=X,Wd.week=la,Wd._week=vd,Wd.firstDayOfYear=na,Wd.firstDayOfWeek=ma,Wd.weekdays=Mb,Wd._weekdays=Fd,Wd.weekdaysMin=Ob,Wd._weekdaysMin=Hd,Wd.weekdaysShort=Nb,Wd._weekdaysShort=Gd,Wd.weekdaysParse=Pb,Wd.isPM=Vb,Wd._meridiemParse=Id,Wd.meridiem=Wb,x("en",{ordinalParse:/\d{1,2}(th|st|nd|rd)/,ordinal:function(a){var b=a%10,c=1===r(a%100/10)?"th":1===b?"st":2===b?"nd":3===b?"rd":"th";return a+c}}),a.lang=ba("moment.lang is deprecated. Use moment.locale instead.",x),a.langData=ba("moment.langData is deprecated. Use moment.localeData instead.",z);var Xd=Math.abs,Yd=zc("ms"),Zd=zc("s"),$d=zc("m"),_d=zc("h"),ae=zc("d"),be=zc("w"),ce=zc("M"),de=zc("y"),ee=Bc("milliseconds"),fe=Bc("seconds"),ge=Bc("minutes"),he=Bc("hours"),ie=Bc("days"),je=Bc("months"),ke=Bc("years"),le=Math.round,me={s:45,m:45,h:22,d:26,M:11},ne=Math.abs,oe=Ia.prototype;oe.abs=pc,oe.add=rc,oe.subtract=sc,oe.as=xc,oe.asMilliseconds=Yd,oe.asSeconds=Zd,oe.asMinutes=$d,oe.asHours=_d,oe.asDays=ae,oe.asWeeks=be,oe.asMonths=ce,oe.asYears=de,oe.valueOf=yc,oe._bubble=uc,oe.get=Ac,oe.milliseconds=ee,oe.seconds=fe,oe.minutes=ge,oe.hours=he,oe.days=ie,oe.weeks=Cc,oe.months=je,oe.years=ke,oe.humanize=Gc,oe.toISOString=Hc,oe.toString=Hc,oe.toJSON=Hc,oe.locale=sb,oe.localeData=tb,oe.toIsoString=ba("toIsoString() is deprecated. Please use toISOString() instead (notice the capitals)",Hc),oe.lang=Dd,I("X",0,0,"unix"),I("x",0,0,"valueOf"),O("x",ad),O("X",cd),R("X",function(a,b,c){c._d=new Date(1e3*parseFloat(a,10))}),R("x",function(a,b,c){c._d=new Date(r(a))}),a.version="2.10.6",c(Ea),a.fn=Pd,a.min=Ga,a.max=Ha,a.utc=i,a.unix=$b,a.months=kc,a.isDate=e,a.locale=x,a.invalid=m,a.duration=Za,a.isMoment=p,a.weekdays=mc,a.parseZone=_b,a.localeData=z,a.isDuration=Ja,a.monthsShort=lc,a.weekdaysMin=oc,a.defineLocale=y,a.weekdaysShort=nc,a.normalizeUnits=B,a.relativeTimeThreshold=Fc;var pe=a;return pe}),ee["node_modules/moment/moment.js"]=b.exports}();var fe=ee["node_modules/numeral/numeral.js"],ge=ee["node_modules/moment/moment.js"];window.moment=ge;var he={},ie=Object.create(null),je=Object.create(null),ke=!1,le="",me=[],ne=[],oe=Object.create(null);window&&(window.bobrilRegisterTranslations=Wb);var pe=Ab(40,40,0,0),qe=Ab(40,40,40,0),re=Bb({render:function(a,b){sb(b,a.data.value?pe:qe)},onClick:function(a){return a.data.onChange(!a.data.value),!0}}),se=Ab(40,40,0,0),te=Ab(40,40,40,0),ue=Bb({render:function(a,b){sb(b,a.data.value?se:te)},onClick:function(a){return a.data.onChange(!a.data.value),!0}}),ve=!1;Ub({});var we=Bb({render:function(a,b){b.children=[{tag:"h1",children:"Hello World!"},re({value:ve,onChange:function(a){ve=a,Ac()}}),ue({value:ve,onChange:function(a){ve=a,Ac()}}),{tag:"p",children:["See examples on ",{tag:"a",attrs:{href:"https://github.com/Bobris/Bobril"},children:"Bobril GitHub pages"},Tb("! {d, date, LLLL}",{d:ic()})]}]}});aa(function(){return we({})})}();
+              case "left":
+                dir = "1";
+                tmp = color1;
+                color1 = color2;
+                color2 = tmp;
+                break;
+
+              case "right":
+                dir = "1";
+                break;
+
+              default:
+                return;
+            }
+            s[oldName] = "none";
+            addFilter(s, "progid:DXImageTransform.Microsoft.gradient(startColorstr='" + color1 + "',endColorstr='" + color2 + "', gradientType='" + dir + "')");
+        });
+    } else {
+        var teststyle = document.createElement("div").style;
+        teststyle.cssText = "background:-webkit-linear-gradient(top,red,red)";
+        if (teststyle.background.length > 0) {
+            var startsWithGradient = /^(?:repeating\-)?(?:linear|radial)\-gradient/gi;
+            var revdirs = {
+                top: "bottom",
+                bottom: "top",
+                left: "right",
+                right: "left"
+            };
+            function gradientWebkitter(style, value, name) {
+                if (startsWithGradient.test(value)) {
+                    var pos = value.indexOf("(to ");
+                    if (pos > 0) {
+                        pos += 4;
+                        var posend = value.indexOf(",", pos);
+                        var dir = value.slice(pos, posend);
+                        dir = dir.split(" ").map(function(v) {
+                            return revdirs[v] || v;
+                        }).join(" ");
+                        value = value.slice(0, pos - 3) + dir + value.slice(posend);
+                    }
+                    value = "-webkit-" + value;
+                }
+                style[name] = value;
+            }
+            setStyleShim("background", gradientWebkitter);
+        }
+    }
+    var bvalue = "b$value";
+    var tvalue = "value";
+    function isCheckboxlike(el) {
+        var t = el.type;
+        return t === "checkbox" || t === "radio";
+    }
+    function stringArrayEqual(a1, a2) {
+        var l = a1.length;
+        if (l !== a2.length) return false;
+        for (var j = 0; j < l; j++) {
+            if (a1[j] !== a2[j]) return false;
+        }
+        return true;
+    }
+    function stringArrayContains(a, v) {
+        for (var j = 0; j < a.length; j++) {
+            if (a[j] === v) return true;
+        }
+        return false;
+    }
+    function selectedArray(options) {
+        var res = [];
+        for (var j = 0; j < options.length; j++) {
+            if (options[j].selected) res.push(options[j].value);
+        }
+        return res;
+    }
+    var prevSetValueCallback = setSetValue(function(el, node, newValue, oldValue) {
+        var tagName = el.tagName;
+        var isSelect = tagName === "SELECT";
+        var isInput = tagName === "INPUT" || tagName === "TEXTAREA";
+        if (!isInput && !isSelect) {
+            prevSetValueCallback(el, node, newValue, oldValue);
+            return;
+        }
+        if (node.ctx === undefined) node.ctx = {};
+        if (oldValue === undefined) {
+            node.ctx[bvalue] = newValue;
+        }
+        var isMultiSelect = isSelect && el.multiple;
+        var emitDiff = false;
+        if (isMultiSelect) {
+            var options = el.options;
+            var currentMulti = selectedArray(options);
+            if (!stringArrayEqual(newValue, currentMulti)) {
+                if (oldValue === undefined || stringArrayEqual(currentMulti, oldValue) || !stringArrayEqual(newValue, node.ctx[bvalue])) {
+                    for (var j = 0; j < options.length; j++) {
+                        options[j].selected = stringArrayContains(newValue, options[j].value);
+                    }
+                    currentMulti = selectedArray(options);
+                    if (stringArrayEqual(currentMulti, newValue)) {
+                        emitDiff = true;
+                    }
+                } else {
+                    emitDiff = true;
+                }
+            }
+        } else if (isInput || isSelect) {
+            if (isInput && isCheckboxlike(el)) {
+                var currentChecked = el.checked;
+                if (newValue !== currentChecked) {
+                    if (oldValue === undefined || currentChecked === oldValue || newValue !== node.ctx[bvalue]) {
+                        el.checked = newValue;
+                    } else {
+                        emitDiff = true;
+                    }
+                }
+            } else {
+                var isCombobox = isSelect && el.size < 2;
+                var currentValue = el[tvalue];
+                if (newValue !== currentValue) {
+                    if (oldValue === undefined || currentValue === oldValue || newValue !== node.ctx[bvalue]) {
+                        if (isSelect) {
+                            if (newValue === "") {
+                                el.selectedIndex = isCombobox ? 0 : -1;
+                            } else {
+                                el[tvalue] = newValue;
+                            }
+                            if (newValue !== "" || isCombobox) {
+                                currentValue = el[tvalue];
+                                if (newValue !== currentValue) {
+                                    emitDiff = true;
+                                }
+                            }
+                        } else {
+                            el[tvalue] = newValue;
+                        }
+                    } else {
+                        emitDiff = true;
+                    }
+                }
+            }
+        }
+        if (emitDiff) {
+            emitOnChange(null, el, node);
+        } else {
+            node.ctx[bvalue] = newValue;
+        }
+    });
+    function emitOnChange(ev, target, node) {
+        if (target && target.nodeName === "OPTION") {
+            target = document.activeElement;
+            node = deref(target);
+        }
+        if (!node) {
+            return false;
+        }
+        var c = node.component;
+        if (!c) return false;
+        if (!c.onChange) return false;
+        var ctx = node.ctx;
+        var tagName = target.tagName;
+        var isSelect = tagName === "SELECT";
+        var isMultiSelect = isSelect && target.multiple;
+        if (isMultiSelect) {
+            var vs = selectedArray(target.options);
+            if (!stringArrayEqual(ctx[bvalue], vs)) {
+                ctx[bvalue] = vs;
+                c.onChange(ctx, vs);
+            }
+        } else if (isCheckboxlike(target)) {
+            if (ev && ev.type === "change") {
+                setTimeout(function() {
+                    emitOnChange(null, target, node);
+                }, 10);
+                return false;
+            }
+            if (target.type === "radio") {
+                var radios = document.getElementsByName(target.name);
+                for (var j = 0; j < radios.length; j++) {
+                    var radio = radios[j];
+                    var radionode = deref(radio);
+                    if (!radionode) continue;
+                    var radiocomponent = radionode.component;
+                    if (!radiocomponent) continue;
+                    if (!radiocomponent.onChange) continue;
+                    var radioctx = radionode.ctx;
+                    var vrb = radio.checked;
+                    if (radioctx[bvalue] !== vrb) {
+                        radioctx[bvalue] = vrb;
+                        radiocomponent.onChange(radioctx, vrb);
+                    }
+                }
+            } else {
+                var vb = target.checked;
+                if (ctx[bvalue] !== vb) {
+                    ctx[bvalue] = vb;
+                    c.onChange(ctx, vb);
+                }
+            }
+        } else {
+            var v = target.value;
+            if (ctx[bvalue] !== v) {
+                ctx[bvalue] = v;
+                c.onChange(ctx, v);
+            }
+        }
+        return false;
+    }
+    var events = [ "input", "cut", "paste", "keydown", "keypress", "keyup", "click", "change" ];
+    for (var i = 0; i < events.length; i++) addEvent(events[i], 10, emitOnChange);
+    function buildParam(ev) {
+        return {
+            shift: ev.shiftKey,
+            ctrl: ev.ctrlKey,
+            alt: ev.altKey,
+            meta: ev.metaKey || false,
+            which: ev.which || ev.keyCode
+        };
+    }
+    function emitOnKeyDown(ev, target, node) {
+        if (!node) return false;
+        var param = buildParam(ev);
+        if (bubble(node, "onKeyDown", param)) {
+            preventDefault(ev);
+            return true;
+        }
+        return false;
+    }
+    function emitOnKeyUp(ev, target, node) {
+        if (!node) return false;
+        var param = buildParam(ev);
+        if (bubble(node, "onKeyUp", param)) {
+            preventDefault(ev);
+            return true;
+        }
+        return false;
+    }
+    function emitOnKeyPress(ev, target, node) {
+        if (!node) return false;
+        if (ev.which === 0) return false;
+        var param = {
+            charCode: ev.which || ev.keyCode
+        };
+        if (bubble(node, "onKeyPress", param)) {
+            preventDefault(ev);
+            return true;
+        }
+        return false;
+    }
+    addEvent("keydown", 50, emitOnKeyDown);
+    addEvent("keyup", 50, emitOnKeyUp);
+    addEvent("keypress", 50, emitOnKeyPress);
+    var ownerCtx = null;
+    var invokingOwner;
+    var onClickText = "onClick";
+    function isMouseOwner(ctx) {
+        return ownerCtx === ctx;
+    }
+    function isMouseOwnerEvent() {
+        return invokingOwner;
+    }
+    function registerMouseOwner(ctx) {
+        ownerCtx = ctx;
+    }
+    function releaseMouseOwner() {
+        ownerCtx = null;
+    }
+    function invokeMouseOwner(handlerName, param) {
+        if (ownerCtx == null) {
+            return false;
+        }
+        var handler = ownerCtx.me.component[handlerName];
+        if (!handler) {
+            return false;
+        }
+        invokingOwner = true;
+        var stop = handler(ownerCtx, param);
+        invokingOwner = false;
+        return stop;
+    }
+    function hasPointerEventsNoneB(node) {
+        while (node) {
+            var s = node.style;
+            if (s) {
+                var e = s.pointerEvents;
+                if (e !== undefined) {
+                    if (e === "none") return true;
+                    return false;
+                }
+            }
+            node = node.parent;
+        }
+        return false;
+    }
+    function hasPointerEventsNone(target) {
+        var bNode = deref(target);
+        return hasPointerEventsNoneB(bNode);
+    }
+    function revertVisibilityChanges(hiddenEls) {
+        if (hiddenEls.length) {
+            for (var i = hiddenEls.length - 1; i >= 0; --i) {
+                hiddenEls[i].t.style.visibility = hiddenEls[i].p;
+            }
+            return true;
+        }
+        return false;
+    }
+    function pushAndHide(hiddenEls, t) {
+        hiddenEls.push({
+            t: t,
+            p: t.style.visibility
+        });
+        t.style.visibility = "hidden";
+    }
+    function pointerThroughIE(ev, target, node) {
+        var hiddenEls = [];
+        var t = target;
+        while (hasPointerEventsNone(t)) {
+            pushAndHide(hiddenEls, t);
+            t = document.elementFromPoint(ev.x, ev.y);
+        }
+        if (revertVisibilityChanges(hiddenEls)) {
+            try {
+                t.dispatchEvent(ev);
+            } catch (e) {
+                return false;
+            }
+            preventDefault(ev);
+            return true;
+        }
+        return false;
+    }
+    function addEvent5(name, callback) {
+        addEvent(name, 5, callback);
+    }
+    var pointersEventNames = [ "PointerDown", "PointerMove", "PointerUp", "PointerCancel" ];
+    var i;
+    if (ieVersion() && ieVersion() < 11) {
+        var mouseEvents = [ "click", "dblclick", "drag", "dragend", "dragenter", "dragleave", "dragover", "dragstart", "drop", "mousedown", "mousemove", "mouseout", "mouseover", "mouseup", "mousewheel", "scroll", "wheel" ];
+        for (i = 0; i < mouseEvents.length; ++i) {
+            addEvent(mouseEvents[i], 1, pointerThroughIE);
+        }
+    }
+    function type2Bobril(t) {
+        if (t == "mouse") return 0;
+        if (t == "pen") return 2;
+        return 1;
+    }
+    function pointerEventsNoneFix(x, y, target, node) {
+        var hiddenEls = [];
+        var t = target;
+        while (hasPointerEventsNoneB(node)) {
+            pushAndHide(hiddenEls, t);
+            t = document.elementFromPoint(x, y);
+            node = deref(t);
+        }
+        revertVisibilityChanges(hiddenEls);
+        return [ t, node ];
+    }
+    function buildHandlerPointer(name) {
+        return function handlePointerDown(ev, target, node) {
+            if (hasPointerEventsNoneB(node)) {
+                var fixed = pointerEventsNoneFix(ev.x, ev.y, target, node);
+                target = fixed[0];
+                node = fixed[1];
+            }
+            var button = ev.button + 1;
+            var type = type2Bobril(ev.pointerType);
+            var buttons = ev.buttons;
+            if (button === 0 && type === 0 && buttons) {
+                button = 1;
+                while (!(buttons & 1)) {
+                    buttons = buttons >> 1;
+                    button++;
+                }
+            }
+            var param = {
+                id: ev.pointerId,
+                type: type,
+                x: ev.clientX,
+                y: ev.clientY,
+                button: button,
+                shift: ev.shiftKey,
+                ctrl: ev.ctrlKey,
+                alt: ev.altKey,
+                meta: ev.metaKey || false
+            };
+            if (emitEvent("!" + name, param, target, node)) {
+                preventDefault(ev);
+                return true;
+            }
+            return false;
+        };
+    }
+    function buildHandlerTouch(name) {
+        return function handlePointerDown(ev, target, node) {
+            var preventDef = false;
+            for (var i = 0; i < ev.changedTouches.length; i++) {
+                var t = ev.changedTouches[i];
+                target = document.elementFromPoint(t.clientX, t.clientY);
+                node = deref(target);
+                var param = {
+                    id: t.identifier + 2,
+                    type: 1,
+                    x: t.clientX,
+                    y: t.clientY,
+                    button: 1,
+                    shift: ev.shiftKey,
+                    ctrl: ev.ctrlKey,
+                    alt: ev.altKey,
+                    meta: ev.metaKey || false
+                };
+                if (emitEvent("!" + name, param, target, node)) preventDef = true;
+            }
+            if (preventDef) {
+                preventDefault(ev);
+                return true;
+            }
+            return false;
+        };
+    }
+    function buildHandlerMouse(name) {
+        return function handlePointer(ev, target, node) {
+            target = document.elementFromPoint(ev.clientX, ev.clientY);
+            node = deref(target);
+            if (hasPointerEventsNoneB(node)) {
+                var fixed = pointerEventsNoneFix(ev.clientX, ev.clientY, target, node);
+                target = fixed[0];
+                node = fixed[1];
+            }
+            var param = {
+                id: 1,
+                type: 0,
+                x: ev.clientX,
+                y: ev.clientY,
+                button: decodeButton(ev),
+                shift: ev.shiftKey,
+                ctrl: ev.ctrlKey,
+                alt: ev.altKey,
+                meta: ev.metaKey || false
+            };
+            if (emitEvent("!" + name, param, target, node)) {
+                preventDefault(ev);
+                return true;
+            }
+            return false;
+        };
+    }
+    if (window.onpointerdown !== undefined) {
+        for (i = 0; i < 4; i++) {
+            var name = pointersEventNames[i];
+            addEvent5(name.toLowerCase(), buildHandlerPointer(name));
+        }
+    } else if (window.onmspointerdown !== undefined) {
+        for (i = 0; i < 4; i++) {
+            var name = pointersEventNames[i];
+            addEvent5("MS" + name, buildHandlerPointer(name));
+        }
+    } else {
+        if (window.ontouchstart !== undefined) {
+            addEvent5("touchstart", buildHandlerTouch(pointersEventNames[0]));
+            addEvent5("touchmove", buildHandlerTouch(pointersEventNames[1]));
+            addEvent5("touchend", buildHandlerTouch(pointersEventNames[2]));
+            addEvent5("touchcancel", buildHandlerTouch(pointersEventNames[3]));
+        }
+        addEvent5("mousedown", buildHandlerMouse(pointersEventNames[0]));
+        addEvent5("mousemove", buildHandlerMouse(pointersEventNames[1]));
+        addEvent5("mouseup", buildHandlerMouse(pointersEventNames[2]));
+    }
+    for (var j = 0; j < 4; j++) {
+        (function(name) {
+            var onname = "on" + name;
+            addEvent("!" + name, 50, function(ev, target, node) {
+                return invokeMouseOwner(onname, ev) || bubble(node, onname, ev) != null;
+            });
+        })(pointersEventNames[j]);
+    }
+    var pointersDown = newHashObj();
+    var toBust = [];
+    var firstPointerDown = -1;
+    var firstPointerDownTime = 0;
+    var firstPointerDownX = 0;
+    var firstPointerDownY = 0;
+    var tapCanceled = false;
+    function diffLess(n1, n2, diff) {
+        return Math.abs(n1 - n2) < diff;
+    }
+    var prevMousePath = [];
+    function mouseEnterAndLeave(ev) {
+        var t = document.elementFromPoint(ev.x, ev.y);
+        var toPath = vdomPath(t);
+        var node = toPath.length == 0 ? null : toPath[toPath.length - 1];
+        if (hasPointerEventsNoneB(node)) {
+            var fixed = pointerEventsNoneFix(ev.x, ev.y, t, node);
+            t = fixed[0];
+            toPath = vdomPath(t);
+        }
+        bubble(node, "onMouseOver", ev);
+        var common = 0;
+        while (common < prevMousePath.length && common < toPath.length && prevMousePath[common] === toPath[common]) common++;
+        var i = prevMousePath.length;
+        var n;
+        var c;
+        while (i > common) {
+            i--;
+            n = prevMousePath[i];
+            if (n) {
+                c = n.component;
+                if (c && c.onMouseLeave) c.onMouseLeave(n.ctx, ev);
+            }
+        }
+        while (i < toPath.length) {
+            n = toPath[i];
+            if (n) {
+                c = n.component;
+                if (c && c.onMouseEnter) c.onMouseEnter(n.ctx, ev);
+            }
+            i++;
+        }
+        prevMousePath = toPath;
+        return false;
+    }
+    function noPointersDown() {
+        return Object.keys(pointersDown).length === 0;
+    }
+    function bustingPointerDown(ev, target, node) {
+        if (firstPointerDown === -1 && noPointersDown()) {
+            firstPointerDown = ev.id;
+            firstPointerDownTime = __export_now();
+            firstPointerDownX = ev.x;
+            firstPointerDownY = ev.y;
+            tapCanceled = false;
+            mouseEnterAndLeave(ev);
+        }
+        pointersDown[ev.id] = ev.type;
+        if (firstPointerDown !== ev.id) {
+            tapCanceled = true;
+        }
+        return false;
+    }
+    function bustingPointerMove(ev, target, node) {
+        if (ev.type === 0 && ev.button === 0 && pointersDown[ev.id] != null) {
+            ev.button = 1;
+            emitEvent("!PointerUp", ev, target, node);
+            ev.button = 0;
+        }
+        if (firstPointerDown === ev.id) {
+            mouseEnterAndLeave(ev);
+            if (!diffLess(firstPointerDownX, ev.x, 13) || !diffLess(firstPointerDownY, ev.y, 13)) tapCanceled = true;
+        } else if (noPointersDown()) {
+            mouseEnterAndLeave(ev);
+        }
+        return false;
+    }
+    function bustingPointerUp(ev, target, node) {
+        delete pointersDown[ev.id];
+        if (firstPointerDown == ev.id) {
+            mouseEnterAndLeave(ev);
+            firstPointerDown = -1;
+            if (ev.type == 1 && !tapCanceled) {
+                if (__export_now() - firstPointerDownTime < 750) {
+                    emitEvent("!PointerCancel", ev, target, node);
+                    var handled = invokeMouseOwner(onClickText, ev) || bubble(node, onClickText, ev) != null;
+                    var delay = ieVersion() ? 800 : 500;
+                    toBust.push([ ev.x, ev.y, __export_now() + delay, handled ? 1 : 0 ]);
+                    return handled;
+                }
+            }
+        }
+        return false;
+    }
+    function bustingPointerCancel(ev, target, node) {
+        delete pointersDown[ev.id];
+        if (firstPointerDown == ev.id) {
+            firstPointerDown = -1;
+        }
+        return false;
+    }
+    function bustingClick(ev, target, node) {
+        var n = __export_now();
+        for (var i = 0; i < toBust.length; i++) {
+            var j = toBust[i];
+            if (j[2] < n) {
+                toBust.splice(i, 1);
+                i--;
+                continue;
+            }
+            if (diffLess(j[0], ev.clientX, 50) && diffLess(j[1], ev.clientY, 50)) {
+                toBust.splice(i, 1);
+                if (j[3]) preventDefault(ev);
+                return true;
+            }
+        }
+        return false;
+    }
+    var bustingEventNames = [ "!PointerDown", "!PointerMove", "!PointerUp", "!PointerCancel", "click" ];
+    var bustingEventHandlers = [ bustingPointerDown, bustingPointerMove, bustingPointerUp, bustingPointerCancel, bustingClick ];
+    for (var i = 0; i < 5; i++) {
+        addEvent(bustingEventNames[i], 3, bustingEventHandlers[i]);
+    }
+    function createHandlerMouse(handlerName) {
+        return function(ev, target, node) {
+            if (firstPointerDown != ev.id && !noPointersDown()) return false;
+            if (invokeMouseOwner(handlerName, ev) || bubble(node, handlerName, ev)) {
+                return true;
+            }
+            return false;
+        };
+    }
+    var mouseHandlerNames = [ "Down", "Move", "Up", "Up" ];
+    for (var i = 0; i < 4; i++) {
+        addEvent(bustingEventNames[i], 80, createHandlerMouse("onMouse" + mouseHandlerNames[i]));
+    }
+    function decodeButton(ev) {
+        return ev.which || ev.button;
+    }
+    function createHandler(handlerName) {
+        return function(ev, target, node) {
+            var button = decodeButton(ev) || 1;
+            if (button !== 1) return false;
+            var param = {
+                x: ev.clientX,
+                y: ev.clientY,
+                button: button,
+                shift: ev.shiftKey,
+                ctrl: ev.ctrlKey,
+                alt: ev.altKey,
+                meta: ev.metaKey || false
+            };
+            if (invokeMouseOwner(handlerName, param) || bubble(node, handlerName, param)) {
+                preventDefault(ev);
+                return true;
+            }
+            return false;
+        };
+    }
+    function nodeOnPoint(x, y) {
+        var target = document.elementFromPoint(x, y);
+        var node = deref(target);
+        if (hasPointerEventsNoneB(node)) {
+            var fixed = pointerEventsNoneFix(x, y, target, node);
+            node = fixed[1];
+        }
+        return node;
+    }
+    function handleSelectStart(ev, target, node) {
+        while (node) {
+            var s = node.style;
+            if (s) {
+                var us = s.userSelect;
+                if (us === "none") {
+                    preventDefault(ev);
+                    return true;
+                }
+                if (us) {
+                    break;
+                }
+            }
+            node = node.parent;
+        }
+        return false;
+    }
+    addEvent5("selectstart", handleSelectStart);
+    addEvent5("click", createHandler(onClickText));
+    addEvent5("dblclick", createHandler("onDoubleClick"));
+    var __export_pointersDownCount = function() {
+        return Object.keys(pointersDown).length;
+    };
+    var __export_firstPointerDownId = function() {
+        return firstPointerDown;
+    };
+    var __export_ignoreClick = function(x, y) {
+        var delay = ieVersion() ? 800 : 500;
+        toBust.push([ x, y, __export_now() + delay, 1 ]);
+    };
+    var currentActiveElement = null;
+    var currentFocusedNode = null;
+    var nodestack = [];
+    function emitOnFocusChange() {
+        var newActiveElement = document.hasFocus() ? document.activeElement : null;
+        if (newActiveElement !== currentActiveElement) {
+            currentActiveElement = newActiveElement;
+            var newstack = vdomPath(currentActiveElement);
+            var common = 0;
+            while (common < nodestack.length && common < newstack.length && nodestack[common] === newstack[common]) common++;
+            var i = nodestack.length - 1;
+            var n;
+            var c;
+            if (i >= common) {
+                n = nodestack[i];
+                if (n) {
+                    c = n.component;
+                    if (c && c.onBlur) c.onBlur(n.ctx);
+                }
+                i--;
+            }
+            while (i >= common) {
+                n = nodestack[i];
+                if (n) {
+                    c = n.component;
+                    if (c && c.onFocusOut) c.onFocusOut(n.ctx);
+                }
+                i--;
+            }
+            i = common;
+            while (i + 1 < newstack.length) {
+                n = newstack[i];
+                if (n) {
+                    c = n.component;
+                    if (c && c.onFocusIn) c.onFocusIn(n.ctx);
+                }
+                i++;
+            }
+            if (i < newstack.length) {
+                n = newstack[i];
+                if (n) {
+                    c = n.component;
+                    if (c && c.onFocus) c.onFocus(n.ctx);
+                }
+                i++;
+            }
+            nodestack = newstack;
+            currentFocusedNode = nodestack.length == 0 ? null : nodestack[nodestack.length - 1];
+        }
+    }
+    function emitOnFocusChangeIE() {
+        setTimeout(emitOnFocusChange, 10);
+        emitOnFocusChange();
+    }
+    var events = [ "focus", "blur", "keydown", "keyup", "keypress", "mousedown", "mouseup", "mousemove", "touchstart", "touchend" ];
+    for (var i = 0; i < events.length; i++) addEvent(events[i], 50, ieVersion() ? emitOnFocusChangeIE : emitOnFocusChange);
+    function focused() {
+        return currentFocusedNode;
+    }
+    var focusableTag = /^input$|^select$|^textarea$|^button$/;
+    function focus(node) {
+        if (node == null) return false;
+        if (typeof node === "string") return false;
+        var style = node.style;
+        if (style != null) {
+            if (style.visibility === "hidden") return false;
+            if (style.display === "none") return false;
+        }
+        var attrs = node.attrs;
+        if (attrs != null) {
+            var ti = attrs.tabindex || attrs.tabIndex;
+            if (ti !== undefined || focusableTag.test(node.tag)) {
+                var el = node.element;
+                el.focus();
+                emitOnFocusChange();
+                return true;
+            }
+        }
+        var children = node.children;
+        if (isArray(children)) {
+            for (var i = 0; i < children.length; i++) {
+                if (focus(children[i])) return true;
+            }
+            return false;
+        }
+        return focus(children);
+    }
+    var callbacks = [];
+    function emitOnScroll() {
+        for (var i = 0; i < callbacks.length; i++) {
+            callbacks[i]();
+        }
+        return false;
+    }
+    addEvent("^scroll", 10, emitOnScroll);
+    function addOnScroll(callback) {
+        callbacks.push(callback);
+    }
+    function removeOnScroll(callback) {
+        for (var i = 0; i < callbacks.length; i++) {
+            if (callbacks[i] === callback) {
+                callbacks.splice(i, 1);
+                return;
+            }
+        }
+    }
+    var isHtml = /^(?:html)$/i;
+    var isScrollOrAuto = /^(?:auto)$|^(?:scroll)$/i;
+    function isScrollable(el) {
+        var styles = window.getComputedStyle(el);
+        var res = [ true, true ];
+        if (!isHtml.test(el.nodeName)) {
+            res[0] = isScrollOrAuto.test(styles.overflowX);
+            res[1] = isScrollOrAuto.test(styles.overflowY);
+        }
+        res[0] = res[0] && el.scrollWidth > el.clientWidth;
+        res[1] = res[1] && el.scrollHeight > el.clientHeight;
+        return res;
+    }
+    function getWindowScroll() {
+        var left = window.pageXOffset;
+        var top = window.pageYOffset;
+        return [ left, top ];
+    }
+    var lastDndId = 0;
+    var dnds = [];
+    var systemdnd = null;
+    var rootId = null;
+    var bodyCursorBackup;
+    var userSelectBackup;
+    var shimedStyle = {
+        userSelect: ""
+    };
+    shimStyle(shimedStyle);
+    var shimedStyleKeys = Object.keys(shimedStyle);
+    var userSelectPropName = shimedStyleKeys[shimedStyleKeys.length - 1];
+    var DndCtx = function(pointerId) {
+        this.id = ++lastDndId;
+        this.pointerid = pointerId;
+        this.enabledOperations = 7;
+        this.operation = 0;
+        this.started = false;
+        this.beforeDrag = true;
+        this.local = true;
+        this.system = false;
+        this.ended = false;
+        this.cursor = null;
+        this.overNode = null;
+        this.targetCtx = null;
+        this.dragView = null;
+        this.startX = 0;
+        this.startY = 0;
+        this.distanceToStart = 10;
+        this.x = 0;
+        this.y = 0;
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.totalX = 0;
+        this.totalY = 0;
+        this.lastX = 0;
+        this.lastY = 0;
+        this.shift = false;
+        this.ctrl = false;
+        this.alt = false;
+        this.meta = false;
+        this.data = newHashObj();
+        if (pointerId >= 0) pointer2Dnd[pointerId] = this;
+        dnds.push(this);
+    };
+    function lazyCreateRoot() {
+        if (rootId == null) {
+            var dbs = document.body.style;
+            bodyCursorBackup = dbs.cursor;
+            userSelectBackup = dbs[userSelectPropName];
+            dbs[userSelectPropName] = "none";
+            rootId = addRoot(dndRootFactory);
+        }
+    }
+    var DndComp = {
+        render: function(ctx, me) {
+            var dnd = ctx.data;
+            me.tag = "div";
+            me.style = {
+                position: "absolute",
+                left: dnd.x,
+                top: dnd.y
+            };
+            me.children = dnd.dragView(dnd);
+        }
+    };
+    function currentCursor() {
+        var cursor = "no-drop";
+        if (dnds.length !== 0) {
+            var dnd = dnds[0];
+            if (dnd.beforeDrag) return "";
+            if (dnd.cursor != null) return dnd.cursor;
+            if (dnd.system) return "";
+            switch (dnd.operation) {
+              case 3:
+                cursor = "move";
+                break;
+
+              case 1:
+                cursor = "alias";
+                break;
+
+              case 2:
+                cursor = "copy";
+                break;
+            }
+        }
+        return cursor;
+    }
+    var DndRootComp = {
+        render: function(ctx, me) {
+            var res = [];
+            for (var i = 0; i < dnds.length; i++) {
+                var dnd = dnds[i];
+                if (dnd.beforeDrag) continue;
+                if (dnd.dragView != null && (dnd.x != 0 || dnd.y != 0)) {
+                    res.push({
+                        key: "" + dnd.id,
+                        data: dnd,
+                        component: DndComp
+                    });
+                }
+            }
+            me.tag = "div";
+            me.style = {
+                position: "fixed",
+                pointerEvents: "none",
+                userSelect: "none",
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0
+            };
+            var dbs = document.body.style;
+            var cur = currentCursor();
+            if (cur && dbs.cursor !== cur) dbs.cursor = cur;
+            me.children = res;
+        },
+        onDrag: function(ctx) {
+            __export_invalidate(ctx);
+            return false;
+        }
+    };
+    function dndRootFactory() {
+        return {
+            component: DndRootComp
+        };
+    }
+    var dndProto = DndCtx.prototype;
+    dndProto.setOperation = function(operation) {
+        this.operation = operation;
+    };
+    dndProto.setDragNodeView = function(view) {
+        this.dragView = view;
+    };
+    dndProto.addData = function(type, data) {
+        this.data[type] = data;
+        return true;
+    };
+    dndProto.listData = function() {
+        return Object.keys(this.data);
+    };
+    dndProto.hasData = function(type) {
+        return this.data[type] !== undefined;
+    };
+    dndProto.getData = function(type) {
+        return this.data[type];
+    };
+    dndProto.setEnabledOps = function(ops) {
+        this.enabledOperations = ops;
+    };
+    dndProto.cancelDnd = function() {
+        dndmoved(null, this);
+        this.destroy();
+    };
+    dndProto.destroy = function() {
+        this.ended = true;
+        if (this.started) broadcast("onDragEnd", this);
+        delete pointer2Dnd[this.pointerid];
+        for (var i = 0; i < dnds.length; i++) {
+            if (dnds[i] === this) {
+                dnds.splice(i, 1);
+                break;
+            }
+        }
+        if (systemdnd === this) {
+            systemdnd = null;
+        }
+        if (dnds.length === 0 && rootId != null) {
+            removeRoot(rootId);
+            rootId = null;
+            var dbs = document.body.style;
+            dbs.cursor = bodyCursorBackup;
+            dbs[userSelectPropName] = userSelectBackup;
+        }
+    };
+    var pointer2Dnd = newHashObj();
+    function handlePointerDown(ev, target, node) {
+        var dnd = pointer2Dnd[ev.id];
+        if (dnd) {
+            dnd.cancelDnd();
+        }
+        if (ev.button <= 1) {
+            dnd = new DndCtx(ev.id);
+            dnd.startX = ev.x;
+            dnd.startY = ev.y;
+            dnd.lastX = ev.x;
+            dnd.lastY = ev.y;
+            dnd.overNode = node;
+            updateDndFromPointerEvent(dnd, ev);
+            var sourceCtx = bubble(node, "onDragStart", dnd);
+            if (sourceCtx) {
+                var htmlNode = getDomNode(sourceCtx.me);
+                if (htmlNode == null) {
+                    dnd.destroy();
+                    return false;
+                }
+                dnd.started = true;
+                var boundFn = htmlNode.getBoundingClientRect;
+                if (boundFn) {
+                    var rect = boundFn.call(htmlNode);
+                    dnd.deltaX = rect.left - ev.x;
+                    dnd.deltaY = rect.top - ev.y;
+                }
+                if (dnd.distanceToStart <= 0) {
+                    dnd.beforeDrag = false;
+                    dndmoved(node, dnd);
+                }
+                lazyCreateRoot();
+            } else {
+                dnd.destroy();
+            }
+        }
+        return false;
+    }
+    function dndmoved(node, dnd) {
+        dnd.overNode = node;
+        dnd.targetCtx = bubble(node, "onDragOver", dnd);
+        if (dnd.targetCtx == null) {
+            dnd.operation = 0;
+        }
+        broadcast("onDrag", dnd);
+    }
+    function updateDndFromPointerEvent(dnd, ev) {
+        dnd.shift = ev.shift;
+        dnd.ctrl = ev.ctrl;
+        dnd.alt = ev.alt;
+        dnd.meta = ev.meta;
+        dnd.x = ev.x;
+        dnd.y = ev.y;
+    }
+    function handlePointerMove(ev, target, node) {
+        var dnd = pointer2Dnd[ev.id];
+        if (!dnd) return false;
+        dnd.totalX += Math.abs(ev.x - dnd.lastX);
+        dnd.totalY += Math.abs(ev.y - dnd.lastY);
+        if (dnd.beforeDrag) {
+            if (dnd.totalX + dnd.totalY <= dnd.distanceToStart) {
+                dnd.lastX = ev.x;
+                dnd.lastY = ev.y;
+                return false;
+            }
+            dnd.beforeDrag = false;
+        }
+        updateDndFromPointerEvent(dnd, ev);
+        dndmoved(node, dnd);
+        dnd.lastX = ev.x;
+        dnd.lastY = ev.y;
+        return true;
+    }
+    function handlePointerUp(ev, target, node) {
+        var dnd = pointer2Dnd[ev.id];
+        if (!dnd) return false;
+        if (!dnd.beforeDrag) {
+            updateDndFromPointerEvent(dnd, ev);
+            dndmoved(node, dnd);
+            var t = dnd.targetCtx;
+            if (t && bubble(t.me, "onDrop", dnd)) {
+                dnd.destroy();
+            } else {
+                dnd.cancelDnd();
+            }
+            __export_ignoreClick(ev.x, ev.y);
+            return true;
+        }
+        dnd.destroy();
+        return false;
+    }
+    function handlePointerCancel(ev, target, node) {
+        var dnd = pointer2Dnd[ev.id];
+        if (!dnd) return false;
+        if (!dnd.beforeDrag) {
+            dnd.cancelDnd();
+        } else {
+            dnd.destroy();
+        }
+        return false;
+    }
+    function updateFromNative(dnd, ev) {
+        dnd.shift = ev.shiftKey;
+        dnd.ctrl = ev.ctrlKey;
+        dnd.alt = ev.altKey;
+        dnd.meta = ev.metaKey;
+        dnd.x = ev.clientX;
+        dnd.y = ev.clientY;
+        dnd.totalX += Math.abs(dnd.x - dnd.lastX);
+        dnd.totalY += Math.abs(dnd.y - dnd.lastY);
+        var node = nodeOnPoint(dnd.x, dnd.y);
+        dndmoved(node, dnd);
+        dnd.lastX = dnd.x;
+        dnd.lastY = dnd.y;
+    }
+    var effectAllowedTable = [ "none", "link", "copy", "copyLink", "move", "linkMove", "copyMove", "all" ];
+    function handleDragStart(ev, target, node) {
+        var dnd = systemdnd;
+        if (dnd != null) {
+            dnd.destroy();
+        }
+        var activePointerIds = Object.keys(pointer2Dnd);
+        if (activePointerIds.length > 0) {
+            dnd = pointer2Dnd[activePointerIds[0]];
+            dnd.system = true;
+            systemdnd = dnd;
+        } else {
+            var startX = ev.clientX, startY = ev.clientY;
+            dnd = new DndCtx(-1);
+            dnd.system = true;
+            systemdnd = dnd;
+            dnd.x = startX;
+            dnd.y = startY;
+            dnd.lastX = startX;
+            dnd.lastY = startY;
+            dnd.startX = startX;
+            dnd.startY = startY;
+            var sourceCtx = bubble(node, "onDragStart", dnd);
+            if (sourceCtx) {
+                var htmlNode = getDomNode(sourceCtx.me);
+                if (htmlNode == null) {
+                    dnd.destroy();
+                    return false;
+                }
+                dnd.started = true;
+                var boundFn = htmlNode.getBoundingClientRect;
+                if (boundFn) {
+                    var rect = boundFn.call(htmlNode);
+                    dnd.deltaX = rect.left - startX;
+                    dnd.deltaY = rect.top - startY;
+                }
+                lazyCreateRoot();
+            } else {
+                dnd.destroy();
+                return false;
+            }
+        }
+        dnd.beforeDrag = false;
+        var eff = effectAllowedTable[dnd.enabledOperations];
+        var dt = ev.dataTransfer;
+        dt.effectAllowed = eff;
+        if (dt.setDragImage) {
+            var div = document.createElement("div");
+            div.style.pointerEvents = "none";
+            dt.setDragImage(div, 0, 0);
+        } else {
+            var style = ev.target.style;
+            var opacityBackup = style.opacity;
+            var widthBackup = style.width;
+            var heightBackup = style.height;
+            var paddingBackup = style.padding;
+            style.opacity = "0";
+            style.width = "0";
+            style.height = "0";
+            style.padding = "0";
+            window.setTimeout(function() {
+                style.opacity = opacityBackup;
+                style.width = widthBackup;
+                style.height = heightBackup;
+                style.padding = paddingBackup;
+            }, 0);
+        }
+        var datas = dnd.data;
+        var dataKeys = Object.keys(datas);
+        for (var i = 0; i < dataKeys.length; i++) {
+            try {
+                var k = dataKeys[i];
+                var d = datas[k];
+                if (typeof d !== "string") d = JSON.stringify(d);
+                ev.dataTransfer.setData(k, d);
+            } catch (e) {
+                if (DEBUG) if (window.console) console.log("Cannot set dnd data to " + dataKeys[i]);
+            }
+        }
+        updateFromNative(dnd, ev);
+        return false;
+    }
+    function setDropEffect(ev, op) {
+        ev.dataTransfer.dropEffect = [ "none", "link", "copy", "move" ][op];
+    }
+    function handleDragOver(ev, target, node) {
+        var dnd = systemdnd;
+        if (dnd == null) {
+            dnd = new DndCtx(-1);
+            dnd.system = true;
+            systemdnd = dnd;
+            dnd.x = ev.clientX;
+            dnd.y = ev.clientY;
+            dnd.startX = dnd.x;
+            dnd.startY = dnd.y;
+            dnd.local = false;
+            var dt = ev.dataTransfer;
+            var eff = 0;
+            try {
+                var effectAllowed = dt.effectAllowed;
+            } catch (e) {}
+            for (;eff < 7; eff++) {
+                if (effectAllowedTable[eff] === effectAllowed) break;
+            }
+            dnd.enabledOperations = eff;
+            var dttypes = dt.types;
+            if (dttypes) {
+                for (var i = 0; i < dttypes.length; i++) {
+                    var tt = dttypes[i];
+                    if (tt === "text/plain") tt = "Text"; else if (tt === "text/uri-list") tt = "Url";
+                    dnd.data[tt] = null;
+                }
+            } else {
+                if (dt.getData("Text") !== undefined) dnd.data["Text"] = null;
+            }
+        }
+        updateFromNative(dnd, ev);
+        setDropEffect(ev, dnd.operation);
+        if (dnd.operation != 0) {
+            preventDefault(ev);
+            return true;
+        }
+        return false;
+    }
+    function handleDrag(ev, target, node) {
+        var x = ev.clientX;
+        var y = ev.clientY;
+        var m = getMedia();
+        if (systemdnd != null && (x === 0 && y === 0 || x < 0 || y < 0 || x >= m.width || y >= m.height)) {
+            systemdnd.x = 0;
+            systemdnd.y = 0;
+            systemdnd.operation = 0;
+            broadcast("onDrag", systemdnd);
+        }
+        return false;
+    }
+    function handleDragEnd(ev, target, node) {
+        if (systemdnd != null) {
+            systemdnd.destroy();
+        }
+        return false;
+    }
+    function handleDrop(ev, target, node) {
+        var dnd = systemdnd;
+        if (dnd == null) return false;
+        dnd.x = ev.clientX;
+        dnd.y = ev.clientY;
+        if (!dnd.local) {
+            var dataKeys = Object.keys(dnd.data);
+            var dt = ev.dataTransfer;
+            for (var i_4 = 0; i_4 < dataKeys.length; i_4++) {
+                var k = dataKeys[i_4];
+                var d;
+                if (k === "Files") {
+                    d = [].slice.call(dt.files, 0);
+                } else {
+                    d = dt.getData(k);
+                }
+                dnd.data[k] = d;
+            }
+        }
+        updateFromNative(dnd, ev);
+        var t = dnd.targetCtx;
+        if (t && bubble(t.me, "onDrop", dnd)) {
+            setDropEffect(ev, dnd.operation);
+            dnd.destroy();
+            preventDefault(ev);
+        } else {
+            dnd.cancelDnd();
+        }
+        return true;
+    }
+    function justPreventDefault(ev, target, node) {
+        preventDefault(ev);
+        return true;
+    }
+    function handleDndSelectStart(ev, target, node) {
+        if (dnds.length === 0) return false;
+        preventDefault(ev);
+        return true;
+    }
+    function anyActiveDnd() {
+        for (var i_5 = 0; i_5 < dnds.length; i_5++) {
+            var dnd = dnds[i_5];
+            if (dnd.beforeDrag) continue;
+            return dnd;
+        }
+        return null;
+    }
+    addEvent("!PointerDown", 4, handlePointerDown);
+    addEvent("!PointerMove", 4, handlePointerMove);
+    addEvent("!PointerUp", 4, handlePointerUp);
+    addEvent("!PointerCancel", 4, handlePointerCancel);
+    addEvent("selectstart", 4, handleDndSelectStart);
+    addEvent("dragstart", 5, handleDragStart);
+    addEvent("dragover", 5, handleDragOver);
+    addEvent("dragend", 5, handleDragEnd);
+    addEvent("drag", 5, handleDrag);
+    addEvent("drop", 5, handleDrop);
+    addEvent("dragenter", 5, justPreventDefault);
+    addEvent("dragleave", 5, justPreventDefault);
+    var __export_getDnds = function() {
+        return dnds;
+    };
+    function emitOnHashChange() {
+        __export_invalidate();
+        return false;
+    }
+    addEvent("hashchange", 10, emitOnHashChange);
+    var myAppHistoryDeepness = 0;
+    var programPath = "";
+    function push(path, inapp) {
+        var l = window.location;
+        if (inapp) {
+            programPath = path;
+            l.hash = path.substring(1);
+            myAppHistoryDeepness++;
+        } else {
+            l.href = path;
+        }
+    }
+    function replace(path, inapp) {
+        var l = window.location;
+        if (inapp) {
+            programPath = path;
+            l.replace(l.pathname + l.search + path);
+        } else {
+            l.replace(path);
+        }
+    }
+    function pop() {
+        myAppHistoryDeepness--;
+        window.history.back();
+    }
+    var rootRoutes;
+    var nameRouteMap = {};
+    function encodeUrl(url) {
+        return encodeURIComponent(url).replace(/%20/g, "+");
+    }
+    function decodeUrl(url) {
+        return decodeURIComponent(url.replace(/\+/g, " "));
+    }
+    function encodeUrlPath(path) {
+        return String(path).split("/").map(encodeUrl).join("/");
+    }
+    var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+    var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
+    var compiledPatterns = {};
+    function compilePattern(pattern) {
+        if (!(pattern in compiledPatterns)) {
+            var paramNames = [];
+            var source = pattern.replace(paramCompileMatcher, function(match, paramName) {
+                if (paramName) {
+                    paramNames.push(paramName);
+                    return "([^/?#]+)";
+                } else if (match === "*") {
+                    paramNames.push("splat");
+                    return "(.*?)";
+                } else {
+                    return "\\" + match;
+                }
+            });
+            compiledPatterns[pattern] = {
+                matcher: new RegExp("^" + source + "$", "i"),
+                paramNames: paramNames
+            };
+        }
+        return compiledPatterns[pattern];
+    }
+    function extractParamNames(pattern) {
+        return compilePattern(pattern).paramNames;
+    }
+    function extractParams(pattern, path) {
+        var object = compilePattern(pattern);
+        var match = decodeUrl(path).match(object.matcher);
+        if (!match) return null;
+        var params = {};
+        var pn = object.paramNames;
+        var l = pn.length;
+        for (var i = 0; i < l; i++) {
+            params[pn[i]] = match[i + 1];
+        }
+        return params;
+    }
+    function injectParams(pattern, params) {
+        params = params || {};
+        var splatIndex = 0;
+        return pattern.replace(paramInjectMatcher, function(match, paramName) {
+            paramName = paramName || "splat";
+            if (paramName.slice(-1) !== "?") {
+                if (params[paramName] == null) throw new Error('Missing "' + paramName + '" parameter for path "' + pattern + '"');
+            } else {
+                paramName = paramName.slice(0, -1);
+                if (params[paramName] == null) {
+                    return "";
+                }
+            }
+            var segment;
+            if (paramName === "splat" && Array.isArray(params[paramName])) {
+                segment = params[paramName][splatIndex++];
+                if (segment == null) throw new Error("Missing splat # " + splatIndex + ' for path "' + pattern + '"');
+            } else {
+                segment = params[paramName];
+            }
+            return encodeUrlPath(segment);
+        });
+    }
+    function findMatch(path, rs, outParams) {
+        var l = rs.length;
+        var notFoundRoute;
+        var defaultRoute;
+        var params;
+        for (var i = 0; i < l; i++) {
+            var r = rs[i];
+            if (r.isNotFound) {
+                notFoundRoute = r;
+                continue;
+            }
+            if (r.isDefault) {
+                defaultRoute = r;
+                continue;
+            }
+            if (r.children) {
+                var res = findMatch(path, r.children, outParams);
+                if (res) {
+                    res.push(r);
+                    return res;
+                }
+            }
+            if (r.url) {
+                params = extractParams(r.url, path);
+                if (params) {
+                    outParams.p = params;
+                    return [ r ];
+                }
+            }
+        }
+        if (defaultRoute) {
+            params = extractParams(defaultRoute.url, path);
+            if (params) {
+                outParams.p = params;
+                return [ defaultRoute ];
+            }
+        }
+        if (notFoundRoute) {
+            params = extractParams(notFoundRoute.url, path);
+            if (params) {
+                outParams.p = params;
+                return [ notFoundRoute ];
+            }
+        }
+        return null;
+    }
+    var activeRoutes = [];
+    var futureRoutes;
+    var activeParams = newHashObj();
+    var nodesArray = [];
+    var setterOfNodesArray = [];
+    var urlRegex = /.*(?:\:|\/).*/;
+    function isInApp(name) {
+        return !urlRegex.test(name);
+    }
+    function isAbsolute(url) {
+        return url[0] === "/";
+    }
+    function noop() {
+        return null;
+    }
+    function getSetterOfNodesArray(idx) {
+        while (idx >= setterOfNodesArray.length) {
+            setterOfNodesArray.push(function(a, i) {
+                return function(n) {
+                    if (n) a[i] = n;
+                };
+            }(nodesArray, idx));
+        }
+        return setterOfNodesArray[idx];
+    }
+    var firstRouting = true;
+    function rootNodeFactory() {
+        var browserPath = window.location.hash;
+        var path = browserPath.substr(1);
+        if (!isAbsolute(path)) path = "/" + path;
+        var out = {
+            p: {}
+        };
+        var matches = findMatch(path, rootRoutes, out) || [];
+        if (firstRouting) {
+            firstRouting = false;
+            currentTransition = {
+                inApp: true,
+                type: 2,
+                name: null,
+                params: null
+            };
+            transitionState = -1;
+            programPath = browserPath;
+        } else {
+            if (!currentTransition && matches.length > 0 && browserPath != programPath) {
+                runTransition(createRedirectPush(matches[0].name, out.p));
+            }
+        }
+        if (currentTransition && currentTransition.type === 2 && transitionState < 0) {
+            currentTransition.inApp = true;
+            if (currentTransition.name == null && matches.length > 0) {
+                currentTransition.name = matches[0].name;
+                currentTransition.params = out.p;
+                nextIteration();
+            }
+            return null;
+        }
+        if (currentTransition == null) {
+            activeRoutes = matches;
+            while (nodesArray.length > activeRoutes.length) nodesArray.pop();
+            while (nodesArray.length < activeRoutes.length) nodesArray.push(null);
+            activeParams = out.p;
+        }
+        var fn = noop;
+        for (var i = 0; i < activeRoutes.length; i++) {
+            (function(fninner, r, routeParams, i) {
+                fn = function(otherdata) {
+                    var data = r.data || {};
+                    assign(data, otherdata);
+                    data.activeRouteHandler = fninner;
+                    data.routeParams = routeParams;
+                    var handler = r.handler;
+                    var res;
+                    if (typeof handler === "function") {
+                        res = handler(data);
+                    } else {
+                        res = {
+                            key: undefined,
+                            ref: undefined,
+                            data: data,
+                            component: handler
+                        };
+                    }
+                    if (r.keyBuilder) res.key = r.keyBuilder(routeParams); else res.key = r.name;
+                    res.ref = getSetterOfNodesArray(i);
+                    return res;
+                };
+            })(fn, activeRoutes[i], activeParams, i);
+        }
+        return fn();
+    }
+    function joinPath(p1, p2) {
+        if (isAbsolute(p2)) return p2;
+        if (p1[p1.length - 1] === "/") return p1 + p2;
+        return p1 + "/" + p2;
+    }
+    function registerRoutes(url, rs) {
+        var l = rs.length;
+        for (var i = 0; i < l; i++) {
+            var r = rs[i];
+            var u = url;
+            var name = r.name;
+            if (!name && url === "/") {
+                name = "root";
+                r.name = name;
+                nameRouteMap[name] = r;
+            } else if (name) {
+                nameRouteMap[name] = r;
+                u = joinPath(u, name);
+            }
+            if (r.isDefault) {
+                u = url;
+            } else if (r.isNotFound) {
+                u = joinPath(url, "*");
+            } else if (r.url) {
+                u = joinPath(url, r.url);
+            }
+            r.url = u;
+            if (r.children) registerRoutes(u, r.children);
+        }
+    }
+    function routes(rootroutes) {
+        if (!isArray(rootroutes)) {
+            rootroutes = [ rootroutes ];
+        }
+        registerRoutes("/", rootroutes);
+        rootRoutes = rootroutes;
+        init(rootNodeFactory);
+    }
+    function route(config, nestedRoutes) {
+        return {
+            name: config.name,
+            url: config.url,
+            data: config.data,
+            handler: config.handler,
+            keyBuilder: config.keyBuilder,
+            children: nestedRoutes
+        };
+    }
+    function routeDefault(config) {
+        return {
+            name: config.name,
+            data: config.data,
+            handler: config.handler,
+            keyBuilder: config.keyBuilder,
+            isDefault: true
+        };
+    }
+    function routeNotFound(config) {
+        return {
+            name: config.name,
+            data: config.data,
+            handler: config.handler,
+            keyBuilder: config.keyBuilder,
+            isNotFound: true
+        };
+    }
+    function isActive(name, params) {
+        if (params) {
+            for (var prop in params) {
+                if (params.hasOwnProperty(prop)) {
+                    if (activeParams[prop] !== params[prop]) return false;
+                }
+            }
+        }
+        for (var i = 0, l = activeRoutes.length; i < l; i++) {
+            if (activeRoutes[i].name === name) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function urlOfRoute(name, params) {
+        if (isInApp(name)) {
+            var r = nameRouteMap[name];
+            if (DEBUG) {
+                if (rootRoutes == null) throw Error("Cannot use urlOfRoute before defining routes");
+                if (r == null) throw Error("Route with name " + name + " if not defined in urlOfRoute");
+            }
+            return "#" + injectParams(r.url, params);
+        }
+        return name;
+    }
+    function link(node, name, params) {
+        node.data = node.data || {};
+        node.data.routeName = name;
+        node.data.routeParams = params;
+        postEnhance(node, {
+            render: function(ctx, me) {
+                var data = ctx.data;
+                me.attrs = me.attrs || {};
+                if (me.tag === "a") {
+                    me.attrs.href = urlOfRoute(data.routeName, data.routeParams);
+                }
+                me.className = me.className || "";
+                if (isActive(data.routeName, data.routeParams)) {
+                    me.className += " active";
+                }
+            },
+            onClick: function(ctx) {
+                var data = ctx.data;
+                runTransition(createRedirectPush(data.routeName, data.routeParams));
+                return true;
+            }
+        });
+        return node;
+    }
+    function createRedirectPush(name, params) {
+        return {
+            inApp: isInApp(name),
+            type: 0,
+            name: name,
+            params: params || {}
+        };
+    }
+    function createRedirectReplace(name, params) {
+        return {
+            inApp: isInApp(name),
+            type: 1,
+            name: name,
+            params: params || {}
+        };
+    }
+    function createBackTransition() {
+        return {
+            inApp: myAppHistoryDeepness > 0,
+            type: 2,
+            name: null,
+            params: {}
+        };
+    }
+    var currentTransition = null;
+    var nextTransition = null;
+    var transitionState = 0;
+    function doAction(transition) {
+        switch (transition.type) {
+          case 0:
+            push(urlOfRoute(transition.name, transition.params), transition.inApp);
+            break;
+
+          case 1:
+            replace(urlOfRoute(transition.name, transition.params), transition.inApp);
+            break;
+
+          case 2:
+            pop();
+            break;
+        }
+        __export_invalidate();
+    }
+    function nextIteration() {
+        while (true) {
+            if (transitionState >= 0 && transitionState < activeRoutes.length) {
+                var node = nodesArray[transitionState];
+                transitionState++;
+                if (!node) continue;
+                var comp = node.component;
+                if (!comp) continue;
+                var fn = comp.canDeactivate;
+                if (!fn) continue;
+                var res = fn.call(comp, node.ctx, currentTransition);
+                Promise.resolve(res).then(function(resp) {
+                    if (resp === true) {} else if (resp === false) {
+                        currentTransition = null;
+                        nextTransition = null;
+                        return;
+                    } else {
+                        nextTransition = resp;
+                    }
+                    nextIteration();
+                }).catch(function(err) {
+                    if (typeof console !== "undefined" && console.log) console.log(err);
+                });
+                return;
+            } else if (transitionState == activeRoutes.length) {
+                if (nextTransition) {
+                    if (currentTransition && currentTransition.type == 0) {
+                        push(urlOfRoute(currentTransition.name, currentTransition.params), currentTransition.inApp);
+                    }
+                    currentTransition = nextTransition;
+                    nextTransition = null;
+                }
+                transitionState = -1;
+                if (!currentTransition.inApp || currentTransition.type === 2) {
+                    doAction(currentTransition);
+                    return;
+                }
+            } else if (transitionState === -1) {
+                var out = {
+                    p: {}
+                };
+                if (currentTransition.inApp) {
+                    futureRoutes = findMatch(urlOfRoute(currentTransition.name, currentTransition.params).substring(1), rootRoutes, out) || [];
+                } else {
+                    futureRoutes = [];
+                }
+                transitionState = -2;
+            } else if (transitionState === -2 - futureRoutes.length) {
+                if (nextTransition) {
+                    transitionState = activeRoutes.length;
+                    continue;
+                }
+                if (currentTransition.type !== 2) {
+                    doAction(currentTransition);
+                } else {
+                    __export_invalidate();
+                }
+                currentTransition = null;
+                return;
+            } else {
+                if (nextTransition) {
+                    transitionState = activeRoutes.length;
+                    continue;
+                }
+                var rr = futureRoutes[futureRoutes.length + 1 + transitionState];
+                transitionState--;
+                var handler = rr.handler;
+                var comp = null;
+                if (typeof handler === "function") {
+                    var node = handler({});
+                    if (!node) continue;
+                    comp = node.component;
+                } else {
+                    comp = handler;
+                }
+                if (!comp) continue;
+                var fn = comp.canActivate;
+                if (!fn) continue;
+                var res = fn.call(comp, currentTransition);
+                Promise.resolve(res).then(function(resp) {
+                    if (resp === true) {} else if (resp === false) {
+                        currentTransition = null;
+                        nextTransition = null;
+                        return;
+                    } else {
+                        nextTransition = resp;
+                    }
+                    nextIteration();
+                }).catch(function(err) {
+                    if (typeof console !== "undefined" && console.log) console.log(err);
+                });
+                return;
+            }
+        }
+    }
+    function runTransition(transition) {
+        if (currentTransition != null) {
+            nextTransition = transition;
+            return;
+        }
+        firstRouting = false;
+        currentTransition = transition;
+        transitionState = 0;
+        nextIteration();
+    }
+    function getRoutes() {
+        return rootRoutes;
+    }
+    function getActiveRoutes() {
+        return activeRoutes;
+    }
+    function getActiveParams() {
+        return activeParams;
+    }
+    var allStyles = newHashObj();
+    var allSprites = newHashObj();
+    var allNameHints = newHashObj();
+    var dynamicSprites = [];
+    var imageCache = newHashObj();
+    var rebuildStyles = false;
+    var htmlStyle = null;
+    var globalCounter = 0;
+    var isIE9 = ieVersion() === 9;
+    var chainedBeforeFrame = setBeforeFrame(beforeFrame);
+    var cssSubRuleDelimiter = /\:|\ |\>/;
+    function buildCssSubRule(parent) {
+        var matchSplit = cssSubRuleDelimiter.exec(parent);
+        if (!matchSplit) return allStyles[parent].name;
+        var posSplit = matchSplit.index;
+        return allStyles[parent.substring(0, posSplit)].name + parent.substring(posSplit);
+    }
+    function buildCssRule(parent, name) {
+        var result = "";
+        if (parent) {
+            if (isArray(parent)) {
+                for (var i_6 = 0; i_6 < parent.length; i_6++) {
+                    if (i_6 > 0) {
+                        result += ",";
+                    }
+                    result += "." + buildCssSubRule(parent[i_6]) + "." + name;
+                }
+            } else {
+                result = "." + buildCssSubRule(parent) + "." + name;
+            }
+        } else {
+            result = "." + name;
+        }
+        return result;
+    }
+    function flattenStyle(cur, curPseudo, style, stylePseudo) {
+        if (typeof style === "string") {
+            var externalStyle = allStyles[style];
+            if (externalStyle === undefined) {
+                throw new Error("uknown style " + style);
+            }
+            flattenStyle(cur, curPseudo, externalStyle.style, externalStyle.pseudo);
+        } else if (typeof style === "function") {
+            style(cur, curPseudo);
+        } else if (isArray(style)) {
+            for (var i_7 = 0; i_7 < style.length; i_7++) {
+                flattenStyle(cur, curPseudo, style[i_7], undefined);
+            }
+        } else if (typeof style === "object") {
+            for (var key in style) {
+                if (!Object.prototype.hasOwnProperty.call(style, key)) continue;
+                var val = style[key];
+                if (typeof val === "function") {
+                    val = val(cur, key);
+                }
+                cur[key] = val;
+            }
+        }
+        if (stylePseudo != null && curPseudo != null) {
+            for (var pseudoKey in stylePseudo) {
+                var curPseudoVal = curPseudo[pseudoKey];
+                if (curPseudoVal === undefined) {
+                    curPseudoVal = newHashObj();
+                    curPseudo[pseudoKey] = curPseudoVal;
+                }
+                flattenStyle(curPseudoVal, undefined, stylePseudo[pseudoKey], undefined);
+            }
+        }
+    }
+    function beforeFrame() {
+        if (rebuildStyles) {
+            for (var i_8 = 0; i_8 < dynamicSprites.length; i_8++) {
+                var dynSprite = dynamicSprites[i_8];
+                var image = imageCache[dynSprite.url];
+                if (image == null) continue;
+                var colorStr = dynSprite.color();
+                if (colorStr !== dynSprite.lastColor) {
+                    dynSprite.lastColor = colorStr;
+                    if (dynSprite.width == null) dynSprite.width = image.width;
+                    if (dynSprite.height == null) dynSprite.height = image.height;
+                    var lastUrl = recolorAndClip(image, colorStr, dynSprite.width, dynSprite.height, dynSprite.left, dynSprite.top);
+                    var stDef = allStyles[dynSprite.styleid];
+                    stDef.style = {
+                        backgroundImage: "url(" + lastUrl + ")",
+                        width: dynSprite.width,
+                        height: dynSprite.height
+                    };
+                }
+            }
+            var stylestr = "";
+            for (var key in allStyles) {
+                var ss = allStyles[key];
+                var parent_1 = ss.parent;
+                var name_1 = ss.name;
+                var style_1 = newHashObj();
+                var flattenPseudo = newHashObj();
+                var sspseudo = ss.pseudo;
+                var ssstyle = ss.style;
+                if (typeof ssstyle === "function" && ssstyle.length === 0) {
+                    _a = ssstyle(), ssstyle = _a[0], sspseudo = _a[1];
+                }
+                flattenStyle(undefined, flattenPseudo, undefined, sspseudo);
+                flattenStyle(style_1, flattenPseudo, ssstyle, undefined);
+                var extractedInlStyle = null;
+                if (style_1["pointerEvents"]) {
+                    extractedInlStyle = newHashObj();
+                    extractedInlStyle["pointerEvents"] = style_1["pointerEvents"];
+                }
+                if (isIE9) {
+                    if (style_1["userSelect"]) {
+                        if (extractedInlStyle == null) extractedInlStyle = newHashObj();
+                        extractedInlStyle["userSelect"] = style_1["userSelect"];
+                        delete style_1["userSelect"];
+                    }
+                }
+                ss.inlStyle = extractedInlStyle;
+                shimStyle(style_1);
+                var cssStyle = inlineStyleToCssDeclaration(style_1);
+                if (cssStyle.length > 0) stylestr += buildCssRule(parent_1, name_1) + " {" + cssStyle + "}\n";
+                for (var key2 in flattenPseudo) {
+                    var sspi = flattenPseudo[key2];
+                    shimStyle(sspi);
+                    stylestr += buildCssRule(parent_1, name_1 + ":" + key2) + " {" + inlineStyleToCssDeclaration(sspi) + "}\n";
+                }
+            }
+            var styleElement = document.createElement("style");
+            styleElement.type = "text/css";
+            if (styleElement.styleSheet) {
+                styleElement.styleSheet.cssText = stylestr;
+            } else {
+                styleElement.appendChild(document.createTextNode(stylestr));
+            }
+            var head = document.head || document.getElementsByTagName("head")[0];
+            if (htmlStyle != null) {
+                head.replaceChild(styleElement, htmlStyle);
+            } else {
+                head.appendChild(styleElement);
+            }
+            htmlStyle = styleElement;
+            rebuildStyles = false;
+        }
+        chainedBeforeFrame();
+        var _a;
+    }
+    function style(node) {
+        var styles = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            styles[_i - 1] = arguments[_i];
+        }
+        var className = node.className;
+        var inlineStyle = node.style;
+        var stack = null;
+        var i = 0;
+        var ca = styles;
+        while (true) {
+            if (ca.length === i) {
+                if (stack === null || stack.length === 0) break;
+                ca = stack.pop();
+                i = stack.pop() + 1;
+                continue;
+            }
+            var s = ca[i];
+            if (s == null || typeof s === "boolean" || s === "") {} else if (typeof s === "string") {
+                var sd = allStyles[s];
+                if (className == null) className = sd.name; else className = className + " " + sd.name;
+                var inls = sd.inlStyle;
+                if (inls) {
+                    inlineStyle = assign(inlineStyle, inls);
+                }
+            } else if (isArray(s)) {
+                if (ca.length > i + 1) {
+                    if (stack == null) stack = [];
+                    stack.push(i);
+                    stack.push(ca);
+                }
+                ca = s;
+                i = 0;
+                continue;
+            } else {
+                inlineStyle = assign(inlineStyle, s);
+            }
+            i++;
+        }
+        node.className = className;
+        node.style = inlineStyle;
+        return node;
+    }
+    var uppercasePattern = /([A-Z])/g;
+    var msPattern = /^ms-/;
+    function hyphenateStyle(s) {
+        if (s === "cssFloat") return "float";
+        return s.replace(uppercasePattern, "-$1").toLowerCase().replace(msPattern, "-ms-");
+    }
+    function inlineStyleToCssDeclaration(style) {
+        var res = "";
+        for (var key in style) {
+            var v = style[key];
+            if (v === undefined) continue;
+            res += hyphenateStyle(key) + ":" + (v === "" ? '""' : v) + ";";
+        }
+        res = res.slice(0, -1);
+        return res;
+    }
+    function styleDef(style, pseudo, nameHint) {
+        return styleDefEx(null, style, pseudo, nameHint);
+    }
+    function styleDefEx(parent, style, pseudo, nameHint) {
+        if (nameHint && nameHint !== "b-") {
+            if (allNameHints[nameHint]) {
+                var counter = 1;
+                while (allNameHints[nameHint + counter]) counter++;
+                nameHint = nameHint + counter;
+            }
+            allNameHints[nameHint] = true;
+        } else {
+            nameHint = "b-" + globalCounter++;
+        }
+        allStyles[nameHint] = {
+            name: nameHint,
+            parent: parent,
+            style: style,
+            inlStyle: null,
+            pseudo: pseudo
+        };
+        invalidateStyles();
+        return nameHint;
+    }
+    function invalidateStyles() {
+        rebuildStyles = true;
+        __export_invalidate();
+    }
+    function updateSprite(spDef) {
+        var stDef = allStyles[spDef.styleid];
+        var style = {
+            backgroundImage: "url(" + spDef.url + ")",
+            width: spDef.width,
+            height: spDef.height
+        };
+        if (spDef.left || spDef.top) {
+            style.backgroundPosition = -spDef.left + "px " + -spDef.top + "px";
+        }
+        stDef.style = style;
+        invalidateStyles();
+    }
+    function emptyStyleDef(url) {
+        return styleDef({
+            width: 0,
+            height: 0
+        }, null, url.replace(/[^a-z0-9_-]/gi, "_"));
+    }
+    var rgbaRegex = /\s*rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d+|\d*\.\d+)\s*\)\s*/;
+    function recolorAndClip(image, colorStr, width, height, left, top) {
+        var canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(image, -left, -top);
+        var imgdata = ctx.getImageData(0, 0, width, height);
+        var imgd = imgdata.data;
+        var rgba = rgbaRegex.exec(colorStr);
+        var cred, cgreen, cblue, calpha;
+        if (rgba) {
+            cred = parseInt(rgba[1], 10);
+            cgreen = parseInt(rgba[2], 10);
+            cblue = parseInt(rgba[3], 10);
+            calpha = Math.round(parseFloat(rgba[4]) * 255);
+        } else {
+            cred = parseInt(colorStr.substr(1, 2), 16);
+            cgreen = parseInt(colorStr.substr(3, 2), 16);
+            cblue = parseInt(colorStr.substr(5, 2), 16);
+            calpha = parseInt(colorStr.substr(7, 2), 16) || 255;
+        }
+        if (calpha === 255) {
+            for (var i = 0; i < imgd.length; i += 4) {
+                var red = imgd[i];
+                if (red === imgd[i + 1] && red === imgd[i + 2] && (red === 128 || imgd[i + 3] < 255 && red > 112)) {
+                    imgd[i] = cred;
+                    imgd[i + 1] = cgreen;
+                    imgd[i + 2] = cblue;
+                }
+            }
+        } else {
+            for (var i = 0; i < imgd.length; i += 4) {
+                var red = imgd[i];
+                var alpha = imgd[i + 3];
+                if (red === imgd[i + 1] && red === imgd[i + 2] && (red === 128 || alpha < 255 && red > 112)) {
+                    if (alpha === 255) {
+                        imgd[i] = cred;
+                        imgd[i + 1] = cgreen;
+                        imgd[i + 2] = cblue;
+                        imgd[i + 3] = calpha;
+                    } else {
+                        alpha = alpha * (1 / 255);
+                        imgd[i] = Math.round(cred * alpha);
+                        imgd[i + 1] = Math.round(cgreen * alpha);
+                        imgd[i + 2] = Math.round(cblue * alpha);
+                        imgd[i + 3] = Math.round(calpha * alpha);
+                    }
+                }
+            }
+        }
+        ctx.putImageData(imgdata, 0, 0);
+        return canvas.toDataURL();
+    }
+    function sprite(url, color, width, height, left, top) {
+        left = left || 0;
+        top = top || 0;
+        if (typeof color === "function") {
+            var styleid = emptyStyleDef(url);
+            dynamicSprites.push({
+                styleid: styleid,
+                color: color,
+                url: url,
+                width: width,
+                height: height,
+                left: left,
+                top: top,
+                lastColor: "",
+                lastUrl: ""
+            });
+            if (imageCache[url] === undefined) {
+                imageCache[url] = null;
+                var image = new Image();
+                image.addEventListener("load", function() {
+                    imageCache[url] = image;
+                    invalidateStyles();
+                });
+                image.src = url;
+            }
+            return styleid;
+        }
+        var key = url + ":" + (color || "") + ":" + (width || 0) + ":" + (height || 0) + ":" + left + ":" + top;
+        var spDef = allSprites[key];
+        if (spDef) return spDef.styleid;
+        var styleid = emptyStyleDef(url);
+        spDef = {
+            styleid: styleid,
+            url: url,
+            width: width,
+            height: height,
+            left: left,
+            top: top
+        };
+        if (width == null || height == null || color != null) {
+            var image = new Image();
+            image.addEventListener("load", function() {
+                if (spDef.width == null) spDef.width = image.width;
+                if (spDef.height == null) spDef.height = image.height;
+                if (color != null) {
+                    spDef.url = recolorAndClip(image, color, spDef.width, spDef.height, spDef.left, spDef.top);
+                    spDef.left = 0;
+                    spDef.top = 0;
+                }
+                updateSprite(spDef);
+            });
+            image.src = url;
+        } else {
+            updateSprite(spDef);
+        }
+        allSprites[key] = spDef;
+        return styleid;
+    }
+    var bundlePath = "bundle.png";
+    function spriteb(width, height, left, top) {
+        var url = bundlePath;
+        var key = url + "::" + width + ":" + height + ":" + left + ":" + top;
+        var spDef = allSprites[key];
+        if (spDef) return spDef.styleid;
+        var styleid = styleDef({
+            width: 0,
+            height: 0
+        });
+        spDef = {
+            styleid: styleid,
+            url: url,
+            width: width,
+            height: height,
+            left: left,
+            top: top
+        };
+        updateSprite(spDef);
+        allSprites[key] = spDef;
+        return styleid;
+    }
+    function spritebc(color, width, height, left, top) {
+        return sprite(bundlePath, color, width, height, left, top);
+    }
+    function asset(path) {
+        return path;
+    }
+    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        var angleInRadians = angleInDegrees * Math.PI / 180;
+        return {
+            x: centerX + radius * Math.sin(angleInRadians),
+            y: centerY - radius * Math.cos(angleInRadians)
+        };
+    }
+    function svgDescribeArc(x, y, radius, startAngle, endAngle, startWithLine) {
+        var absDeltaAngle = Math.abs(endAngle - startAngle);
+        var close = false;
+        if (absDeltaAngle > 360 - .01) {
+            if (endAngle > startAngle) endAngle = startAngle - 359.9; else endAngle = startAngle + 359.9;
+            if (radius === 0) return "";
+            close = true;
+        } else {
+            if (radius === 0) {
+                return [ startWithLine ? "L" : "M", x, y ].join(" ");
+            }
+        }
+        var start = polarToCartesian(x, y, radius, endAngle);
+        var end = polarToCartesian(x, y, radius, startAngle);
+        var arcSweep = absDeltaAngle <= 180 ? "0" : "1";
+        var largeArg = endAngle > startAngle ? "0" : "1";
+        var d = [ startWithLine ? "L" : "M", start.x, start.y, "A", radius, radius, 0, arcSweep, largeArg, end.x, end.y ].join(" ");
+        if (close) d += "Z";
+        return d;
+    }
+    function svgPie(x, y, radiusBig, radiusSmall, startAngle, endAngle) {
+        var p = svgDescribeArc(x, y, radiusBig, startAngle, endAngle, false);
+        var nextWithLine = true;
+        if (p[p.length - 1] === "Z") nextWithLine = false;
+        if (radiusSmall === 0) {
+            if (!nextWithLine) return p;
+        }
+        return p + svgDescribeArc(x, y, radiusSmall, endAngle, startAngle, nextWithLine) + "Z";
+    }
+    function svgCircle(x, y, radius) {
+        return svgDescribeArc(x, y, radius, 0, 360, false);
+    }
+    function svgRect(x, y, width, height) {
+        return "M" + x + " " + y + "h" + width + "v" + height + "h" + -width + "Z";
+    }
+    function withKey(node, key) {
+        node.key = key;
+        return node;
+    }
+    function styledDiv(children) {
+        var styles = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            styles[_i - 1] = arguments[_i];
+        }
+        return style({
+            tag: "div",
+            children: children
+        }, styles);
+    }
+    function createVirtualComponent(component) {
+        return function(data, children) {
+            if (children !== undefined) data.children = children;
+            return {
+                data: data,
+                component: component
+            };
+        };
+    }
+    function createComponent(component) {
+        var originalRender = component.render;
+        if (originalRender) {
+            component.render = function(ctx, me, oldMe) {
+                me.tag = "div";
+                return originalRender.call(component, ctx, me, oldMe);
+            };
+        } else {
+            component.render = function(ctx, me) {
+                me.tag = "div";
+            };
+        }
+        return function(data, children) {
+            if (children !== undefined) data.children = children;
+            return {
+                data: data,
+                component: component
+            };
+        };
+    }
+    function createDerivedComponent(original, after) {
+        var originalComponent = original({}).component;
+        var merged = mergeComponents(originalComponent, after);
+        return createVirtualComponent(merged);
+    }
+    if (!window.b) window.b = {
+        deref: deref,
+        getRoots: getRoots,
+        setInvalidate: setInvalidate,
+        invalidateStyles: invalidateStyles,
+        ignoreShouldChange: ignoreShouldChange,
+        setAfterFrame: setAfterFrame,
+        setBeforeFrame: setBeforeFrame,
+        getDnds: __export_getDnds
+    };
+    var sourceText;
+    var pos;
+    var length;
+    var curLine;
+    var curCol;
+    var nextLine;
+    var nextCol;
+    var curToken;
+    var errorMsg;
+    var EOFToken = -1;
+    var ErrorToken = -2;
+    var OpenBracketToken = -3;
+    var CloseBracketToken = -4;
+    var HashToken = -5;
+    function advanceNextToken() {
+        curLine = nextLine;
+        curCol = nextCol;
+        if (pos === length) {
+            curToken = EOFToken;
+            return;
+        }
+        var ch = sourceText.charCodeAt(pos++);
+        if (ch === 13 || ch === 10) {
+            nextLine++;
+            nextCol = 1;
+            if (ch === 13 && pos < length && sourceText.charCodeAt(pos) === 10) {
+                pos++;
+            }
+            curToken = 13;
+            return;
+        }
+        nextCol++;
+        if (ch === 92) {
+            if (pos === length) {
+                curToken = 92;
+                return;
+            }
+            ch = sourceText.charCodeAt(pos++);
+            nextCol++;
+            if (ch === 92 || ch === 123 || ch === 125 || ch === 35) {
+                curToken = ch;
+                return;
+            }
+            if (ch === 117) {
+                if (pos + 4 <= length) {
+                    var hexcode = sourceText.substr(pos, 4);
+                    if (/^[0-9a-f]+$/gi.test(hexcode)) {
+                        curToken = parseInt(hexcode, 16);
+                        pos += 4;
+                        nextCol += 4;
+                        return;
+                    }
+                }
+                errorMsg = "After \\u there must be 4 hex characters";
+                curToken = ErrorToken;
+                return;
+            }
+            errorMsg = "After \\ there coud be only one of \\{}#u characters";
+            curToken = ErrorToken;
+            return;
+        }
+        if (ch === 123) {
+            curToken = OpenBracketToken;
+        } else if (ch === 125) {
+            curToken = CloseBracketToken;
+        } else if (ch === 35) {
+            curToken = HashToken;
+        } else {
+            curToken = ch;
+        }
+    }
+    function isError(val) {
+        return val != null && typeof val === "object" && val.type === "error";
+    }
+    function buildError(msg) {
+        if (msg === undefined) msg = errorMsg;
+        return {
+            type: "error",
+            msg: msg,
+            pos: pos - 1,
+            line: curLine,
+            col: curCol
+        };
+    }
+    function skipWs() {
+        while (curToken === 9 || curToken === 10 || curToken === 13 || curToken === 32) {
+            advanceNextToken();
+        }
+    }
+    function parseIdentificator() {
+        var identificator = "";
+        if (curToken >= 65 && curToken <= 90 || curToken >= 97 && curToken <= 122 || curToken === 95) {
+            do {
+                identificator += String.fromCharCode(curToken);
+                advanceNextToken();
+            } while (curToken >= 65 && curToken <= 90 || curToken >= 97 && curToken <= 122 || curToken === 95 || curToken >= 48 && curToken <= 57);
+        } else {
+            return buildError("Expecting identifier [a-zA-Z_]");
+        }
+        return identificator;
+    }
+    function parseChars() {
+        var res = "";
+        do {
+            res += String.fromCharCode(curToken);
+            advanceNextToken();
+        } while (curToken >= 0 && curToken !== 9 && curToken !== 10 && curToken !== 13 && curToken !== 32);
+        return res;
+    }
+    function parseNumber() {
+        var number = "";
+        do {
+            number += String.fromCharCode(curToken);
+            advanceNextToken();
+        } while (curToken >= 48 && curToken <= 57);
+        return parseInt(number, 10);
+    }
+    function parseFormat() {
+        skipWs();
+        if (curToken === ErrorToken) return buildError();
+        var identificator = parseIdentificator();
+        if (isError(identificator)) return identificator;
+        skipWs();
+        if (curToken === ErrorToken) return buildError();
+        if (curToken === CloseBracketToken) {
+            advanceNextToken();
+            return {
+                type: "arg",
+                id: identificator
+            };
+        }
+        if (curToken !== 44) {
+            return buildError('Expecting "}" or ","');
+        }
+        advanceNextToken();
+        skipWs();
+        var format = {
+            type: undefined
+        };
+        var res = {
+            type: "format",
+            id: identificator,
+            format: format
+        };
+        var name = parseIdentificator();
+        if (isError(name)) return name;
+        skipWs();
+        if (curToken === ErrorToken) return buildError();
+        if (name === "number" || name === "time" || name === "date") {
+            format.type = name;
+            format.style = null;
+            format.options = null;
+            if (curToken === CloseBracketToken) {
+                advanceNextToken();
+                return res;
+            }
+            if (curToken === 44) {
+                advanceNextToken();
+                skipWs();
+                var style = parseIdentificator();
+                if (isError(style)) return name;
+                format.style = style;
+                format.options = [];
+                while (true) {
+                    skipWs();
+                    if (curToken === ErrorToken) return buildError();
+                    if (curToken === CloseBracketToken) {
+                        advanceNextToken();
+                        return res;
+                    }
+                    if (curToken === 44) {
+                        advanceNextToken();
+                        skipWs();
+                        var optionName = parseIdentificator();
+                        if (isError(optionName)) return optionName;
+                        if (curToken === 58) {
+                            advanceNextToken();
+                            skipWs();
+                            var val = void 0;
+                            if (curToken >= 48 && curToken <= 57) {
+                                val = parseNumber();
+                            } else if (curToken === OpenBracketToken) {
+                                advanceNextToken();
+                                val = parseMsg(false);
+                            } else {
+                                val = parseIdentificator();
+                            }
+                            if (isError(val)) return val;
+                            format.options.push({
+                                key: optionName,
+                                value: val
+                            });
+                        } else {
+                            format.options.push({
+                                key: optionName
+                            });
+                        }
+                        continue;
+                    }
+                    break;
+                }
+            }
+            return buildError('Expecting "," or "}"');
+        } else if (name === "plural" || name === "selectordinal") {
+            var options = [];
+            format.type = "plural";
+            format.ordinal = name !== "plural";
+            format.offset = 0;
+            format.options = options;
+            if (curToken !== 44) {
+                return buildError('Expecting ","');
+            }
+            advanceNextToken();
+            skipWs();
+            var offsetAllowed = true;
+            while (curToken !== CloseBracketToken) {
+                if (curToken < 0) {
+                    return buildError('Expecting characters except "{", "#"');
+                }
+                var chars = parseChars();
+                skipWs();
+                if (offsetAllowed && /^offset:/.test(chars)) {
+                    var m = /^offset:*([0-9]+)$/.exec(chars);
+                    if (m) {
+                        format.offset = parseInt(m[1], 10);
+                    } else if (chars === "offset:") {
+                        skipWs();
+                        if (curToken < 48 || curToken > 57) {
+                            return buildError("Expecting number");
+                        }
+                        format.offset = parseInt(parseNumber(), 10);
+                    } else return buildError('After "offset:" there must be number');
+                    offsetAllowed = false;
+                    continue;
+                }
+                offsetAllowed = false;
+                var selector = void 0;
+                if (/^=[0-9]+$/.test(chars)) {
+                    selector = parseInt(chars.substring(1), 10);
+                } else {
+                    selector = chars;
+                }
+                if (curToken !== OpenBracketToken) {
+                    return buildError('Expecting "{"');
+                }
+                advanceNextToken();
+                var value = parseMsg(false);
+                if (isError(value)) return value;
+                options.push({
+                    selector: selector,
+                    value: value
+                });
+                skipWs();
+            }
+            advanceNextToken();
+            return res;
+        } else if (name === "select") {
+            var options = [];
+            format.type = "select";
+            format.options = options;
+            if (curToken !== 44) {
+                return buildError('Expecting ","');
+            }
+            advanceNextToken();
+            skipWs();
+            while (curToken !== CloseBracketToken) {
+                if (curToken < 0) {
+                    return buildError('Expecting characters except "{", "#"');
+                }
+                var chars = parseChars();
+                skipWs();
+                var selector = void 0;
+                if (/^=[0-9]+$/.test(chars)) {
+                    selector = parseInt(chars.substring(1), 10);
+                } else {
+                    selector = chars;
+                }
+                if (curToken !== OpenBracketToken) {
+                    return buildError('Expecting "{"');
+                }
+                advanceNextToken();
+                var value = parseMsg(false);
+                if (isError(value)) return value;
+                options.push({
+                    selector: selector,
+                    value: value
+                });
+                skipWs();
+            }
+            advanceNextToken();
+            return res;
+        }
+        return buildError('Expecting one of "number", "time", "date", "plural", "selectordinal", "select".');
+    }
+    function parseMsg(endWithEOF) {
+        var res = null;
+        while (true) {
+            if (curToken === ErrorToken) {
+                return buildError();
+            }
+            if (curToken === EOFToken) {
+                if (endWithEOF) {
+                    if (res === null) return "";
+                    return res;
+                }
+                return buildError('Unexpected end of message missing "}"');
+            }
+            var val = void 0;
+            if (curToken === OpenBracketToken) {
+                advanceNextToken();
+                val = parseFormat();
+            } else if (curToken === HashToken) {
+                advanceNextToken();
+                val = {
+                    type: "hash"
+                };
+            } else if (curToken === CloseBracketToken) {
+                if (endWithEOF) {
+                    return buildError('Unexpected "}". Maybe you forgot to prefix it with "\\".');
+                }
+                advanceNextToken();
+                if (res === null) return "";
+                return res;
+            } else {
+                val = "";
+                while (curToken >= 0) {
+                    val += String.fromCharCode(curToken);
+                    advanceNextToken();
+                }
+            }
+            if (isError(val)) return val;
+            if (res === null) res = val; else {
+                if (Array.isArray(res)) {
+                    res.push(val);
+                } else {
+                    res = [ res, val ];
+                }
+            }
+        }
+    }
+    function parse(text) {
+        pos = 0;
+        sourceText = text;
+        length = text.length;
+        nextLine = 1;
+        nextCol = 1;
+        advanceNextToken();
+        return parseMsg(true);
+    }
+    var RuntimeFunctionGenerator = function() {
+        function RuntimeFunctionGenerator() {
+            this.constants = [];
+            this.body = "";
+            this.argCount = 0;
+            this.localCount = 0;
+        }
+        RuntimeFunctionGenerator.prototype.addConstant = function(value) {
+            var cc = this.constants;
+            for (var i = 0; i < cc.length; i++) {
+                if (cc[i] === value) return "c_" + i;
+            }
+            cc.push(value);
+            return "c_" + (cc.length - 1);
+        };
+        RuntimeFunctionGenerator.prototype.addArg = function(index) {
+            if (index >= this.argCount) this.argCount = index + 1;
+            return "a_" + index;
+        };
+        RuntimeFunctionGenerator.prototype.addBody = function(text) {
+            this.body += text;
+        };
+        RuntimeFunctionGenerator.prototype.addLocal = function() {
+            return "l_" + this.localCount++;
+        };
+        RuntimeFunctionGenerator.prototype.build = function() {
+            var innerParams = [];
+            for (var i = 0; i < this.argCount; i++) {
+                innerParams.push("a_" + i);
+            }
+            if (this.constants.length > 0) {
+                var params = [];
+                for (var i = 0; i < this.constants.length; i++) {
+                    params.push("c_" + i);
+                }
+                params.push("return function(" + innerParams.join(",") + ") {\n" + this.body + "\n}");
+                return Function.apply(null, params).apply(null, this.constants);
+            }
+            innerParams.push(this.body);
+            return Function.apply(null, innerParams);
+        };
+        return RuntimeFunctionGenerator;
+    }();
+    var defs = Object.create(null);
+    defs["en"] = {
+        pluralFn: function(n, ord) {
+            var s = String(n).split("."), v0 = !s[1], t0 = Number(s[0]) == n, n10 = t0 && s[0].slice(-1), n100 = t0 && s[0].slice(-2);
+            if (ord) return n10 == 1 && n100 != 11 ? "one" : n10 == 2 && n100 != 12 ? "two" : n10 == 3 && n100 != 13 ? "few" : "other";
+            return n == 1 && v0 ? "one" : "other";
+        }
+    };
+    function setPluralRule(locale, pluralFn) {
+        var d = defs[locale];
+        if (d === undefined) {
+            d = {};
+        }
+        d.pluralFn = pluralFn;
+        defs[locale] = d;
+    }
+    function getLanguageFromLocale(locale) {
+        var idx = locale.indexOf("-");
+        if (idx >= 0) return locale.substr(0, idx);
+        return locale;
+    }
+    function getPluralRule(locale) {
+        var d = defs[locale];
+        if (!d) {
+            d = defs[getLanguageFromLocale(locale)];
+            if (!d) {
+                d = defs["en"];
+            }
+        }
+        return d.pluralFn;
+    }
+    var __bbe = {};
+    (function() {
+        var exports = {};
+        var module = {
+            exports: exports
+        };
+        (function() {
+            var numeral, VERSION = "1.5.3", languages = {}, currentLanguage = "en", zeroFormat = null, defaultFormat = "0,0", hasModule = typeof module !== "undefined" && module.exports;
+            function Numeral(number) {
+                this._value = number;
+            }
+            function toFixed(value, precision, roundingFunction, optionals) {
+                var power = Math.pow(10, precision), optionalsRegExp, output;
+                output = (roundingFunction(value * power) / power).toFixed(precision);
+                if (optionals) {
+                    optionalsRegExp = new RegExp("0{1," + optionals + "}$");
+                    output = output.replace(optionalsRegExp, "");
+                }
+                return output;
+            }
+            function formatNumeral(n, format, roundingFunction) {
+                var output;
+                if (format.indexOf("$") > -1) {
+                    output = formatCurrency(n, format, roundingFunction);
+                } else if (format.indexOf("%") > -1) {
+                    output = formatPercentage(n, format, roundingFunction);
+                } else if (format.indexOf(":") > -1) {
+                    output = formatTime(n, format);
+                } else {
+                    output = formatNumber(n._value, format, roundingFunction);
+                }
+                return output;
+            }
+            function unformatNumeral(n, string) {
+                var stringOriginal = string, thousandRegExp, millionRegExp, billionRegExp, trillionRegExp, suffixes = [ "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" ], bytesMultiplier = false, power;
+                if (string.indexOf(":") > -1) {
+                    n._value = unformatTime(string);
+                } else {
+                    if (string === zeroFormat) {
+                        n._value = 0;
+                    } else {
+                        if (languages[currentLanguage].delimiters.decimal !== ".") {
+                            string = string.replace(/\./g, "").replace(languages[currentLanguage].delimiters.decimal, ".");
+                        }
+                        thousandRegExp = new RegExp("[^a-zA-Z]" + languages[currentLanguage].abbreviations.thousand + "(?:\\)|(\\" + languages[currentLanguage].currency.symbol + ")?(?:\\))?)?$");
+                        millionRegExp = new RegExp("[^a-zA-Z]" + languages[currentLanguage].abbreviations.million + "(?:\\)|(\\" + languages[currentLanguage].currency.symbol + ")?(?:\\))?)?$");
+                        billionRegExp = new RegExp("[^a-zA-Z]" + languages[currentLanguage].abbreviations.billion + "(?:\\)|(\\" + languages[currentLanguage].currency.symbol + ")?(?:\\))?)?$");
+                        trillionRegExp = new RegExp("[^a-zA-Z]" + languages[currentLanguage].abbreviations.trillion + "(?:\\)|(\\" + languages[currentLanguage].currency.symbol + ")?(?:\\))?)?$");
+                        for (power = 0; power <= suffixes.length; power++) {
+                            bytesMultiplier = string.indexOf(suffixes[power]) > -1 ? Math.pow(1024, power + 1) : false;
+                            if (bytesMultiplier) {
+                                break;
+                            }
+                        }
+                        n._value = (bytesMultiplier ? bytesMultiplier : 1) * (stringOriginal.match(thousandRegExp) ? Math.pow(10, 3) : 1) * (stringOriginal.match(millionRegExp) ? Math.pow(10, 6) : 1) * (stringOriginal.match(billionRegExp) ? Math.pow(10, 9) : 1) * (stringOriginal.match(trillionRegExp) ? Math.pow(10, 12) : 1) * (string.indexOf("%") > -1 ? .01 : 1) * ((string.split("-").length + Math.min(string.split("(").length - 1, string.split(")").length - 1)) % 2 ? 1 : -1) * Number(string.replace(/[^0-9\.]+/g, ""));
+                        n._value = bytesMultiplier ? Math.ceil(n._value) : n._value;
+                    }
+                }
+                return n._value;
+            }
+            function formatCurrency(n, format, roundingFunction) {
+                var symbolIndex = format.indexOf("$"), openParenIndex = format.indexOf("("), minusSignIndex = format.indexOf("-"), space = "", spliceIndex, output;
+                if (format.indexOf(" $") > -1) {
+                    space = " ";
+                    format = format.replace(" $", "");
+                } else if (format.indexOf("$ ") > -1) {
+                    space = " ";
+                    format = format.replace("$ ", "");
+                } else {
+                    format = format.replace("$", "");
+                }
+                output = formatNumber(n._value, format, roundingFunction);
+                if (symbolIndex <= 1) {
+                    if (output.indexOf("(") > -1 || output.indexOf("-") > -1) {
+                        output = output.split("");
+                        spliceIndex = 1;
+                        if (symbolIndex < openParenIndex || symbolIndex < minusSignIndex) {
+                            spliceIndex = 0;
+                        }
+                        output.splice(spliceIndex, 0, languages[currentLanguage].currency.symbol + space);
+                        output = output.join("");
+                    } else {
+                        output = languages[currentLanguage].currency.symbol + space + output;
+                    }
+                } else {
+                    if (output.indexOf(")") > -1) {
+                        output = output.split("");
+                        output.splice(-1, 0, space + languages[currentLanguage].currency.symbol);
+                        output = output.join("");
+                    } else {
+                        output = output + space + languages[currentLanguage].currency.symbol;
+                    }
+                }
+                return output;
+            }
+            function formatPercentage(n, format, roundingFunction) {
+                var space = "", output, value = n._value * 100;
+                if (format.indexOf(" %") > -1) {
+                    space = " ";
+                    format = format.replace(" %", "");
+                } else {
+                    format = format.replace("%", "");
+                }
+                output = formatNumber(value, format, roundingFunction);
+                if (output.indexOf(")") > -1) {
+                    output = output.split("");
+                    output.splice(-1, 0, space + "%");
+                    output = output.join("");
+                } else {
+                    output = output + space + "%";
+                }
+                return output;
+            }
+            function formatTime(n) {
+                var hours = Math.floor(n._value / 60 / 60), minutes = Math.floor((n._value - hours * 60 * 60) / 60), seconds = Math.round(n._value - hours * 60 * 60 - minutes * 60);
+                return hours + ":" + (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+            }
+            function unformatTime(string) {
+                var timeArray = string.split(":"), seconds = 0;
+                if (timeArray.length === 3) {
+                    seconds = seconds + Number(timeArray[0]) * 60 * 60;
+                    seconds = seconds + Number(timeArray[1]) * 60;
+                    seconds = seconds + Number(timeArray[2]);
+                } else if (timeArray.length === 2) {
+                    seconds = seconds + Number(timeArray[0]) * 60;
+                    seconds = seconds + Number(timeArray[1]);
+                }
+                return Number(seconds);
+            }
+            function formatNumber(value, format, roundingFunction) {
+                var negP = false, signed = false, optDec = false, abbr = "", abbrK = false, abbrM = false, abbrB = false, abbrT = false, abbrForce = false, bytes = "", ord = "", abs = Math.abs(value), suffixes = [ "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" ], min, max, power, w, precision, thousands, d = "", neg = false;
+                if (value === 0 && zeroFormat !== null) {
+                    return zeroFormat;
+                } else {
+                    if (format.indexOf("(") > -1) {
+                        negP = true;
+                        format = format.slice(1, -1);
+                    } else if (format.indexOf("+") > -1) {
+                        signed = true;
+                        format = format.replace(/\+/g, "");
+                    }
+                    if (format.indexOf("a") > -1) {
+                        abbrK = format.indexOf("aK") >= 0;
+                        abbrM = format.indexOf("aM") >= 0;
+                        abbrB = format.indexOf("aB") >= 0;
+                        abbrT = format.indexOf("aT") >= 0;
+                        abbrForce = abbrK || abbrM || abbrB || abbrT;
+                        if (format.indexOf(" a") > -1) {
+                            abbr = " ";
+                            format = format.replace(" a", "");
+                        } else {
+                            format = format.replace("a", "");
+                        }
+                        if (abs >= Math.pow(10, 12) && !abbrForce || abbrT) {
+                            abbr = abbr + languages[currentLanguage].abbreviations.trillion;
+                            value = value / Math.pow(10, 12);
+                        } else if (abs < Math.pow(10, 12) && abs >= Math.pow(10, 9) && !abbrForce || abbrB) {
+                            abbr = abbr + languages[currentLanguage].abbreviations.billion;
+                            value = value / Math.pow(10, 9);
+                        } else if (abs < Math.pow(10, 9) && abs >= Math.pow(10, 6) && !abbrForce || abbrM) {
+                            abbr = abbr + languages[currentLanguage].abbreviations.million;
+                            value = value / Math.pow(10, 6);
+                        } else if (abs < Math.pow(10, 6) && abs >= Math.pow(10, 3) && !abbrForce || abbrK) {
+                            abbr = abbr + languages[currentLanguage].abbreviations.thousand;
+                            value = value / Math.pow(10, 3);
+                        }
+                    }
+                    if (format.indexOf("b") > -1) {
+                        if (format.indexOf(" b") > -1) {
+                            bytes = " ";
+                            format = format.replace(" b", "");
+                        } else {
+                            format = format.replace("b", "");
+                        }
+                        for (power = 0; power <= suffixes.length; power++) {
+                            min = Math.pow(1024, power);
+                            max = Math.pow(1024, power + 1);
+                            if (value >= min && value < max) {
+                                bytes = bytes + suffixes[power];
+                                if (min > 0) {
+                                    value = value / min;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (format.indexOf("o") > -1) {
+                        if (format.indexOf(" o") > -1) {
+                            ord = " ";
+                            format = format.replace(" o", "");
+                        } else {
+                            format = format.replace("o", "");
+                        }
+                        ord = ord + languages[currentLanguage].ordinal(value);
+                    }
+                    if (format.indexOf("[.]") > -1) {
+                        optDec = true;
+                        format = format.replace("[.]", ".");
+                    }
+                    w = value.toString().split(".")[0];
+                    precision = format.split(".")[1];
+                    thousands = format.indexOf(",");
+                    if (precision) {
+                        if (precision.indexOf("[") > -1) {
+                            precision = precision.replace("]", "");
+                            precision = precision.split("[");
+                            d = toFixed(value, precision[0].length + precision[1].length, roundingFunction, precision[1].length);
+                        } else {
+                            d = toFixed(value, precision.length, roundingFunction);
+                        }
+                        w = d.split(".")[0];
+                        if (d.split(".")[1].length) {
+                            d = languages[currentLanguage].delimiters.decimal + d.split(".")[1];
+                        } else {
+                            d = "";
+                        }
+                        if (optDec && Number(d.slice(1)) === 0) {
+                            d = "";
+                        }
+                    } else {
+                        w = toFixed(value, null, roundingFunction);
+                    }
+                    if (w.indexOf("-") > -1) {
+                        w = w.slice(1);
+                        neg = true;
+                    }
+                    if (thousands > -1) {
+                        w = w.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + languages[currentLanguage].delimiters.thousands);
+                    }
+                    if (format.indexOf(".") === 0) {
+                        w = "";
+                    }
+                    return (negP && neg ? "(" : "") + (!negP && neg ? "-" : "") + (!neg && signed ? "+" : "") + w + d + (ord ? ord : "") + (abbr ? abbr : "") + (bytes ? bytes : "") + (negP && neg ? ")" : "");
+                }
+            }
+            numeral = function(input) {
+                if (numeral.isNumeral(input)) {
+                    input = input.value();
+                } else if (input === 0 || typeof input === "undefined") {
+                    input = 0;
+                } else if (!Number(input)) {
+                    input = numeral.fn.unformat(input);
+                }
+                return new Numeral(Number(input));
+            };
+            numeral.version = VERSION;
+            numeral.isNumeral = function(obj) {
+                return obj instanceof Numeral;
+            };
+            numeral.language = function(key, values) {
+                if (!key) {
+                    return currentLanguage;
+                }
+                if (key && !values) {
+                    if (!languages[key]) {
+                        throw new Error("Unknown language : " + key);
+                    }
+                    currentLanguage = key;
+                }
+                if (values || !languages[key]) {
+                    loadLanguage(key, values);
+                }
+                return numeral;
+            };
+            numeral.languageData = function(key) {
+                if (!key) {
+                    return languages[currentLanguage];
+                }
+                if (!languages[key]) {
+                    throw new Error("Unknown language : " + key);
+                }
+                return languages[key];
+            };
+            numeral.language("en", {
+                delimiters: {
+                    thousands: ",",
+                    decimal: "."
+                },
+                abbreviations: {
+                    thousand: "k",
+                    million: "m",
+                    billion: "b",
+                    trillion: "t"
+                },
+                ordinal: function(number) {
+                    var b = number % 10;
+                    return ~~(number % 100 / 10) === 1 ? "th" : b === 1 ? "st" : b === 2 ? "nd" : b === 3 ? "rd" : "th";
+                },
+                currency: {
+                    symbol: "$"
+                }
+            });
+            numeral.zeroFormat = function(format) {
+                zeroFormat = typeof format === "string" ? format : null;
+            };
+            numeral.defaultFormat = function(format) {
+                defaultFormat = typeof format === "string" ? format : "0.0";
+            };
+            function loadLanguage(key, values) {
+                languages[key] = values;
+            }
+            if ("function" !== typeof Array.prototype.reduce) {
+                Array.prototype.reduce = function(callback, opt_initialValue) {
+                    "use strict";
+                    if (null === this || "undefined" === typeof this) {
+                        throw new TypeError("Array.prototype.reduce called on null or undefined");
+                    }
+                    if ("function" !== typeof callback) {
+                        throw new TypeError(callback + " is not a function");
+                    }
+                    var index, value, length = this.length >>> 0, isValueSet = false;
+                    if (1 < arguments.length) {
+                        value = opt_initialValue;
+                        isValueSet = true;
+                    }
+                    for (index = 0; length > index; ++index) {
+                        if (this.hasOwnProperty(index)) {
+                            if (isValueSet) {
+                                value = callback(value, this[index], index, this);
+                            } else {
+                                value = this[index];
+                                isValueSet = true;
+                            }
+                        }
+                    }
+                    if (!isValueSet) {
+                        throw new TypeError("Reduce of empty array with no initial value");
+                    }
+                    return value;
+                };
+            }
+            function multiplier(x) {
+                var parts = x.toString().split(".");
+                if (parts.length < 2) {
+                    return 1;
+                }
+                return Math.pow(10, parts[1].length);
+            }
+            function correctionFactor() {
+                var args = Array.prototype.slice.call(arguments);
+                return args.reduce(function(prev, next) {
+                    var mp = multiplier(prev), mn = multiplier(next);
+                    return mp > mn ? mp : mn;
+                }, -Infinity);
+            }
+            numeral.fn = Numeral.prototype = {
+                clone: function() {
+                    return numeral(this);
+                },
+                format: function(inputString, roundingFunction) {
+                    return formatNumeral(this, inputString ? inputString : defaultFormat, roundingFunction !== undefined ? roundingFunction : Math.round);
+                },
+                unformat: function(inputString) {
+                    if (Object.prototype.toString.call(inputString) === "[object Number]") {
+                        return inputString;
+                    }
+                    return unformatNumeral(this, inputString ? inputString : defaultFormat);
+                },
+                value: function() {
+                    return this._value;
+                },
+                valueOf: function() {
+                    return this._value;
+                },
+                set: function(value) {
+                    this._value = Number(value);
+                    return this;
+                },
+                add: function(value) {
+                    var corrFactor = correctionFactor.call(null, this._value, value);
+                    function cback(accum, curr, currI, O) {
+                        return accum + corrFactor * curr;
+                    }
+                    this._value = [ this._value, value ].reduce(cback, 0) / corrFactor;
+                    return this;
+                },
+                subtract: function(value) {
+                    var corrFactor = correctionFactor.call(null, this._value, value);
+                    function cback(accum, curr, currI, O) {
+                        return accum - corrFactor * curr;
+                    }
+                    this._value = [ value ].reduce(cback, this._value * corrFactor) / corrFactor;
+                    return this;
+                },
+                multiply: function(value) {
+                    function cback(accum, curr, currI, O) {
+                        var corrFactor = correctionFactor(accum, curr);
+                        return accum * corrFactor * (curr * corrFactor) / (corrFactor * corrFactor);
+                    }
+                    this._value = [ this._value, value ].reduce(cback, 1);
+                    return this;
+                },
+                divide: function(value) {
+                    function cback(accum, curr, currI, O) {
+                        var corrFactor = correctionFactor(accum, curr);
+                        return accum * corrFactor / (curr * corrFactor);
+                    }
+                    this._value = [ this._value, value ].reduce(cback);
+                    return this;
+                },
+                difference: function(value) {
+                    return Math.abs(numeral(this._value).subtract(value).value());
+                }
+            };
+            if (hasModule) {
+                module.exports = numeral;
+            }
+            if (typeof ender === "undefined") {
+                this["numeral"] = numeral;
+            }
+            if (typeof define === "function" && define.amd) {
+                define([], function() {
+                    return numeral;
+                });
+            }
+        }).call(this);
+        __bbe["node_modules/numeral/numeral.js"] = module.exports;
+    })();
+    (function() {
+        var exports = {};
+        var module = {
+            exports: exports
+        };
+        (function(global, factory) {
+            typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : global.moment = factory();
+        })(this, function() {
+            "use strict";
+            var hookCallback;
+            function utils_hooks__hooks() {
+                return hookCallback.apply(null, arguments);
+            }
+            function setHookCallback(callback) {
+                hookCallback = callback;
+            }
+            function isArray(input) {
+                return Object.prototype.toString.call(input) === "[object Array]";
+            }
+            function isDate(input) {
+                return input instanceof Date || Object.prototype.toString.call(input) === "[object Date]";
+            }
+            function map(arr, fn) {
+                var res = [], i;
+                for (i = 0; i < arr.length; ++i) {
+                    res.push(fn(arr[i], i));
+                }
+                return res;
+            }
+            function hasOwnProp(a, b) {
+                return Object.prototype.hasOwnProperty.call(a, b);
+            }
+            function extend(a, b) {
+                for (var i in b) {
+                    if (hasOwnProp(b, i)) {
+                        a[i] = b[i];
+                    }
+                }
+                if (hasOwnProp(b, "toString")) {
+                    a.toString = b.toString;
+                }
+                if (hasOwnProp(b, "valueOf")) {
+                    a.valueOf = b.valueOf;
+                }
+                return a;
+            }
+            function create_utc__createUTC(input, format, locale, strict) {
+                return createLocalOrUTC(input, format, locale, strict, true).utc();
+            }
+            function defaultParsingFlags() {
+                return {
+                    empty: false,
+                    unusedTokens: [],
+                    unusedInput: [],
+                    overflow: -2,
+                    charsLeftOver: 0,
+                    nullInput: false,
+                    invalidMonth: null,
+                    invalidFormat: false,
+                    userInvalidated: false,
+                    iso: false
+                };
+            }
+            function getParsingFlags(m) {
+                if (m._pf == null) {
+                    m._pf = defaultParsingFlags();
+                }
+                return m._pf;
+            }
+            function valid__isValid(m) {
+                if (m._isValid == null) {
+                    var flags = getParsingFlags(m);
+                    m._isValid = !isNaN(m._d.getTime()) && flags.overflow < 0 && !flags.empty && !flags.invalidMonth && !flags.invalidWeekday && !flags.nullInput && !flags.invalidFormat && !flags.userInvalidated;
+                    if (m._strict) {
+                        m._isValid = m._isValid && flags.charsLeftOver === 0 && flags.unusedTokens.length === 0 && flags.bigHour === undefined;
+                    }
+                }
+                return m._isValid;
+            }
+            function valid__createInvalid(flags) {
+                var m = create_utc__createUTC(NaN);
+                if (flags != null) {
+                    extend(getParsingFlags(m), flags);
+                } else {
+                    getParsingFlags(m).userInvalidated = true;
+                }
+                return m;
+            }
+            var momentProperties = utils_hooks__hooks.momentProperties = [];
+            function copyConfig(to, from) {
+                var i, prop, val;
+                if (typeof from._isAMomentObject !== "undefined") {
+                    to._isAMomentObject = from._isAMomentObject;
+                }
+                if (typeof from._i !== "undefined") {
+                    to._i = from._i;
+                }
+                if (typeof from._f !== "undefined") {
+                    to._f = from._f;
+                }
+                if (typeof from._l !== "undefined") {
+                    to._l = from._l;
+                }
+                if (typeof from._strict !== "undefined") {
+                    to._strict = from._strict;
+                }
+                if (typeof from._tzm !== "undefined") {
+                    to._tzm = from._tzm;
+                }
+                if (typeof from._isUTC !== "undefined") {
+                    to._isUTC = from._isUTC;
+                }
+                if (typeof from._offset !== "undefined") {
+                    to._offset = from._offset;
+                }
+                if (typeof from._pf !== "undefined") {
+                    to._pf = getParsingFlags(from);
+                }
+                if (typeof from._locale !== "undefined") {
+                    to._locale = from._locale;
+                }
+                if (momentProperties.length > 0) {
+                    for (i in momentProperties) {
+                        prop = momentProperties[i];
+                        val = from[prop];
+                        if (typeof val !== "undefined") {
+                            to[prop] = val;
+                        }
+                    }
+                }
+                return to;
+            }
+            var updateInProgress = false;
+            function Moment(config) {
+                copyConfig(this, config);
+                this._d = new Date(config._d != null ? config._d.getTime() : NaN);
+                if (updateInProgress === false) {
+                    updateInProgress = true;
+                    utils_hooks__hooks.updateOffset(this);
+                    updateInProgress = false;
+                }
+            }
+            function isMoment(obj) {
+                return obj instanceof Moment || obj != null && obj._isAMomentObject != null;
+            }
+            function absFloor(number) {
+                if (number < 0) {
+                    return Math.ceil(number);
+                } else {
+                    return Math.floor(number);
+                }
+            }
+            function toInt(argumentForCoercion) {
+                var coercedNumber = +argumentForCoercion, value = 0;
+                if (coercedNumber !== 0 && isFinite(coercedNumber)) {
+                    value = absFloor(coercedNumber);
+                }
+                return value;
+            }
+            function compareArrays(array1, array2, dontConvert) {
+                var len = Math.min(array1.length, array2.length), lengthDiff = Math.abs(array1.length - array2.length), diffs = 0, i;
+                for (i = 0; i < len; i++) {
+                    if (dontConvert && array1[i] !== array2[i] || !dontConvert && toInt(array1[i]) !== toInt(array2[i])) {
+                        diffs++;
+                    }
+                }
+                return diffs + lengthDiff;
+            }
+            function Locale() {}
+            var locales = {};
+            var globalLocale;
+            function normalizeLocale(key) {
+                return key ? key.toLowerCase().replace("_", "-") : key;
+            }
+            function chooseLocale(names) {
+                var i = 0, j, next, locale, split;
+                while (i < names.length) {
+                    split = normalizeLocale(names[i]).split("-");
+                    j = split.length;
+                    next = normalizeLocale(names[i + 1]);
+                    next = next ? next.split("-") : null;
+                    while (j > 0) {
+                        locale = loadLocale(split.slice(0, j).join("-"));
+                        if (locale) {
+                            return locale;
+                        }
+                        if (next && next.length >= j && compareArrays(split, next, true) >= j - 1) {
+                            break;
+                        }
+                        j--;
+                    }
+                    i++;
+                }
+                return null;
+            }
+            function loadLocale(name) {
+                var oldLocale = null;
+                if (!locales[name] && typeof module !== "undefined" && module && module.exports) {
+                    try {
+                        oldLocale = globalLocale._abbr;
+                        require("./locale/" + name);
+                        locale_locales__getSetGlobalLocale(oldLocale);
+                    } catch (e) {}
+                }
+                return locales[name];
+            }
+            function locale_locales__getSetGlobalLocale(key, values) {
+                var data;
+                if (key) {
+                    if (typeof values === "undefined") {
+                        data = locale_locales__getLocale(key);
+                    } else {
+                        data = defineLocale(key, values);
+                    }
+                    if (data) {
+                        globalLocale = data;
+                    }
+                }
+                return globalLocale._abbr;
+            }
+            function defineLocale(name, values) {
+                if (values !== null) {
+                    values.abbr = name;
+                    locales[name] = locales[name] || new Locale();
+                    locales[name].set(values);
+                    locale_locales__getSetGlobalLocale(name);
+                    return locales[name];
+                } else {
+                    delete locales[name];
+                    return null;
+                }
+            }
+            function locale_locales__getLocale(key) {
+                var locale;
+                if (key && key._locale && key._locale._abbr) {
+                    key = key._locale._abbr;
+                }
+                if (!key) {
+                    return globalLocale;
+                }
+                if (!isArray(key)) {
+                    locale = loadLocale(key);
+                    if (locale) {
+                        return locale;
+                    }
+                    key = [ key ];
+                }
+                return chooseLocale(key);
+            }
+            var aliases = {};
+            function addUnitAlias(unit, shorthand) {
+                var lowerCase = unit.toLowerCase();
+                aliases[lowerCase] = aliases[lowerCase + "s"] = aliases[shorthand] = unit;
+            }
+            function normalizeUnits(units) {
+                return typeof units === "string" ? aliases[units] || aliases[units.toLowerCase()] : undefined;
+            }
+            function normalizeObjectUnits(inputObject) {
+                var normalizedInput = {}, normalizedProp, prop;
+                for (prop in inputObject) {
+                    if (hasOwnProp(inputObject, prop)) {
+                        normalizedProp = normalizeUnits(prop);
+                        if (normalizedProp) {
+                            normalizedInput[normalizedProp] = inputObject[prop];
+                        }
+                    }
+                }
+                return normalizedInput;
+            }
+            function makeGetSet(unit, keepTime) {
+                return function(value) {
+                    if (value != null) {
+                        get_set__set(this, unit, value);
+                        utils_hooks__hooks.updateOffset(this, keepTime);
+                        return this;
+                    } else {
+                        return get_set__get(this, unit);
+                    }
+                };
+            }
+            function get_set__get(mom, unit) {
+                return mom._d["get" + (mom._isUTC ? "UTC" : "") + unit]();
+            }
+            function get_set__set(mom, unit, value) {
+                return mom._d["set" + (mom._isUTC ? "UTC" : "") + unit](value);
+            }
+            function getSet(units, value) {
+                var unit;
+                if (typeof units === "object") {
+                    for (unit in units) {
+                        this.set(unit, units[unit]);
+                    }
+                } else {
+                    units = normalizeUnits(units);
+                    if (typeof this[units] === "function") {
+                        return this[units](value);
+                    }
+                }
+                return this;
+            }
+            function zeroFill(number, targetLength, forceSign) {
+                var absNumber = "" + Math.abs(number), zerosToFill = targetLength - absNumber.length, sign = number >= 0;
+                return (sign ? forceSign ? "+" : "" : "-") + Math.pow(10, Math.max(0, zerosToFill)).toString().substr(1) + absNumber;
+            }
+            var formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,9}|x|X|zz?|ZZ?|.)/g;
+            var localFormattingTokens = /(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g;
+            var formatFunctions = {};
+            var formatTokenFunctions = {};
+            function addFormatToken(token, padded, ordinal, callback) {
+                var func = callback;
+                if (typeof callback === "string") {
+                    func = function() {
+                        return this[callback]();
+                    };
+                }
+                if (token) {
+                    formatTokenFunctions[token] = func;
+                }
+                if (padded) {
+                    formatTokenFunctions[padded[0]] = function() {
+                        return zeroFill(func.apply(this, arguments), padded[1], padded[2]);
+                    };
+                }
+                if (ordinal) {
+                    formatTokenFunctions[ordinal] = function() {
+                        return this.localeData().ordinal(func.apply(this, arguments), token);
+                    };
+                }
+            }
+            function removeFormattingTokens(input) {
+                if (input.match(/\[[\s\S]/)) {
+                    return input.replace(/^\[|\]$/g, "");
+                }
+                return input.replace(/\\/g, "");
+            }
+            function makeFormatFunction(format) {
+                var array = format.match(formattingTokens), i, length;
+                for (i = 0, length = array.length; i < length; i++) {
+                    if (formatTokenFunctions[array[i]]) {
+                        array[i] = formatTokenFunctions[array[i]];
+                    } else {
+                        array[i] = removeFormattingTokens(array[i]);
+                    }
+                }
+                return function(mom) {
+                    var output = "";
+                    for (i = 0; i < length; i++) {
+                        output += array[i] instanceof Function ? array[i].call(mom, format) : array[i];
+                    }
+                    return output;
+                };
+            }
+            function formatMoment(m, format) {
+                if (!m.isValid()) {
+                    return m.localeData().invalidDate();
+                }
+                format = expandFormat(format, m.localeData());
+                formatFunctions[format] = formatFunctions[format] || makeFormatFunction(format);
+                return formatFunctions[format](m);
+            }
+            function expandFormat(format, locale) {
+                var i = 5;
+                function replaceLongDateFormatTokens(input) {
+                    return locale.longDateFormat(input) || input;
+                }
+                localFormattingTokens.lastIndex = 0;
+                while (i >= 0 && localFormattingTokens.test(format)) {
+                    format = format.replace(localFormattingTokens, replaceLongDateFormatTokens);
+                    localFormattingTokens.lastIndex = 0;
+                    i -= 1;
+                }
+                return format;
+            }
+            var match1 = /\d/;
+            var match2 = /\d\d/;
+            var match3 = /\d{3}/;
+            var match4 = /\d{4}/;
+            var match6 = /[+-]?\d{6}/;
+            var match1to2 = /\d\d?/;
+            var match1to3 = /\d{1,3}/;
+            var match1to4 = /\d{1,4}/;
+            var match1to6 = /[+-]?\d{1,6}/;
+            var matchUnsigned = /\d+/;
+            var matchSigned = /[+-]?\d+/;
+            var matchOffset = /Z|[+-]\d\d:?\d\d/gi;
+            var matchTimestamp = /[+-]?\d+(\.\d{1,3})?/;
+            var matchWord = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i;
+            var regexes = {};
+            function isFunction(sth) {
+                return typeof sth === "function" && Object.prototype.toString.call(sth) === "[object Function]";
+            }
+            function addRegexToken(token, regex, strictRegex) {
+                regexes[token] = isFunction(regex) ? regex : function(isStrict) {
+                    return isStrict && strictRegex ? strictRegex : regex;
+                };
+            }
+            function getParseRegexForToken(token, config) {
+                if (!hasOwnProp(regexes, token)) {
+                    return new RegExp(unescapeFormat(token));
+                }
+                return regexes[token](config._strict, config._locale);
+            }
+            function unescapeFormat(s) {
+                return s.replace("\\", "").replace(/\\(\[)|\\(\])|\[([^\]\[]*)\]|\\(.)/g, function(matched, p1, p2, p3, p4) {
+                    return p1 || p2 || p3 || p4;
+                }).replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+            }
+            var tokens = {};
+            function addParseToken(token, callback) {
+                var i, func = callback;
+                if (typeof token === "string") {
+                    token = [ token ];
+                }
+                if (typeof callback === "number") {
+                    func = function(input, array) {
+                        array[callback] = toInt(input);
+                    };
+                }
+                for (i = 0; i < token.length; i++) {
+                    tokens[token[i]] = func;
+                }
+            }
+            function addWeekParseToken(token, callback) {
+                addParseToken(token, function(input, array, config, token) {
+                    config._w = config._w || {};
+                    callback(input, config._w, config, token);
+                });
+            }
+            function addTimeToArrayFromToken(token, input, config) {
+                if (input != null && hasOwnProp(tokens, token)) {
+                    tokens[token](input, config._a, config, token);
+                }
+            }
+            var YEAR = 0;
+            var MONTH = 1;
+            var DATE = 2;
+            var HOUR = 3;
+            var MINUTE = 4;
+            var SECOND = 5;
+            var MILLISECOND = 6;
+            function daysInMonth(year, month) {
+                return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+            }
+            addFormatToken("M", [ "MM", 2 ], "Mo", function() {
+                return this.month() + 1;
+            });
+            addFormatToken("MMM", 0, 0, function(format) {
+                return this.localeData().monthsShort(this, format);
+            });
+            addFormatToken("MMMM", 0, 0, function(format) {
+                return this.localeData().months(this, format);
+            });
+            addUnitAlias("month", "M");
+            addRegexToken("M", match1to2);
+            addRegexToken("MM", match1to2, match2);
+            addRegexToken("MMM", matchWord);
+            addRegexToken("MMMM", matchWord);
+            addParseToken([ "M", "MM" ], function(input, array) {
+                array[MONTH] = toInt(input) - 1;
+            });
+            addParseToken([ "MMM", "MMMM" ], function(input, array, config, token) {
+                var month = config._locale.monthsParse(input, token, config._strict);
+                if (month != null) {
+                    array[MONTH] = month;
+                } else {
+                    getParsingFlags(config).invalidMonth = input;
+                }
+            });
+            var defaultLocaleMonths = "January_February_March_April_May_June_July_August_September_October_November_December".split("_");
+            function localeMonths(m) {
+                return this._months[m.month()];
+            }
+            var defaultLocaleMonthsShort = "Jan_Feb_Mar_Apr_May_Jun_Jul_Aug_Sep_Oct_Nov_Dec".split("_");
+            function localeMonthsShort(m) {
+                return this._monthsShort[m.month()];
+            }
+            function localeMonthsParse(monthName, format, strict) {
+                var i, mom, regex;
+                if (!this._monthsParse) {
+                    this._monthsParse = [];
+                    this._longMonthsParse = [];
+                    this._shortMonthsParse = [];
+                }
+                for (i = 0; i < 12; i++) {
+                    mom = create_utc__createUTC([ 2e3, i ]);
+                    if (strict && !this._longMonthsParse[i]) {
+                        this._longMonthsParse[i] = new RegExp("^" + this.months(mom, "").replace(".", "") + "$", "i");
+                        this._shortMonthsParse[i] = new RegExp("^" + this.monthsShort(mom, "").replace(".", "") + "$", "i");
+                    }
+                    if (!strict && !this._monthsParse[i]) {
+                        regex = "^" + this.months(mom, "") + "|^" + this.monthsShort(mom, "");
+                        this._monthsParse[i] = new RegExp(regex.replace(".", ""), "i");
+                    }
+                    if (strict && format === "MMMM" && this._longMonthsParse[i].test(monthName)) {
+                        return i;
+                    } else if (strict && format === "MMM" && this._shortMonthsParse[i].test(monthName)) {
+                        return i;
+                    } else if (!strict && this._monthsParse[i].test(monthName)) {
+                        return i;
+                    }
+                }
+            }
+            function setMonth(mom, value) {
+                var dayOfMonth;
+                if (typeof value === "string") {
+                    value = mom.localeData().monthsParse(value);
+                    if (typeof value !== "number") {
+                        return mom;
+                    }
+                }
+                dayOfMonth = Math.min(mom.date(), daysInMonth(mom.year(), value));
+                mom._d["set" + (mom._isUTC ? "UTC" : "") + "Month"](value, dayOfMonth);
+                return mom;
+            }
+            function getSetMonth(value) {
+                if (value != null) {
+                    setMonth(this, value);
+                    utils_hooks__hooks.updateOffset(this, true);
+                    return this;
+                } else {
+                    return get_set__get(this, "Month");
+                }
+            }
+            function getDaysInMonth() {
+                return daysInMonth(this.year(), this.month());
+            }
+            function checkOverflow(m) {
+                var overflow;
+                var a = m._a;
+                if (a && getParsingFlags(m).overflow === -2) {
+                    overflow = a[MONTH] < 0 || a[MONTH] > 11 ? MONTH : a[DATE] < 1 || a[DATE] > daysInMonth(a[YEAR], a[MONTH]) ? DATE : a[HOUR] < 0 || a[HOUR] > 24 || a[HOUR] === 24 && (a[MINUTE] !== 0 || a[SECOND] !== 0 || a[MILLISECOND] !== 0) ? HOUR : a[MINUTE] < 0 || a[MINUTE] > 59 ? MINUTE : a[SECOND] < 0 || a[SECOND] > 59 ? SECOND : a[MILLISECOND] < 0 || a[MILLISECOND] > 999 ? MILLISECOND : -1;
+                    if (getParsingFlags(m)._overflowDayOfYear && (overflow < YEAR || overflow > DATE)) {
+                        overflow = DATE;
+                    }
+                    getParsingFlags(m).overflow = overflow;
+                }
+                return m;
+            }
+            function warn(msg) {
+                if (utils_hooks__hooks.suppressDeprecationWarnings === false && typeof console !== "undefined" && console.warn) {
+                    console.warn("Deprecation warning: " + msg);
+                }
+            }
+            function deprecate(msg, fn) {
+                var firstTime = true;
+                return extend(function() {
+                    if (firstTime) {
+                        warn(msg + "\n" + new Error().stack);
+                        firstTime = false;
+                    }
+                    return fn.apply(this, arguments);
+                }, fn);
+            }
+            var deprecations = {};
+            function deprecateSimple(name, msg) {
+                if (!deprecations[name]) {
+                    warn(msg);
+                    deprecations[name] = true;
+                }
+            }
+            utils_hooks__hooks.suppressDeprecationWarnings = false;
+            var from_string__isoRegex = /^\s*(?:[+-]\d{6}|\d{4})-(?:(\d\d-\d\d)|(W\d\d$)|(W\d\d-\d)|(\d\d\d))((T| )(\d\d(:\d\d(:\d\d(\.\d+)?)?)?)?([\+\-]\d\d(?::?\d\d)?|\s*Z)?)?$/;
+            var isoDates = [ [ "YYYYYY-MM-DD", /[+-]\d{6}-\d{2}-\d{2}/ ], [ "YYYY-MM-DD", /\d{4}-\d{2}-\d{2}/ ], [ "GGGG-[W]WW-E", /\d{4}-W\d{2}-\d/ ], [ "GGGG-[W]WW", /\d{4}-W\d{2}/ ], [ "YYYY-DDD", /\d{4}-\d{3}/ ] ];
+            var isoTimes = [ [ "HH:mm:ss.SSSS", /(T| )\d\d:\d\d:\d\d\.\d+/ ], [ "HH:mm:ss", /(T| )\d\d:\d\d:\d\d/ ], [ "HH:mm", /(T| )\d\d:\d\d/ ], [ "HH", /(T| )\d\d/ ] ];
+            var aspNetJsonRegex = /^\/?Date\((\-?\d+)/i;
+            function configFromISO(config) {
+                var i, l, string = config._i, match = from_string__isoRegex.exec(string);
+                if (match) {
+                    getParsingFlags(config).iso = true;
+                    for (i = 0, l = isoDates.length; i < l; i++) {
+                        if (isoDates[i][1].exec(string)) {
+                            config._f = isoDates[i][0];
+                            break;
+                        }
+                    }
+                    for (i = 0, l = isoTimes.length; i < l; i++) {
+                        if (isoTimes[i][1].exec(string)) {
+                            config._f += (match[6] || " ") + isoTimes[i][0];
+                            break;
+                        }
+                    }
+                    if (string.match(matchOffset)) {
+                        config._f += "Z";
+                    }
+                    configFromStringAndFormat(config);
+                } else {
+                    config._isValid = false;
+                }
+            }
+            function configFromString(config) {
+                var matched = aspNetJsonRegex.exec(config._i);
+                if (matched !== null) {
+                    config._d = new Date(+matched[1]);
+                    return;
+                }
+                configFromISO(config);
+                if (config._isValid === false) {
+                    delete config._isValid;
+                    utils_hooks__hooks.createFromInputFallback(config);
+                }
+            }
+            utils_hooks__hooks.createFromInputFallback = deprecate("moment construction falls back to js Date. This is " + "discouraged and will be removed in upcoming major " + "release. Please refer to " + "https://github.com/moment/moment/issues/1407 for more info.", function(config) {
+                config._d = new Date(config._i + (config._useUTC ? " UTC" : ""));
+            });
+            function createDate(y, m, d, h, M, s, ms) {
+                var date = new Date(y, m, d, h, M, s, ms);
+                if (y < 1970) {
+                    date.setFullYear(y);
+                }
+                return date;
+            }
+            function createUTCDate(y) {
+                var date = new Date(Date.UTC.apply(null, arguments));
+                if (y < 1970) {
+                    date.setUTCFullYear(y);
+                }
+                return date;
+            }
+            addFormatToken(0, [ "YY", 2 ], 0, function() {
+                return this.year() % 100;
+            });
+            addFormatToken(0, [ "YYYY", 4 ], 0, "year");
+            addFormatToken(0, [ "YYYYY", 5 ], 0, "year");
+            addFormatToken(0, [ "YYYYYY", 6, true ], 0, "year");
+            addUnitAlias("year", "y");
+            addRegexToken("Y", matchSigned);
+            addRegexToken("YY", match1to2, match2);
+            addRegexToken("YYYY", match1to4, match4);
+            addRegexToken("YYYYY", match1to6, match6);
+            addRegexToken("YYYYYY", match1to6, match6);
+            addParseToken([ "YYYYY", "YYYYYY" ], YEAR);
+            addParseToken("YYYY", function(input, array) {
+                array[YEAR] = input.length === 2 ? utils_hooks__hooks.parseTwoDigitYear(input) : toInt(input);
+            });
+            addParseToken("YY", function(input, array) {
+                array[YEAR] = utils_hooks__hooks.parseTwoDigitYear(input);
+            });
+            function daysInYear(year) {
+                return isLeapYear(year) ? 366 : 365;
+            }
+            function isLeapYear(year) {
+                return year % 4 === 0 && year % 100 !== 0 || year % 400 === 0;
+            }
+            utils_hooks__hooks.parseTwoDigitYear = function(input) {
+                return toInt(input) + (toInt(input) > 68 ? 1900 : 2e3);
+            };
+            var getSetYear = makeGetSet("FullYear", false);
+            function getIsLeapYear() {
+                return isLeapYear(this.year());
+            }
+            addFormatToken("w", [ "ww", 2 ], "wo", "week");
+            addFormatToken("W", [ "WW", 2 ], "Wo", "isoWeek");
+            addUnitAlias("week", "w");
+            addUnitAlias("isoWeek", "W");
+            addRegexToken("w", match1to2);
+            addRegexToken("ww", match1to2, match2);
+            addRegexToken("W", match1to2);
+            addRegexToken("WW", match1to2, match2);
+            addWeekParseToken([ "w", "ww", "W", "WW" ], function(input, week, config, token) {
+                week[token.substr(0, 1)] = toInt(input);
+            });
+            function weekOfYear(mom, firstDayOfWeek, firstDayOfWeekOfYear) {
+                var end = firstDayOfWeekOfYear - firstDayOfWeek, daysToDayOfWeek = firstDayOfWeekOfYear - mom.day(), adjustedMoment;
+                if (daysToDayOfWeek > end) {
+                    daysToDayOfWeek -= 7;
+                }
+                if (daysToDayOfWeek < end - 7) {
+                    daysToDayOfWeek += 7;
+                }
+                adjustedMoment = local__createLocal(mom).add(daysToDayOfWeek, "d");
+                return {
+                    week: Math.ceil(adjustedMoment.dayOfYear() / 7),
+                    year: adjustedMoment.year()
+                };
+            }
+            function localeWeek(mom) {
+                return weekOfYear(mom, this._week.dow, this._week.doy).week;
+            }
+            var defaultLocaleWeek = {
+                dow: 0,
+                doy: 6
+            };
+            function localeFirstDayOfWeek() {
+                return this._week.dow;
+            }
+            function localeFirstDayOfYear() {
+                return this._week.doy;
+            }
+            function getSetWeek(input) {
+                var week = this.localeData().week(this);
+                return input == null ? week : this.add((input - week) * 7, "d");
+            }
+            function getSetISOWeek(input) {
+                var week = weekOfYear(this, 1, 4).week;
+                return input == null ? week : this.add((input - week) * 7, "d");
+            }
+            addFormatToken("DDD", [ "DDDD", 3 ], "DDDo", "dayOfYear");
+            addUnitAlias("dayOfYear", "DDD");
+            addRegexToken("DDD", match1to3);
+            addRegexToken("DDDD", match3);
+            addParseToken([ "DDD", "DDDD" ], function(input, array, config) {
+                config._dayOfYear = toInt(input);
+            });
+            function dayOfYearFromWeeks(year, week, weekday, firstDayOfWeekOfYear, firstDayOfWeek) {
+                var week1Jan = 6 + firstDayOfWeek - firstDayOfWeekOfYear, janX = createUTCDate(year, 0, 1 + week1Jan), d = janX.getUTCDay(), dayOfYear;
+                if (d < firstDayOfWeek) {
+                    d += 7;
+                }
+                weekday = weekday != null ? 1 * weekday : firstDayOfWeek;
+                dayOfYear = 1 + week1Jan + 7 * (week - 1) - d + weekday;
+                return {
+                    year: dayOfYear > 0 ? year : year - 1,
+                    dayOfYear: dayOfYear > 0 ? dayOfYear : daysInYear(year - 1) + dayOfYear
+                };
+            }
+            function getSetDayOfYear(input) {
+                var dayOfYear = Math.round((this.clone().startOf("day") - this.clone().startOf("year")) / 864e5) + 1;
+                return input == null ? dayOfYear : this.add(input - dayOfYear, "d");
+            }
+            function defaults(a, b, c) {
+                if (a != null) {
+                    return a;
+                }
+                if (b != null) {
+                    return b;
+                }
+                return c;
+            }
+            function currentDateArray(config) {
+                var now = new Date();
+                if (config._useUTC) {
+                    return [ now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() ];
+                }
+                return [ now.getFullYear(), now.getMonth(), now.getDate() ];
+            }
+            function configFromArray(config) {
+                var i, date, input = [], currentDate, yearToUse;
+                if (config._d) {
+                    return;
+                }
+                currentDate = currentDateArray(config);
+                if (config._w && config._a[DATE] == null && config._a[MONTH] == null) {
+                    dayOfYearFromWeekInfo(config);
+                }
+                if (config._dayOfYear) {
+                    yearToUse = defaults(config._a[YEAR], currentDate[YEAR]);
+                    if (config._dayOfYear > daysInYear(yearToUse)) {
+                        getParsingFlags(config)._overflowDayOfYear = true;
+                    }
+                    date = createUTCDate(yearToUse, 0, config._dayOfYear);
+                    config._a[MONTH] = date.getUTCMonth();
+                    config._a[DATE] = date.getUTCDate();
+                }
+                for (i = 0; i < 3 && config._a[i] == null; ++i) {
+                    config._a[i] = input[i] = currentDate[i];
+                }
+                for (;i < 7; i++) {
+                    config._a[i] = input[i] = config._a[i] == null ? i === 2 ? 1 : 0 : config._a[i];
+                }
+                if (config._a[HOUR] === 24 && config._a[MINUTE] === 0 && config._a[SECOND] === 0 && config._a[MILLISECOND] === 0) {
+                    config._nextDay = true;
+                    config._a[HOUR] = 0;
+                }
+                config._d = (config._useUTC ? createUTCDate : createDate).apply(null, input);
+                if (config._tzm != null) {
+                    config._d.setUTCMinutes(config._d.getUTCMinutes() - config._tzm);
+                }
+                if (config._nextDay) {
+                    config._a[HOUR] = 24;
+                }
+            }
+            function dayOfYearFromWeekInfo(config) {
+                var w, weekYear, week, weekday, dow, doy, temp;
+                w = config._w;
+                if (w.GG != null || w.W != null || w.E != null) {
+                    dow = 1;
+                    doy = 4;
+                    weekYear = defaults(w.GG, config._a[YEAR], weekOfYear(local__createLocal(), 1, 4).year);
+                    week = defaults(w.W, 1);
+                    weekday = defaults(w.E, 1);
+                } else {
+                    dow = config._locale._week.dow;
+                    doy = config._locale._week.doy;
+                    weekYear = defaults(w.gg, config._a[YEAR], weekOfYear(local__createLocal(), dow, doy).year);
+                    week = defaults(w.w, 1);
+                    if (w.d != null) {
+                        weekday = w.d;
+                        if (weekday < dow) {
+                            ++week;
+                        }
+                    } else if (w.e != null) {
+                        weekday = w.e + dow;
+                    } else {
+                        weekday = dow;
+                    }
+                }
+                temp = dayOfYearFromWeeks(weekYear, week, weekday, doy, dow);
+                config._a[YEAR] = temp.year;
+                config._dayOfYear = temp.dayOfYear;
+            }
+            utils_hooks__hooks.ISO_8601 = function() {};
+            function configFromStringAndFormat(config) {
+                if (config._f === utils_hooks__hooks.ISO_8601) {
+                    configFromISO(config);
+                    return;
+                }
+                config._a = [];
+                getParsingFlags(config).empty = true;
+                var string = "" + config._i, i, parsedInput, tokens, token, skipped, stringLength = string.length, totalParsedInputLength = 0;
+                tokens = expandFormat(config._f, config._locale).match(formattingTokens) || [];
+                for (i = 0; i < tokens.length; i++) {
+                    token = tokens[i];
+                    parsedInput = (string.match(getParseRegexForToken(token, config)) || [])[0];
+                    if (parsedInput) {
+                        skipped = string.substr(0, string.indexOf(parsedInput));
+                        if (skipped.length > 0) {
+                            getParsingFlags(config).unusedInput.push(skipped);
+                        }
+                        string = string.slice(string.indexOf(parsedInput) + parsedInput.length);
+                        totalParsedInputLength += parsedInput.length;
+                    }
+                    if (formatTokenFunctions[token]) {
+                        if (parsedInput) {
+                            getParsingFlags(config).empty = false;
+                        } else {
+                            getParsingFlags(config).unusedTokens.push(token);
+                        }
+                        addTimeToArrayFromToken(token, parsedInput, config);
+                    } else if (config._strict && !parsedInput) {
+                        getParsingFlags(config).unusedTokens.push(token);
+                    }
+                }
+                getParsingFlags(config).charsLeftOver = stringLength - totalParsedInputLength;
+                if (string.length > 0) {
+                    getParsingFlags(config).unusedInput.push(string);
+                }
+                if (getParsingFlags(config).bigHour === true && config._a[HOUR] <= 12 && config._a[HOUR] > 0) {
+                    getParsingFlags(config).bigHour = undefined;
+                }
+                config._a[HOUR] = meridiemFixWrap(config._locale, config._a[HOUR], config._meridiem);
+                configFromArray(config);
+                checkOverflow(config);
+            }
+            function meridiemFixWrap(locale, hour, meridiem) {
+                var isPm;
+                if (meridiem == null) {
+                    return hour;
+                }
+                if (locale.meridiemHour != null) {
+                    return locale.meridiemHour(hour, meridiem);
+                } else if (locale.isPM != null) {
+                    isPm = locale.isPM(meridiem);
+                    if (isPm && hour < 12) {
+                        hour += 12;
+                    }
+                    if (!isPm && hour === 12) {
+                        hour = 0;
+                    }
+                    return hour;
+                } else {
+                    return hour;
+                }
+            }
+            function configFromStringAndArray(config) {
+                var tempConfig, bestMoment, scoreToBeat, i, currentScore;
+                if (config._f.length === 0) {
+                    getParsingFlags(config).invalidFormat = true;
+                    config._d = new Date(NaN);
+                    return;
+                }
+                for (i = 0; i < config._f.length; i++) {
+                    currentScore = 0;
+                    tempConfig = copyConfig({}, config);
+                    if (config._useUTC != null) {
+                        tempConfig._useUTC = config._useUTC;
+                    }
+                    tempConfig._f = config._f[i];
+                    configFromStringAndFormat(tempConfig);
+                    if (!valid__isValid(tempConfig)) {
+                        continue;
+                    }
+                    currentScore += getParsingFlags(tempConfig).charsLeftOver;
+                    currentScore += getParsingFlags(tempConfig).unusedTokens.length * 10;
+                    getParsingFlags(tempConfig).score = currentScore;
+                    if (scoreToBeat == null || currentScore < scoreToBeat) {
+                        scoreToBeat = currentScore;
+                        bestMoment = tempConfig;
+                    }
+                }
+                extend(config, bestMoment || tempConfig);
+            }
+            function configFromObject(config) {
+                if (config._d) {
+                    return;
+                }
+                var i = normalizeObjectUnits(config._i);
+                config._a = [ i.year, i.month, i.day || i.date, i.hour, i.minute, i.second, i.millisecond ];
+                configFromArray(config);
+            }
+            function createFromConfig(config) {
+                var res = new Moment(checkOverflow(prepareConfig(config)));
+                if (res._nextDay) {
+                    res.add(1, "d");
+                    res._nextDay = undefined;
+                }
+                return res;
+            }
+            function prepareConfig(config) {
+                var input = config._i, format = config._f;
+                config._locale = config._locale || locale_locales__getLocale(config._l);
+                if (input === null || format === undefined && input === "") {
+                    return valid__createInvalid({
+                        nullInput: true
+                    });
+                }
+                if (typeof input === "string") {
+                    config._i = input = config._locale.preparse(input);
+                }
+                if (isMoment(input)) {
+                    return new Moment(checkOverflow(input));
+                } else if (isArray(format)) {
+                    configFromStringAndArray(config);
+                } else if (format) {
+                    configFromStringAndFormat(config);
+                } else if (isDate(input)) {
+                    config._d = input;
+                } else {
+                    configFromInput(config);
+                }
+                return config;
+            }
+            function configFromInput(config) {
+                var input = config._i;
+                if (input === undefined) {
+                    config._d = new Date();
+                } else if (isDate(input)) {
+                    config._d = new Date(+input);
+                } else if (typeof input === "string") {
+                    configFromString(config);
+                } else if (isArray(input)) {
+                    config._a = map(input.slice(0), function(obj) {
+                        return parseInt(obj, 10);
+                    });
+                    configFromArray(config);
+                } else if (typeof input === "object") {
+                    configFromObject(config);
+                } else if (typeof input === "number") {
+                    config._d = new Date(input);
+                } else {
+                    utils_hooks__hooks.createFromInputFallback(config);
+                }
+            }
+            function createLocalOrUTC(input, format, locale, strict, isUTC) {
+                var c = {};
+                if (typeof locale === "boolean") {
+                    strict = locale;
+                    locale = undefined;
+                }
+                c._isAMomentObject = true;
+                c._useUTC = c._isUTC = isUTC;
+                c._l = locale;
+                c._i = input;
+                c._f = format;
+                c._strict = strict;
+                return createFromConfig(c);
+            }
+            function local__createLocal(input, format, locale, strict) {
+                return createLocalOrUTC(input, format, locale, strict, false);
+            }
+            var prototypeMin = deprecate("moment().min is deprecated, use moment.min instead. https://github.com/moment/moment/issues/1548", function() {
+                var other = local__createLocal.apply(null, arguments);
+                return other < this ? this : other;
+            });
+            var prototypeMax = deprecate("moment().max is deprecated, use moment.max instead. https://github.com/moment/moment/issues/1548", function() {
+                var other = local__createLocal.apply(null, arguments);
+                return other > this ? this : other;
+            });
+            function pickBy(fn, moments) {
+                var res, i;
+                if (moments.length === 1 && isArray(moments[0])) {
+                    moments = moments[0];
+                }
+                if (!moments.length) {
+                    return local__createLocal();
+                }
+                res = moments[0];
+                for (i = 1; i < moments.length; ++i) {
+                    if (!moments[i].isValid() || moments[i][fn](res)) {
+                        res = moments[i];
+                    }
+                }
+                return res;
+            }
+            function min() {
+                var args = [].slice.call(arguments, 0);
+                return pickBy("isBefore", args);
+            }
+            function max() {
+                var args = [].slice.call(arguments, 0);
+                return pickBy("isAfter", args);
+            }
+            function Duration(duration) {
+                var normalizedInput = normalizeObjectUnits(duration), years = normalizedInput.year || 0, quarters = normalizedInput.quarter || 0, months = normalizedInput.month || 0, weeks = normalizedInput.week || 0, days = normalizedInput.day || 0, hours = normalizedInput.hour || 0, minutes = normalizedInput.minute || 0, seconds = normalizedInput.second || 0, milliseconds = normalizedInput.millisecond || 0;
+                this._milliseconds = +milliseconds + seconds * 1e3 + minutes * 6e4 + hours * 36e5;
+                this._days = +days + weeks * 7;
+                this._months = +months + quarters * 3 + years * 12;
+                this._data = {};
+                this._locale = locale_locales__getLocale();
+                this._bubble();
+            }
+            function isDuration(obj) {
+                return obj instanceof Duration;
+            }
+            function offset(token, separator) {
+                addFormatToken(token, 0, 0, function() {
+                    var offset = this.utcOffset();
+                    var sign = "+";
+                    if (offset < 0) {
+                        offset = -offset;
+                        sign = "-";
+                    }
+                    return sign + zeroFill(~~(offset / 60), 2) + separator + zeroFill(~~offset % 60, 2);
+                });
+            }
+            offset("Z", ":");
+            offset("ZZ", "");
+            addRegexToken("Z", matchOffset);
+            addRegexToken("ZZ", matchOffset);
+            addParseToken([ "Z", "ZZ" ], function(input, array, config) {
+                config._useUTC = true;
+                config._tzm = offsetFromString(input);
+            });
+            var chunkOffset = /([\+\-]|\d\d)/gi;
+            function offsetFromString(string) {
+                var matches = (string || "").match(matchOffset) || [];
+                var chunk = matches[matches.length - 1] || [];
+                var parts = (chunk + "").match(chunkOffset) || [ "-", 0, 0 ];
+                var minutes = +(parts[1] * 60) + toInt(parts[2]);
+                return parts[0] === "+" ? minutes : -minutes;
+            }
+            function cloneWithOffset(input, model) {
+                var res, diff;
+                if (model._isUTC) {
+                    res = model.clone();
+                    diff = (isMoment(input) || isDate(input) ? +input : +local__createLocal(input)) - +res;
+                    res._d.setTime(+res._d + diff);
+                    utils_hooks__hooks.updateOffset(res, false);
+                    return res;
+                } else {
+                    return local__createLocal(input).local();
+                }
+            }
+            function getDateOffset(m) {
+                return -Math.round(m._d.getTimezoneOffset() / 15) * 15;
+            }
+            utils_hooks__hooks.updateOffset = function() {};
+            function getSetOffset(input, keepLocalTime) {
+                var offset = this._offset || 0, localAdjust;
+                if (input != null) {
+                    if (typeof input === "string") {
+                        input = offsetFromString(input);
+                    }
+                    if (Math.abs(input) < 16) {
+                        input = input * 60;
+                    }
+                    if (!this._isUTC && keepLocalTime) {
+                        localAdjust = getDateOffset(this);
+                    }
+                    this._offset = input;
+                    this._isUTC = true;
+                    if (localAdjust != null) {
+                        this.add(localAdjust, "m");
+                    }
+                    if (offset !== input) {
+                        if (!keepLocalTime || this._changeInProgress) {
+                            add_subtract__addSubtract(this, create__createDuration(input - offset, "m"), 1, false);
+                        } else if (!this._changeInProgress) {
+                            this._changeInProgress = true;
+                            utils_hooks__hooks.updateOffset(this, true);
+                            this._changeInProgress = null;
+                        }
+                    }
+                    return this;
+                } else {
+                    return this._isUTC ? offset : getDateOffset(this);
+                }
+            }
+            function getSetZone(input, keepLocalTime) {
+                if (input != null) {
+                    if (typeof input !== "string") {
+                        input = -input;
+                    }
+                    this.utcOffset(input, keepLocalTime);
+                    return this;
+                } else {
+                    return -this.utcOffset();
+                }
+            }
+            function setOffsetToUTC(keepLocalTime) {
+                return this.utcOffset(0, keepLocalTime);
+            }
+            function setOffsetToLocal(keepLocalTime) {
+                if (this._isUTC) {
+                    this.utcOffset(0, keepLocalTime);
+                    this._isUTC = false;
+                    if (keepLocalTime) {
+                        this.subtract(getDateOffset(this), "m");
+                    }
+                }
+                return this;
+            }
+            function setOffsetToParsedOffset() {
+                if (this._tzm) {
+                    this.utcOffset(this._tzm);
+                } else if (typeof this._i === "string") {
+                    this.utcOffset(offsetFromString(this._i));
+                }
+                return this;
+            }
+            function hasAlignedHourOffset(input) {
+                input = input ? local__createLocal(input).utcOffset() : 0;
+                return (this.utcOffset() - input) % 60 === 0;
+            }
+            function isDaylightSavingTime() {
+                return this.utcOffset() > this.clone().month(0).utcOffset() || this.utcOffset() > this.clone().month(5).utcOffset();
+            }
+            function isDaylightSavingTimeShifted() {
+                if (typeof this._isDSTShifted !== "undefined") {
+                    return this._isDSTShifted;
+                }
+                var c = {};
+                copyConfig(c, this);
+                c = prepareConfig(c);
+                if (c._a) {
+                    var other = c._isUTC ? create_utc__createUTC(c._a) : local__createLocal(c._a);
+                    this._isDSTShifted = this.isValid() && compareArrays(c._a, other.toArray()) > 0;
+                } else {
+                    this._isDSTShifted = false;
+                }
+                return this._isDSTShifted;
+            }
+            function isLocal() {
+                return !this._isUTC;
+            }
+            function isUtcOffset() {
+                return this._isUTC;
+            }
+            function isUtc() {
+                return this._isUTC && this._offset === 0;
+            }
+            var aspNetRegex = /(\-)?(?:(\d*)\.)?(\d+)\:(\d+)(?:\:(\d+)\.?(\d{3})?)?/;
+            var create__isoRegex = /^(-)?P(?:(?:([0-9,.]*)Y)?(?:([0-9,.]*)M)?(?:([0-9,.]*)D)?(?:T(?:([0-9,.]*)H)?(?:([0-9,.]*)M)?(?:([0-9,.]*)S)?)?|([0-9,.]*)W)$/;
+            function create__createDuration(input, key) {
+                var duration = input, match = null, sign, ret, diffRes;
+                if (isDuration(input)) {
+                    duration = {
+                        ms: input._milliseconds,
+                        d: input._days,
+                        M: input._months
+                    };
+                } else if (typeof input === "number") {
+                    duration = {};
+                    if (key) {
+                        duration[key] = input;
+                    } else {
+                        duration.milliseconds = input;
+                    }
+                } else if (!!(match = aspNetRegex.exec(input))) {
+                    sign = match[1] === "-" ? -1 : 1;
+                    duration = {
+                        y: 0,
+                        d: toInt(match[DATE]) * sign,
+                        h: toInt(match[HOUR]) * sign,
+                        m: toInt(match[MINUTE]) * sign,
+                        s: toInt(match[SECOND]) * sign,
+                        ms: toInt(match[MILLISECOND]) * sign
+                    };
+                } else if (!!(match = create__isoRegex.exec(input))) {
+                    sign = match[1] === "-" ? -1 : 1;
+                    duration = {
+                        y: parseIso(match[2], sign),
+                        M: parseIso(match[3], sign),
+                        d: parseIso(match[4], sign),
+                        h: parseIso(match[5], sign),
+                        m: parseIso(match[6], sign),
+                        s: parseIso(match[7], sign),
+                        w: parseIso(match[8], sign)
+                    };
+                } else if (duration == null) {
+                    duration = {};
+                } else if (typeof duration === "object" && ("from" in duration || "to" in duration)) {
+                    diffRes = momentsDifference(local__createLocal(duration.from), local__createLocal(duration.to));
+                    duration = {};
+                    duration.ms = diffRes.milliseconds;
+                    duration.M = diffRes.months;
+                }
+                ret = new Duration(duration);
+                if (isDuration(input) && hasOwnProp(input, "_locale")) {
+                    ret._locale = input._locale;
+                }
+                return ret;
+            }
+            create__createDuration.fn = Duration.prototype;
+            function parseIso(inp, sign) {
+                var res = inp && parseFloat(inp.replace(",", "."));
+                return (isNaN(res) ? 0 : res) * sign;
+            }
+            function positiveMomentsDifference(base, other) {
+                var res = {
+                    milliseconds: 0,
+                    months: 0
+                };
+                res.months = other.month() - base.month() + (other.year() - base.year()) * 12;
+                if (base.clone().add(res.months, "M").isAfter(other)) {
+                    --res.months;
+                }
+                res.milliseconds = +other - +base.clone().add(res.months, "M");
+                return res;
+            }
+            function momentsDifference(base, other) {
+                var res;
+                other = cloneWithOffset(other, base);
+                if (base.isBefore(other)) {
+                    res = positiveMomentsDifference(base, other);
+                } else {
+                    res = positiveMomentsDifference(other, base);
+                    res.milliseconds = -res.milliseconds;
+                    res.months = -res.months;
+                }
+                return res;
+            }
+            function createAdder(direction, name) {
+                return function(val, period) {
+                    var dur, tmp;
+                    if (period !== null && !isNaN(+period)) {
+                        deprecateSimple(name, "moment()." + name + "(period, number) is deprecated. Please use moment()." + name + "(number, period).");
+                        tmp = val;
+                        val = period;
+                        period = tmp;
+                    }
+                    val = typeof val === "string" ? +val : val;
+                    dur = create__createDuration(val, period);
+                    add_subtract__addSubtract(this, dur, direction);
+                    return this;
+                };
+            }
+            function add_subtract__addSubtract(mom, duration, isAdding, updateOffset) {
+                var milliseconds = duration._milliseconds, days = duration._days, months = duration._months;
+                updateOffset = updateOffset == null ? true : updateOffset;
+                if (milliseconds) {
+                    mom._d.setTime(+mom._d + milliseconds * isAdding);
+                }
+                if (days) {
+                    get_set__set(mom, "Date", get_set__get(mom, "Date") + days * isAdding);
+                }
+                if (months) {
+                    setMonth(mom, get_set__get(mom, "Month") + months * isAdding);
+                }
+                if (updateOffset) {
+                    utils_hooks__hooks.updateOffset(mom, days || months);
+                }
+            }
+            var add_subtract__add = createAdder(1, "add");
+            var add_subtract__subtract = createAdder(-1, "subtract");
+            function moment_calendar__calendar(time, formats) {
+                var now = time || local__createLocal(), sod = cloneWithOffset(now, this).startOf("day"), diff = this.diff(sod, "days", true), format = diff < -6 ? "sameElse" : diff < -1 ? "lastWeek" : diff < 0 ? "lastDay" : diff < 1 ? "sameDay" : diff < 2 ? "nextDay" : diff < 7 ? "nextWeek" : "sameElse";
+                return this.format(formats && formats[format] || this.localeData().calendar(format, this, local__createLocal(now)));
+            }
+            function clone() {
+                return new Moment(this);
+            }
+            function isAfter(input, units) {
+                var inputMs;
+                units = normalizeUnits(typeof units !== "undefined" ? units : "millisecond");
+                if (units === "millisecond") {
+                    input = isMoment(input) ? input : local__createLocal(input);
+                    return +this > +input;
+                } else {
+                    inputMs = isMoment(input) ? +input : +local__createLocal(input);
+                    return inputMs < +this.clone().startOf(units);
+                }
+            }
+            function isBefore(input, units) {
+                var inputMs;
+                units = normalizeUnits(typeof units !== "undefined" ? units : "millisecond");
+                if (units === "millisecond") {
+                    input = isMoment(input) ? input : local__createLocal(input);
+                    return +this < +input;
+                } else {
+                    inputMs = isMoment(input) ? +input : +local__createLocal(input);
+                    return +this.clone().endOf(units) < inputMs;
+                }
+            }
+            function isBetween(from, to, units) {
+                return this.isAfter(from, units) && this.isBefore(to, units);
+            }
+            function isSame(input, units) {
+                var inputMs;
+                units = normalizeUnits(units || "millisecond");
+                if (units === "millisecond") {
+                    input = isMoment(input) ? input : local__createLocal(input);
+                    return +this === +input;
+                } else {
+                    inputMs = +local__createLocal(input);
+                    return +this.clone().startOf(units) <= inputMs && inputMs <= +this.clone().endOf(units);
+                }
+            }
+            function diff(input, units, asFloat) {
+                var that = cloneWithOffset(input, this), zoneDelta = (that.utcOffset() - this.utcOffset()) * 6e4, delta, output;
+                units = normalizeUnits(units);
+                if (units === "year" || units === "month" || units === "quarter") {
+                    output = monthDiff(this, that);
+                    if (units === "quarter") {
+                        output = output / 3;
+                    } else if (units === "year") {
+                        output = output / 12;
+                    }
+                } else {
+                    delta = this - that;
+                    output = units === "second" ? delta / 1e3 : units === "minute" ? delta / 6e4 : units === "hour" ? delta / 36e5 : units === "day" ? (delta - zoneDelta) / 864e5 : units === "week" ? (delta - zoneDelta) / 6048e5 : delta;
+                }
+                return asFloat ? output : absFloor(output);
+            }
+            function monthDiff(a, b) {
+                var wholeMonthDiff = (b.year() - a.year()) * 12 + (b.month() - a.month()), anchor = a.clone().add(wholeMonthDiff, "months"), anchor2, adjust;
+                if (b - anchor < 0) {
+                    anchor2 = a.clone().add(wholeMonthDiff - 1, "months");
+                    adjust = (b - anchor) / (anchor - anchor2);
+                } else {
+                    anchor2 = a.clone().add(wholeMonthDiff + 1, "months");
+                    adjust = (b - anchor) / (anchor2 - anchor);
+                }
+                return -(wholeMonthDiff + adjust);
+            }
+            utils_hooks__hooks.defaultFormat = "YYYY-MM-DDTHH:mm:ssZ";
+            function toString() {
+                return this.clone().locale("en").format("ddd MMM DD YYYY HH:mm:ss [GMT]ZZ");
+            }
+            function moment_format__toISOString() {
+                var m = this.clone().utc();
+                if (0 < m.year() && m.year() <= 9999) {
+                    if ("function" === typeof Date.prototype.toISOString) {
+                        return this.toDate().toISOString();
+                    } else {
+                        return formatMoment(m, "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
+                    }
+                } else {
+                    return formatMoment(m, "YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
+                }
+            }
+            function format(inputString) {
+                var output = formatMoment(this, inputString || utils_hooks__hooks.defaultFormat);
+                return this.localeData().postformat(output);
+            }
+            function from(time, withoutSuffix) {
+                if (!this.isValid()) {
+                    return this.localeData().invalidDate();
+                }
+                return create__createDuration({
+                    to: this,
+                    from: time
+                }).locale(this.locale()).humanize(!withoutSuffix);
+            }
+            function fromNow(withoutSuffix) {
+                return this.from(local__createLocal(), withoutSuffix);
+            }
+            function to(time, withoutSuffix) {
+                if (!this.isValid()) {
+                    return this.localeData().invalidDate();
+                }
+                return create__createDuration({
+                    from: this,
+                    to: time
+                }).locale(this.locale()).humanize(!withoutSuffix);
+            }
+            function toNow(withoutSuffix) {
+                return this.to(local__createLocal(), withoutSuffix);
+            }
+            function locale(key) {
+                var newLocaleData;
+                if (key === undefined) {
+                    return this._locale._abbr;
+                } else {
+                    newLocaleData = locale_locales__getLocale(key);
+                    if (newLocaleData != null) {
+                        this._locale = newLocaleData;
+                    }
+                    return this;
+                }
+            }
+            var lang = deprecate("moment().lang() is deprecated. Instead, use moment().localeData() to get the language configuration. Use moment().locale() to change languages.", function(key) {
+                if (key === undefined) {
+                    return this.localeData();
+                } else {
+                    return this.locale(key);
+                }
+            });
+            function localeData() {
+                return this._locale;
+            }
+            function startOf(units) {
+                units = normalizeUnits(units);
+                switch (units) {
+                  case "year":
+                    this.month(0);
+
+                  case "quarter":
+                  case "month":
+                    this.date(1);
+
+                  case "week":
+                  case "isoWeek":
+                  case "day":
+                    this.hours(0);
+
+                  case "hour":
+                    this.minutes(0);
+
+                  case "minute":
+                    this.seconds(0);
+
+                  case "second":
+                    this.milliseconds(0);
+                }
+                if (units === "week") {
+                    this.weekday(0);
+                }
+                if (units === "isoWeek") {
+                    this.isoWeekday(1);
+                }
+                if (units === "quarter") {
+                    this.month(Math.floor(this.month() / 3) * 3);
+                }
+                return this;
+            }
+            function endOf(units) {
+                units = normalizeUnits(units);
+                if (units === undefined || units === "millisecond") {
+                    return this;
+                }
+                return this.startOf(units).add(1, units === "isoWeek" ? "week" : units).subtract(1, "ms");
+            }
+            function to_type__valueOf() {
+                return +this._d - (this._offset || 0) * 6e4;
+            }
+            function unix() {
+                return Math.floor(+this / 1e3);
+            }
+            function toDate() {
+                return this._offset ? new Date(+this) : this._d;
+            }
+            function toArray() {
+                var m = this;
+                return [ m.year(), m.month(), m.date(), m.hour(), m.minute(), m.second(), m.millisecond() ];
+            }
+            function toObject() {
+                var m = this;
+                return {
+                    years: m.year(),
+                    months: m.month(),
+                    date: m.date(),
+                    hours: m.hours(),
+                    minutes: m.minutes(),
+                    seconds: m.seconds(),
+                    milliseconds: m.milliseconds()
+                };
+            }
+            function moment_valid__isValid() {
+                return valid__isValid(this);
+            }
+            function parsingFlags() {
+                return extend({}, getParsingFlags(this));
+            }
+            function invalidAt() {
+                return getParsingFlags(this).overflow;
+            }
+            addFormatToken(0, [ "gg", 2 ], 0, function() {
+                return this.weekYear() % 100;
+            });
+            addFormatToken(0, [ "GG", 2 ], 0, function() {
+                return this.isoWeekYear() % 100;
+            });
+            function addWeekYearFormatToken(token, getter) {
+                addFormatToken(0, [ token, token.length ], 0, getter);
+            }
+            addWeekYearFormatToken("gggg", "weekYear");
+            addWeekYearFormatToken("ggggg", "weekYear");
+            addWeekYearFormatToken("GGGG", "isoWeekYear");
+            addWeekYearFormatToken("GGGGG", "isoWeekYear");
+            addUnitAlias("weekYear", "gg");
+            addUnitAlias("isoWeekYear", "GG");
+            addRegexToken("G", matchSigned);
+            addRegexToken("g", matchSigned);
+            addRegexToken("GG", match1to2, match2);
+            addRegexToken("gg", match1to2, match2);
+            addRegexToken("GGGG", match1to4, match4);
+            addRegexToken("gggg", match1to4, match4);
+            addRegexToken("GGGGG", match1to6, match6);
+            addRegexToken("ggggg", match1to6, match6);
+            addWeekParseToken([ "gggg", "ggggg", "GGGG", "GGGGG" ], function(input, week, config, token) {
+                week[token.substr(0, 2)] = toInt(input);
+            });
+            addWeekParseToken([ "gg", "GG" ], function(input, week, config, token) {
+                week[token] = utils_hooks__hooks.parseTwoDigitYear(input);
+            });
+            function weeksInYear(year, dow, doy) {
+                return weekOfYear(local__createLocal([ year, 11, 31 + dow - doy ]), dow, doy).week;
+            }
+            function getSetWeekYear(input) {
+                var year = weekOfYear(this, this.localeData()._week.dow, this.localeData()._week.doy).year;
+                return input == null ? year : this.add(input - year, "y");
+            }
+            function getSetISOWeekYear(input) {
+                var year = weekOfYear(this, 1, 4).year;
+                return input == null ? year : this.add(input - year, "y");
+            }
+            function getISOWeeksInYear() {
+                return weeksInYear(this.year(), 1, 4);
+            }
+            function getWeeksInYear() {
+                var weekInfo = this.localeData()._week;
+                return weeksInYear(this.year(), weekInfo.dow, weekInfo.doy);
+            }
+            addFormatToken("Q", 0, 0, "quarter");
+            addUnitAlias("quarter", "Q");
+            addRegexToken("Q", match1);
+            addParseToken("Q", function(input, array) {
+                array[MONTH] = (toInt(input) - 1) * 3;
+            });
+            function getSetQuarter(input) {
+                return input == null ? Math.ceil((this.month() + 1) / 3) : this.month((input - 1) * 3 + this.month() % 3);
+            }
+            addFormatToken("D", [ "DD", 2 ], "Do", "date");
+            addUnitAlias("date", "D");
+            addRegexToken("D", match1to2);
+            addRegexToken("DD", match1to2, match2);
+            addRegexToken("Do", function(isStrict, locale) {
+                return isStrict ? locale._ordinalParse : locale._ordinalParseLenient;
+            });
+            addParseToken([ "D", "DD" ], DATE);
+            addParseToken("Do", function(input, array) {
+                array[DATE] = toInt(input.match(match1to2)[0], 10);
+            });
+            var getSetDayOfMonth = makeGetSet("Date", true);
+            addFormatToken("d", 0, "do", "day");
+            addFormatToken("dd", 0, 0, function(format) {
+                return this.localeData().weekdaysMin(this, format);
+            });
+            addFormatToken("ddd", 0, 0, function(format) {
+                return this.localeData().weekdaysShort(this, format);
+            });
+            addFormatToken("dddd", 0, 0, function(format) {
+                return this.localeData().weekdays(this, format);
+            });
+            addFormatToken("e", 0, 0, "weekday");
+            addFormatToken("E", 0, 0, "isoWeekday");
+            addUnitAlias("day", "d");
+            addUnitAlias("weekday", "e");
+            addUnitAlias("isoWeekday", "E");
+            addRegexToken("d", match1to2);
+            addRegexToken("e", match1to2);
+            addRegexToken("E", match1to2);
+            addRegexToken("dd", matchWord);
+            addRegexToken("ddd", matchWord);
+            addRegexToken("dddd", matchWord);
+            addWeekParseToken([ "dd", "ddd", "dddd" ], function(input, week, config) {
+                var weekday = config._locale.weekdaysParse(input);
+                if (weekday != null) {
+                    week.d = weekday;
+                } else {
+                    getParsingFlags(config).invalidWeekday = input;
+                }
+            });
+            addWeekParseToken([ "d", "e", "E" ], function(input, week, config, token) {
+                week[token] = toInt(input);
+            });
+            function parseWeekday(input, locale) {
+                if (typeof input !== "string") {
+                    return input;
+                }
+                if (!isNaN(input)) {
+                    return parseInt(input, 10);
+                }
+                input = locale.weekdaysParse(input);
+                if (typeof input === "number") {
+                    return input;
+                }
+                return null;
+            }
+            var defaultLocaleWeekdays = "Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_");
+            function localeWeekdays(m) {
+                return this._weekdays[m.day()];
+            }
+            var defaultLocaleWeekdaysShort = "Sun_Mon_Tue_Wed_Thu_Fri_Sat".split("_");
+            function localeWeekdaysShort(m) {
+                return this._weekdaysShort[m.day()];
+            }
+            var defaultLocaleWeekdaysMin = "Su_Mo_Tu_We_Th_Fr_Sa".split("_");
+            function localeWeekdaysMin(m) {
+                return this._weekdaysMin[m.day()];
+            }
+            function localeWeekdaysParse(weekdayName) {
+                var i, mom, regex;
+                this._weekdaysParse = this._weekdaysParse || [];
+                for (i = 0; i < 7; i++) {
+                    if (!this._weekdaysParse[i]) {
+                        mom = local__createLocal([ 2e3, 1 ]).day(i);
+                        regex = "^" + this.weekdays(mom, "") + "|^" + this.weekdaysShort(mom, "") + "|^" + this.weekdaysMin(mom, "");
+                        this._weekdaysParse[i] = new RegExp(regex.replace(".", ""), "i");
+                    }
+                    if (this._weekdaysParse[i].test(weekdayName)) {
+                        return i;
+                    }
+                }
+            }
+            function getSetDayOfWeek(input) {
+                var day = this._isUTC ? this._d.getUTCDay() : this._d.getDay();
+                if (input != null) {
+                    input = parseWeekday(input, this.localeData());
+                    return this.add(input - day, "d");
+                } else {
+                    return day;
+                }
+            }
+            function getSetLocaleDayOfWeek(input) {
+                var weekday = (this.day() + 7 - this.localeData()._week.dow) % 7;
+                return input == null ? weekday : this.add(input - weekday, "d");
+            }
+            function getSetISODayOfWeek(input) {
+                return input == null ? this.day() || 7 : this.day(this.day() % 7 ? input : input - 7);
+            }
+            addFormatToken("H", [ "HH", 2 ], 0, "hour");
+            addFormatToken("h", [ "hh", 2 ], 0, function() {
+                return this.hours() % 12 || 12;
+            });
+            function meridiem(token, lowercase) {
+                addFormatToken(token, 0, 0, function() {
+                    return this.localeData().meridiem(this.hours(), this.minutes(), lowercase);
+                });
+            }
+            meridiem("a", true);
+            meridiem("A", false);
+            addUnitAlias("hour", "h");
+            function matchMeridiem(isStrict, locale) {
+                return locale._meridiemParse;
+            }
+            addRegexToken("a", matchMeridiem);
+            addRegexToken("A", matchMeridiem);
+            addRegexToken("H", match1to2);
+            addRegexToken("h", match1to2);
+            addRegexToken("HH", match1to2, match2);
+            addRegexToken("hh", match1to2, match2);
+            addParseToken([ "H", "HH" ], HOUR);
+            addParseToken([ "a", "A" ], function(input, array, config) {
+                config._isPm = config._locale.isPM(input);
+                config._meridiem = input;
+            });
+            addParseToken([ "h", "hh" ], function(input, array, config) {
+                array[HOUR] = toInt(input);
+                getParsingFlags(config).bigHour = true;
+            });
+            function localeIsPM(input) {
+                return (input + "").toLowerCase().charAt(0) === "p";
+            }
+            var defaultLocaleMeridiemParse = /[ap]\.?m?\.?/i;
+            function localeMeridiem(hours, minutes, isLower) {
+                if (hours > 11) {
+                    return isLower ? "pm" : "PM";
+                } else {
+                    return isLower ? "am" : "AM";
+                }
+            }
+            var getSetHour = makeGetSet("Hours", true);
+            addFormatToken("m", [ "mm", 2 ], 0, "minute");
+            addUnitAlias("minute", "m");
+            addRegexToken("m", match1to2);
+            addRegexToken("mm", match1to2, match2);
+            addParseToken([ "m", "mm" ], MINUTE);
+            var getSetMinute = makeGetSet("Minutes", false);
+            addFormatToken("s", [ "ss", 2 ], 0, "second");
+            addUnitAlias("second", "s");
+            addRegexToken("s", match1to2);
+            addRegexToken("ss", match1to2, match2);
+            addParseToken([ "s", "ss" ], SECOND);
+            var getSetSecond = makeGetSet("Seconds", false);
+            addFormatToken("S", 0, 0, function() {
+                return ~~(this.millisecond() / 100);
+            });
+            addFormatToken(0, [ "SS", 2 ], 0, function() {
+                return ~~(this.millisecond() / 10);
+            });
+            addFormatToken(0, [ "SSS", 3 ], 0, "millisecond");
+            addFormatToken(0, [ "SSSS", 4 ], 0, function() {
+                return this.millisecond() * 10;
+            });
+            addFormatToken(0, [ "SSSSS", 5 ], 0, function() {
+                return this.millisecond() * 100;
+            });
+            addFormatToken(0, [ "SSSSSS", 6 ], 0, function() {
+                return this.millisecond() * 1e3;
+            });
+            addFormatToken(0, [ "SSSSSSS", 7 ], 0, function() {
+                return this.millisecond() * 1e4;
+            });
+            addFormatToken(0, [ "SSSSSSSS", 8 ], 0, function() {
+                return this.millisecond() * 1e5;
+            });
+            addFormatToken(0, [ "SSSSSSSSS", 9 ], 0, function() {
+                return this.millisecond() * 1e6;
+            });
+            addUnitAlias("millisecond", "ms");
+            addRegexToken("S", match1to3, match1);
+            addRegexToken("SS", match1to3, match2);
+            addRegexToken("SSS", match1to3, match3);
+            var token;
+            for (token = "SSSS"; token.length <= 9; token += "S") {
+                addRegexToken(token, matchUnsigned);
+            }
+            function parseMs(input, array) {
+                array[MILLISECOND] = toInt(("0." + input) * 1e3);
+            }
+            for (token = "S"; token.length <= 9; token += "S") {
+                addParseToken(token, parseMs);
+            }
+            var getSetMillisecond = makeGetSet("Milliseconds", false);
+            addFormatToken("z", 0, 0, "zoneAbbr");
+            addFormatToken("zz", 0, 0, "zoneName");
+            function getZoneAbbr() {
+                return this._isUTC ? "UTC" : "";
+            }
+            function getZoneName() {
+                return this._isUTC ? "Coordinated Universal Time" : "";
+            }
+            var momentPrototype__proto = Moment.prototype;
+            momentPrototype__proto.add = add_subtract__add;
+            momentPrototype__proto.calendar = moment_calendar__calendar;
+            momentPrototype__proto.clone = clone;
+            momentPrototype__proto.diff = diff;
+            momentPrototype__proto.endOf = endOf;
+            momentPrototype__proto.format = format;
+            momentPrototype__proto.from = from;
+            momentPrototype__proto.fromNow = fromNow;
+            momentPrototype__proto.to = to;
+            momentPrototype__proto.toNow = toNow;
+            momentPrototype__proto.get = getSet;
+            momentPrototype__proto.invalidAt = invalidAt;
+            momentPrototype__proto.isAfter = isAfter;
+            momentPrototype__proto.isBefore = isBefore;
+            momentPrototype__proto.isBetween = isBetween;
+            momentPrototype__proto.isSame = isSame;
+            momentPrototype__proto.isValid = moment_valid__isValid;
+            momentPrototype__proto.lang = lang;
+            momentPrototype__proto.locale = locale;
+            momentPrototype__proto.localeData = localeData;
+            momentPrototype__proto.max = prototypeMax;
+            momentPrototype__proto.min = prototypeMin;
+            momentPrototype__proto.parsingFlags = parsingFlags;
+            momentPrototype__proto.set = getSet;
+            momentPrototype__proto.startOf = startOf;
+            momentPrototype__proto.subtract = add_subtract__subtract;
+            momentPrototype__proto.toArray = toArray;
+            momentPrototype__proto.toObject = toObject;
+            momentPrototype__proto.toDate = toDate;
+            momentPrototype__proto.toISOString = moment_format__toISOString;
+            momentPrototype__proto.toJSON = moment_format__toISOString;
+            momentPrototype__proto.toString = toString;
+            momentPrototype__proto.unix = unix;
+            momentPrototype__proto.valueOf = to_type__valueOf;
+            momentPrototype__proto.year = getSetYear;
+            momentPrototype__proto.isLeapYear = getIsLeapYear;
+            momentPrototype__proto.weekYear = getSetWeekYear;
+            momentPrototype__proto.isoWeekYear = getSetISOWeekYear;
+            momentPrototype__proto.quarter = momentPrototype__proto.quarters = getSetQuarter;
+            momentPrototype__proto.month = getSetMonth;
+            momentPrototype__proto.daysInMonth = getDaysInMonth;
+            momentPrototype__proto.week = momentPrototype__proto.weeks = getSetWeek;
+            momentPrototype__proto.isoWeek = momentPrototype__proto.isoWeeks = getSetISOWeek;
+            momentPrototype__proto.weeksInYear = getWeeksInYear;
+            momentPrototype__proto.isoWeeksInYear = getISOWeeksInYear;
+            momentPrototype__proto.date = getSetDayOfMonth;
+            momentPrototype__proto.day = momentPrototype__proto.days = getSetDayOfWeek;
+            momentPrototype__proto.weekday = getSetLocaleDayOfWeek;
+            momentPrototype__proto.isoWeekday = getSetISODayOfWeek;
+            momentPrototype__proto.dayOfYear = getSetDayOfYear;
+            momentPrototype__proto.hour = momentPrototype__proto.hours = getSetHour;
+            momentPrototype__proto.minute = momentPrototype__proto.minutes = getSetMinute;
+            momentPrototype__proto.second = momentPrototype__proto.seconds = getSetSecond;
+            momentPrototype__proto.millisecond = momentPrototype__proto.milliseconds = getSetMillisecond;
+            momentPrototype__proto.utcOffset = getSetOffset;
+            momentPrototype__proto.utc = setOffsetToUTC;
+            momentPrototype__proto.local = setOffsetToLocal;
+            momentPrototype__proto.parseZone = setOffsetToParsedOffset;
+            momentPrototype__proto.hasAlignedHourOffset = hasAlignedHourOffset;
+            momentPrototype__proto.isDST = isDaylightSavingTime;
+            momentPrototype__proto.isDSTShifted = isDaylightSavingTimeShifted;
+            momentPrototype__proto.isLocal = isLocal;
+            momentPrototype__proto.isUtcOffset = isUtcOffset;
+            momentPrototype__proto.isUtc = isUtc;
+            momentPrototype__proto.isUTC = isUtc;
+            momentPrototype__proto.zoneAbbr = getZoneAbbr;
+            momentPrototype__proto.zoneName = getZoneName;
+            momentPrototype__proto.dates = deprecate("dates accessor is deprecated. Use date instead.", getSetDayOfMonth);
+            momentPrototype__proto.months = deprecate("months accessor is deprecated. Use month instead", getSetMonth);
+            momentPrototype__proto.years = deprecate("years accessor is deprecated. Use year instead", getSetYear);
+            momentPrototype__proto.zone = deprecate("moment().zone is deprecated, use moment().utcOffset instead. https://github.com/moment/moment/issues/1779", getSetZone);
+            var momentPrototype = momentPrototype__proto;
+            function moment__createUnix(input) {
+                return local__createLocal(input * 1e3);
+            }
+            function moment__createInZone() {
+                return local__createLocal.apply(null, arguments).parseZone();
+            }
+            var defaultCalendar = {
+                sameDay: "[Today at] LT",
+                nextDay: "[Tomorrow at] LT",
+                nextWeek: "dddd [at] LT",
+                lastDay: "[Yesterday at] LT",
+                lastWeek: "[Last] dddd [at] LT",
+                sameElse: "L"
+            };
+            function locale_calendar__calendar(key, mom, now) {
+                var output = this._calendar[key];
+                return typeof output === "function" ? output.call(mom, now) : output;
+            }
+            var defaultLongDateFormat = {
+                LTS: "h:mm:ss A",
+                LT: "h:mm A",
+                L: "MM/DD/YYYY",
+                LL: "MMMM D, YYYY",
+                LLL: "MMMM D, YYYY h:mm A",
+                LLLL: "dddd, MMMM D, YYYY h:mm A"
+            };
+            function longDateFormat(key) {
+                var format = this._longDateFormat[key], formatUpper = this._longDateFormat[key.toUpperCase()];
+                if (format || !formatUpper) {
+                    return format;
+                }
+                this._longDateFormat[key] = formatUpper.replace(/MMMM|MM|DD|dddd/g, function(val) {
+                    return val.slice(1);
+                });
+                return this._longDateFormat[key];
+            }
+            var defaultInvalidDate = "Invalid date";
+            function invalidDate() {
+                return this._invalidDate;
+            }
+            var defaultOrdinal = "%d";
+            var defaultOrdinalParse = /\d{1,2}/;
+            function ordinal(number) {
+                return this._ordinal.replace("%d", number);
+            }
+            function preParsePostFormat(string) {
+                return string;
+            }
+            var defaultRelativeTime = {
+                future: "in %s",
+                past: "%s ago",
+                s: "a few seconds",
+                m: "a minute",
+                mm: "%d minutes",
+                h: "an hour",
+                hh: "%d hours",
+                d: "a day",
+                dd: "%d days",
+                M: "a month",
+                MM: "%d months",
+                y: "a year",
+                yy: "%d years"
+            };
+            function relative__relativeTime(number, withoutSuffix, string, isFuture) {
+                var output = this._relativeTime[string];
+                return typeof output === "function" ? output(number, withoutSuffix, string, isFuture) : output.replace(/%d/i, number);
+            }
+            function pastFuture(diff, output) {
+                var format = this._relativeTime[diff > 0 ? "future" : "past"];
+                return typeof format === "function" ? format(output) : format.replace(/%s/i, output);
+            }
+            function locale_set__set(config) {
+                var prop, i;
+                for (i in config) {
+                    prop = config[i];
+                    if (typeof prop === "function") {
+                        this[i] = prop;
+                    } else {
+                        this["_" + i] = prop;
+                    }
+                }
+                this._ordinalParseLenient = new RegExp(this._ordinalParse.source + "|" + /\d{1,2}/.source);
+            }
+            var prototype__proto = Locale.prototype;
+            prototype__proto._calendar = defaultCalendar;
+            prototype__proto.calendar = locale_calendar__calendar;
+            prototype__proto._longDateFormat = defaultLongDateFormat;
+            prototype__proto.longDateFormat = longDateFormat;
+            prototype__proto._invalidDate = defaultInvalidDate;
+            prototype__proto.invalidDate = invalidDate;
+            prototype__proto._ordinal = defaultOrdinal;
+            prototype__proto.ordinal = ordinal;
+            prototype__proto._ordinalParse = defaultOrdinalParse;
+            prototype__proto.preparse = preParsePostFormat;
+            prototype__proto.postformat = preParsePostFormat;
+            prototype__proto._relativeTime = defaultRelativeTime;
+            prototype__proto.relativeTime = relative__relativeTime;
+            prototype__proto.pastFuture = pastFuture;
+            prototype__proto.set = locale_set__set;
+            prototype__proto.months = localeMonths;
+            prototype__proto._months = defaultLocaleMonths;
+            prototype__proto.monthsShort = localeMonthsShort;
+            prototype__proto._monthsShort = defaultLocaleMonthsShort;
+            prototype__proto.monthsParse = localeMonthsParse;
+            prototype__proto.week = localeWeek;
+            prototype__proto._week = defaultLocaleWeek;
+            prototype__proto.firstDayOfYear = localeFirstDayOfYear;
+            prototype__proto.firstDayOfWeek = localeFirstDayOfWeek;
+            prototype__proto.weekdays = localeWeekdays;
+            prototype__proto._weekdays = defaultLocaleWeekdays;
+            prototype__proto.weekdaysMin = localeWeekdaysMin;
+            prototype__proto._weekdaysMin = defaultLocaleWeekdaysMin;
+            prototype__proto.weekdaysShort = localeWeekdaysShort;
+            prototype__proto._weekdaysShort = defaultLocaleWeekdaysShort;
+            prototype__proto.weekdaysParse = localeWeekdaysParse;
+            prototype__proto.isPM = localeIsPM;
+            prototype__proto._meridiemParse = defaultLocaleMeridiemParse;
+            prototype__proto.meridiem = localeMeridiem;
+            function lists__get(format, index, field, setter) {
+                var locale = locale_locales__getLocale();
+                var utc = create_utc__createUTC().set(setter, index);
+                return locale[field](utc, format);
+            }
+            function list(format, index, field, count, setter) {
+                if (typeof format === "number") {
+                    index = format;
+                    format = undefined;
+                }
+                format = format || "";
+                if (index != null) {
+                    return lists__get(format, index, field, setter);
+                }
+                var i;
+                var out = [];
+                for (i = 0; i < count; i++) {
+                    out[i] = lists__get(format, i, field, setter);
+                }
+                return out;
+            }
+            function lists__listMonths(format, index) {
+                return list(format, index, "months", 12, "month");
+            }
+            function lists__listMonthsShort(format, index) {
+                return list(format, index, "monthsShort", 12, "month");
+            }
+            function lists__listWeekdays(format, index) {
+                return list(format, index, "weekdays", 7, "day");
+            }
+            function lists__listWeekdaysShort(format, index) {
+                return list(format, index, "weekdaysShort", 7, "day");
+            }
+            function lists__listWeekdaysMin(format, index) {
+                return list(format, index, "weekdaysMin", 7, "day");
+            }
+            locale_locales__getSetGlobalLocale("en", {
+                ordinalParse: /\d{1,2}(th|st|nd|rd)/,
+                ordinal: function(number) {
+                    var b = number % 10, output = toInt(number % 100 / 10) === 1 ? "th" : b === 1 ? "st" : b === 2 ? "nd" : b === 3 ? "rd" : "th";
+                    return number + output;
+                }
+            });
+            utils_hooks__hooks.lang = deprecate("moment.lang is deprecated. Use moment.locale instead.", locale_locales__getSetGlobalLocale);
+            utils_hooks__hooks.langData = deprecate("moment.langData is deprecated. Use moment.localeData instead.", locale_locales__getLocale);
+            var mathAbs = Math.abs;
+            function duration_abs__abs() {
+                var data = this._data;
+                this._milliseconds = mathAbs(this._milliseconds);
+                this._days = mathAbs(this._days);
+                this._months = mathAbs(this._months);
+                data.milliseconds = mathAbs(data.milliseconds);
+                data.seconds = mathAbs(data.seconds);
+                data.minutes = mathAbs(data.minutes);
+                data.hours = mathAbs(data.hours);
+                data.months = mathAbs(data.months);
+                data.years = mathAbs(data.years);
+                return this;
+            }
+            function duration_add_subtract__addSubtract(duration, input, value, direction) {
+                var other = create__createDuration(input, value);
+                duration._milliseconds += direction * other._milliseconds;
+                duration._days += direction * other._days;
+                duration._months += direction * other._months;
+                return duration._bubble();
+            }
+            function duration_add_subtract__add(input, value) {
+                return duration_add_subtract__addSubtract(this, input, value, 1);
+            }
+            function duration_add_subtract__subtract(input, value) {
+                return duration_add_subtract__addSubtract(this, input, value, -1);
+            }
+            function absCeil(number) {
+                if (number < 0) {
+                    return Math.floor(number);
+                } else {
+                    return Math.ceil(number);
+                }
+            }
+            function bubble() {
+                var milliseconds = this._milliseconds;
+                var days = this._days;
+                var months = this._months;
+                var data = this._data;
+                var seconds, minutes, hours, years, monthsFromDays;
+                if (!(milliseconds >= 0 && days >= 0 && months >= 0 || milliseconds <= 0 && days <= 0 && months <= 0)) {
+                    milliseconds += absCeil(monthsToDays(months) + days) * 864e5;
+                    days = 0;
+                    months = 0;
+                }
+                data.milliseconds = milliseconds % 1e3;
+                seconds = absFloor(milliseconds / 1e3);
+                data.seconds = seconds % 60;
+                minutes = absFloor(seconds / 60);
+                data.minutes = minutes % 60;
+                hours = absFloor(minutes / 60);
+                data.hours = hours % 24;
+                days += absFloor(hours / 24);
+                monthsFromDays = absFloor(daysToMonths(days));
+                months += monthsFromDays;
+                days -= absCeil(monthsToDays(monthsFromDays));
+                years = absFloor(months / 12);
+                months %= 12;
+                data.days = days;
+                data.months = months;
+                data.years = years;
+                return this;
+            }
+            function daysToMonths(days) {
+                return days * 4800 / 146097;
+            }
+            function monthsToDays(months) {
+                return months * 146097 / 4800;
+            }
+            function as(units) {
+                var days;
+                var months;
+                var milliseconds = this._milliseconds;
+                units = normalizeUnits(units);
+                if (units === "month" || units === "year") {
+                    days = this._days + milliseconds / 864e5;
+                    months = this._months + daysToMonths(days);
+                    return units === "month" ? months : months / 12;
+                } else {
+                    days = this._days + Math.round(monthsToDays(this._months));
+                    switch (units) {
+                      case "week":
+                        return days / 7 + milliseconds / 6048e5;
+
+                      case "day":
+                        return days + milliseconds / 864e5;
+
+                      case "hour":
+                        return days * 24 + milliseconds / 36e5;
+
+                      case "minute":
+                        return days * 1440 + milliseconds / 6e4;
+
+                      case "second":
+                        return days * 86400 + milliseconds / 1e3;
+
+                      case "millisecond":
+                        return Math.floor(days * 864e5) + milliseconds;
+
+                      default:
+                        throw new Error("Unknown unit " + units);
+                    }
+                }
+            }
+            function duration_as__valueOf() {
+                return this._milliseconds + this._days * 864e5 + this._months % 12 * 2592e6 + toInt(this._months / 12) * 31536e6;
+            }
+            function makeAs(alias) {
+                return function() {
+                    return this.as(alias);
+                };
+            }
+            var asMilliseconds = makeAs("ms");
+            var asSeconds = makeAs("s");
+            var asMinutes = makeAs("m");
+            var asHours = makeAs("h");
+            var asDays = makeAs("d");
+            var asWeeks = makeAs("w");
+            var asMonths = makeAs("M");
+            var asYears = makeAs("y");
+            function duration_get__get(units) {
+                units = normalizeUnits(units);
+                return this[units + "s"]();
+            }
+            function makeGetter(name) {
+                return function() {
+                    return this._data[name];
+                };
+            }
+            var milliseconds = makeGetter("milliseconds");
+            var seconds = makeGetter("seconds");
+            var minutes = makeGetter("minutes");
+            var hours = makeGetter("hours");
+            var days = makeGetter("days");
+            var months = makeGetter("months");
+            var years = makeGetter("years");
+            function weeks() {
+                return absFloor(this.days() / 7);
+            }
+            var round = Math.round;
+            var thresholds = {
+                s: 45,
+                m: 45,
+                h: 22,
+                d: 26,
+                M: 11
+            };
+            function substituteTimeAgo(string, number, withoutSuffix, isFuture, locale) {
+                return locale.relativeTime(number || 1, !!withoutSuffix, string, isFuture);
+            }
+            function duration_humanize__relativeTime(posNegDuration, withoutSuffix, locale) {
+                var duration = create__createDuration(posNegDuration).abs();
+                var seconds = round(duration.as("s"));
+                var minutes = round(duration.as("m"));
+                var hours = round(duration.as("h"));
+                var days = round(duration.as("d"));
+                var months = round(duration.as("M"));
+                var years = round(duration.as("y"));
+                var a = seconds < thresholds.s && [ "s", seconds ] || minutes === 1 && [ "m" ] || minutes < thresholds.m && [ "mm", minutes ] || hours === 1 && [ "h" ] || hours < thresholds.h && [ "hh", hours ] || days === 1 && [ "d" ] || days < thresholds.d && [ "dd", days ] || months === 1 && [ "M" ] || months < thresholds.M && [ "MM", months ] || years === 1 && [ "y" ] || [ "yy", years ];
+                a[2] = withoutSuffix;
+                a[3] = +posNegDuration > 0;
+                a[4] = locale;
+                return substituteTimeAgo.apply(null, a);
+            }
+            function duration_humanize__getSetRelativeTimeThreshold(threshold, limit) {
+                if (thresholds[threshold] === undefined) {
+                    return false;
+                }
+                if (limit === undefined) {
+                    return thresholds[threshold];
+                }
+                thresholds[threshold] = limit;
+                return true;
+            }
+            function humanize(withSuffix) {
+                var locale = this.localeData();
+                var output = duration_humanize__relativeTime(this, !withSuffix, locale);
+                if (withSuffix) {
+                    output = locale.pastFuture(+this, output);
+                }
+                return locale.postformat(output);
+            }
+            var iso_string__abs = Math.abs;
+            function iso_string__toISOString() {
+                var seconds = iso_string__abs(this._milliseconds) / 1e3;
+                var days = iso_string__abs(this._days);
+                var months = iso_string__abs(this._months);
+                var minutes, hours, years;
+                minutes = absFloor(seconds / 60);
+                hours = absFloor(minutes / 60);
+                seconds %= 60;
+                minutes %= 60;
+                years = absFloor(months / 12);
+                months %= 12;
+                var Y = years;
+                var M = months;
+                var D = days;
+                var h = hours;
+                var m = minutes;
+                var s = seconds;
+                var total = this.asSeconds();
+                if (!total) {
+                    return "P0D";
+                }
+                return (total < 0 ? "-" : "") + "P" + (Y ? Y + "Y" : "") + (M ? M + "M" : "") + (D ? D + "D" : "") + (h || m || s ? "T" : "") + (h ? h + "H" : "") + (m ? m + "M" : "") + (s ? s + "S" : "");
+            }
+            var duration_prototype__proto = Duration.prototype;
+            duration_prototype__proto.abs = duration_abs__abs;
+            duration_prototype__proto.add = duration_add_subtract__add;
+            duration_prototype__proto.subtract = duration_add_subtract__subtract;
+            duration_prototype__proto.as = as;
+            duration_prototype__proto.asMilliseconds = asMilliseconds;
+            duration_prototype__proto.asSeconds = asSeconds;
+            duration_prototype__proto.asMinutes = asMinutes;
+            duration_prototype__proto.asHours = asHours;
+            duration_prototype__proto.asDays = asDays;
+            duration_prototype__proto.asWeeks = asWeeks;
+            duration_prototype__proto.asMonths = asMonths;
+            duration_prototype__proto.asYears = asYears;
+            duration_prototype__proto.valueOf = duration_as__valueOf;
+            duration_prototype__proto._bubble = bubble;
+            duration_prototype__proto.get = duration_get__get;
+            duration_prototype__proto.milliseconds = milliseconds;
+            duration_prototype__proto.seconds = seconds;
+            duration_prototype__proto.minutes = minutes;
+            duration_prototype__proto.hours = hours;
+            duration_prototype__proto.days = days;
+            duration_prototype__proto.weeks = weeks;
+            duration_prototype__proto.months = months;
+            duration_prototype__proto.years = years;
+            duration_prototype__proto.humanize = humanize;
+            duration_prototype__proto.toISOString = iso_string__toISOString;
+            duration_prototype__proto.toString = iso_string__toISOString;
+            duration_prototype__proto.toJSON = iso_string__toISOString;
+            duration_prototype__proto.locale = locale;
+            duration_prototype__proto.localeData = localeData;
+            duration_prototype__proto.toIsoString = deprecate("toIsoString() is deprecated. Please use toISOString() instead (notice the capitals)", iso_string__toISOString);
+            duration_prototype__proto.lang = lang;
+            addFormatToken("X", 0, 0, "unix");
+            addFormatToken("x", 0, 0, "valueOf");
+            addRegexToken("x", matchSigned);
+            addRegexToken("X", matchTimestamp);
+            addParseToken("X", function(input, array, config) {
+                config._d = new Date(parseFloat(input, 10) * 1e3);
+            });
+            addParseToken("x", function(input, array, config) {
+                config._d = new Date(toInt(input));
+            });
+            utils_hooks__hooks.version = "2.10.6";
+            setHookCallback(local__createLocal);
+            utils_hooks__hooks.fn = momentPrototype;
+            utils_hooks__hooks.min = min;
+            utils_hooks__hooks.max = max;
+            utils_hooks__hooks.utc = create_utc__createUTC;
+            utils_hooks__hooks.unix = moment__createUnix;
+            utils_hooks__hooks.months = lists__listMonths;
+            utils_hooks__hooks.isDate = isDate;
+            utils_hooks__hooks.locale = locale_locales__getSetGlobalLocale;
+            utils_hooks__hooks.invalid = valid__createInvalid;
+            utils_hooks__hooks.duration = create__createDuration;
+            utils_hooks__hooks.isMoment = isMoment;
+            utils_hooks__hooks.weekdays = lists__listWeekdays;
+            utils_hooks__hooks.parseZone = moment__createInZone;
+            utils_hooks__hooks.localeData = locale_locales__getLocale;
+            utils_hooks__hooks.isDuration = isDuration;
+            utils_hooks__hooks.monthsShort = lists__listMonthsShort;
+            utils_hooks__hooks.weekdaysMin = lists__listWeekdaysMin;
+            utils_hooks__hooks.defineLocale = defineLocale;
+            utils_hooks__hooks.weekdaysShort = lists__listWeekdaysShort;
+            utils_hooks__hooks.normalizeUnits = normalizeUnits;
+            utils_hooks__hooks.relativeTimeThreshold = duration_humanize__getSetRelativeTimeThreshold;
+            var _moment = utils_hooks__hooks;
+            return _moment;
+        });
+        __bbe["node_modules/moment/moment.js"] = module.exports;
+    })();
+    var numeral = __bbe["node_modules/numeral/numeral.js"];
+    var moment = __bbe["node_modules/moment/moment.js"];
+    window.moment = moment;
+    function AnyFormatter(locale, type, style, options) {
+        var language = getLanguageFromLocale(locale);
+        switch (type) {
+          case "number":
+            {
+                if (style === "custom" && "format" in options) {
+                    return function(val, opt) {
+                        numeral.language(language);
+                        return numeral(val).format(opt.format);
+                    };
+                }
+                if (style === "default") {
+                    return function(val, opt) {
+                        numeral.language(language);
+                        return numeral(val).format("0,0.[0000]");
+                    };
+                }
+                if (style === "percent") {
+                    return function(val, opt) {
+                        numeral.language(language);
+                        return numeral(val).format("0%");
+                    };
+                }
+                if (style === "bytes") {
+                    return function(val, opt) {
+                        numeral.language(language);
+                        return numeral(val).format("0b");
+                    };
+                }
+                break;
+            }
+
+          case "date":
+          case "time":
+            {
+                if (style === "relative") {
+                    if (options["noago"] === true) {
+                        return function(val, opt) {
+                            return moment(val).locale(language).fromNow(true);
+                        };
+                    }
+                    if (options["noago"] === null) {
+                        return function(val, opt) {
+                            return moment(val).locale(language).fromNow(opt["noago"]);
+                        };
+                    }
+                    return function(val, opt) {
+                        return moment(val).locale(language).fromNow(false);
+                    };
+                }
+                if (style === "calendar") {
+                    return function(val, opt) {
+                        return moment(val).locale(language).calendar();
+                    };
+                }
+                if (style === "custom" && "format" in options) {
+                    return function(val, opt) {
+                        return moment(val).locale(language).format(opt.format);
+                    };
+                }
+                return function(val, opt) {
+                    return moment(val).locale(language).format(style);
+                };
+            }
+        }
+    }
+    function compile(locale, msgAst) {
+        if (typeof msgAst === "string") {
+            return function() {
+                return msgAst;
+            };
+        }
+        if (Array.isArray(msgAst)) {
+            if (msgAst.length === 0) return function() {
+                return "";
+            };
+            var comp = new RuntimeFunctionGenerator();
+            var argParams = comp.addArg(0);
+            var argHash = comp.addArg(1);
+            comp.addBody("return ");
+            for (var i = 0; i < msgAst.length; i++) {
+                if (i > 0) comp.addBody("+");
+                var item = msgAst[i];
+                if (typeof item === "string") {
+                    comp.addBody(comp.addConstant(item));
+                } else {
+                    comp.addBody(comp.addConstant(compile(locale, item)) + ("(" + argParams + "," + argHash + ")"));
+                }
+            }
+            comp.addBody(";");
+            return comp.build();
+        }
+        switch (msgAst.type) {
+          case "arg":
+            return function(name) {
+                return function(params) {
+                    return params[name];
+                };
+            }(msgAst.id);
+
+          case "hash":
+            return function(params, hashArg) {
+                if (hashArg === undefined) return "#";
+                return hashArg;
+            };
+
+          case "format":
+            var comp = new RuntimeFunctionGenerator();
+            var argParams = comp.addArg(0);
+            var localArg = comp.addLocal();
+            comp.addBody("var " + localArg + "=" + argParams + "[" + comp.addConstant(msgAst.id) + "];");
+            var type = msgAst.format.type;
+            switch (type) {
+              case "plural":
+                {
+                    var localArgOffset = comp.addLocal();
+                    comp.addBody("var " + localArgOffset + "=" + localArg + "-" + msgAst.format.offset + ";");
+                    var options = msgAst.format.options;
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options[i];
+                        if (typeof opt.selector !== "number") continue;
+                        var fn = comp.addConstant(compile(locale, opt.value));
+                        comp.addBody("if (" + localArgOffset + "===" + opt.selector + ") return " + fn + "(" + argParams + ",''+" + localArgOffset + ");");
+                    }
+                    var localCase = comp.addLocal();
+                    var pluralFn = comp.addConstant(getPluralRule(locale));
+                    comp.addBody("var " + localCase + "=" + pluralFn + "(" + localArgOffset + "," + (msgAst.format.ordinal ? "true" : "false") + ");");
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options[i];
+                        if (typeof opt.selector !== "string") continue;
+                        if (opt.selector === "other") continue;
+                        var fn = comp.addConstant(compile(locale, opt.value));
+                        comp.addBody("if (" + localCase + "===" + comp.addConstant(opt.selector) + ") return " + fn + "(" + argParams + ",''+" + localArgOffset + ");");
+                    }
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options[i];
+                        if (opt.selector !== "other") continue;
+                        var fn = comp.addConstant(compile(locale, opt.value));
+                        comp.addBody("return " + fn + "(" + argParams + ",''+" + localArgOffset + ");");
+                    }
+                    break;
+                }
+
+              case "select":
+                {
+                    var options = msgAst.format.options;
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options[i];
+                        if (typeof opt.selector !== "string") continue;
+                        if (opt.selector === "other") continue;
+                        var fn = comp.addConstant(compile(locale, opt.value));
+                        comp.addBody("if (" + localArg + "===" + comp.addConstant(opt.selector) + ") return " + fn + "(" + argParams + "," + localArg + ");");
+                    }
+                    for (var i = 0; i < options.length; i++) {
+                        var opt = options[i];
+                        if (opt.selector !== "other") continue;
+                        var fn = comp.addConstant(compile(locale, opt.value));
+                        comp.addBody("return " + fn + "(" + argParams + "," + localArg + ");");
+                    }
+                    break;
+                }
+
+              case "number":
+              case "date":
+              case "time":
+                {
+                    var style = msgAst.format.style || "default";
+                    var options = msgAst.format.options;
+                    if (options) {
+                        var opt = {};
+                        var complex = false;
+                        for (var i = 0; i < options.length; i++) {
+                            if (typeof options[i].value === "object") {
+                                complex = true;
+                                opt[options[i].key] = null;
+                            } else {
+                                var val = options[i].value;
+                                if (val === undefined) val = true;
+                                opt[options[i].key] = val;
+                            }
+                        }
+                        var formatFn = comp.addConstant(AnyFormatter(locale, type, style, opt));
+                        if (complex) {
+                            var optConst = comp.addConstant(opt);
+                            var optLocal = comp.addLocal();
+                            var hashArg = comp.addArg(1);
+                            comp.addBody("var " + optLocal + "=" + optConst + ";");
+                            for (var i = 0; i < options.length; i++) {
+                                if (typeof options[i].value === "object") {
+                                    var fnConst = comp.addConstant(compile(locale, options[i].value));
+                                    comp.addBody(optLocal + "[" + comp.addConstant(options[i].key) + "]=" + fnConst + "(" + argParams + "," + hashArg + ");");
+                                }
+                            }
+                            comp.addBody("return " + formatFn + "(" + localArg + "," + optLocal + ");");
+                        } else {
+                            comp.addBody("return " + formatFn + "(" + localArg + "," + comp.addConstant(opt) + ");");
+                        }
+                    } else {
+                        var formatFn = comp.addConstant(AnyFormatter(locale, type, style, null));
+                        comp.addBody("return " + formatFn + "(" + localArg + ");");
+                    }
+                }
+            }
+            return comp.build();
+        }
+    }
+    function jsonp(url) {
+        return new Promise(function(r, e) {
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.charset = "utf-8";
+            script.onload = function() {
+                r();
+            };
+            script.onerror = function(ev) {
+                e("Failed to load " + url);
+            };
+            script.src = url;
+            document.head.appendChild(script);
+        });
+    }
+    var cfg = {};
+    var loadedLocales = Object.create(null);
+    var registeredTranslations = Object.create(null);
+    var initWasStarted = false;
+    var currentLocale = "";
+    var currentTranslations = [];
+    var currentCachedFormat = [];
+    var stringCachedFormats = Object.create(null);
+    function currentTranslationMessage(message) {
+        var text = currentTranslations[message];
+        if (text === undefined) {
+            throw new Error("message " + message + " is not defined");
+        }
+        return text;
+    }
+    function t(message, params, translationHelp) {
+        if (currentLocale.length === 0) {
+            throw new Error("before using t you need to wait for initialization of g11n");
+        }
+        var format;
+        if (typeof message === "number") {
+            if (params == null) {
+                return currentTranslationMessage(message);
+            }
+            format = currentCachedFormat[message];
+            if (format === undefined) {
+                var ast = parse(currentTranslationMessage(message));
+                if (ast.type === "error") {
+                    throw new Error("message " + message + " in " + currentLocale + " has error: " + ast.msg);
+                }
+                format = compile(currentLocale, ast);
+                currentCachedFormat[message] = format;
+            }
+        } else {
+            if (params == null) return message;
+            format = stringCachedFormats[message];
+            if (format === undefined) {
+                var ast = parse(message);
+                if (ast.type === "error") {
+                    throw new Error('message "' + message + '" has error: ' + ast.msg + " on position: " + ast.pos);
+                }
+                format = compile(currentLocale, ast);
+                stringCachedFormats[message] = format;
+            }
+        }
+        return format(params);
+    }
+    function initGlobalization(config) {
+        if (initWasStarted) {
+            throw new Error("initLocalization must be called only once");
+        }
+        cfg = config;
+        initWasStarted = true;
+        var prom = Promise.resolve(null);
+        prom = prom.then(function() {
+            return setLocale(config.defaultLocale || "en");
+        });
+        setBeforeInit(function(cb) {
+            prom.then(cb);
+        });
+        return prom;
+    }
+    function setLocale(locale) {
+        var prom = Promise.resolve(null);
+        if (currentLocale === locale) return prom;
+        if (!loadedLocales[locale]) {
+            loadedLocales[locale] = true;
+            var pathToTranslation = cfg.pathToTranslation;
+            if (pathToTranslation) {
+                var p = pathToTranslation(locale);
+                if (p) {
+                    prom = prom.then(function() {
+                        return jsonp(p);
+                    });
+                }
+            }
+        }
+        prom = prom.then(function() {
+            currentLocale = locale;
+            currentTranslations = registeredTranslations[locale] || [];
+            currentCachedFormat = [];
+            currentCachedFormat.length = currentTranslations.length;
+            ignoreShouldChange();
+        });
+        return prom;
+    }
+    function getLocale() {
+        return currentLocale;
+    }
+    function registerTranslations(locale, localeDefs, msgs) {
+        if (Array.isArray(localeDefs)) {
+            if (localeDefs.length >= 1) setPluralRule(locale, localeDefs[0]);
+        }
+        if (Array.isArray(msgs)) registeredTranslations[locale] = msgs;
+        loadedLocales[locale] = true;
+    }
+    if (window) window["bobrilRegisterTranslations"] = registerTranslations;
+    var __export_hasOwnProperty;;
+    var iconShine = sprite("light.png", "#80ff80");
+    var iconOff = sprite("light.png", "#e03030");
+    var __export_default = createComponent({
+        render: function(ctx, me) {
+            style(me, ctx.data.value ? iconShine : iconOff);
+        },
+        onClick: function(ctx) {
+            ctx.data.onChange(!ctx.data.value);
+            return true;
+        }
+    });
+    var iconShine_lightSwitch2 = sprite("light.png", "#80ff80");
+    var iconOff_lightSwitch2 = sprite("light.png", "#e03030");
+    var __export_default_lightSwitch2 = createComponent({
+        render: function(ctx, me) {
+            style(me, ctx.data.value ? iconShine_lightSwitch2 : iconOff_lightSwitch2);
+        },
+        onClick: function(ctx) {
+            ctx.data.onChange(!ctx.data.value);
+            return true;
+        }
+    });
+    var v1 = false;
+    initGlobalization({});
+    var counter = 0;
+    setInterval(function() {
+        counter++;
+        __export_invalidate();
+    }, 1e3);
+    var mystyle = styleDef(function() {
+        return [ {
+            backgroundColor: "blue"
+        } ];
+    }, null, "mystyle");
+    var page = createComponent({
+        render: function(ctx, me, oldMe) {
+            me.children = [ style({
+                tag: "h1",
+                children: "Hello World! " + counter
+            }, mystyle), __export_default({
+                value: v1,
+                onChange: function(v) {
+                    v1 = v;
+                    __export_invalidate();
+                }
+            }), __export_default_lightSwitch2({
+                value: v1,
+                onChange: function(v) {
+                    v1 = v;
+                    __export_invalidate();
+                }
+            }), {
+                tag: "p",
+                children: [ "See examples on ", {
+                    tag: "a",
+                    attrs: {
+                        href: "https://github.com/Bobris/Bobril"
+                    },
+                    children: "Bobril GitHub pages"
+                }, t("! {d, date, LLLL}", {
+                    d: __export_now()
+                }) ]
+            } ];
+        }
+    });
+    init(function() {
+        return page({});
+    });
+})();

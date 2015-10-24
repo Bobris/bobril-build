@@ -259,6 +259,7 @@ function check(name, order, stack, project, resolveRequire) {
                             });
                             var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
                             symb.undeclared = false;
+                            symb.bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
                             var newStm = new uglify.AST_SimpleStatement({ body: newVar });
@@ -314,15 +315,18 @@ function check(name, order, stack, project, resolveRequire) {
 }
 function renameSymbol(node) {
     if (node instanceof uglify.AST_Symbol) {
-        var symb = node.clone();
+        var symb = node;
         if (symb.thedef == null)
-            return symb;
+            return node;
         var rename = symb.thedef.bbRename;
-        if (rename !== undefined) {
-            symb.name = rename;
+        if (rename !== undefined || symb.bbAlwaysClone) {
+            symb = symb.clone();
+            if (rename !== undefined) {
+                symb.name = rename;
+            }
+            symb.thedef = undefined;
+            symb.scope = undefined;
         }
-        symb.thedef = undefined;
-        symb.scope = undefined;
         return symb;
     }
     return node;
@@ -385,9 +389,10 @@ function bundle(project) {
                 if (symb.thedef == null)
                     return undefined;
                 var rename = symb.thedef.bbRename;
-                if (rename !== undefined) {
+                if (rename !== undefined || symb.thedef.bbAlwaysClone) {
                     symb = symb.clone();
-                    symb.name = rename;
+                    if (rename !== undefined)
+                        symb.name = rename;
                     symb.thedef = undefined;
                     symb.scope = undefined;
                     return symb;

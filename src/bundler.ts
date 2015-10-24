@@ -73,6 +73,7 @@ export interface IBundleProject {
 interface ISymbolDef extends uglify.ISymbolDef {
     bbRequirePath?: string;
     bbRename?: string;
+    bbAlwaysClone?: boolean;
 }
 
 function defaultResolveRequire(name: string, from: string, fileExists: (name: string) => boolean, readFile: (name: string) => string): string {
@@ -305,6 +306,7 @@ __bbe['${name}']=module.exports; })();`);
                             });
                             let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
                             symb.undeclared = false;
+                            (<ISymbolDef>symb).bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
                             let newStm = new uglify.AST_SimpleStatement({ body: newVar });
@@ -360,14 +362,17 @@ __bbe['${name}']=module.exports; })();`);
 
 function renameSymbol(node: uglify.IAstNode): uglify.IAstNode {
     if (node instanceof uglify.AST_Symbol) {
-        let symb = <uglify.IAstSymbol>node.clone();
-        if (symb.thedef == null) return symb;
+        let symb = <uglify.IAstSymbol>node;
+        if (symb.thedef == null) return node;
         let rename = (<ISymbolDef>symb.thedef).bbRename;
-        if (rename !== undefined) {
-            symb.name = rename;
+        if (rename !== undefined || (<ISymbolDef>symb).bbAlwaysClone) {
+            symb = <uglify.IAstSymbol>symb.clone();
+            if (rename !== undefined) {
+                symb.name = rename;
+            }
+            symb.thedef = undefined;
+            symb.scope = undefined;
         }
-        symb.thedef = undefined;
-        symb.scope = undefined;
         return symb;
     }
     return node;
@@ -424,9 +429,10 @@ export function bundle(project: IBundleProject) {
                 let symb = <uglify.IAstSymbol>node;
                 if (symb.thedef == null) return undefined;
                 let rename = (<ISymbolDef>symb.thedef).bbRename;
-                if (rename !== undefined) {
+                if (rename !== undefined || (<ISymbolDef>symb.thedef).bbAlwaysClone) {
                     symb = <uglify.IAstSymbol>symb.clone();
-                    symb.name = rename;
+                    if (rename !== undefined)
+                        symb.name = rename;
                     symb.thedef = undefined;
                     symb.scope = undefined;
                     return symb;

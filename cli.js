@@ -36,7 +36,7 @@ function compile() {
     }).then(function () {
         console.log('Compiled in ' + (Date.now() - startCompilation) + 'ms');
     }, function (e) {
-        console.log(e);
+        console.log(e.stack);
     });
 }
 function handleRequest(request, response) {
@@ -124,6 +124,17 @@ function presetDebugProject(project) {
     project.defines = { DEBUG: true };
     project.writeFileCallback = write;
 }
+function presetLiveReloadProject(project) {
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.totalBundle = true;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+    project.writeFileCallback = writeDist;
+}
 function presetReleaseProject(project) {
     project.debugStyleDefs = false;
     project.releaseStyleDefs = true;
@@ -135,13 +146,33 @@ function presetReleaseProject(project) {
     project.defines = { DEBUG: false };
     project.writeFileCallback = writeDist;
 }
+var flo = require('fb-flo');
+var server = flo('dist', {
+    port: 8888,
+    host: 'localhost',
+    verbose: false,
+    glob: [
+        'bundle.js'
+    ]
+}, function resolver(filepath, callback) {
+    callback({
+        resourceURL: 'bundle.js',
+        // any string-ish value is acceptable. i.e. strings, Buffers etc.
+        contents: memoryFs['bundle.js'],
+        update: function (_window, _resourceURL) {
+            if (_window.b && _window.b.ignoreShouldChange && _window.b.invalidateStyles) {
+                _window.b.ignoreShouldChange();
+                _window.b.invalidateStyles();
+            }
+        }
+    });
+});
 function run() {
     printIntroLine();
     project = createProjectFromPackageJson();
     if (project == null)
         return;
-    //presetDebugProject(project);
-    presetReleaseProject(project);
+    presetLiveReloadProject(project);
     var startWatching = Date.now();
     chokidar.watch(['**/*.ts', '**/tsconfig.json', '**/package.json'], { ignored: /[\/\\]\./, ignoreInitial: true }).once('ready', function () {
         console.log('Watching in ' + (Date.now() - startWatching).toFixed(0) + 'ms');

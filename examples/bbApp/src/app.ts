@@ -7,10 +7,16 @@ var v1 = false;
 
 g.initGlobalization({});
 
+let counter = 0;
+
+setInterval(() => { counter++; b.invalidate(); }, 1000);
+
+let mystyle = b.styleDef(() => [{ backgroundColor: 'blue' }]);
+
 let page = b.createComponent({
     render(ctx: b.IBobrilCtx, me: b.IBobrilNode, oldMe?: b.IBobrilCacheNode): void {
         me.children = [
-            { tag: 'h1', children: 'Hello World!' },
+            b.style({ tag: 'h1', children: 'Hello World! ' + counter }, mystyle),
             lightSwitch({
                 value: v1,
                 onChange: (v) => {
@@ -39,4 +45,4 @@ let page = b.createComponent({
     }
 });
 
-b.init(()=>page({}));
+b.init(() => page({}));
