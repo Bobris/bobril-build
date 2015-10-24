@@ -314,17 +314,16 @@ function check(name, order, stack, project, resolveRequire) {
 }
 function renameSymbol(node) {
     if (node instanceof uglify.AST_Symbol) {
-        var symb = node;
+        var symb = node.clone();
         if (symb.thedef == null)
-            return node;
+            return symb;
         var rename = symb.thedef.bbRename;
         if (rename !== undefined) {
-            symb = symb.clone();
             symb.name = rename;
-            symb.thedef = undefined;
-            symb.scope = undefined;
-            return symb;
         }
+        symb.thedef = undefined;
+        symb.scope = undefined;
+        return symb;
     }
     return node;
 }

@@ -360,16 +360,15 @@ __bbe['${name}']=module.exports; })();`);
 
 function renameSymbol(node: uglify.IAstNode): uglify.IAstNode {
     if (node instanceof uglify.AST_Symbol) {
-        let symb = <uglify.IAstSymbol>node;
-        if (symb.thedef == null) return node;
+        let symb = <uglify.IAstSymbol>node.clone();
+        if (symb.thedef == null) return symb;
         let rename = (<ISymbolDef>symb.thedef).bbRename;
         if (rename !== undefined) {
-            symb = <uglify.IAstSymbol>symb.clone();
             symb.name = rename;
-            symb.thedef = undefined;
-            symb.scope = undefined;
-            return symb;
         }
+        symb.thedef = undefined;
+        symb.scope = undefined;
+        return symb;
     }
     return node;
 }
