@@ -20,10 +20,10 @@ var D2Array = (function () {
         var oldwidth = this.widths.length;
         this.widths.push(v);
         var newcovs = [];
-        for (var i = 0; i < this.heights.length; i++) {
-            var rowstart = i * oldwidth;
-            for (var j = 0; j < oldwidth; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (var iy = 0; iy < this.heights.length; iy++) {
+            var rowstart = iy * oldwidth;
+            for (var ix = 0; ix < oldwidth; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
             newcovs.push(false);
         }
@@ -32,28 +32,23 @@ var D2Array = (function () {
     D2Array.prototype.addRow = function (v) {
         var oldheight = this.heights.length;
         this.heights.push(v);
-        for (var i = 0; i < this.widths.length; i++) {
+        for (var ix = 0; ix < this.widths.length; ix++) {
             this.covs.push(false);
         }
     };
     D2Array.prototype.splitCol = function (idxpos, v) {
         var oldwidth = this.widths.length;
-        var idx = 0;
-        var x = 0;
-        for (; idx < idxpos; idx++) {
-            x += this.widths[idx];
-        }
-        this.widths.splice(idx, 0, v);
-        this.widths[idx + 1] -= v;
+        this.widths.splice(idxpos, 0, v);
+        this.widths[idxpos + 1] -= v;
         var newcovs = [];
-        for (var i = 0; i < this.heights.length; i++) {
-            var rowstart = i * oldwidth;
-            for (var j = 0; j < idx; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (var iy = 0; iy < this.heights.length; iy++) {
+            var rowstart = iy * oldwidth;
+            for (var ix = 0; ix < idxpos; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
-            newcovs.push(this.covs[rowstart + idx]);
-            for (var j = idx; j < oldwidth; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+            newcovs.push(this.covs[rowstart + idxpos]);
+            for (var ix = idxpos; ix < oldwidth; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
         }
         this.covs = newcovs;
@@ -61,24 +56,19 @@ var D2Array = (function () {
     D2Array.prototype.splitRow = function (idxpos, v) {
         var width = this.widths.length;
         var oldheight = this.heights.length;
-        var idx = 0;
-        var x = 0;
-        for (; idx < idxpos; idx++) {
-            x += this.heights[idx];
-        }
-        this.heights.splice(idx, 0, v);
-        this.heights[idx + 1] -= v;
+        this.heights.splice(idxpos, 0, v);
+        this.heights[idxpos + 1] -= v;
         var newcovs = [];
-        for (var i = 0; i <= idx; i++) {
-            var rowstart = i * width;
-            for (var j = 0; j < width; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (var iy = 0; iy <= idxpos; iy++) {
+            var rowstart = iy * width;
+            for (var ix = 0; ix < width; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
         }
-        for (var i = idx; i < oldheight; i++) {
-            var rowstart = i * width;
-            for (var j = 0; j < width; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (var iy = idxpos; iy < oldheight; iy++) {
+            var rowstart = iy * width;
+            for (var ix = 0; ix < width; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
         }
         this.covs = newcovs;
@@ -102,9 +92,9 @@ var D2Array = (function () {
         }
         var covwidth = this.widths.length;
         var start = idxy * covwidth + idxx;
-        for (var i = 0; i < h; i++) {
-            for (var j = 0; j < w; j++) {
-                if (this.covs[start + i * covwidth + j])
+        for (var iy = 0; iy < h; iy++) {
+            for (var ix = 0; ix < w; ix++) {
+                if (this.covs[start + iy * covwidth + ix])
                     return false;
             }
         }
@@ -145,9 +135,9 @@ var D2Array = (function () {
         }
         var covwidth = this.widths.length;
         var start = idxy * covwidth + idxx;
-        for (var i = 0; i < h; i++) {
-            for (var j = 0; j < w; j++) {
-                this.covs[start + i * covwidth + j] = true;
+        for (var iy = 0; iy < h; iy++) {
+            for (var ix = 0; ix < w; ix++) {
+                this.covs[start + iy * covwidth + ix] = true;
             }
         }
     };
@@ -187,22 +177,22 @@ var D2Array = (function () {
             }
         }
         var posy = 0;
-        stop: for (var i = 0; i < this.heights.length; i++) {
+        stop: for (var iy = 0; iy < this.heights.length; iy++) {
             var posx = 0;
-            for (var j = 0; j < this.widths.length; j++) {
-                if (this.isFree(posx, posy, i, j, sprite.width, sprite.height)) {
+            for (var ix = 0; ix < this.widths.length; ix++) {
+                if (this.isFree(posx, posy, ix, iy, sprite.width, sprite.height)) {
                     if (isImprovement(posx + sprite.width, posy + sprite.height)) {
                         bestx = posx;
                         besty = posy;
-                        bestix = i;
-                        bestiy = j;
+                        bestix = ix;
+                        bestiy = iy;
                         if (addpx === 0)
                             break stop;
                     }
                 }
-                posx += this.widths[j];
+                posx += this.widths[ix];
             }
-            posy += this.heights[i];
+            posy += this.heights[iy];
         }
         sprite.x = bestx;
         sprite.y = besty;

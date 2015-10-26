@@ -92,7 +92,32 @@ function evalNode(n, tc, resolveStringLiteral) {
         case 69 /* Identifier */:
         case 166 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
-            if (s.flags & 3 /* Variable */) {
+            if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 69 /* Identifier */) {
+                if (s.declarations.length !== 1)
+                    return undefined;
+                var decl = s.declarations[0];
+                if (decl.kind !== 226 /* ImportSpecifier */)
+                    return undefined;
+                if (decl.parent && decl.parent.parent && decl.parent.parent.parent && decl.parent.parent.parent.kind === 222 /* ImportDeclaration */) {
+                    var impdecl = decl.parent.parent.parent;
+                    var s2 = tc.getSymbolAtLocation(impdecl.moduleSpecifier);
+                    if (s2 && s2.exports[decl.propertyName.text]) {
+                        var s3 = s2.exports[decl.propertyName.text];
+                        var exportAssign = s3.declarations[0];
+                        if (exportAssign.kind === 227 /* ExportAssignment */) {
+                            return evalNode(exportAssign.expression, tc, resolveStringLiteral);
+                        }
+                    }
+                }
+            }
+            else if (((s.flags & 4 /* Property */) !== 0) && n.kind === 166 /* PropertyAccessExpression */) {
+                var obj = evalNode(n.expression, tc, resolveStringLiteral);
+                if (typeof obj !== "object")
+                    return undefined;
+                var name_1 = n.name.text;
+                return obj[name_1];
+            }
+            else if (s.flags & 3 /* Variable */) {
                 if (s.valueDeclaration.parent.flags & 32768 /* Const */) {
                     return evalNode(s.valueDeclaration.initializer, tc, resolveStringLiteral);
                 }
@@ -109,13 +134,16 @@ function evalNode(n, tc, resolveStringLiteral) {
             for (var i = 0; i < ole.properties.length; i++) {
                 var prop = ole.properties[i];
                 if (prop.kind === 245 /* PropertyAssignment */ && (prop.name.kind === 69 /* Identifier */ || prop.name.kind === 9 /* StringLiteral */)) {
-                    var name_1 = prop.name.kind === 69 /* Identifier */ ? prop.name.text : prop.name.text;
-                    res[name_1] = evalNode(prop.initializer, tc, resolveStringLiteral);
+                    var name_2 = prop.name.kind === 69 /* Identifier */ ? prop.name.text : prop.name.text;
+                    res[name_2] = evalNode(prop.initializer, tc, resolveStringLiteral);
                 }
             }
             return res;
         }
-        default: return undefined;
+        default: {
+            //console.log((<any>ts).SyntaxKind[n.kind]);
+            return undefined;
+        }
     }
 }
 exports.evalNode = evalNode;

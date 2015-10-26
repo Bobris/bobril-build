@@ -30,10 +30,10 @@ class D2Array {
         const oldwidth = this.widths.length;
         this.widths.push(v);
         let newcovs = [];
-        for (let i = 0; i < this.heights.length; i++) {
-            let rowstart = i * oldwidth;
-            for (let j = 0; j < oldwidth; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (let iy = 0; iy < this.heights.length; iy++) {
+            let rowstart = iy * oldwidth;
+            for (let ix = 0; ix < oldwidth; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
             newcovs.push(false);
         }
@@ -42,28 +42,23 @@ class D2Array {
     addRow(v: number) {
         const oldheight = this.heights.length;
         this.heights.push(v);
-        for (let i = 0; i < this.widths.length; i++) {
+        for (let ix = 0; ix < this.widths.length; ix++) {
             this.covs.push(false);
         }
     }
     splitCol(idxpos: number, v: number) {
         const oldwidth = this.widths.length;
-        let idx = 0;
-        let x = 0;
-        for (; idx < idxpos; idx++) {
-            x += this.widths[idx];
-        }
-        this.widths.splice(idx, 0, v);
-        this.widths[idx + 1] -= v;
+        this.widths.splice(idxpos, 0, v);
+        this.widths[idxpos + 1] -= v;
         let newcovs = [];
-        for (let i = 0; i < this.heights.length; i++) {
-            let rowstart = i * oldwidth;
-            for (let j = 0; j < idx; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (let iy = 0; iy < this.heights.length; iy++) {
+            let rowstart = iy * oldwidth;
+            for (let ix = 0; ix < idxpos; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
-            newcovs.push(this.covs[rowstart + idx]);
-            for (let j = idx; j < oldwidth; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+            newcovs.push(this.covs[rowstart + idxpos]);
+            for (let ix = idxpos; ix < oldwidth; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
         }
         this.covs = newcovs;
@@ -71,24 +66,19 @@ class D2Array {
     splitRow(idxpos: number, v: number) {
         const width = this.widths.length;
         const oldheight = this.heights.length;
-        let idx = 0;
-        let x = 0;
-        for (; idx < idxpos; idx++) {
-            x += this.heights[idx];
-        }
-        this.heights.splice(idx, 0, v);
-        this.heights[idx + 1] -= v;
+        this.heights.splice(idxpos, 0, v);
+        this.heights[idxpos + 1] -= v;
         let newcovs = [];
-        for (let i = 0; i <= idx; i++) {
-            let rowstart = i * width;
-            for (let j = 0; j < width; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (let iy = 0; iy <= idxpos; iy++) {
+            let rowstart = iy * width;
+            for (let ix = 0; ix < width; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
         }
-        for (let i = idx; i < oldheight; i++) {
-            let rowstart = i * width;
-            for (let j = 0; j < width; j++) {
-                newcovs.push(this.covs[rowstart + j]);
+        for (let iy = idxpos; iy < oldheight; iy++) {
+            let rowstart = iy * width;
+            for (let ix = 0; ix < width; ix++) {
+                newcovs.push(this.covs[rowstart + ix]);
             }
         }
         this.covs = newcovs;
@@ -109,9 +99,9 @@ class D2Array {
         }
         const covwidth = this.widths.length;
         const start = idxy * covwidth + idxx;
-        for (let i = 0; i < h; i++) {
-            for (let j = 0; j < w; j++) {
-                if (this.covs[start + i * covwidth + j]) return false;
+        for (let iy = 0; iy < h; iy++) {
+            for (let ix = 0; ix < w; ix++) {
+                if (this.covs[start + iy * covwidth + ix]) return false;
             }
         }
         return true;
@@ -151,9 +141,9 @@ class D2Array {
         }
         const covwidth = this.widths.length;
         const start = idxy * covwidth + idxx;
-        for (let i = 0; i < h; i++) {
-            for (let j = 0; j < w; j++) {
-                this.covs[start + i * covwidth + j] = true;
+        for (let iy = 0; iy < h; iy++) {
+            for (let ix = 0; ix < w; ix++) {
+                this.covs[start + iy * covwidth + ix] = true;
             }
         }
     }
@@ -187,19 +177,19 @@ class D2Array {
         }
         let posy = 0;
         stop:
-        for (let i = 0; i < this.heights.length; i++) {
+        for (let iy = 0; iy < this.heights.length; iy++) {
             let posx = 0;
-            for (let j = 0; j < this.widths.length; j++) {
-                if (this.isFree(posx, posy, i, j, sprite.width, sprite.height)) {
+            for (let ix = 0; ix < this.widths.length; ix++) {
+                if (this.isFree(posx, posy, ix, iy, sprite.width, sprite.height)) {
                     if (isImprovement(posx + sprite.width, posy + sprite.height)) {
                         bestx = posx; besty = posy;
-                        bestix = i; bestiy = j;
+                        bestix = ix; bestiy = iy;
                         if (addpx === 0) break stop;
                     }
                 }
-                posx += this.widths[j];
+                posx += this.widths[ix];
             }
-            posy += this.heights[i];
+            posy += this.heights[iy];
         }
         sprite.x = bestx;
         sprite.y = besty;

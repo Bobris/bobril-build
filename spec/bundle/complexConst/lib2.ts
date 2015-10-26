@@ -1,3 +1,3 @@
 import * as l from './lib';
-export const b = l.a;
-export const c = b;
+export const bbb = l.aaa;
+export const ccc = bbb;

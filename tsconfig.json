@@ -41,6 +41,7 @@
         "spec/evalNodeSpec.ts",
         "spec/imageOpsSpec.ts",
         "spec/spriterSpec.ts",
+        "spec/spriterExSpec.ts",
         "node_modules/typescript/lib/typescript.d.ts",
         "typings/uglifyjs/uglifyjs.d.ts",
         "typings/chokidar/chokidar.d.ts",
