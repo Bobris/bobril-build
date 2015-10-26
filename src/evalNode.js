@@ -89,10 +89,20 @@ function evalNode(n, tc, resolveStringLiteral) {
             var e = cond ? nn.whenTrue : nn.whenFalse;
             return evalNode(e, tc, resolveStringLiteral);
         }
+        case 227 /* ExportAssignment */: {
+            var nn = n;
+            return evalNode(nn.expression, tc, resolveStringLiteral);
+        }
         case 69 /* Identifier */:
         case 166 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
-            if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 69 /* Identifier */) {
+            if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 166 /* PropertyAccessExpression */) {
+                if (s.declarations.length !== 1)
+                    return undefined;
+                var decl = s.declarations[0];
+                return evalNode(decl, tc, resolveStringLiteral);
+            }
+            else if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 69 /* Identifier */) {
                 if (s.declarations.length !== 1)
                     return undefined;
                 var decl = s.declarations[0];
@@ -104,9 +114,7 @@ function evalNode(n, tc, resolveStringLiteral) {
                     if (s2 && s2.exports[decl.propertyName.text]) {
                         var s3 = s2.exports[decl.propertyName.text];
                         var exportAssign = s3.declarations[0];
-                        if (exportAssign.kind === 227 /* ExportAssignment */) {
-                            return evalNode(exportAssign.expression, tc, resolveStringLiteral);
-                        }
+                        return evalNode(exportAssign, tc, resolveStringLiteral);
                     }
                 }
             }

@@ -81,10 +81,19 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral: (
             let e = cond ? nn.whenTrue : nn.whenFalse;
             return evalNode(e, tc, resolveStringLiteral);
         }
+        case ts.SyntaxKind.ExportAssignment: {
+            let nn = <ts.ExportAssignment>n;
+            return evalNode(nn.expression, tc, resolveStringLiteral);   
+        }
         case ts.SyntaxKind.Identifier:
         case ts.SyntaxKind.PropertyAccessExpression: {
             let s = tc.getSymbolAtLocation(n);
-            if (((s.flags & ts.SymbolFlags.Alias) !== 0) && n.kind === ts.SyntaxKind.Identifier) {
+            if (((s.flags & ts.SymbolFlags.Alias) !== 0) && n.kind === ts.SyntaxKind.PropertyAccessExpression) {
+                if (s.declarations.length!==1)
+                    return undefined;
+                let decl = <ts.ImportSpecifier>s.declarations[0];
+                return evalNode(decl, tc, resolveStringLiteral);
+            } else if (((s.flags & ts.SymbolFlags.Alias) !== 0) && n.kind === ts.SyntaxKind.Identifier) {
                 if (s.declarations.length!==1)
                     return undefined;
                 let decl = <ts.ImportSpecifier>s.declarations[0];
@@ -96,9 +105,7 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral: (
                     if (s2 && s2.exports[decl.propertyName.text]) {
                         let s3 = s2.exports[decl.propertyName.text];
                         let exportAssign = <ts.ExportAssignment>s3.declarations[0];
-                        if (exportAssign.kind === ts.SyntaxKind.ExportAssignment) {
-                            return evalNode(exportAssign.expression, tc, resolveStringLiteral);
-                        }
+                        return evalNode(exportAssign, tc, resolveStringLiteral);
                     }
                 }
             } else if (((s.flags & ts.SymbolFlags.Property) !== 0) && n.kind === ts.SyntaxKind.PropertyAccessExpression) {
