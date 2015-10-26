@@ -47,9 +47,6 @@ export interface IFileForBundle {
     selfexports: { [name: string]: uglify.IAstNode };
     exports: { [name: string]: uglify.IAstNode };
     reexportAll: string[];
-    reexport: {
-        [from: string]: { [name: string]: string }
-    };
 }
 
 export interface IBundleProject {
@@ -194,7 +191,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         let ast = uglify.parse(project.readContent(name));
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [] };
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name) }
@@ -215,25 +212,6 @@ __bbe['${name}']=module.exports; })();`);
                         let stmbody = (<uglify.IAstSimpleStatement>stm).body;
                         let pea = paternAssignExports(stmbody);
                         if (pea) {
-                            if (pea.value instanceof uglify.AST_PropAccess) {
-                                let propAccess = <uglify.IAstPropAccess>pea.value;
-                                if (propAccess.expression instanceof uglify.AST_SymbolRef) {
-                                    let symb = <uglify.IAstSymbolRef>propAccess.expression;
-                                    let thedef = <ISymbolDef>symb.thedef;
-                                    if (thedef.bbRequirePath) {
-                                        let extf = cached.reexport[thedef.bbRequirePath.toLowerCase()];
-                                        if (extf === undefined) {
-                                            extf = Object.create(null);
-                                            cached.reexport[thedef.bbRequirePath.toLowerCase()] = extf;
-                                        }
-                                        let extn = matchPropKey(propAccess);
-                                        if (extn) {
-                                            extf[pea.name] = extn;
-                                            return null;
-                                        }
-                                    }
-                                }
-                            }
                             if (!(pea.value instanceof uglify.AST_SymbolRef)) {
                                 let newName = '__export_' + pea.name;
                                 let newVar = new uglify.AST_Var({
@@ -350,15 +328,6 @@ __bbe['${name}']=module.exports; })();`);
     cached.reexportAll.forEach(exp=> {
         exp = exp.toLowerCase();
         Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
-    });
-    let reex = Object.keys(cached.reexport);
-    reex.forEach((exp) => {
-        let expm = project.cache[exp].exports || project.cache[exp].selfexports;
-        let exps = cached.reexport[exp];
-        let expsn = Object.keys(exps);
-        expsn.forEach((nn) => {
-            cached.exports[nn] = expm[exps[nn]];
-        });
     });
     order.push(cached);
 }

@@ -147,7 +147,7 @@ function check(name, order, stack, project, resolveRequire) {
         var ast = uglify.parse(project.readContent(name));
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
+        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [] };
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; })();");
@@ -167,25 +167,6 @@ function check(name, order, stack, project, resolveRequire) {
                         var stmbody = stm.body;
                         var pea = paternAssignExports(stmbody);
                         if (pea) {
-                            if (pea.value instanceof uglify.AST_PropAccess) {
-                                var propAccess = pea.value;
-                                if (propAccess.expression instanceof uglify.AST_SymbolRef) {
-                                    var symb = propAccess.expression;
-                                    var thedef = symb.thedef;
-                                    if (thedef.bbRequirePath) {
-                                        var extf = cached.reexport[thedef.bbRequirePath.toLowerCase()];
-                                        if (extf === undefined) {
-                                            extf = Object.create(null);
-                                            cached.reexport[thedef.bbRequirePath.toLowerCase()] = extf;
-                                        }
-                                        var extn = matchPropKey(propAccess);
-                                        if (extn) {
-                                            extf[pea.name] = extn;
-                                            return null;
-                                        }
-                                    }
-                                }
-                            }
                             if (!(pea.value instanceof uglify.AST_SymbolRef)) {
                                 var newName = '__export_' + pea.name;
                                 var newVar = new uglify.AST_Var({
@@ -301,15 +282,6 @@ function check(name, order, stack, project, resolveRequire) {
     cached.reexportAll.forEach(function (exp) {
         exp = exp.toLowerCase();
         Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
-    });
-    var reex = Object.keys(cached.reexport);
-    reex.forEach(function (exp) {
-        var expm = project.cache[exp].exports || project.cache[exp].selfexports;
-        var exps = cached.reexport[exp];
-        var expsn = Object.keys(exps);
-        expsn.forEach(function (nn) {
-            cached.exports[nn] = expm[exps[nn]];
-        });
     });
     order.push(cached);
     var _a;
