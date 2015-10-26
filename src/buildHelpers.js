@@ -174,16 +174,47 @@ function setMethod(callExpression, name) {
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 exports.setMethod = setMethod;
-function setArgument(callExpression, index, value) {
+function setArgumentAst(callExpression, index, value) {
     while (callExpression.arguments.length < index) {
         callExpression.arguments.push(createNodeFromValue(null));
     }
     if (callExpression.arguments.length === index) {
-        callExpression.arguments.push(createNodeFromValue(value));
+        callExpression.arguments.push(value);
     }
     else {
-        callExpression.arguments[index] = createNodeFromValue(value);
+        callExpression.arguments[index] = value;
     }
+}
+exports.setArgumentAst = setArgumentAst;
+function createNodeArray(len) {
+    var arr = [];
+    while (len-- > 0)
+        arr.push(null);
+    var res = arr;
+    res.pos = -1;
+    res.end = -1;
+    return res;
+}
+function buildLambdaReturningArray(values) {
+    var pos = values[0].pos;
+    var end = values[values.length - 1].end;
+    var fn = ts.createNode(174 /* ArrowFunction */);
+    fn.parameters = createNodeArray(0);
+    fn.equalsGreaterThanToken = ts.createNode(34 /* EqualsGreaterThanToken */);
+    var body = ts.createNode(164 /* ArrayLiteralExpression */);
+    body.elements = createNodeArray(0);
+    (_a = body.elements).push.apply(_a, values);
+    body.pos = pos;
+    body.end = end;
+    fn.body = body;
+    fn.pos = pos;
+    fn.end = end;
+    return fn;
+    var _a;
+}
+exports.buildLambdaReturningArray = buildLambdaReturningArray;
+function setArgument(callExpression, index, value) {
+    setArgumentAst(callExpression, index, createNodeFromValue(value));
 }
 exports.setArgument = setArgument;
 function setArgumentCount(callExpression, count) {

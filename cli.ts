@@ -16,6 +16,7 @@ var compilationCache = new bb.CompilationCache();
 var translationDb = new bb.TranslationDb();
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 var project: bb.IProject;
+var browserControl = new bb.BrowserControl();
 
 function write(fn: string, b: Buffer) {
     console.log('Memory write ' + fn);
@@ -129,6 +130,7 @@ function presetDebugProject(project: bb.IProject) {
 }
 
 function presetLiveReloadProject(project: bb.IProject) {
+    project.liveReloadStyleDefs = true;
     project.debugStyleDefs = true;
     project.releaseStyleDefs = false;
     project.spriteMerge = false;
@@ -152,32 +154,6 @@ function presetReleaseProject(project: bb.IProject) {
     project.writeFileCallback = writeDist;
 }
 
-var flo = require('fb-flo');
-
-var server = flo(
-  'dist',
-  {
-    port: 8888,
-    host: 'localhost',
-    verbose: false,
-    glob: [
-      'bundle.js'
-    ]
-  },
-  function resolver(filepath, callback) {
-    callback({
-      resourceURL: 'bundle.js',
-      // any string-ish value is acceptable. i.e. strings, Buffers etc.
-      contents: memoryFs['bundle.js'],
-      update: function(_window, _resourceURL) {
-        if (_window.b && _window.b.ignoreShouldChange && _window.b.invalidateStyles) {
-            _window.b.ignoreShouldChange(); _window.b.invalidateStyles();
-        }
-      }
-    });
-  }
-);
-
 export function run() {
     printIntroLine();
     project = createProjectFromPackageJson();
@@ -190,6 +166,7 @@ export function run() {
             var server = http.createServer(handleRequest);
             server.listen(8080, function () {
                 console.log("Server listening on: http://localhost:8080");
+                browserControl.start(6666,'chrome','http://localhost:8080');
             });
         });
     }).on('all', bb.debounce((v, v2) => {

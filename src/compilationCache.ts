@@ -56,6 +56,7 @@ export interface IProject {
     writeFileCallback?: (filename: string, content: Buffer) => void;
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
+    liveReloadStyleDefs?: boolean;
     spriteMerge?: boolean;
     remapImages?: (filename: string) => string;
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
@@ -270,19 +271,31 @@ export class CompilationCache {
                 }
                 for (let j = 0; j < info.styleDefs.length; j++) {
                     let sd = info.styleDefs[j];
+                    let remembered = false;
+                    let skipEx = sd.isEx ? 1 : 0;
+                    if (project.liveReloadStyleDefs) {
+                        remembered = true;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        BuildHelpers.setArgumentAst(sd.callExpression, skipEx, BuildHelpers.buildLambdaReturningArray(sd.callExpression.arguments.slice(skipEx, 2 + skipEx)));
+                        BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
+                    }
                     if (project.debugStyleDefs) {
                         let name = sd.name;
                         if (sd.userNamed) continue;
                         if (!name)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
-                        BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name);
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + skipEx);
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, name);
                     } else if (project.releaseStyleDefs) {
-                        if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                        if (sd.callExpression.arguments.length <= 2 + skipEx)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
                     }
                 }
                 program.emit(src);
@@ -319,10 +332,10 @@ export class CompilationCache {
                     beautify: project.beautify,
                     defines: project.defines,
                     getMainFiles() { return mainJsList; },
-                    checkFileModification(name: string):number {
+                    checkFileModification(name: string): number {
                         if (/\.js$/i.test(name)) {
                             let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
-                            if (cached.curTime!=null)
+                            if (cached.curTime != null)
                                 return cached.outputTime;
                         }
                         let cached = that.getCachedFileContent(name, project.dir);
@@ -362,7 +375,7 @@ export class CompilationCache {
             cache.outputTime = cache.curTime;
         }
     }
-     
+
     private addDepJsToOutput(project: IProject, srcDir: string, name: string) {
         project.depJsFiles[path.join(srcDir, name)] = name;
     }

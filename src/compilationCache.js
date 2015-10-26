@@ -205,21 +205,33 @@ var CompilationCache = (function () {
                 }
                 for (var j = 0; j < info.styleDefs.length; j++) {
                     var sd = info.styleDefs[j];
+                    var remembered = false;
+                    var skipEx = sd.isEx ? 1 : 0;
+                    if (project.liveReloadStyleDefs) {
+                        remembered = true;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        BuildHelpers.setArgumentAst(sd.callExpression, skipEx, BuildHelpers.buildLambdaReturningArray(sd.callExpression.arguments.slice(skipEx, 2 + skipEx)));
+                        BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
+                    }
                     if (project.debugStyleDefs) {
                         var name_1 = sd.name;
                         if (sd.userNamed)
                             continue;
                         if (!name_1)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
-                        BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name_1);
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + skipEx);
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, name_1);
                     }
                     else if (project.releaseStyleDefs) {
-                        if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                        if (sd.callExpression.arguments.length <= 2 + skipEx)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
                     }
                 }
                 program.emit(src);

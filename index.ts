@@ -8,3 +8,4 @@ export * from './src/spriter';
 export * from './src/translationCache';
 export * from './src/pathUtils';
 export * from './src/debounce';
+export * from './src/browserControl';

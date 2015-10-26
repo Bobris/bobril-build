@@ -1,5 +1,4 @@
 {
-    "version": "1.6.2",
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
@@ -36,6 +35,7 @@
         "src/pathUtils.ts",
         "src/spriter.ts",
         "src/translationCache.ts",
+        "src/browserControl.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",

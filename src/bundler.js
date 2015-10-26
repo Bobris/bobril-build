@@ -158,6 +158,7 @@ function check(name, order, stack, project, resolveRequire) {
         }
         var exportsSymbol = ast.globals['exports'];
         var unshiftToBody = [];
+        var varDecls = null;
         var walker = new uglify.TreeWalker(function (node, descend) {
             if (node instanceof uglify.AST_Block) {
                 descend();
@@ -250,20 +251,20 @@ function check(name, order, stack, project, resolveRequire) {
                             if (cached.selfexports[key])
                                 return false;
                             var newName = '__export_' + key;
-                            var newVar = new uglify.AST_Var({
-                                start: node.start,
-                                end: node.end,
-                                definitions: [
-                                    new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end }), value: null })
-                                ]
-                            });
-                            var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            if (varDecls == null) {
+                                var vartop = uglify.parse('var a;');
+                                var stm = vartop.body[0];
+                                unshiftToBody.push(stm);
+                                varDecls = stm.definitions;
+                                varDecls.pop();
+                            }
+                            var symbVar = new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end });
+                            varDecls.push(new uglify.AST_VarDef({ name: symbVar, value: null }));
+                            var symb = new uglify.SymbolDef(ast, ast.variables.size(), symbVar);
                             symb.undeclared = false;
                             symb.bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
-                            newVar.definitions[0].name.thedef = symb;
-                            var newStm = new uglify.AST_SimpleStatement({ body: newVar });
-                            unshiftToBody.push(newStm);
+                            symbVar.thedef = symb;
                             cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
                             return false;
                         }

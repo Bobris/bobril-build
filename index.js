@@ -11,3 +11,4 @@ __export(require('./src/spriter'));
 __export(require('./src/translationCache'));
 __export(require('./src/pathUtils'));
 __export(require('./src/debounce'));
+__export(require('./src/browserControl'));

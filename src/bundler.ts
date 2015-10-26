@@ -9,7 +9,7 @@ if (!Object.assign) {
         enumerable: false,
         configurable: true,
         writable: true,
-        value: function (target) {
+        value: function(target) {
             'use strict';
             if (target === undefined || target === null) {
                 throw new TypeError('Cannot convert first argument to object');
@@ -194,10 +194,10 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         let ast = uglify.parse(project.readContent(name));
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult:false, selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [], reexport: Object.create(null) };
         if (ast.globals.has('module')) {
             cached.difficult = true;
-            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name)}
+            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name) }
 __bbe['${name}']=module.exports; })();`);
             cached.ast = ast;
             project.cache[name.toLowerCase()] = cached;
@@ -206,6 +206,7 @@ __bbe['${name}']=module.exports; })();`);
         }
         let exportsSymbol = ast.globals['exports'];
         let unshiftToBody = [];
+        let varDecls: uglify.IAstVarDef[] = null;
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Block) {
                 descend();
@@ -297,20 +298,22 @@ __bbe['${name}']=module.exports; })();`);
                             if (cached.selfexports[key])
                                 return false;
                             let newName = '__export_' + key;
-                            let newVar = new uglify.AST_Var({
-                                start: node.start,
-                                end: node.end,
-                                definitions: [
-                                    new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end }), value: null })
-                                ]
-                            });
-                            let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            if (varDecls == null) {
+                                let vartop = uglify.parse('var a;');
+                                let stm = <uglify.IAstVar>vartop.body[0];
+                                unshiftToBody.push(stm);
+                                varDecls = stm.definitions;
+                                varDecls.pop();
+                            }
+                            let symbVar = new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end });
+                            varDecls.push(
+                                new uglify.AST_VarDef({ name: symbVar, value: null })
+                            );
+                            let symb = new uglify.SymbolDef(ast, ast.variables.size(), symbVar);
                             symb.undeclared = false;
                             (<ISymbolDef>symb).bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
-                            newVar.definitions[0].name.thedef = symb;
-                            let newStm = new uglify.AST_SimpleStatement({ body: newVar });
-                            unshiftToBody.push(newStm);
+                            symbVar.thedef = symb;
                             cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
                             return false;
                         }
