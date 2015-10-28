@@ -450,6 +450,17 @@ function bundle(project) {
     }
     if (project.mangle !== false) {
         bundleAst.figure_out_scope();
+        var rootScope = null;
+        var walker = new uglify.TreeWalker(function (n) {
+            if (n !== bundleAst && n instanceof uglify.AST_Scope) {
+                rootScope = n;
+                return true;
+            }
+            return false;
+        });
+        bundleAst.walk(walker);
+        rootScope.uses_eval = false;
+        rootScope.uses_with = false;
         bundleAst.mangle_names();
     }
     var os = uglify.OutputStream({

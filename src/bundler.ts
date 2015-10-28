@@ -485,6 +485,17 @@ export function bundle(project: IBundleProject) {
     }
     if (project.mangle !== false) {
         bundleAst.figure_out_scope();
+        let rootScope = null;
+        let walker = new uglify.TreeWalker((n)=>{
+            if (n!==bundleAst && n instanceof uglify.AST_Scope) {
+                rootScope = n;              
+                return true;
+            }
+            return false;
+        });
+        bundleAst.walk(walker);
+        rootScope.uses_eval = false;
+        rootScope.uses_with = false;
         bundleAst.mangle_names();
     }
     let os = uglify.OutputStream({

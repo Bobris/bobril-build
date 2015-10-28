@@ -1,0 +1,1 @@
+!function(){function a(){eval("return 1")}function b(b){return b+a()}console.log(b("a"))}();
