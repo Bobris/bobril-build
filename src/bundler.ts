@@ -212,25 +212,21 @@ __bbe['${name}']=module.exports; })();`);
                         let stmbody = (<uglify.IAstSimpleStatement>stm).body;
                         let pea = paternAssignExports(stmbody);
                         if (pea) {
-                            if (!(pea.value instanceof uglify.AST_SymbolRef)) {
-                                let newName = '__export_' + pea.name;
-                                let newVar = new uglify.AST_Var({
-                                    start: stmbody.start,
-                                    end: stmbody.end,
-                                    definitions: [
-                                        new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
-                                    ]
-                                });
-                                let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
-                                symb.undeclared = false;
-                                ast.variables.set(newName, symb);
-                                newVar.definitions[0].name.thedef = symb;
-                                (<uglify.IAstSimpleStatement>stm).body = newVar;
-                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
-                                return newVar;
-                            }
-                            cached.selfexports[pea.name] = pea.value;
-                            return null;
+                            let newName = '__export_' + pea.name;
+                            let newVar = new uglify.AST_Var({
+                                start: stmbody.start,
+                                end: stmbody.end,
+                                definitions: [
+                                    new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
+                                ]
+                            });
+                            let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            symb.undeclared = false;
+                            ast.variables.set(newName, symb);
+                            newVar.definitions[0].name.thedef = symb;
+                            (<uglify.IAstSimpleStatement>stm).body = newVar;
+                            cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            return newVar;
                         }
                         if (stmbody instanceof uglify.AST_Call) {
                             let call = <uglify.IAstCall>stmbody;

@@ -1,1 +1,1 @@
-!function(){var a=42;console.log(a)}();
+!function(){var a=42,b=a;console.log(b)}();

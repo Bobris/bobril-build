@@ -167,25 +167,21 @@ function check(name, order, stack, project, resolveRequire) {
                         var stmbody = stm.body;
                         var pea = paternAssignExports(stmbody);
                         if (pea) {
-                            if (!(pea.value instanceof uglify.AST_SymbolRef)) {
-                                var newName = '__export_' + pea.name;
-                                var newVar = new uglify.AST_Var({
-                                    start: stmbody.start,
-                                    end: stmbody.end,
-                                    definitions: [
-                                        new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
-                                    ]
-                                });
-                                var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
-                                symb.undeclared = false;
-                                ast.variables.set(newName, symb);
-                                newVar.definitions[0].name.thedef = symb;
-                                stm.body = newVar;
-                                cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
-                                return newVar;
-                            }
-                            cached.selfexports[pea.name] = pea.value;
-                            return null;
+                            var newName = '__export_' + pea.name;
+                            var newVar = new uglify.AST_Var({
+                                start: stmbody.start,
+                                end: stmbody.end,
+                                definitions: [
+                                    new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
+                                ]
+                            });
+                            var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            symb.undeclared = false;
+                            ast.variables.set(newName, symb);
+                            newVar.definitions[0].name.thedef = symb;
+                            stm.body = newVar;
+                            cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            return newVar;
                         }
                         if (stmbody instanceof uglify.AST_Call) {
                             var call = stmbody;
