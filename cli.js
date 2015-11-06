@@ -165,7 +165,13 @@ function run() {
             });
         });
     }).on('all', bb.debounce(function (v, v2) {
-        compile();
+        compile().then(function () {
+            var scriptUrl = browserControl.listScriptUrls()[0];
+            var scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
+            browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(function () {
+                browserControl.evaluate("b.invalidateStyles();b.ignoreShouldChange();");
+            });
+        });
     }));
 }
 exports.run = run;

@@ -6,28 +6,28 @@ require('bluebird');
 var BrowserControl = (function () {
     function BrowserControl() {
         var _this = this;
+        var that = this;
         this._scripts = [];
         this._client = rdbg.createClient();
         this._client.on('close', function () {
-            console.log('close');
+            console.log('debugger disconnected');
         });
         this._client.on('connect', function () {
-            console.log('connect');
             _this._client.debugger.on('clear', function () {
-                console.log('clear');
-                this._scripts = [];
+                that._scripts = [];
             });
             _this._client.debugger.on('scriptParse', function (script) {
-                console.log('parse ', script);
-                this._scripts.push(script);
+                if (script.url != "") {
+                    that._scripts.push(script);
+                }
             });
             _this._client.debugger.enable(function () {
                 console.log('debugger enabled');
             });
         });
-        this._client.on('ready', function () {
-            console.log('ready');
-        });
+        //this._client.on('ready', () => {
+        //	console.log('ready');
+        //});
     }
     BrowserControl.prototype.start = function (port, command, url) {
         var that = this;
@@ -88,8 +88,9 @@ var BrowserControl = (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             _this._client.debugger.setScriptSource(scriptId, content, function (err) {
-                if (err)
+                if (err) {
                     reject(err);
+                }
                 resolve();
             });
         });
@@ -97,7 +98,7 @@ var BrowserControl = (function () {
     BrowserControl.prototype.evaluate = function (script) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this._client.debugger.evaluate(script, function (err) {
+            _this._client.runtime.evaluate(script, function (err) {
                 if (err)
                     reject(err);
                 resolve();

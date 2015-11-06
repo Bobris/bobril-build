@@ -4,16 +4,16 @@ interface IPageCtx extends b.IBobrilCtx {
     counter: number;
 }
 
-let headerStyle = b.styleDef({ backgroundColor: 'green', padding: 15 });
+let headerStyle = b.styleDef({ backgroundColor:"green", padding: 15 });
 
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
         ctx.counter = 0;
-        setInterval(() => { ctx.counter++; b.invalidate(); }, 1000);        
+        setInterval(() => { ctx.counter++; b.invalidate(); }, 1000);
     },
     render(ctx: IPageCtx, me: b.IBobrilNode, oldMe?: b.IBobrilCacheNode): void {
         me.children = [
-            { tag: 'h1', children: 'Hello World! ' + ctx.counter },
+            b.style({ tag: 'h1', children: 'Hello World! ' + ctx.counter }, headerStyle),
             {
                 tag: 'p',
                 children: [

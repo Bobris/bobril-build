@@ -20,7 +20,9 @@
         "!./node_modules/**/*"
     ],
     "files": [
-        "./src/app.ts",
-        "./src/lightSwitch.ts"
-    ]
+        "src/app.ts",
+        "src/lightSwitch.ts",
+        "src/lightSwitch2.ts"
+    ],
+    "exclude": []
 }

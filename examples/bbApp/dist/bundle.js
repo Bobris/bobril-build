@@ -1,9 +1,5 @@
 (function() {
-    var __export_now;;
-    var __export_invalidate;;
-    var __export_asap;;
-    var __export_ignoreClick;;
-    var __export_getDnds;;
+    var __export_now, __export_invalidate, __export_asap, __export_ignoreClick, __export_getDnds;
     if (typeof DEBUG === "undefined") DEBUG = true;
     function assert(shoudBeTrue, messageIfFalse) {
         if (DEBUG && !shoudBeTrue) throw Error(messageIfFalse || "assertion failed");
@@ -42,6 +38,7 @@
         }
         return a;
     }
+    var __export_flatten = flatten;
     var inSvg = false;
     var updateCall = [];
     var updateInstance = [];
@@ -53,6 +50,7 @@
         setValueCallback = callback;
         return prev;
     }
+    var __export_setSetValue = setSetValue;
     function newHashObj() {
         return Object.create(null);
     }
@@ -104,6 +102,7 @@
     function ieVersion() {
         return document.documentMode;
     }
+    var __export_ieVersion = ieVersion;
     function shimStyle(newValue) {
         var k = Object.keys(newValue);
         for (var i = 0, l = k.length; i < l; i++) {
@@ -367,6 +366,7 @@
         pushInitCallback(c, false);
         return c;
     }
+    var __export_createNode = createNode;
     function normalizeNode(n) {
         var t = typeof n;
         if (t === "string") {
@@ -531,11 +531,13 @@
         }
         return res;
     }
+    var __export_vdomPath = vdomPath;
     function deref(n) {
         var s = vdomPath(n);
         if (s.length == 0) return null;
         return s[s.length - 1];
     }
+    var __export_deref = deref;
     function finishUpdateNode(n, c, component) {
         if (component) {
             if (component.postRender) {
@@ -644,6 +646,7 @@
         removeNode(c);
         return r;
     }
+    var __export_updateNode = updateNode;
     function getDomNode(c) {
         var el = c.element;
         if (el != null) {
@@ -658,6 +661,7 @@
         }
         return null;
     }
+    var __export_getDomNode = getDomNode;
     function findNextNode(a, i, len, def) {
         while (++i < len) {
             var ai = a[i];
@@ -680,6 +684,7 @@
         updateCall = [];
         updateInstance = [];
     }
+    var __export_callPostCallbacks = callPostCallbacks;
     function updateNodeInUpdateChildren(newNode, cachedChildren, cachedIndex, cachedLength, createBefore, element, deepness) {
         cachedChildren[cachedIndex] = updateNode(newNode, cachedChildren[cachedIndex], element, findNextNode(cachedChildren, cachedIndex, cachedLength, createBefore), deepness);
     }
@@ -988,6 +993,7 @@
         }
         return cachedChildren;
     }
+    var __export_updateChildren = updateChildren;
     var hasNativeRaf = false;
     var nativeRaf = window.requestAnimationFrame;
     if (nativeRaf) {
@@ -1030,6 +1036,7 @@
         });
         registryEvents[name] = list;
     }
+    var __export_addEvent = addEvent;
     function emitEvent(name, ev, target, node) {
         var events = regEvents[name];
         if (events) for (var i = 0; i < events.length; i++) {
@@ -1037,6 +1044,7 @@
         }
         return false;
     }
+    var __export_emitEvent = emitEvent;
     function addListener(el, name) {
         if (name[0] == "!") return;
         var capture = name[0] == "^";
@@ -1100,11 +1108,13 @@
         beforeFrameCallback = callback;
         return res;
     }
+    var __export_setBeforeFrame = setBeforeFrame;
     function setAfterFrame(callback) {
         var res = afterFrameCallback;
         afterFrameCallback = callback;
         return res;
     }
+    var __export_setAfterFrame = setAfterFrame;
     function findLastNode(children) {
         for (var i = children.length - 1; i >= 0; i--) {
             var c = children[i];
@@ -1164,10 +1174,13 @@
         nextIgnoreShouldChange = true;
         __export_invalidate();
     }
+    var __export_ignoreShouldChange = ignoreShouldChange;
     function setInvalidate(inv) {
         var prev = __export_invalidate;
+        var __export_invalidate = inv;
         return prev;
     }
+    var __export_setInvalidate = setInvalidate;
     var __export_invalidate = function(ctx, deepness) {
         if (fullRecreateRequested) return;
         if (ctx != null) {
@@ -1202,6 +1215,7 @@
         forceInvalidate();
         return rootId;
     }
+    var __export_addRoot = addRoot;
     function removeRoot(id) {
         var root = roots[id];
         if (!root) return;
@@ -1210,9 +1224,11 @@
         }
         delete roots[id];
     }
+    var __export_removeRoot = removeRoot;
     function getRoots() {
         return roots;
     }
+    var __export_getRoots = getRoots;
     var beforeInit = forceInvalidate;
     function init(factory, element) {
         removeRoot("0");
@@ -1225,12 +1241,14 @@
         beforeInit();
         beforeInit = forceInvalidate;
     }
+    var __export_init = init;
     function setBeforeInit(callback) {
         var prevBeforeInit = beforeInit;
         beforeInit = function() {
             callback(prevBeforeInit);
         };
     }
+    var __export_setBeforeInit = setBeforeInit;
     function bubble(node, name, param) {
         while (node) {
             var c = node.component;
@@ -1249,6 +1267,7 @@
         }
         return null;
     }
+    var __export_bubble = bubble;
     function broadcastEventToNode(node, name, param) {
         if (!node) return null;
         var c = node.component;
@@ -1286,6 +1305,7 @@
         }
         return null;
     }
+    var __export_broadcast = broadcast;
     function merge(f1, f2) {
         var _this = this;
         return function() {
@@ -1325,6 +1345,7 @@
         node.component = mergeComponents(methods, comp);
         return node;
     }
+    var __export_preEnhance = preEnhance;
     function postEnhance(node, methods) {
         var comp = node.component;
         if (!comp) {
@@ -1334,6 +1355,7 @@
         node.component = mergeComponents(comp, methods);
         return node;
     }
+    var __export_postEnhance = postEnhance;
     function assign(target) {
         var sources = [];
         for (var _i = 1; _i < arguments.length; _i++) {
@@ -1353,10 +1375,12 @@
         }
         return target;
     }
+    var __export_assign = assign;
     function preventDefault(event) {
         var pd = event.preventDefault;
         if (pd) pd.call(event); else event.returnValue = false;
     }
+    var __export_preventDefault = preventDefault;
     function cloneNodeArray(a) {
         a = a.slice(0);
         for (var i = 0; i < a.length; i++) {
@@ -1387,21 +1411,27 @@
         }
         return r;
     }
+    var __export_cloneNode = cloneNode;
     function setStyleShim(name, action) {
         mapping[name] = action;
     }
+    var __export_setStyleShim = setStyleShim;
     function uptime() {
         return uptimeMs;
     }
+    var __export_uptime = uptime;
     function lastFrameDuration() {
         return lastFrameDurationMs;
     }
+    var __export_lastFrameDuration = lastFrameDuration;
     function frame() {
         return frameCounter;
     }
+    var __export_frame = frame;
     function invalidated() {
         return scheduled;
     }
+    var __export_invalidated = invalidated;
     var media = null;
     var breaks = [ [ 414, 800, 900 ], [ 736, 1280, 1440 ] ];
     function emitOnMediaChange() {
@@ -1418,6 +1448,7 @@
         }
         return breaks;
     }
+    var __export_accDeviceBreaks = accDeviceBreaks;
     var viewport = window.document.documentElement;
     function getMedia() {
         if (media == null) {
@@ -1438,6 +1469,7 @@
         }
         return media;
     }
+    var __export_getMedia = getMedia;
     var __export_asap = function() {
         var callbacks = [];
         function executeCallbacks() {
@@ -1928,15 +1960,19 @@
     function isMouseOwner(ctx) {
         return ownerCtx === ctx;
     }
+    var __export_isMouseOwner = isMouseOwner;
     function isMouseOwnerEvent() {
         return invokingOwner;
     }
+    var __export_isMouseOwnerEvent = isMouseOwnerEvent;
     function registerMouseOwner(ctx) {
         ownerCtx = ctx;
     }
+    var __export_registerMouseOwner = registerMouseOwner;
     function releaseMouseOwner() {
         ownerCtx = null;
     }
+    var __export_releaseMouseOwner = releaseMouseOwner;
     function invokeMouseOwner(handlerName, param) {
         if (ownerCtx == null) {
             return false;
@@ -2315,6 +2351,7 @@
         }
         return node;
     }
+    var __export_nodeOnPoint = nodeOnPoint;
     function handleSelectStart(ev, target, node) {
         while (node) {
             var s = node.style;
@@ -2404,6 +2441,7 @@
     function focused() {
         return currentFocusedNode;
     }
+    var __export_focused = focused;
     var focusableTag = /^input$|^select$|^textarea$|^button$/;
     function focus(node) {
         if (node == null) return false;
@@ -2432,6 +2470,7 @@
         }
         return focus(children);
     }
+    var __export_focus = focus;
     var callbacks = [];
     function emitOnScroll() {
         for (var i = 0; i < callbacks.length; i++) {
@@ -2443,6 +2482,7 @@
     function addOnScroll(callback) {
         callbacks.push(callback);
     }
+    var __export_addOnScroll = addOnScroll;
     function removeOnScroll(callback) {
         for (var i = 0; i < callbacks.length; i++) {
             if (callbacks[i] === callback) {
@@ -2451,6 +2491,7 @@
             }
         }
     }
+    var __export_removeOnScroll = removeOnScroll;
     var isHtml = /^(?:html)$/i;
     var isScrollOrAuto = /^(?:auto)$|^(?:scroll)$/i;
     function isScrollable(el) {
@@ -2464,11 +2505,13 @@
         res[1] = res[1] && el.scrollHeight > el.clientHeight;
         return res;
     }
+    var __export_isScrollable = isScrollable;
     function getWindowScroll() {
         var left = window.pageXOffset;
         var top = window.pageYOffset;
         return [ left, top ];
     }
+    var __export_getWindowScroll = getWindowScroll;
     var lastDndId = 0;
     var dnds = [];
     var systemdnd = null;
@@ -2950,6 +2993,7 @@
         }
         return null;
     }
+    var __export_anyActiveDnd = anyActiveDnd;
     addEvent("!PointerDown", 4, handlePointerDown);
     addEvent("!PointerMove", 4, handlePointerMove);
     addEvent("!PointerUp", 4, handlePointerUp);
@@ -3244,6 +3288,7 @@
         rootRoutes = rootroutes;
         init(rootNodeFactory);
     }
+    var __export_routes = routes;
     function route(config, nestedRoutes) {
         return {
             name: config.name,
@@ -3254,6 +3299,7 @@
             children: nestedRoutes
         };
     }
+    var __export_route = route;
     function routeDefault(config) {
         return {
             name: config.name,
@@ -3263,6 +3309,7 @@
             isDefault: true
         };
     }
+    var __export_routeDefault = routeDefault;
     function routeNotFound(config) {
         return {
             name: config.name,
@@ -3272,6 +3319,7 @@
             isNotFound: true
         };
     }
+    var __export_routeNotFound = routeNotFound;
     function isActive(name, params) {
         if (params) {
             for (var prop in params) {
@@ -3287,6 +3335,7 @@
         }
         return false;
     }
+    var __export_isActive = isActive;
     function urlOfRoute(name, params) {
         if (isInApp(name)) {
             var r = nameRouteMap[name];
@@ -3298,6 +3347,7 @@
         }
         return name;
     }
+    var __export_urlOfRoute = urlOfRoute;
     function link(node, name, params) {
         node.data = node.data || {};
         node.data.routeName = name;
@@ -3322,6 +3372,7 @@
         });
         return node;
     }
+    var __export_link = link;
     function createRedirectPush(name, params) {
         return {
             inApp: isInApp(name),
@@ -3330,6 +3381,7 @@
             params: params || {}
         };
     }
+    var __export_createRedirectPush = createRedirectPush;
     function createRedirectReplace(name, params) {
         return {
             inApp: isInApp(name),
@@ -3338,6 +3390,7 @@
             params: params || {}
         };
     }
+    var __export_createRedirectReplace = createRedirectReplace;
     function createBackTransition() {
         return {
             inApp: myAppHistoryDeepness > 0,
@@ -3346,6 +3399,7 @@
             params: {}
         };
     }
+    var __export_createBackTransition = createBackTransition;
     var currentTransition = null;
     var nextTransition = null;
     var transitionState = 0;
@@ -3470,15 +3524,19 @@
         transitionState = 0;
         nextIteration();
     }
+    var __export_runTransition = runTransition;
     function getRoutes() {
         return rootRoutes;
     }
+    var __export_getRoutes = getRoutes;
     function getActiveRoutes() {
         return activeRoutes;
     }
+    var __export_getActiveRoutes = getActiveRoutes;
     function getActiveParams() {
         return activeParams;
     }
+    var __export_getActiveParams = getActiveParams;
     var allStyles = newHashObj();
     var allSprites = newHashObj();
     var allNameHints = newHashObj();
@@ -3666,6 +3724,7 @@
         node.style = inlineStyle;
         return node;
     }
+    var __export_style = style;
     var uppercasePattern = /([A-Z])/g;
     var msPattern = /^ms-/;
     function hyphenateStyle(s) {
@@ -3685,6 +3744,7 @@
     function styleDef(style, pseudo, nameHint) {
         return styleDefEx(null, style, pseudo, nameHint);
     }
+    var __export_styleDef = styleDef;
     function styleDefEx(parent, style, pseudo, nameHint) {
         if (nameHint && nameHint !== "b-") {
             if (allNameHints[nameHint]) {
@@ -3706,10 +3766,12 @@
         invalidateStyles();
         return nameHint;
     }
+    var __export_styleDefEx = styleDefEx;
     function invalidateStyles() {
         rebuildStyles = true;
         __export_invalidate();
     }
+    var __export_invalidateStyles = invalidateStyles;
     function updateSprite(spDef) {
         var stDef = allStyles[spDef.styleid];
         var style = {
@@ -3841,6 +3903,7 @@
         allSprites[key] = spDef;
         return styleid;
     }
+    var __export_sprite = sprite;
     var bundlePath = "bundle.png";
     function spriteb(width, height, left, top) {
         var url = bundlePath;
@@ -3863,12 +3926,15 @@
         allSprites[key] = spDef;
         return styleid;
     }
+    var __export_spriteb = spriteb;
     function spritebc(color, width, height, left, top) {
         return sprite(bundlePath, color, width, height, left, top);
     }
+    var __export_spritebc = spritebc;
     function asset(path) {
         return path;
     }
+    var __export_asset = asset;
     function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
         var angleInRadians = angleInDegrees * Math.PI / 180;
         return {
@@ -3905,16 +3971,20 @@
         }
         return p + svgDescribeArc(x, y, radiusSmall, endAngle, startAngle, nextWithLine) + "Z";
     }
+    var __export_svgPie = svgPie;
     function svgCircle(x, y, radius) {
         return svgDescribeArc(x, y, radius, 0, 360, false);
     }
+    var __export_svgCircle = svgCircle;
     function svgRect(x, y, width, height) {
         return "M" + x + " " + y + "h" + width + "v" + height + "h" + -width + "Z";
     }
+    var __export_svgRect = svgRect;
     function withKey(node, key) {
         node.key = key;
         return node;
     }
+    var __export_withKey = withKey;
     function styledDiv(children) {
         var styles = [];
         for (var _i = 1; _i < arguments.length; _i++) {
@@ -3925,6 +3995,7 @@
             children: children
         }, styles);
     }
+    var __export_styledDiv = styledDiv;
     function createVirtualComponent(component) {
         return function(data, children) {
             if (children !== undefined) data.children = children;
@@ -3934,6 +4005,7 @@
             };
         };
     }
+    var __export_createVirtualComponent = createVirtualComponent;
     function createComponent(component) {
         var originalRender = component.render;
         if (originalRender) {
@@ -3954,11 +4026,13 @@
             };
         };
     }
+    var __export_createComponent = createComponent;
     function createDerivedComponent(original, after) {
         var originalComponent = original({}).component;
         var merged = mergeComponents(originalComponent, after);
         return createVirtualComponent(merged);
     }
+    var __export_createDerivedComponent = createDerivedComponent;
     if (!window.b) window.b = {
         deref: deref,
         getRoots: getRoots,
@@ -3969,13 +4043,13 @@
         setBeforeFrame: setBeforeFrame,
         getDnds: __export_getDnds
     };
-    var headerStyle = styleDef(function() {
+    var headerStyle = __export_styleDef(function() {
         return [ {
             backgroundColor: "green",
             padding: 15
         } ];
     }, null, "headerStyle");
-    var page = createVirtualComponent({
+    var page = __export_createVirtualComponent({
         init: function(ctx) {
             ctx.counter = 0;
             setInterval(function() {
@@ -3984,10 +4058,10 @@
             }, 1e3);
         },
         render: function(ctx, me, oldMe) {
-            me.children = [ {
+            me.children = [ __export_style({
                 tag: "h1",
                 children: "Hello World! " + ctx.counter
-            }, {
+            }, headerStyle), {
                 tag: "p",
                 children: [ "See examples on ", {
                     tag: "a",
@@ -3999,7 +4073,7 @@
             } ];
         }
     });
-    init(function() {
+    __export_init(function() {
         return page({});
     });
 })();

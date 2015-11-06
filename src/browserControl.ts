@@ -14,30 +14,30 @@ export interface IBrowserControl {
 
 export class BrowserControl implements IBrowserControl {
 	constructor() {
+		let that = this;
 		this._scripts = [];
 		this._client = rdbg.createClient();
 		this._client.on('close', () => {
-			console.log('close');
+			console.log('debugger disconnected');
 		});
 		this._client.on('connect', () => {
-			console.log('connect');
 
 			this._client.debugger.on('clear', function() {
-				console.log('clear');
-				this._scripts = [];
+				that._scripts = [];
 			});
 
 			this._client.debugger.on('scriptParse', function(script) {
-				console.log('parse ', script);
-				this._scripts.push(script);
+				if (script.url!="") {
+					that._scripts.push(script);
+				}
 			});
 			this._client.debugger.enable(()=>{
 				console.log('debugger enabled');
 			});
 		});
-		this._client.on('ready', () => {
-			console.log('ready');
-		});
+		//this._client.on('ready', () => {
+		//	console.log('ready');
+		//});
 	}
 
 	private _target: any;
@@ -109,7 +109,9 @@ export class BrowserControl implements IBrowserControl {
 	setScriptSource(scriptId:string, content:string): Promise<any> {
 		return new Promise((resolve, reject)=>{
 			this._client.debugger.setScriptSource(scriptId, content, (err)=>{
-				if (err) reject(err);
+				if (err) {
+					reject(err);
+				}
 				resolve();
 			});
 		});
@@ -117,7 +119,7 @@ export class BrowserControl implements IBrowserControl {
 	
 	evaluate(script:string): Promise<any> {
 		return new Promise((resolve, reject)=>{
-			this._client.debugger.evaluate(script,(err)=>{
+			this._client.runtime.evaluate(script,(err)=>{
 				if (err) reject(err);
 				resolve();
 			});

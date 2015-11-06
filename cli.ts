@@ -170,6 +170,12 @@ export function run() {
             });
         });
     }).on('all', bb.debounce((v, v2) => {
-        compile();
+        compile().then(()=>{
+            let scriptUrl = browserControl.listScriptUrls()[0];
+            let scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
+            browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(()=>{
+                browserControl.evaluate("b.invalidateStyles();b.ignoreShouldChange();"); 
+            });
+        });
     }));
 }
