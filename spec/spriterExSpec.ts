@@ -12,6 +12,6 @@ describe("spriter", () => {
 		add(40,40,10);
         let dim = spriter.spritePlace(a);
 		//console.log(a);
-        expect(dim).toEqual([300, 180]);
+        expect(dim).toEqual([306, 183]);
     });
 });

@@ -131,6 +131,8 @@ describe("evalNode", () => {
             } catch (err) {
                 expc = "New Test";
             }
+            expc=expc.replace(/\r\n/g,'\n');
+            accc=accc.replace(/\r\n/g,'\n');
             expect(accc).toEqual(expc);
         });
     });
