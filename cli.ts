@@ -1,54 +1,40 @@
-import * as bb from './index';
-import * as chokidar from 'chokidar';
-import * as fs from 'fs';
+import * as childProcess from 'child_process';
 import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+import * as fs from "fs";
 
-let bbPackageJson: any;
-
-function loadBBPackage() {
+function printIntroLine() {
     let pp = pathPlatformDependent.join(__dirname, 'package.json');
-    bbPackageJson=JSON.parse(fs.readFileSync(pp, 'utf8'))
+    let bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
+    console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
 }
 
-function debounce(func: Function, wait: number = 100, immediate?: boolean): Function {
-    var timeout, args, context, timestamp, result;
-
-    function later() {
-        let last = Date.now() - timestamp;
-
-        if (last < wait && last > 0) {
-            timeout = setTimeout(later, wait - last);
+function backgroundProcess() {
+    let commands = Object.create(null);
+    process.on("message", ({ command, param }) => {
+        if (commands[command]) {
+            require('./src/'+commands[command])[command](param);
         } else {
-            timeout = null;
-            if (!immediate) {
-                result = func.apply(context, args);
-                if (!timeout) context = args = null;
-            }
+            process.send({ command:"error", param: "Unknown command "+command });            
         }
-    };
-
-    return function debounced() {
-        context = this;
-        args = arguments;
-        timestamp = Date.now();
-        var callNow = immediate && !timeout;
-        if (!timeout) timeout = setTimeout(later, wait);
-        if (callNow) {
-            result = func.apply(context, args);
-            context = args = null;
-        }
-
-        return result;
-    };
-};
-
-export function run() {
-    loadBBPackage();
-    console.log('Bobril-build ' + bbPackageJson.version +' - ' + process.cwd());
-    let startWatching = Date.now();
-    chokidar.watch(['**/*.ts', '**/tsconfig.json'], { ignoreInitial: true }).once('ready', () => {
-        console.log('Watching in ' + (Date.now() - startWatching).toFixed(0)+'ms');
-    }).on('all', debounce((v,v2) => {
-        console.log('Something changed a '+v+' '+v2);
-    }));
+    });
+    function register(name:string, file:string) {
+        commands[name] = file;
+    }
+    register("ping","backgroundBasicCommands");
+    register("stop","backgroundBasicCommands");
+    register("watch","backgroundWatchCommands");
+    register("initProject","backgroundCompileCommands");
+    register("compile","backgroundCompileCommands");
 }
+
+function run() {
+    if (process.argv[2] === "background") {
+        backgroundProcess();
+        return;
+    }
+    printIntroLine();
+    require("./src/cliMain").run();
+}
+
+run();

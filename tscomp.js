@@ -128,7 +128,7 @@ function typeScriptCompile(tsconfig, rebuild) {
 	tsconfigjson["compilerOptions"]["moduleResolution"]="node";
 	tsconfigjson["compilerOptions"]["target"]="es5";
 	tsconfigjson["compilerOptions"]["module"]="commonjs";
-	var tscmd = ts.parseConfigFile(tsconfigjson, null, curDir);
+	var tscmd = ts.parseJsonConfigFileContent(tsconfigjson, null, curDir);
 	if (tscmd.errors.length) {
 		reportDiagnostics(tscmd.errors);
 		return 1;

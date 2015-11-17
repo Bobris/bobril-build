@@ -1,0 +1,1 @@
+!function(){a:for(;;)for(;;)if(Math.random()>.5)break a}();

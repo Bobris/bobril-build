@@ -14,10 +14,10 @@ function evalNode(n, tc, resolveStringLiteral) {
             var nn = n;
             return parseFloat(nn.text);
         }
-        case 97 /* TrueKeyword */: return true;
-        case 82 /* FalseKeyword */: return false;
-        case 91 /* NullKeyword */: return null;
-        case 177 /* PrefixUnaryExpression */: {
+        case 99 /* TrueKeyword */: return true;
+        case 84 /* FalseKeyword */: return false;
+        case 93 /* NullKeyword */: return null;
+        case 179 /* PrefixUnaryExpression */: {
             var nn = n;
             var operand = evalNode(nn.operand, tc, resolveStringLiteral);
             if (operand !== undefined) {
@@ -29,10 +29,10 @@ function evalNode(n, tc, resolveStringLiteral) {
                     case 36 /* MinusToken */:
                         op = "-";
                         break;
-                    case 49 /* TildeToken */:
+                    case 50 /* TildeToken */:
                         op = "~";
                         break;
-                    case 48 /* ExclamationToken */:
+                    case 49 /* ExclamationToken */:
                         op = "!";
                         break;
                     default: return undefined;
@@ -42,18 +42,18 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 179 /* BinaryExpression */: {
+        case 181 /* BinaryExpression */: {
             var nn = n;
             var left = evalNode(nn.left, tc, resolveStringLiteral);
             var right = evalNode(nn.right, tc, null);
             if (left !== undefined && right !== undefined) {
                 var op = null;
                 switch (nn.operatorToken.kind) {
-                    case 51 /* BarBarToken */:
-                    case 50 /* AmpersandAmpersandToken */:
-                    case 46 /* BarToken */:
-                    case 47 /* CaretToken */:
-                    case 45 /* AmpersandToken */:
+                    case 52 /* BarBarToken */:
+                    case 51 /* AmpersandAmpersandToken */:
+                    case 47 /* BarToken */:
+                    case 48 /* CaretToken */:
+                    case 46 /* AmpersandToken */:
                     case 30 /* EqualsEqualsToken */:
                     case 31 /* ExclamationEqualsToken */:
                     case 32 /* EqualsEqualsEqualsToken */:
@@ -62,16 +62,16 @@ function evalNode(n, tc, resolveStringLiteral) {
                     case 27 /* GreaterThanToken */:
                     case 28 /* LessThanEqualsToken */:
                     case 29 /* GreaterThanEqualsToken */:
-                    case 89 /* InstanceOfKeyword */:
-                    case 88 /* InKeyword */:
-                    case 42 /* LessThanLessThanToken */:
-                    case 43 /* GreaterThanGreaterThanToken */:
-                    case 44 /* GreaterThanGreaterThanGreaterThanToken */:
+                    case 91 /* InstanceOfKeyword */:
+                    case 90 /* InKeyword */:
+                    case 43 /* LessThanLessThanToken */:
+                    case 44 /* GreaterThanGreaterThanToken */:
+                    case 45 /* GreaterThanGreaterThanGreaterThanToken */:
                     case 35 /* PlusToken */:
                     case 36 /* MinusToken */:
                     case 37 /* AsteriskToken */:
-                    case 38 /* SlashToken */:
-                    case 39 /* PercentToken */:
+                    case 39 /* SlashToken */:
+                    case 40 /* PercentToken */:
                         op = nn.operatorToken.getText();
                         break;
                     default: return undefined;
@@ -81,7 +81,7 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 180 /* ConditionalExpression */: {
+        case 182 /* ConditionalExpression */: {
             var nn = n;
             var cond = evalNode(nn.condition, tc, null);
             if (cond === undefined)
@@ -89,33 +89,69 @@ function evalNode(n, tc, resolveStringLiteral) {
             var e = cond ? nn.whenTrue : nn.whenFalse;
             return evalNode(e, tc, resolveStringLiteral);
         }
-        case 67 /* Identifier */:
-        case 164 /* PropertyAccessExpression */: {
+        case 227 /* ExportAssignment */: {
+            var nn = n;
+            return evalNode(nn.expression, tc, resolveStringLiteral);
+        }
+        case 69 /* Identifier */:
+        case 166 /* PropertyAccessExpression */: {
             var s = tc.getSymbolAtLocation(n);
-            if (s.flags & 3 /* Variable */) {
+            if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 166 /* PropertyAccessExpression */) {
+                if (s.declarations.length !== 1)
+                    return undefined;
+                var decl = s.declarations[0];
+                return evalNode(decl, tc, resolveStringLiteral);
+            }
+            else if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 69 /* Identifier */) {
+                if (s.declarations.length !== 1)
+                    return undefined;
+                var decl = s.declarations[0];
+                if (decl.kind !== 226 /* ImportSpecifier */)
+                    return undefined;
+                if (decl.parent && decl.parent.parent && decl.parent.parent.parent && decl.parent.parent.parent.kind === 222 /* ImportDeclaration */) {
+                    var impdecl = decl.parent.parent.parent;
+                    var s2 = tc.getSymbolAtLocation(impdecl.moduleSpecifier);
+                    if (s2 && s2.exports[decl.propertyName.text]) {
+                        var s3 = s2.exports[decl.propertyName.text];
+                        var exportAssign = s3.declarations[0];
+                        return evalNode(exportAssign, tc, resolveStringLiteral);
+                    }
+                }
+            }
+            else if (((s.flags & 4 /* Property */) !== 0) && n.kind === 166 /* PropertyAccessExpression */) {
+                var obj = evalNode(n.expression, tc, resolveStringLiteral);
+                if (typeof obj !== "object")
+                    return undefined;
+                var name_1 = n.name.text;
+                return obj[name_1];
+            }
+            else if (s.flags & 3 /* Variable */) {
                 if (s.valueDeclaration.parent.flags & 32768 /* Const */) {
                     return evalNode(s.valueDeclaration.initializer, tc, resolveStringLiteral);
                 }
             }
             return undefined;
         }
-        case 169 /* TypeAssertionExpression */: {
+        case 171 /* TypeAssertionExpression */: {
             var nn = n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
         }
-        case 163 /* ObjectLiteralExpression */: {
+        case 165 /* ObjectLiteralExpression */: {
             var ole = n;
             var res = {};
             for (var i = 0; i < ole.properties.length; i++) {
                 var prop = ole.properties[i];
-                if (prop.kind === 243 /* PropertyAssignment */ && (prop.name.kind === 67 /* Identifier */ || prop.name.kind === 9 /* StringLiteral */)) {
-                    var name_1 = prop.name.kind === 67 /* Identifier */ ? prop.name.text : prop.name.text;
-                    res[name_1] = evalNode(prop.initializer, tc, resolveStringLiteral);
+                if (prop.kind === 245 /* PropertyAssignment */ && (prop.name.kind === 69 /* Identifier */ || prop.name.kind === 9 /* StringLiteral */)) {
+                    var name_2 = prop.name.kind === 69 /* Identifier */ ? prop.name.text : prop.name.text;
+                    res[name_2] = evalNode(prop.initializer, tc, resolveStringLiteral);
                 }
             }
             return res;
         }
-        default: return undefined;
+        default: {
+            //console.log((<any>ts).SyntaxKind[n.kind]);
+            return undefined;
+        }
     }
 }
 exports.evalNode = evalNode;

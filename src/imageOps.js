@@ -7,17 +7,53 @@ function cloneImage(img) {
     return res;
 }
 exports.cloneImage = cloneImage;
+var rgbaRegex = /\s*rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d+|\d*\.\d+)\s*\)\s*/;
 function replaceColor(img, color) {
-    var width = img.width, height = img.height, data = img.data;
-    var cred = parseInt(color.substr(1, 2), 16);
-    var cgreen = parseInt(color.substr(3, 2), 16);
-    var cblue = parseInt(color.substr(5, 2), 16);
-    var len = width * height * 4;
-    for (var i = 0; i < len; i += 4) {
-        if (data[i] === 0x80 && data[i + 1] === 0x80 && data[i + 2] === 0x80) {
-            data[i] = cred;
-            data[i + 1] = cgreen;
-            data[i + 2] = cblue;
+    var width = img.width, height = img.height, imgd = img.data;
+    var rgba = rgbaRegex.exec(color);
+    var cred, cgreen, cblue, calpha;
+    if (rgba) {
+        cred = parseInt(rgba[1], 10);
+        cgreen = parseInt(rgba[2], 10);
+        cblue = parseInt(rgba[3], 10);
+        calpha = Math.round(parseFloat(rgba[4]) * 255);
+    }
+    else {
+        cred = parseInt(color.substr(1, 2), 16);
+        cgreen = parseInt(color.substr(3, 2), 16);
+        cblue = parseInt(color.substr(5, 2), 16);
+        calpha = parseInt(color.substr(7, 2), 16) || 0xff;
+    }
+    if (calpha === 0xff) {
+        for (var i = 0; i < imgd.length; i += 4) {
+            // Horrible workaround for imprecisions due to browsers using premultiplied alpha internally for canvas
+            var red = imgd[i];
+            if (red === imgd[i + 1] && red === imgd[i + 2] && (red === 0x80 || imgd[i + 3] < 0xff && red > 0x70)) {
+                imgd[i] = cred;
+                imgd[i + 1] = cgreen;
+                imgd[i + 2] = cblue;
+            }
+        }
+    }
+    else {
+        for (var i = 0; i < imgd.length; i += 4) {
+            var red = imgd[i];
+            var alpha = imgd[i + 3];
+            if (red === imgd[i + 1] && red === imgd[i + 2] && (red === 0x80 || alpha < 0xff && red > 0x70)) {
+                if (alpha === 0xff) {
+                    imgd[i] = cred;
+                    imgd[i + 1] = cgreen;
+                    imgd[i + 2] = cblue;
+                    imgd[i + 3] = calpha;
+                }
+                else {
+                    alpha = alpha * (1.0 / 255);
+                    imgd[i] = Math.round(cred * alpha);
+                    imgd[i + 1] = Math.round(cgreen * alpha);
+                    imgd[i + 2] = Math.round(cblue * alpha);
+                    imgd[i + 3] = Math.round(calpha * alpha);
+                }
+            }
         }
     }
 }

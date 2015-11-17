@@ -208,15 +208,45 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 
-export function setArgument(callExpression: ts.CallExpression, index: number, value: string | number | boolean): void {
+export function setArgumentAst(callExpression: ts.CallExpression, index: number, value: ts.Expression): void {
     while (callExpression.arguments.length < index) {
         callExpression.arguments.push(<ts.Expression>createNodeFromValue(null));
     }
     if (callExpression.arguments.length === index) {
-        callExpression.arguments.push(<ts.Expression>createNodeFromValue(value));
+        callExpression.arguments.push(value);
     } else {
-        callExpression.arguments[index] = <ts.Expression>createNodeFromValue(value);
+        callExpression.arguments[index] = value;
     }
+}
+
+function createNodeArray<T extends ts.Node>(len: number): ts.NodeArray<T> {
+    let arr = [];
+    while (len-- > 0) arr.push(null);
+    let res = <ts.NodeArray<T>>arr;
+    res.pos = -1;
+    res.end = -1;
+    return res;
+}
+
+export function buildLambdaReturningArray(values: ts.Expression[]): ts.Expression {
+    let pos = values[0].pos;
+    let end = values[values.length - 1].end;
+    let fn = <ts.ArrowFunction>ts.createNode(ts.SyntaxKind.ArrowFunction);
+    fn.parameters = createNodeArray<ts.ParameterDeclaration>(0);
+    fn.equalsGreaterThanToken = ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
+    let body = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
+    body.elements = createNodeArray<ts.Expression>(0);
+    body.elements.push(...values);
+    body.pos = pos;
+    body.end = end;
+    fn.body = body;
+    fn.pos = pos;
+    fn.end = end;
+    return fn;
+}
+
+export function setArgument(callExpression: ts.CallExpression, index: number, value: string | number | boolean): void {
+    setArgumentAst(callExpression, index, <ts.Expression>createNodeFromValue(value));
 }
 
 export function setArgumentCount(callExpression: ts.CallExpression, count: number) {

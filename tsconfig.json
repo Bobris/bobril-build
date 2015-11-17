@@ -1,28 +1,57 @@
 {
-    "version": "1.6.0",
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
         "declaration": false,
         "noImplicitAny": false,
         "removeComments": false,
+        "moduleResolution": "node",
         "noLib": false
     },
     "compileOnSave": false,
     "filesGlob": [
         "./cli.ts",
         "./index.ts",
+        "./src/*.ts",
+        "./spec/*.ts",
         "./node_modules/typescript/lib/typescript.d.ts",
+        "./typings/uglifyjs/**/*.d.ts",
         "./typings/chokidar/**/*.d.ts",
         "./typings/node/**/*.d.ts",
-        "./typings/png-async/**/*.d.ts"
+        "./typings/png-async/**/*.d.ts",
+        "./typings/jasmine/jasmine.d.ts"
     ],
     "files": [
-        "./cli.ts",
-        "./index.ts",
-        "./node_modules/typescript/lib/typescript.d.ts",
-        "./typings/chokidar/chokidar.d.ts",
-        "./typings/node/node.d.ts",
-        "./typings/png-async/png-async.d.ts"
-    ]
+        "cli.ts",
+        "index.ts",
+        "src/bobrilDepsHelpers.ts",
+        "src/buildHelpers.ts",
+        "src/bundler.ts",
+        "src/compilationCache.ts",
+        "src/debounce.ts",
+        "src/evalNode.ts",
+        "src/imageOps.ts",
+        "src/imgCache.ts",
+        "src/pathUtils.ts",
+        "src/spriter.ts",
+        "src/translationCache.ts",
+        "src/browserControl.ts",
+        "src/backgroundBasicCommands.ts",
+        "src/backgroundWatchCommands.ts",
+        "src/backgroundCompileCommands.ts",
+        "src/cliMain.ts",
+        "spec/bundlerSpec.ts",
+        "spec/compilationCacheSpec.ts",
+        "spec/evalNodeSpec.ts",
+        "spec/imageOpsSpec.ts",
+        "spec/spriterSpec.ts",
+        "spec/spriterExSpec.ts",
+        "node_modules/typescript/lib/typescript.d.ts",
+        "typings/uglifyjs/uglifyjs.d.ts",
+        "typings/chokidar/chokidar.d.ts",
+        "typings/node/node.d.ts",
+        "typings/png-async/png-async.d.ts",
+        "typings/jasmine/jasmine.d.ts"
+    ],
+    "exclude": []
 }

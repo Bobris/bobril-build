@@ -8,6 +8,7 @@ require('bluebird');
 var BuildHelpers = require('./buildHelpers');
 var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
 var pathUtils = require('./pathUtils');
+var bundler = require('./bundler');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
@@ -55,6 +56,15 @@ var CompilationCache = (function () {
         project.logCallback = project.logCallback || (function (text) { return console.log(text); });
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
+        var jsWriteFileCallback = project.writeFileCallback;
+        if (project.totalBundle) {
+            if (project.options.module != 1 /* CommonJS */)
+                throw Error('Total bundle works only with CommonJS modules');
+            project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            jsWriteFileCallback = function (filename, content) {
+                project.commonJsTemp[filename.toLowerCase()] = content;
+            };
+        }
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
@@ -62,11 +72,14 @@ var CompilationCache = (function () {
         for (var i = 0; i < mainList.length; i++) {
             var main = mainList[i];
             var mainCache = this.calcMaxTimeForDeps(main, project.dir);
-            if (mainCache.maxTimeForDeps !== null || project.spriteMerge != null || project.textForTranslationReplacer != null) {
+            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge || project.textForTranslationReplacer != null) {
                 mainChangedList.push(main);
             }
         }
-        var program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
+        if (mainChangedList.length === 0) {
+            return Promise.resolve(null);
+        }
+        var program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         var diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
@@ -98,6 +111,8 @@ var CompilationCache = (function () {
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
+                cached.maxTimeForDeps = undefined; // invalidate to recalculate fresness of dependencies
+                this.calcMaxTimeForDeps(src.fileName, project.dir);
             }
             if (project.spriteMerge) {
                 var info = cached.info;
@@ -132,19 +147,19 @@ var CompilationCache = (function () {
         }
         prom = prom.then(function () {
             for (var i = 0; i < sourceFiles.length; i++) {
+                var restorationMemory = [];
                 var src = sourceFiles[i];
                 if (src.hasNoDefaultLib)
                     continue; // skip searching default lib
                 var cached = _this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
-                    && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+                    && !project.spriteMerge && project.textForTranslationReplacer == null) {
                     continue;
                 }
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
                     _this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     _this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
                 }
-                var restorationMemory = [];
                 var info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
                     for (var j = 0; j < info.sprites.length; j++) {
@@ -190,28 +205,40 @@ var CompilationCache = (function () {
                 }
                 for (var j = 0; j < info.styleDefs.length; j++) {
                     var sd = info.styleDefs[j];
+                    var remembered = false;
+                    var skipEx = sd.isEx ? 1 : 0;
+                    if (project.liveReloadStyleDefs) {
+                        remembered = true;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        BuildHelpers.setArgumentAst(sd.callExpression, skipEx, BuildHelpers.buildLambdaReturningArray(sd.callExpression.arguments.slice(skipEx, 2 + skipEx)));
+                        BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
+                    }
                     if (project.debugStyleDefs) {
                         var name_1 = sd.name;
                         if (sd.userNamed)
                             continue;
                         if (!name_1)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
-                        BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name_1);
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + skipEx);
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, name_1);
                     }
                     else if (project.releaseStyleDefs) {
-                        if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                        if (sd.callExpression.arguments.length <= 2 + skipEx)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
                     }
                 }
                 program.emit(src);
+                cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
                 for (var j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
                 }
-                cached.outputTime = cached.maxTimeForDeps;
             }
             var jsFiles = Object.keys(project.depJsFiles);
             for (var i = 0; i < jsFiles.length; i++) {
@@ -227,8 +254,42 @@ var CompilationCache = (function () {
                         project.logCallback('Error: Dependent ' + jsFile + ' failed to load');
                         continue;
                     }
-                    project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    cached.outputTime = cached.textTime;
                 }
+            }
+            if (project.totalBundle) {
+                var mainJsList = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
+                var that = _this;
+                var bp = {
+                    compress: project.compress,
+                    mangle: project.mangle,
+                    beautify: project.beautify,
+                    defines: project.defines,
+                    getMainFiles: function () { return mainJsList; },
+                    checkFileModification: function (name) {
+                        if (/\.js$/i.test(name)) {
+                            var cached_1 = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                            if (cached_1.curTime != null)
+                                return cached_1.outputTime;
+                        }
+                        var cached = that.getCachedFileContent(name, project.dir);
+                        return cached.curTime;
+                    },
+                    readContent: function (name) {
+                        var jsout = project.commonJsTemp[name.toLowerCase()];
+                        if (jsout !== undefined)
+                            return jsout.toString('utf-8');
+                        var cached = that.getCachedFileContent(name, project.dir);
+                        if (cached.textTime == null)
+                            throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                        return cached.text;
+                    },
+                    writeBundle: function (content) {
+                        project.writeFileCallback('bundle.js', new Buffer(content));
+                    }
+                };
+                bundler.bundle(bp);
             }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
@@ -236,6 +297,17 @@ var CompilationCache = (function () {
             return null;
         });
         return prom;
+    };
+    CompilationCache.prototype.copyToProjectIfChanged = function (name, dir, outName, write) {
+        var cache = this.getCachedFileExistence(name, dir);
+        if (cache.curTime == null) {
+            throw Error('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+        }
+        if (cache.outputTime == null || cache.curTime > cache.outputTime) {
+            var buf = fs.readFileSync(cache.fullName);
+            write(outName, buf);
+            cache.outputTime = cache.curTime;
+        }
     };
     CompilationCache.prototype.addDepJsToOutput = function (project, srcDir, name) {
         project.depJsFiles[path.join(srcDir, name)] = name;
@@ -316,6 +388,7 @@ var CompilationCache = (function () {
                 }
             }
         }
+        return cached;
     };
     CompilationCache.prototype.createCompilerHost = function (cc, project, writeFileCallback) {
         var currentDirectory = project.dir;

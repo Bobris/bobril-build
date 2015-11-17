@@ -1,52 +1,37 @@
-var chokidar = require('chokidar');
-var fs = require('fs');
 var pathPlatformDependent = require("path");
-var bbPackageJson;
-function loadBBPackage() {
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+var fs = require("fs");
+function printIntroLine() {
     var pp = pathPlatformDependent.join(__dirname, 'package.json');
-    bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
+    var bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
+    console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
 }
-function debounce(func, wait, immediate) {
-    if (wait === void 0) { wait = 100; }
-    var timeout, args, context, timestamp, result;
-    function later() {
-        var last = Date.now() - timestamp;
-        if (last < wait && last > 0) {
-            timeout = setTimeout(later, wait - last);
+function backgroundProcess() {
+    var commands = Object.create(null);
+    process.on("message", function (_a) {
+        var command = _a.command, param = _a.param;
+        if (commands[command]) {
+            require('./src/' + commands[command])[command](param);
         }
         else {
-            timeout = null;
-            if (!immediate) {
-                result = func.apply(context, args);
-                if (!timeout)
-                    context = args = null;
-            }
+            process.send({ command: "error", param: "Unknown command " + command });
         }
+    });
+    function register(name, file) {
+        commands[name] = file;
     }
-    ;
-    return function debounced() {
-        context = this;
-        args = arguments;
-        timestamp = Date.now();
-        var callNow = immediate && !timeout;
-        if (!timeout)
-            timeout = setTimeout(later, wait);
-        if (callNow) {
-            result = func.apply(context, args);
-            context = args = null;
-        }
-        return result;
-    };
+    register("ping", "backgroundBasicCommands");
+    register("stop", "backgroundBasicCommands");
+    register("watch", "backgroundWatchCommands");
+    register("initProject", "backgroundCompileCommands");
+    register("compile", "backgroundCompileCommands");
 }
-;
 function run() {
-    loadBBPackage();
-    console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
-    var startWatching = Date.now();
-    chokidar.watch(['**/*.ts', '**/tsconfig.json'], { ignoreInitial: true }).once('ready', function () {
-        console.log('Watching in ' + (Date.now() - startWatching).toFixed(0) + 'ms');
-    }).on('all', debounce(function (v, v2) {
-        console.log('Something changed a ' + v + ' ' + v2);
-    }));
+    if (process.argv[2] === "background") {
+        backgroundProcess();
+        return;
+    }
+    printIntroLine();
+    require("./src/cliMain").run();
 }
-exports.run = run;
+run();

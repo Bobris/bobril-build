@@ -117,7 +117,7 @@ describe("evalNode", function () {
             var tc = program.getTypeChecker();
             var mainsource = program.getSourceFile("main.ts");
             function visit(n) {
-                if (n.kind === 166 /* CallExpression */) {
+                if (n.kind === 168 /* CallExpression */) {
                     var ce = n;
                     if (ce.expression.getText() === "console.log") {
                         if (ce.arguments.length === 1) {
@@ -142,6 +142,8 @@ describe("evalNode", function () {
             catch (err) {
                 expc = "New Test";
             }
+            expc = expc.replace(/\r\n/g, '\n');
+            accc = accc.replace(/\r\n/g, '\n');
             expect(accc).toEqual(expc);
         });
     });

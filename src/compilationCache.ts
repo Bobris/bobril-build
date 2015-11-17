@@ -10,6 +10,7 @@ require('bluebird');
 import * as BuildHelpers from './buildHelpers';
 import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
+import * as bundler from './bundler';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -28,7 +29,7 @@ function reportDiagnostics(diagnostics, logcb: (text: string) => void) {
     }
 }
 
-interface ICacheFile {
+export interface ICacheFile {
     fullName: string;
     text?: string;
     textTime?: number;
@@ -55,14 +56,28 @@ export interface IProject {
     writeFileCallback?: (filename: string, content: Buffer) => void;
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
+    liveReloadStyleDefs?: boolean;
     spriteMerge?: boolean;
     remapImages?: (filename: string) => string;
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
     textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
+    htmlTitle?: string;
+    mainJsFile?: string;
+    // default false
+    totalBundle?: boolean;
+    // default true
+    compress?: boolean;
+    // default true
+    mangle?: boolean;
+    // default false
+    beautify?: boolean;
+    defines?: { [name: string]: any };
 
+    lastwrittenIndexHtml?: string;
     imgBundleCache?: imgCache.ImgBundleCache;
     depJsFiles?: { [name: string]: string };
     moduleMap?: { [name: string]: { defFile: string, jsFile: string, isDefOnly: boolean, internalModule: boolean } };
+    commonJsTemp?: { [name: string]: Buffer };
 }
 
 export class CompilationCache {
@@ -106,6 +121,15 @@ export class CompilationCache {
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
+        let jsWriteFileCallback = project.writeFileCallback;
+        if (project.totalBundle) {
+            if (project.options.module != ts.ModuleKind.CommonJS)
+                throw Error('Total bundle works only with CommonJS modules');
+            project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            jsWriteFileCallback = (filename: string, content: Buffer) => {
+                project.commonJsTemp[filename.toLowerCase()] = content;
+            };
+        }
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
@@ -113,11 +137,14 @@ export class CompilationCache {
         for (let i = 0; i < mainList.length; i++) {
             let main = mainList[i];
             let mainCache = this.calcMaxTimeForDeps(main, project.dir);
-            if (mainCache.maxTimeForDeps !== null || project.spriteMerge != null || project.textForTranslationReplacer != null) {
+            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge || project.textForTranslationReplacer != null) {
                 mainChangedList.push(main);
             }
         }
-        let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, project.writeFileCallback));
+        if (mainChangedList.length === 0) {
+            return Promise.resolve(null);
+        }
+        let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
         reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
@@ -149,6 +176,8 @@ export class CompilationCache {
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
+                cached.maxTimeForDeps = undefined; // invalidate to recalculate fresness of dependencies
+                this.calcMaxTimeForDeps(src.fileName, project.dir);
             }
             if (project.spriteMerge) {
                 let info = cached.info;
@@ -185,18 +214,18 @@ export class CompilationCache {
 
         prom = prom.then(() => {
             for (let i = 0; i < sourceFiles.length; i++) {
+                let restorationMemory = <(() => void)[]>[];
                 let src = sourceFiles[i];
                 if (src.hasNoDefaultLib) continue; // skip searching default lib
                 let cached = this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
-                    && project.spriteMerge == null && project.textForTranslationReplacer == null) {
+                    && !project.spriteMerge && project.textForTranslationReplacer == null) {
                     continue;
                 }
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
                     this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
                 }
-                let restorationMemory = <(() => void)[]>[];
                 let info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
@@ -242,27 +271,40 @@ export class CompilationCache {
                 }
                 for (let j = 0; j < info.styleDefs.length; j++) {
                     let sd = info.styleDefs[j];
+                    let remembered = false;
+                    let skipEx = sd.isEx ? 1 : 0;
+                    if (project.liveReloadStyleDefs) {
+                        remembered = true;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        BuildHelpers.setArgumentAst(sd.callExpression, skipEx, BuildHelpers.buildLambdaReturningArray(sd.callExpression.arguments.slice(skipEx, 2 + skipEx)));
+                        BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
+                    }
                     if (project.debugStyleDefs) {
                         let name = sd.name;
                         if (sd.userNamed) continue;
                         if (!name)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + (sd.isEx ? 1 : 0));
-                        BuildHelpers.setArgument(sd.callExpression, 2 + (sd.isEx ? 1 : 0), name);
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + skipEx);
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, name);
                     } else if (project.releaseStyleDefs) {
-                        if (sd.callExpression.arguments.length === 2 + (sd.isEx ? 1 : 0))
+                        if (sd.callExpression.arguments.length <= 2 + skipEx)
                             continue;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
-                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + (sd.isEx ? 1 : 0));
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
                     }
                 }
                 program.emit(src);
+                cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
                 for (let j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
                 }
-                cached.outputTime = cached.maxTimeForDeps;
             }
+
             let jsFiles = Object.keys(project.depJsFiles);
             for (let i = 0; i < jsFiles.length; i++) {
                 let jsFile = jsFiles[i];
@@ -277,8 +319,42 @@ export class CompilationCache {
                         project.logCallback('Error: Dependent ' + jsFile + ' failed to load');
                         continue;
                     }
-                    project.writeFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    cached.outputTime = cached.textTime;
                 }
+            }
+            if (project.totalBundle) {
+                let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
+                let that = this;
+                let bp: bundler.IBundleProject = {
+                    compress: project.compress,
+                    mangle: project.mangle,
+                    beautify: project.beautify,
+                    defines: project.defines,
+                    getMainFiles() { return mainJsList; },
+                    checkFileModification(name: string): number {
+                        if (/\.js$/i.test(name)) {
+                            let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                            if (cached.curTime != null)
+                                return cached.outputTime;
+                        }
+                        let cached = that.getCachedFileContent(name, project.dir);
+                        return cached.curTime;
+                    },
+                    readContent(name: string) {
+                        let jsout = project.commonJsTemp[name.toLowerCase()];
+                        if (jsout !== undefined)
+                            return jsout.toString('utf-8');
+                        let cached = that.getCachedFileContent(name, project.dir);
+                        if (cached.textTime == null)
+                            throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                        return cached.text;
+                    },
+                    writeBundle(content: string) {
+                        project.writeFileCallback('bundle.js', new Buffer(content));
+                    }
+                };
+                bundler.bundle(bp);
             }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
@@ -286,6 +362,18 @@ export class CompilationCache {
             return null;
         });
         return prom;
+    }
+
+    public copyToProjectIfChanged(name: string, dir: string, outName: string, write: (filename: string, content: Buffer) => void) {
+        let cache = this.getCachedFileExistence(name, dir);
+        if (cache.curTime == null) {
+            throw Error('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+        }
+        if (cache.outputTime == null || cache.curTime > cache.outputTime) {
+            let buf = fs.readFileSync(cache.fullName);
+            write(outName, buf);
+            cache.outputTime = cache.curTime;
+        }
     }
 
     private addDepJsToOutput(project: IProject, srcDir: string, name: string) {
@@ -371,6 +459,7 @@ export class CompilationCache {
                 }
             }
         }
+        return cached;
     }
 
     private createCompilerHost(cc: CompilationCache, project: IProject, writeFileCallback: (filename: string, content: Buffer) => void): ts.CompilerHost {
