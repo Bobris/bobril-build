@@ -23,7 +23,10 @@ function backgroundProcess() {
     register("ping", "backgroundBasicCommands");
     register("stop", "backgroundBasicCommands");
     register("watch", "backgroundWatchCommands");
-    register("initProject", "backgroundCompileCommands");
+    register("createProject", "backgroundCompileCommands");
+    register("refreshProject", "backgroundCompileCommands");
+    register("setProjectOptions", "backgroundCompileCommands");
+    register("disposeProject", "backgroundCompileCommands");
     register("compile", "backgroundCompileCommands");
 }
 function run() {

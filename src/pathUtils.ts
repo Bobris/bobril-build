@@ -6,6 +6,10 @@ export function dirOfNodeModule(name:string) {
     return path.dirname(require.resolve(name).replace(/\\/g,"/"));
 }
 
+export function currentDirectory() {
+    return process.cwd().replace(/\\/g,"/");
+}
+
 export function isAbsolutePath(name:string) {
     return /^([a-zA-Z]\:)?\//.test(name);
 }
@@ -24,3 +28,11 @@ export function mkpathsync(dirpath:string) {
         }
     }
 };
+
+export function fileModifiedTime(path:string): number {
+    try {
+        return fs.statSync(path).mtime.getTime();
+    } catch (er) {
+        return null;
+    }
+}

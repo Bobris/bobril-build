@@ -1,3 +1,4 @@
+import * as c from 'commander';
 import * as ts from 'typescript';
 import * as bb from '../index';
 import * as http from 'http';
@@ -11,7 +12,6 @@ var project: bb.IProject;
 var browserControl = new bb.BrowserControl();
 
 function write(fn: string, b: Buffer) {
-    console.log('Memory write ' + fn);
     memoryFs[fn] = b;
 }
 
@@ -23,8 +23,41 @@ function writeDist(fn: string, b: Buffer) {
     fs.writeFileSync(ofn, b);
 }
 
+const reUrlBB = /^\/bb(?:$|\/)/;
+const distWebRoot = path.dirname(__dirname.replace(/\\/g, "/")) + "/distweb";
 function handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
     //console.log('Req ' + request.url);
+    if (reUrlBB.test(request.url)) {
+        if (request.url.length===3) {
+            response.writeHead(301, { Location: "/bb/" });
+            response.end();
+            return;
+        }
+        let name = request.url.substr(4);
+        if (name.length === 0) name = 'index.html';
+        let contentStream = <fs.ReadStream>fs.createReadStream(distWebRoot + "/" + name)
+            .on("open",
+            function handleContentReadStreamOpen() {
+                contentStream.pipe(response);
+            }
+            )
+            .on("error",
+            function handleContentReadStreamError(error) {
+                try {
+                    response.setHeader("Content-Length", "0");
+                    response.setHeader("Cache-Control", "max-age=0");
+                    response.writeHead(500, "Server Error");
+                } catch (headerError) {
+                    // We can't set a header once the headers have already
+                    // been sent - catch failed attempt to overwrite the
+                    // response code.
+                } finally {
+                    response.end("500 Server Error");
+                }
+            }
+            );
+        return;
+    }
     if (request.url === '/') {
         response.end(memoryFs['index.html']);
         return;
@@ -92,6 +125,9 @@ function createProjectFromPackageJson(): bb.IProject {
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }
+    if (typeof bobrilSection.dir === 'string') {
+        project.outputDir = bobrilSection.dir;
+    }
     return project;
 }
 
@@ -104,7 +140,6 @@ function presetDebugProject(project: bb.IProject) {
     project.mangle = false;
     project.beautify = true;
     project.defines = { DEBUG: true };
-    project.writeFileCallback = write;
 }
 
 function presetLiveReloadProject(project: bb.IProject) {
@@ -117,7 +152,6 @@ function presetLiveReloadProject(project: bb.IProject) {
     project.mangle = false;
     project.beautify = true;
     project.defines = { DEBUG: true };
-    project.writeFileCallback = writeDist;
 }
 
 function presetReleaseProject(project: bb.IProject) {
@@ -129,7 +163,6 @@ function presetReleaseProject(project: bb.IProject) {
     project.mangle = true;
     project.beautify = false;
     project.defines = { DEBUG: false };
-    project.writeFileCallback = writeDist;
 }
 
 function startBackgroundProcess(name: string, callbacks: {}): (command: string, param?: any, callbacks?: {}) => void {
@@ -182,27 +215,53 @@ function startWatchProcess(notify: () => void) {
 }
 
 interface ICompileProcess {
+    refresh(): Promise<any>;
+    setOptions(options: any): Promise<any>;
     compile(): Promise<any>;
     stop(): void;
 }
 
-function startCompileProcess(project: bb.IProject): ICompileProcess {
+let lastId = 0;
+function startCompileProcess(path: string): ICompileProcess {
     let compileProcess = startBackgroundProcess("compile", {});
-    compileProcess("initProject", { project });
+    let myId = ""+(lastId++);
+    compileProcess("createProject", { id: myId, dir: path });
     return {
         stop() {
-            compileProcess("stop", null, { exit() { } });
+            compileProcess("disposeProject", myId, { exit() { } });
         },
-        compile() {
+        refresh():Promise<any> {
+            return new Promise((resolve, reject) => {
+                compileProcess("refreshProject", myId, {
+                    log(param) { console.log(param) },
+                    refreshed(param: boolean) {
+                        if (param) resolve(); else reject(new Error("Refresh failed"));
+                    },
+                });
+            });
+        },
+        setOptions(options: any):Promise<any> {
+            return new Promise((resolve, reject) => {
+                compileProcess("setProjectOptions", { id: myId, options }, {
+                    log(param) { console.log(param) },
+                    options(param: any) {
+                        resolve(param);
+                    },
+                });
+            });
+        },
+        compile():Promise<any> {
             return new Promise((resolve, reject) => {
                 let startCompilation = Date.now();
-                compileProcess("compile", null, {
-                    log(param) { console.log("Compilation:" + param) },
+                let writtenFileCount = 0;
+                compileProcess("compile", myId, {
+                    log(param) { console.log(param) },
                     write({ name, buffer }) {
+                        writtenFileCount++;
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk() {
-                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms");
+                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated "+writtenFileCount+" file"+(writtenFileCount!==1?"s":"")+".");
                         resolve();
                     },
                     compileFailed(param) {
@@ -215,27 +274,97 @@ function startCompileProcess(project: bb.IProject): ICompileProcess {
     };
 }
 
-export function run() {
-    project = createProjectFromPackageJson();
-    if (project == null) return;
-    presetLiveReloadProject(project);
+function humanTrue(val: string): boolean {
+    return /^(true|1|t|y)$/i.test(val);
+}
 
-    let compileProcess = startCompileProcess(project);
-    compileProcess.compile().then(() => {
-        var server = http.createServer(handleRequest);
-        server.listen(8080, function() {
-            console.log("Server listening on: http://localhost:8080");
-            browserControl.start(6666, 'chrome', 'http://localhost:8080');
-        });
+function getDefaultDebugOptions() {
+    return {
+        debugStyleDefs: true,
+        releaseStyleDefs: false,
+        spriteMerge: false,
+        totalBundle: false,
+        compress: false,
+        mangle: false,
+        beautify: true,
+        defines: { DEBUG: true }
+    };
+}
+
+function interactiveCommand() {
+    var server = http.createServer(handleRequest);
+    server.listen(8080, function() {
+        console.log("Server listening on: http://localhost:8080");
     });
+    let compileProcess = startCompileProcess(bb.currentDirectory());
+    compileProcess.refresh().then(()=>{
+        return compileProcess.setOptions(getDefaultDebugOptions());
+    }).then((opts)=>{
+        return compileProcess.compile();
+    });
+    //browserControl.start(6666, 'chrome', 'http://localhost:8080');
     startWatchProcess(() => {
+        compileProcess.refresh().then(()=>compileProcess.compile());
+        /*
         compileProcess.compile().then(() => {
             let scriptUrl = browserControl.listScriptUrls()[0];
             let scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
             browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(() => {
                 browserControl.evaluate("b.invalidateStyles();b.ignoreShouldChange();");
             });
-        });
+        });*/
     });
 }
 
+export function run() {
+    let commandRunning = false;
+    c
+        .command("build")
+        .alias("b")
+        .description("just build and stop")
+        .option("-d, --dir <outputdir>", "define where to put build result (default is ./dist)")
+        .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
+        .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
+        .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .action((c) => {
+            commandRunning = true;
+            let project = bb.createProjectFromDir(bb.currentDirectory());
+            project.logCallback = (text) => {
+                console.log(text);
+            }
+            if (!bb.refreshProjectFromPackageJson(project)) {
+                process.exit(1);
+            }
+            presetReleaseProject(project);
+            if (c["dir"]) project.outputDir = c["dir"];
+            project.compress = humanTrue(c["compress"]);
+            project.mangle = humanTrue(c["mangle"]);
+            project.beautify = humanTrue(c["beautify"]);
+            if (!project.outputDir) {
+                project.outputDir = "./dist";
+            }
+            console.time("compile");
+            bb.compileProject(project).then(() => {
+                console.timeEnd("compile");
+                process.exit(0);
+            }, (err) => {
+                console.error(err);
+                process.exit(1);
+            });
+        });
+    c
+        .command("interactive")
+        .alias("i")
+        .description("runs web controled build ui")
+        .action(() => {
+            commandRunning = true;
+            interactiveCommand();
+        });
+    c.command('*', null, { noHelp: true }).action((com) => {
+        console.log("Invalid command " + com);
+    });
+    c.parse(process.argv);
+    if (!commandRunning) {
+        interactiveCommand();
+    }
+}
