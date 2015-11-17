@@ -154,6 +154,8 @@ class D2Array {
         let besty = 0;
         let bestix = 0;
         let bestiy = 0;
+        let aHeight = sprite.height + 1;
+        let aWidth = sprite.width + 1;
         function isImprovement(x: number, y: number): boolean {
             if (x <= oldDim[0]) x = oldDim[0];
             if (y <= oldDim[1]) y = oldDim[1];
@@ -165,12 +167,12 @@ class D2Array {
             return false;
         }
         if (oldDim[0] <= oldDim[1]) {
-            if (isImprovement(oldDim[0] + sprite.width, sprite.height)) {
+            if (isImprovement(oldDim[0] + aWidth, aHeight)) {
                 bestx = oldDim[0]; besty = 0;
                 bestix = this.widths.length; bestiy = 0;
             }
         } else {
-            if (isImprovement(sprite.width, oldDim[1] + sprite.height)) {
+            if (isImprovement(aWidth, oldDim[1] + aHeight)) {
                 besty = oldDim[1]; bestx = 0;
                 bestix = 0; bestiy = this.heights.length;
             }
@@ -180,8 +182,8 @@ class D2Array {
         for (let iy = 0; iy < this.heights.length; iy++) {
             let posx = 0;
             for (let ix = 0; ix < this.widths.length; ix++) {
-                if (this.isFree(posx, posy, ix, iy, sprite.width, sprite.height)) {
-                    if (isImprovement(posx + sprite.width, posy + sprite.height)) {
+                if (this.isFree(posx, posy, ix, iy, aWidth, aHeight)) {
+                    if (isImprovement(posx + aWidth, posy + aHeight)) {
                         bestx = posx; besty = posy;
                         bestix = ix; bestiy = iy;
                         if (addpx === 0) break stop;
@@ -193,6 +195,6 @@ class D2Array {
         }
         sprite.x = bestx;
         sprite.y = besty;
-        this.fill(bestx, besty, bestix, bestiy, sprite.width, sprite.height);
+        this.fill(bestx, besty, bestix, bestiy, aWidth, aHeight);
     }
 }

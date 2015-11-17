@@ -148,6 +148,8 @@ var D2Array = (function () {
         var besty = 0;
         var bestix = 0;
         var bestiy = 0;
+        var aHeight = sprite.height + 1;
+        var aWidth = sprite.width + 1;
         function isImprovement(x, y) {
             if (x <= oldDim[0])
                 x = oldDim[0];
@@ -161,7 +163,7 @@ var D2Array = (function () {
             return false;
         }
         if (oldDim[0] <= oldDim[1]) {
-            if (isImprovement(oldDim[0] + sprite.width, sprite.height)) {
+            if (isImprovement(oldDim[0] + aWidth, aHeight)) {
                 bestx = oldDim[0];
                 besty = 0;
                 bestix = this.widths.length;
@@ -169,7 +171,7 @@ var D2Array = (function () {
             }
         }
         else {
-            if (isImprovement(sprite.width, oldDim[1] + sprite.height)) {
+            if (isImprovement(aWidth, oldDim[1] + aHeight)) {
                 besty = oldDim[1];
                 bestx = 0;
                 bestix = 0;
@@ -180,8 +182,8 @@ var D2Array = (function () {
         stop: for (var iy = 0; iy < this.heights.length; iy++) {
             var posx = 0;
             for (var ix = 0; ix < this.widths.length; ix++) {
-                if (this.isFree(posx, posy, ix, iy, sprite.width, sprite.height)) {
-                    if (isImprovement(posx + sprite.width, posy + sprite.height)) {
+                if (this.isFree(posx, posy, ix, iy, aWidth, aHeight)) {
+                    if (isImprovement(posx + aWidth, posy + aHeight)) {
                         bestx = posx;
                         besty = posy;
                         bestix = ix;
@@ -196,7 +198,7 @@ var D2Array = (function () {
         }
         sprite.x = bestx;
         sprite.y = besty;
-        this.fill(bestx, besty, bestix, bestiy, sprite.width, sprite.height);
+        this.fill(bestx, besty, bestix, bestiy, aWidth, aHeight);
     };
     return D2Array;
 })();

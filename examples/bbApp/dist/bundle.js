@@ -1623,6 +1623,9 @@
                     handle.call(me, [ onFulfilled, onRejected, resolve, reject ]);
                 });
             };
+            Promise.prototype["catch"] = function(onRejected) {
+                return this.then(undefined, onRejected);
+            };
             Promise.all = function() {
                 var args = [].slice.call(arguments.length === 1 && isArray(arguments[0]) ? arguments[0] : arguments);
                 return new Promise(function(resolve, reject) {
@@ -2472,9 +2475,12 @@
     }
     var __export_focus = focus;
     var callbacks = [];
-    function emitOnScroll() {
+    function emitOnScroll(ev, target, node) {
+        var info = {
+            node: node
+        };
         for (var i = 0; i < callbacks.length; i++) {
-            callbacks[i]();
+            callbacks[i](info);
         }
         return false;
     }
