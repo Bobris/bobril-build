@@ -147,7 +147,7 @@ function check(name, order, stack, project, resolveRequire) {
         var ast = uglify.parse(project.readContent(name));
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [] };
+        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: [], exports: null };
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; })();");
@@ -158,6 +158,7 @@ function check(name, order, stack, project, resolveRequire) {
         }
         var exportsSymbol = ast.globals['exports'];
         var unshiftToBody = [];
+        var selfExpNames = Object.create(null);
         var varDecls = null;
         var walker = new uglify.TreeWalker(function (node, descend) {
             if (node instanceof uglify.AST_Block) {
@@ -180,7 +181,8 @@ function check(name, order, stack, project, resolveRequire) {
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
                             stm.body = newVar;
-                            cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            selfExpNames[pea.name] = true;
+                            cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
                         }
                         if (stmbody instanceof uglify.AST_Call) {
@@ -198,8 +200,7 @@ function check(name, order, stack, project, resolveRequire) {
                                         }
                                         if (cached.requires.indexOf(reqr) < 0)
                                             cached.requires.push(reqr);
-                                        if (cached.reexportAll.indexOf(reqr) < 0)
-                                            cached.reexportAll.push(reqr);
+                                        cached.selfexports.push({ reexport: reqr });
                                         return null;
                                     }
                                 }
@@ -225,7 +226,7 @@ function check(name, order, stack, project, resolveRequire) {
                     if (isExports(propAccess.expression)) {
                         var key = matchPropKey(propAccess);
                         if (key) {
-                            if (cached.selfexports[key])
+                            if (selfExpNames[key])
                                 return false;
                             var newName = '__export_' + key;
                             if (varDecls == null) {
@@ -242,7 +243,8 @@ function check(name, order, stack, project, resolveRequire) {
                             symb.bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
                             symbVar.thedef = symb;
-                            cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            selfExpNames[key] = true;
+                            cached.selfexports.push({ name: key, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return false;
                         }
                     }
@@ -274,10 +276,24 @@ function check(name, order, stack, project, resolveRequire) {
         stack.push(r);
         check(r, order, stack, project, resolveRequire);
     });
-    cached.exports = Object.assign(Object.create(null), cached.selfexports);
-    cached.reexportAll.forEach(function (exp) {
-        exp = exp.toLowerCase();
-        Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
+    cached.exports = Object.create(null);
+    cached.selfexports.forEach(function (exp) {
+        if (exp.name) {
+            cached.exports[exp.name] = exp.node;
+        }
+        else if (exp.reexport) {
+            var reexModule = project.cache[exp.reexport.toLowerCase()];
+            if (reexModule.exports) {
+                Object.assign(cached.exports, reexModule.exports);
+            }
+            else {
+                reexModule.selfexports.forEach(function (exp2) {
+                    if (exp2.name) {
+                        cached.exports[exp2.name] = exp2.node;
+                    }
+                });
+            }
+        }
     });
     order.push(cached);
     var _a;
@@ -372,7 +388,7 @@ function bundle(project) {
                 if (isExports(propAccess.expression)) {
                     var key = matchPropKey(propAccess);
                     if (key) {
-                        var symb = f.selfexports[key];
+                        var symb = f.exports[key];
                         if (symb)
                             return renameSymbol(symb);
                     }
