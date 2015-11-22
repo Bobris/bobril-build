@@ -19,7 +19,8 @@
         "./typings/chokidar/**/*.d.ts",
         "./typings/node/**/*.d.ts",
         "./typings/png-async/**/*.d.ts",
-        "./typings/jasmine/jasmine.d.ts"
+        "./typings/jasmine/jasmine.d.ts",
+		"./typings/commander/commander.d.ts"
     ],
     "files": [
         "cli.ts",
@@ -40,6 +41,7 @@
         "src/backgroundWatchCommands.ts",
         "src/backgroundCompileCommands.ts",
         "src/cliMain.ts",
+        "src/compileProject.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
@@ -51,7 +53,8 @@
         "typings/chokidar/chokidar.d.ts",
         "typings/node/node.d.ts",
         "typings/png-async/png-async.d.ts",
-        "typings/jasmine/jasmine.d.ts"
+        "typings/jasmine/jasmine.d.ts",
+		"typings/commander/commander.d.ts"
     ],
     "exclude": []
 }

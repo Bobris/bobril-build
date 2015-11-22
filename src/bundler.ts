@@ -44,9 +44,8 @@ export interface IFileForBundle {
     requires: string[];
     // it is not really TypeScript converted to commonjs
     difficult: boolean;
-    selfexports: { [name: string]: uglify.IAstNode };
+    selfexports: { name?: string, node?: uglify.IAstNode, reexport?: string }[];
     exports: { [name: string]: uglify.IAstNode };
-    reexportAll: string[];
 }
 
 export interface IBundleProject {
@@ -191,7 +190,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         let ast = uglify.parse(project.readContent(name));
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: Object.create(null), exports: null, reexportAll: [] };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null };
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name) }
@@ -203,6 +202,7 @@ __bbe['${name}']=module.exports; })();`);
         }
         let exportsSymbol = ast.globals['exports'];
         let unshiftToBody = [];
+        let selfExpNames = Object.create(null);
         let varDecls: uglify.IAstVarDef[] = null;
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Block) {
@@ -225,7 +225,8 @@ __bbe['${name}']=module.exports; })();`);
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
                             (<uglify.IAstSimpleStatement>stm).body = newVar;
-                            cached.selfexports[pea.name] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            selfExpNames[pea.name] = true;
+                            cached.selfexports.push({ name:pea.name, node:new uglify.AST_SymbolRef({ name: newName, thedef: symb })});
                             return newVar;
                         }
                         if (stmbody instanceof uglify.AST_Call) {
@@ -243,8 +244,7 @@ __bbe['${name}']=module.exports; })();`);
                                         }
                                         if (cached.requires.indexOf(reqr) < 0)
                                             cached.requires.push(reqr);
-                                        if (cached.reexportAll.indexOf(reqr) < 0)
-                                            cached.reexportAll.push(reqr);
+                                        cached.selfexports.push({ reexport:reqr });
                                         return null;
                                     }
                                 }
@@ -269,7 +269,7 @@ __bbe['${name}']=module.exports; })();`);
                     if (isExports(propAccess.expression)) {
                         let key = matchPropKey(propAccess);
                         if (key) {
-                            if (cached.selfexports[key])
+                            if (selfExpNames[key])
                                 return false;
                             let newName = '__export_' + key;
                             if (varDecls == null) {
@@ -288,7 +288,8 @@ __bbe['${name}']=module.exports; })();`);
                             (<ISymbolDef>symb).bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
                             symbVar.thedef = symb;
-                            cached.selfexports[key] = new uglify.AST_SymbolRef({ name: newName, thedef: symb });
+                            selfExpNames[key] = true;
+                            cached.selfexports.push({ name:key, node:new uglify.AST_SymbolRef({ name: newName, thedef: symb })});
                             return false;
                         }
                     }
@@ -320,10 +321,22 @@ __bbe['${name}']=module.exports; })();`);
         stack.push(r);
         check(r, order, stack, project, resolveRequire);
     });
-    cached.exports = Object.assign(Object.create(null), cached.selfexports);
-    cached.reexportAll.forEach(exp=> {
-        exp = exp.toLowerCase();
-        Object.assign(cached.exports, project.cache[exp].exports || project.cache[exp].selfexports);
+    cached.exports = Object.create(null);
+    cached.selfexports.forEach(exp=> {
+        if (exp.name) {
+            cached.exports[exp.name] = exp.node;
+        } else if (exp.reexport) {
+            let reexModule = project.cache[exp.reexport.toLowerCase()];
+            if (reexModule.exports) {
+                Object.assign(cached.exports,reexModule.exports);
+            } else {
+                reexModule.selfexports.forEach(exp2 => {
+                   if (exp2.name) {
+                       cached.exports[exp2.name] = exp2.node;
+                   } 
+                });
+            }
+        }
     });
     order.push(cached);
 }
@@ -411,7 +424,7 @@ export function bundle(project: IBundleProject) {
                 if (isExports(propAccess.expression)) {
                     let key = matchPropKey(propAccess);
                     if (key) {
-                        let symb = f.selfexports[key];
+                        let symb = f.exports[key];
                         if (symb)
                             return renameSymbol(symb);
                     }

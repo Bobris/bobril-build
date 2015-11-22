@@ -1,3 +1,4 @@
+var c = require('commander');
 var ts = require('typescript');
 var bb = require('../index');
 var http = require('http');
@@ -9,7 +10,6 @@ var memoryFs = Object.create(null);
 var project;
 var browserControl = new bb.BrowserControl();
 function write(fn, b) {
-    console.log('Memory write ' + fn);
     memoryFs[fn] = b;
 }
 function writeDist(fn, b) {
@@ -19,8 +19,37 @@ function writeDist(fn, b) {
     bb.mkpathsync(path.dirname(ofn));
     fs.writeFileSync(ofn, b);
 }
+var reUrlBB = /^\/bb(?:$|\/)/;
+var distWebRoot = path.dirname(__dirname.replace(/\\/g, "/")) + "/distweb";
 function handleRequest(request, response) {
     //console.log('Req ' + request.url);
+    if (reUrlBB.test(request.url)) {
+        if (request.url.length === 3) {
+            response.writeHead(301, { Location: "/bb/" });
+            response.end();
+            return;
+        }
+        var name_1 = request.url.substr(4);
+        if (name_1.length === 0)
+            name_1 = 'index.html';
+        var contentStream = fs.createReadStream(distWebRoot + "/" + name_1)
+            .on("open", function handleContentReadStreamOpen() {
+            contentStream.pipe(response);
+        })
+            .on("error", function handleContentReadStreamError(error) {
+            try {
+                response.setHeader("Content-Length", "0");
+                response.setHeader("Cache-Control", "max-age=0");
+                response.writeHead(500, "Server Error");
+            }
+            catch (headerError) {
+            }
+            finally {
+                response.end("500 Server Error");
+            }
+        });
+        return;
+    }
     if (request.url === '/') {
         response.end(memoryFs['index.html']);
         return;
@@ -91,6 +120,9 @@ function createProjectFromPackageJson() {
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }
+    if (typeof bobrilSection.dir === 'string') {
+        project.outputDir = bobrilSection.dir;
+    }
     return project;
 }
 function presetDebugProject(project) {
@@ -102,7 +134,6 @@ function presetDebugProject(project) {
     project.mangle = false;
     project.beautify = true;
     project.defines = { DEBUG: true };
-    project.writeFileCallback = write;
 }
 function presetLiveReloadProject(project) {
     project.liveReloadStyleDefs = true;
@@ -114,7 +145,6 @@ function presetLiveReloadProject(project) {
     project.mangle = false;
     project.beautify = true;
     project.defines = { DEBUG: true };
-    project.writeFileCallback = writeDist;
 }
 function presetReleaseProject(project) {
     project.debugStyleDefs = false;
@@ -125,7 +155,6 @@ function presetReleaseProject(project) {
     project.mangle = true;
     project.beautify = false;
     project.defines = { DEBUG: false };
-    project.writeFileCallback = writeDist;
 }
 function startBackgroundProcess(name, callbacks) {
     var child = childProcess.fork(path.dirname(__dirname.replace(/\\/g, "/")) + "/cli", ["background"]);
@@ -176,24 +205,51 @@ function startWatchProcess(notify) {
         }
     });
 }
-function startCompileProcess(project) {
+var lastId = 0;
+function startCompileProcess(path) {
     var compileProcess = startBackgroundProcess("compile", {});
-    compileProcess("initProject", { project: project });
+    var myId = "" + (lastId++);
+    compileProcess("createProject", { id: myId, dir: path });
     return {
         stop: function () {
-            compileProcess("stop", null, { exit: function () { } });
+            compileProcess("disposeProject", myId, { exit: function () { } });
+        },
+        refresh: function () {
+            return new Promise(function (resolve, reject) {
+                compileProcess("refreshProject", myId, {
+                    log: function (param) { console.log(param); },
+                    refreshed: function (param) {
+                        if (param)
+                            resolve();
+                        else
+                            reject(new Error("Refresh failed"));
+                    },
+                });
+            });
+        },
+        setOptions: function (options) {
+            return new Promise(function (resolve, reject) {
+                compileProcess("setProjectOptions", { id: myId, options: options }, {
+                    log: function (param) { console.log(param); },
+                    options: function (param) {
+                        resolve(param);
+                    },
+                });
+            });
         },
         compile: function () {
             return new Promise(function (resolve, reject) {
                 var startCompilation = Date.now();
-                compileProcess("compile", null, {
-                    log: function (param) { console.log("Compilation:" + param); },
+                var writtenFileCount = 0;
+                compileProcess("compile", myId, {
+                    log: function (param) { console.log(param); },
                     write: function (_a) {
                         var name = _a.name, buffer = _a.buffer;
+                        writtenFileCount++;
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk: function () {
-                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms");
+                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
                         resolve();
                     },
                     compileFailed: function (param) {
@@ -205,27 +261,96 @@ function startCompileProcess(project) {
         }
     };
 }
-function run() {
-    project = createProjectFromPackageJson();
-    if (project == null)
-        return;
-    presetLiveReloadProject(project);
-    var compileProcess = startCompileProcess(project);
-    compileProcess.compile().then(function () {
-        var server = http.createServer(handleRequest);
-        server.listen(8080, function () {
-            console.log("Server listening on: http://localhost:8080");
-            browserControl.start(6666, 'chrome', 'http://localhost:8080');
-        });
+function humanTrue(val) {
+    return /^(true|1|t|y)$/i.test(val);
+}
+function getDefaultDebugOptions() {
+    return {
+        debugStyleDefs: true,
+        releaseStyleDefs: false,
+        spriteMerge: false,
+        totalBundle: false,
+        compress: false,
+        mangle: false,
+        beautify: true,
+        defines: { DEBUG: true }
+    };
+}
+function interactiveCommand() {
+    var server = http.createServer(handleRequest);
+    server.listen(8080, function () {
+        console.log("Server listening on: http://localhost:8080");
     });
+    var compileProcess = startCompileProcess(bb.currentDirectory());
+    compileProcess.refresh().then(function () {
+        return compileProcess.setOptions(getDefaultDebugOptions());
+    }).then(function (opts) {
+        return compileProcess.compile();
+    });
+    //browserControl.start(6666, 'chrome', 'http://localhost:8080');
     startWatchProcess(function () {
-        compileProcess.compile().then(function () {
-            var scriptUrl = browserControl.listScriptUrls()[0];
-            var scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
-            browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(function () {
+        compileProcess.refresh().then(function () { return compileProcess.compile(); });
+        /*
+        compileProcess.compile().then(() => {
+            let scriptUrl = browserControl.listScriptUrls()[0];
+            let scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
+            browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(() => {
                 browserControl.evaluate("b.invalidateStyles();b.ignoreShouldChange();");
             });
+        });*/
+    });
+}
+function run() {
+    var commandRunning = false;
+    c
+        .command("build")
+        .alias("b")
+        .description("just build and stop")
+        .option("-d, --dir <outputdir>", "define where to put build result (default is ./dist)")
+        .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
+        .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
+        .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .action(function (c) {
+        commandRunning = true;
+        var project = bb.createProjectFromDir(bb.currentDirectory());
+        project.logCallback = function (text) {
+            console.log(text);
+        };
+        if (!bb.refreshProjectFromPackageJson(project)) {
+            process.exit(1);
+        }
+        presetReleaseProject(project);
+        if (c["dir"])
+            project.outputDir = c["dir"];
+        project.compress = humanTrue(c["compress"]);
+        project.mangle = humanTrue(c["mangle"]);
+        project.beautify = humanTrue(c["beautify"]);
+        if (!project.outputDir) {
+            project.outputDir = "./dist";
+        }
+        console.time("compile");
+        bb.compileProject(project).then(function () {
+            console.timeEnd("compile");
+            process.exit(0);
+        }, function (err) {
+            console.error(err);
+            process.exit(1);
         });
     });
+    c
+        .command("interactive")
+        .alias("i")
+        .description("runs web controled build ui")
+        .action(function () {
+        commandRunning = true;
+        interactiveCommand();
+    });
+    c.command('*', null, { noHelp: true }).action(function (com) {
+        console.log("Invalid command " + com);
+    });
+    c.parse(process.argv);
+    if (!commandRunning) {
+        interactiveCommand();
+    }
 }
 exports.run = run;

@@ -72,7 +72,10 @@ export interface IProject {
     // default false
     beautify?: boolean;
     defines?: { [name: string]: any };
+    outputDir?: string;
 
+    projectJsonTime?: number;
+    mainAutoDetected?: boolean;
     lastwrittenIndexHtml?: string;
     imgBundleCache?: imgCache.ImgBundleCache;
     depJsFiles?: { [name: string]: string };

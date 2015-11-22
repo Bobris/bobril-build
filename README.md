@@ -10,7 +10,11 @@ Then create package.json with typescript.main or name your main ts file as index
 
 	bb
 	
-It will watch changes of your application, recompile and host in on http://localhost:8080. It uses latest Typescript to compile and prefer Node moduleResolution. Compilation for maximum speed enables skipDefaultLibCheck.
+This will start bobril build in interactive mode. It will watch changes of your application, recompile and host in on http://localhost:8080. It uses latest Typescript to compile and prefer Node moduleResolution. Compilation for maximum speed enables skipDefaultLibCheck.
+
+There is also command line single build option. Start to learn all options:
+
+	bb -h
 
 For development of bobril-build check out this project and start:
 

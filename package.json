@@ -1,6 +1,6 @@
 {
   "name": "bobril-build",
-  "version": "0.5.5",
+  "version": "0.6.1",
   "description": "Builds Bobril Applications or Libraries",
   "main": "index.js",
   "bin": {
@@ -13,7 +13,6 @@
     "browser_process": "^1.0.4",
     "chokidar": "^1.0.6",
     "commander": "^2.9.0",
-    "fb-flo": "^0.4.0",
     "make-plural": "^3.0.0",
     "moment": "^2.10.6",
     "numeral": "^1.5.3",
