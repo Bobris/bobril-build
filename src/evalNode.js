@@ -3,36 +3,36 @@ var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 function evalNode(n, tc, resolveStringLiteral) {
     switch (n.kind) {
-        case 9 /* StringLiteral */: {
+        case ts.SyntaxKind.StringLiteral: {
             var nn = n;
             if (resolveStringLiteral) {
                 return resolveStringLiteral(nn);
             }
             return nn.text;
         }
-        case 8 /* NumericLiteral */: {
+        case ts.SyntaxKind.NumericLiteral: {
             var nn = n;
             return parseFloat(nn.text);
         }
-        case 99 /* TrueKeyword */: return true;
-        case 84 /* FalseKeyword */: return false;
-        case 93 /* NullKeyword */: return null;
-        case 179 /* PrefixUnaryExpression */: {
+        case ts.SyntaxKind.TrueKeyword: return true;
+        case ts.SyntaxKind.FalseKeyword: return false;
+        case ts.SyntaxKind.NullKeyword: return null;
+        case ts.SyntaxKind.PrefixUnaryExpression: {
             var nn = n;
             var operand = evalNode(nn.operand, tc, resolveStringLiteral);
             if (operand !== undefined) {
                 var op = null;
                 switch (nn.operator) {
-                    case 35 /* PlusToken */:
+                    case ts.SyntaxKind.PlusToken:
                         op = "+";
                         break;
-                    case 36 /* MinusToken */:
+                    case ts.SyntaxKind.MinusToken:
                         op = "-";
                         break;
-                    case 50 /* TildeToken */:
+                    case ts.SyntaxKind.TildeToken:
                         op = "~";
                         break;
-                    case 49 /* ExclamationToken */:
+                    case ts.SyntaxKind.ExclamationToken:
                         op = "!";
                         break;
                     default: return undefined;
@@ -42,36 +42,36 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 181 /* BinaryExpression */: {
+        case ts.SyntaxKind.BinaryExpression: {
             var nn = n;
             var left = evalNode(nn.left, tc, resolveStringLiteral);
             var right = evalNode(nn.right, tc, null);
             if (left !== undefined && right !== undefined) {
                 var op = null;
                 switch (nn.operatorToken.kind) {
-                    case 52 /* BarBarToken */:
-                    case 51 /* AmpersandAmpersandToken */:
-                    case 47 /* BarToken */:
-                    case 48 /* CaretToken */:
-                    case 46 /* AmpersandToken */:
-                    case 30 /* EqualsEqualsToken */:
-                    case 31 /* ExclamationEqualsToken */:
-                    case 32 /* EqualsEqualsEqualsToken */:
-                    case 33 /* ExclamationEqualsEqualsToken */:
-                    case 25 /* LessThanToken */:
-                    case 27 /* GreaterThanToken */:
-                    case 28 /* LessThanEqualsToken */:
-                    case 29 /* GreaterThanEqualsToken */:
-                    case 91 /* InstanceOfKeyword */:
-                    case 90 /* InKeyword */:
-                    case 43 /* LessThanLessThanToken */:
-                    case 44 /* GreaterThanGreaterThanToken */:
-                    case 45 /* GreaterThanGreaterThanGreaterThanToken */:
-                    case 35 /* PlusToken */:
-                    case 36 /* MinusToken */:
-                    case 37 /* AsteriskToken */:
-                    case 39 /* SlashToken */:
-                    case 40 /* PercentToken */:
+                    case ts.SyntaxKind.BarBarToken:
+                    case ts.SyntaxKind.AmpersandAmpersandToken:
+                    case ts.SyntaxKind.BarToken:
+                    case ts.SyntaxKind.CaretToken:
+                    case ts.SyntaxKind.AmpersandToken:
+                    case ts.SyntaxKind.EqualsEqualsToken:
+                    case ts.SyntaxKind.ExclamationEqualsToken:
+                    case ts.SyntaxKind.EqualsEqualsEqualsToken:
+                    case ts.SyntaxKind.ExclamationEqualsEqualsToken:
+                    case ts.SyntaxKind.LessThanToken:
+                    case ts.SyntaxKind.GreaterThanToken:
+                    case ts.SyntaxKind.LessThanEqualsToken:
+                    case ts.SyntaxKind.GreaterThanEqualsToken:
+                    case ts.SyntaxKind.InstanceOfKeyword:
+                    case ts.SyntaxKind.InKeyword:
+                    case ts.SyntaxKind.LessThanLessThanToken:
+                    case ts.SyntaxKind.GreaterThanGreaterThanToken:
+                    case ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken:
+                    case ts.SyntaxKind.PlusToken:
+                    case ts.SyntaxKind.MinusToken:
+                    case ts.SyntaxKind.AsteriskToken:
+                    case ts.SyntaxKind.SlashToken:
+                    case ts.SyntaxKind.PercentToken:
                         op = nn.operatorToken.getText();
                         break;
                     default: return undefined;
@@ -81,7 +81,7 @@ function evalNode(n, tc, resolveStringLiteral) {
             }
             return undefined;
         }
-        case 182 /* ConditionalExpression */: {
+        case ts.SyntaxKind.ConditionalExpression: {
             var nn = n;
             var cond = evalNode(nn.condition, tc, null);
             if (cond === undefined)
@@ -89,26 +89,26 @@ function evalNode(n, tc, resolveStringLiteral) {
             var e = cond ? nn.whenTrue : nn.whenFalse;
             return evalNode(e, tc, resolveStringLiteral);
         }
-        case 227 /* ExportAssignment */: {
+        case ts.SyntaxKind.ExportAssignment: {
             var nn = n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
         }
-        case 69 /* Identifier */:
-        case 166 /* PropertyAccessExpression */: {
+        case ts.SyntaxKind.Identifier:
+        case ts.SyntaxKind.PropertyAccessExpression: {
             var s = tc.getSymbolAtLocation(n);
-            if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 166 /* PropertyAccessExpression */) {
+            if (((s.flags & ts.SymbolFlags.Alias) !== 0) && n.kind === ts.SyntaxKind.PropertyAccessExpression) {
                 if (s.declarations.length !== 1)
                     return undefined;
                 var decl = s.declarations[0];
                 return evalNode(decl, tc, resolveStringLiteral);
             }
-            else if (((s.flags & 8388608 /* Alias */) !== 0) && n.kind === 69 /* Identifier */) {
+            else if (((s.flags & ts.SymbolFlags.Alias) !== 0) && n.kind === ts.SyntaxKind.Identifier) {
                 if (s.declarations.length !== 1)
                     return undefined;
                 var decl = s.declarations[0];
-                if (decl.kind !== 226 /* ImportSpecifier */)
+                if (decl.kind !== ts.SyntaxKind.ImportSpecifier)
                     return undefined;
-                if (decl.parent && decl.parent.parent && decl.parent.parent.parent && decl.parent.parent.parent.kind === 222 /* ImportDeclaration */) {
+                if (decl.parent && decl.parent.parent && decl.parent.parent.parent && decl.parent.parent.parent.kind === ts.SyntaxKind.ImportDeclaration) {
                     var impdecl = decl.parent.parent.parent;
                     var s2 = tc.getSymbolAtLocation(impdecl.moduleSpecifier);
                     if (s2 && s2.exports[decl.propertyName.text]) {
@@ -118,31 +118,31 @@ function evalNode(n, tc, resolveStringLiteral) {
                     }
                 }
             }
-            else if (((s.flags & 4 /* Property */) !== 0) && n.kind === 166 /* PropertyAccessExpression */) {
+            else if (((s.flags & ts.SymbolFlags.Property) !== 0) && n.kind === ts.SyntaxKind.PropertyAccessExpression) {
                 var obj = evalNode(n.expression, tc, resolveStringLiteral);
                 if (typeof obj !== "object")
                     return undefined;
                 var name_1 = n.name.text;
                 return obj[name_1];
             }
-            else if (s.flags & 3 /* Variable */) {
-                if (s.valueDeclaration.parent.flags & 32768 /* Const */) {
+            else if (s.flags & ts.SymbolFlags.Variable) {
+                if (s.valueDeclaration.parent.flags & ts.NodeFlags.Const) {
                     return evalNode(s.valueDeclaration.initializer, tc, resolveStringLiteral);
                 }
             }
             return undefined;
         }
-        case 171 /* TypeAssertionExpression */: {
+        case ts.SyntaxKind.TypeAssertionExpression: {
             var nn = n;
             return evalNode(nn.expression, tc, resolveStringLiteral);
         }
-        case 165 /* ObjectLiteralExpression */: {
+        case ts.SyntaxKind.ObjectLiteralExpression: {
             var ole = n;
             var res = {};
             for (var i = 0; i < ole.properties.length; i++) {
                 var prop = ole.properties[i];
-                if (prop.kind === 245 /* PropertyAssignment */ && (prop.name.kind === 69 /* Identifier */ || prop.name.kind === 9 /* StringLiteral */)) {
-                    var name_2 = prop.name.kind === 69 /* Identifier */ ? prop.name.text : prop.name.text;
+                if (prop.kind === ts.SyntaxKind.PropertyAssignment && (prop.name.kind === ts.SyntaxKind.Identifier || prop.name.kind === ts.SyntaxKind.StringLiteral)) {
+                    var name_2 = prop.name.kind === ts.SyntaxKind.Identifier ? prop.name.text : prop.name.text;
                     res[name_2] = evalNode(prop.initializer, tc, resolveStringLiteral);
                 }
             }

@@ -18,7 +18,7 @@ describe("compilationCache", function () {
         var project = {
             dir: path.join(__dirname.replace(/\\/g, '/'), 'cc'),
             main: 'app.ts',
-            options: { module: 1 /* CommonJS */, target: 1 /* ES5 */ },
+            options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
             debugStyleDefs: true,
             releaseStyleDefs: false,
             spriteMerge: true,

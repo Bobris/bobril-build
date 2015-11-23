@@ -80,16 +80,25 @@ export function compile(param: string) {
     if (cp) {
         cp.promise = new Promise((resolve, reject) => {
             cp.promise.then(() => {
+                bb.defineTranslationReporter(cp.project);
+                if (cp.project.localize) {
+                    bb.defineTranslationReplacer(cp.project, cp.translationDb);
+                } else {
+                    cp.project.textForTranslationReplacer = null;
+                }
                 cp.compilationCache.clearFileTimeModifications();
                 return cp.compilationCache.compile(cp.project).then(() => {
                     if (!cp.project.totalBundle) bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
                     bb.updateIndexHtml(cp.project);
+                    if (cp.project.localize) {
+                        bb.emitTranslationsJs(cp.project, cp.translationDb);
+                    }
                 }).then(() => {
                     process.send({ command: "compileOk" });
                 }, (err) => {
                     process.send({ command: "compileFailed", param: err });
                 });
-            }).then(()=>resolve(null),()=>resolve(null));
+            }).then(() => resolve(null), () => resolve(null));
         });
     } else {
         process.send({ command: "Cannot compile nonexisting project", param });

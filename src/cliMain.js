@@ -81,7 +81,7 @@ function createProjectFromPackageJson() {
         dir: process.cwd().replace(/\\/g, '/'),
         main: 'src/app.ts',
         mainJsFile: 'src/app.js',
-        options: { module: 1 /* CommonJS */, target: 1 /* ES5 */, skipDefaultLibCheck: true }
+        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     var packageJson = null;
     try {
@@ -266,6 +266,7 @@ function humanTrue(val) {
 }
 function getDefaultDebugOptions() {
     return {
+        localize: false,
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
@@ -310,6 +311,7 @@ function run() {
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .action(function (c) {
         commandRunning = true;
         var project = bb.createProjectFromDir(bb.currentDirectory());
@@ -325,6 +327,9 @@ function run() {
         project.compress = humanTrue(c["compress"]);
         project.mangle = humanTrue(c["mangle"]);
         project.beautify = humanTrue(c["beautify"]);
+        if (c["localize"]) {
+            project.localize = humanTrue(c["localize"]);
+        }
         if (!project.outputDir) {
             project.outputDir = "./dist";
         }
@@ -336,6 +341,28 @@ function run() {
             console.error(err);
             process.exit(1);
         });
+    });
+    c
+        .command("translation")
+        .alias("t")
+        .description("everything around translations")
+        .option("-a, --addlang <lang>", "add new language")
+        .option("-r, --removelang <lang>", "remove language")
+        .action(function (c) {
+        commandRunning = true;
+        var project = bb.createProjectFromDir(bb.currentDirectory());
+        var trDir = path.join(project.dir, "translations");
+        var trDb = new bb.TranslationDb();
+        trDb.loadLangDbs(trDir);
+        if (c["addlang"]) {
+            trDb.addLang(c["addlang"]);
+            trDb.saveLangDbs(trDir);
+        }
+        if (c["removelang"]) {
+            trDb.removeLang(c["removelang"]);
+            trDb.saveLangDbs(trDir);
+        }
+        process.exit(0);
     });
     c
         .command("interactive")

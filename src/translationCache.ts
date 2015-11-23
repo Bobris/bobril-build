@@ -1,5 +1,8 @@
 import * as fs from 'fs';
 import * as BuildHelpers from './buildHelpers';
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+import * as pathUtils from "./pathUtils";
 
 const indexOfLangsMessages = 4;
 
@@ -9,7 +12,7 @@ export class TranslationDb {
     // 2 - withParams&1 temporary&2 used&4
     // 3 - message id
     // 4+ - message in langs[idx-4]
-    db: { [messsageAndHint: string]: (string|number)[] };
+    db: { [messsageAndHint: string]: (string | number)[] };
     usedKeyList: string[];
     temporaryKeyList: string[];
     langs: string[];
@@ -34,6 +37,19 @@ export class TranslationDb {
 
     buildKey(message: string, hint: string, hasParams: boolean) {
         return message + '\x01\x02' + (hasParams ? '#' : '-') + (hint || '');
+    }
+
+    loadLangDbs(dir: string) {
+        let trFiles: string[];
+        try {
+            trFiles = fs.readdirSync(dir).filter(v=> /\.json$/i.test(v));
+        } catch (err) {
+            // ignore errors
+            return;
+        }
+        trFiles.forEach(v=> {
+            this.loadLangDb(path.join(dir, v));
+        });
     }
 
     loadLangDb(fileName: string) {
@@ -82,6 +98,13 @@ export class TranslationDb {
         }
     }
 
+    saveLangDbs(dir: string) {
+        pathUtils.mkpathsync(dir);
+        this.langs.forEach(lang=> {
+            this.saveLangDb(path.join(dir, lang + ".json"), lang);
+        });
+    }
+
     saveLangDb(filename: string, lang: string) {
         let pos = this.langs.indexOf(lang);
         if (pos < 0) pos = this.langs.length;
@@ -127,6 +150,16 @@ export class TranslationDb {
         list.length = 0;
     }
 
+    clearTemporaryFlags() {
+        let list = this.temporaryKeyList;
+        let db = this.db;
+        for (let i = 0; i < list.length; i++) {
+            let item = db[list[i]];
+            item[2] = (<number>item[2]) & ~2;
+        }
+        list.length = 0;
+    }
+
     pruneDbOfTemporaryUnused() {
         let list = this.temporaryKeyList;
         let db = this.db;
@@ -138,6 +171,10 @@ export class TranslationDb {
                 list.splice(i, 1); i--;
             }
         }
+    }
+
+    getTemporaryStringsCount(): number {
+        return this.temporaryKeyList.length;
     }
 
     getMessageArrayInLang(lang: string): string[] {
@@ -181,7 +218,7 @@ export class TranslationDb {
         let db = this.db;
         for (let i = 0; i < trs.length; i++) {
             let row = trs[i];
-            if (typeof row[0]!=='string') continue;
+            if (typeof row[0] !== 'string') continue;
             let item = db[row[4]];
             item[pos] = row[0];
         }

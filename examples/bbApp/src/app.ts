@@ -1,10 +1,11 @@
 import * as b from 'bobril';
+import * as g from 'bobril-g11n';
 
 interface IPageCtx extends b.IBobrilCtx {
     counter: number;
 }
 
-let headerStyle = b.styleDef({ backgroundColor:"green", padding: 10 });
+let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 });
 
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
@@ -13,7 +14,7 @@ let page = b.createVirtualComponent({
     },
     render(ctx: IPageCtx, me: b.IBobrilNode, oldMe?: b.IBobrilCacheNode): void {
         me.children = [
-            b.style({ tag: 'h1', children: 'Hello World! ' + ctx.counter }, headerStyle),
+            b.style({ tag: 'h1', children: g.t('Hello World! {c, number}', { c: ctx.counter }) }, headerStyle),
             {
                 tag: 'p',
                 children: [
@@ -29,4 +30,5 @@ let page = b.createVirtualComponent({
     }
 });
 
+g.initGlobalization({ pathToTranslation: (locale: string) => './' + locale + '.js' });
 b.init(() => page({}));

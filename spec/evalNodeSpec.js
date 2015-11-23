@@ -102,7 +102,7 @@ describe("evalNode", function () {
             return;
         it(n, function () {
             var full = path.join(testpath, n);
-            var program = ts.createProgram(["main.ts"], { module: 1 /* CommonJS */ }, createCompilerHost(full));
+            var program = ts.createProgram(["main.ts"], { module: ts.ModuleKind.CommonJS }, createCompilerHost(full));
             var diagnostics = program.getSyntacticDiagnostics();
             reportDiagnostics(diagnostics);
             if (diagnostics.length === 0) {
@@ -117,7 +117,7 @@ describe("evalNode", function () {
             var tc = program.getTypeChecker();
             var mainsource = program.getSourceFile("main.ts");
             function visit(n) {
-                if (n.kind === 168 /* CallExpression */) {
+                if (n.kind === ts.SyntaxKind.CallExpression) {
                     var ce = n;
                     if (ce.expression.getText() === "console.log") {
                         if (ce.arguments.length === 1) {

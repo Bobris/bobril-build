@@ -63,6 +63,8 @@ export interface IProject {
     textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
     htmlTitle?: string;
     mainJsFile?: string;
+    // dafalt false
+    localize?: boolean;
     // default false
     totalBundle?: boolean;
     // default true
@@ -174,7 +176,7 @@ export class CompilationCache {
         let sourceFiles = program.getSourceFiles();
         for (let i = 0; i < sourceFiles.length; i++) {
             let src = sourceFiles[i];
-            if (src.hasNoDefaultLib) continue; // skip searching default lib
+            if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib
             let cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
@@ -219,7 +221,7 @@ export class CompilationCache {
             for (let i = 0; i < sourceFiles.length; i++) {
                 let restorationMemory = <(() => void)[]>[];
                 let src = sourceFiles[i];
-                if (src.hasNoDefaultLib) continue; // skip searching default lib
+                if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib
                 let cached = this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
                     && !project.spriteMerge && project.textForTranslationReplacer == null) {
@@ -261,7 +263,7 @@ export class CompilationCache {
                     let trs = info.trs;
                     for (let j = 0; j < trs.length; j++) {
                         let message = trs[j].message;
-                        if (typeof message === 'string') {
+                        if (typeof message === 'string' && trs[j].justFormat!=true) {
                             let id = project.textForTranslationReplacer(trs[j]);
                             let ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));

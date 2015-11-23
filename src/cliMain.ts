@@ -280,6 +280,7 @@ function humanTrue(val: string): boolean {
 
 function getDefaultDebugOptions() {
     return {
+        localize: false,
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
@@ -326,6 +327,7 @@ export function run() {
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .action((c) => {
             commandRunning = true;
             let project = bb.createProjectFromDir(bb.currentDirectory());
@@ -340,6 +342,9 @@ export function run() {
             project.compress = humanTrue(c["compress"]);
             project.mangle = humanTrue(c["mangle"]);
             project.beautify = humanTrue(c["beautify"]);
+            if (c["localize"]) {
+                project.localize = humanTrue(c["localize"]);
+            }
             if (!project.outputDir) {
                 project.outputDir = "./dist";
             }
@@ -351,6 +356,28 @@ export function run() {
                 console.error(err);
                 process.exit(1);
             });
+        });
+    c
+        .command("translation")
+        .alias("t")
+        .description("everything around translations")
+        .option("-a, --addlang <lang>", "add new language")
+        .option("-r, --removelang <lang>", "remove language")
+        .action((c)=> {
+            commandRunning = true;
+            let project = bb.createProjectFromDir(bb.currentDirectory());
+            let trDir = path.join(project.dir, "translations");
+            let trDb = new bb.TranslationDb();
+            trDb.loadLangDbs(trDir);
+            if (c["addlang"]) {
+                trDb.addLang(c["addlang"]);
+                trDb.saveLangDbs(trDir);
+            }
+            if (c["removelang"]) {
+                trDb.removeLang(c["removelang"]);
+                trDb.saveLangDbs(trDir);
+            }
+            process.exit(0);
         });
     c
         .command("interactive")

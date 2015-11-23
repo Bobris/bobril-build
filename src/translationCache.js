@@ -1,4 +1,7 @@
 var fs = require('fs');
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+var pathUtils = require("./pathUtils");
 var indexOfLangsMessages = 4;
 var TranslationDb = (function () {
     function TranslationDb() {
@@ -19,6 +22,20 @@ var TranslationDb = (function () {
     };
     TranslationDb.prototype.buildKey = function (message, hint, hasParams) {
         return message + '\x01\x02' + (hasParams ? '#' : '-') + (hint || '');
+    };
+    TranslationDb.prototype.loadLangDbs = function (dir) {
+        var _this = this;
+        var trFiles;
+        try {
+            trFiles = fs.readdirSync(dir).filter(function (v) { return /\.json$/i.test(v); });
+        }
+        catch (err) {
+            // ignore errors
+            return;
+        }
+        trFiles.forEach(function (v) {
+            _this.loadLangDb(path.join(dir, v));
+        });
     };
     TranslationDb.prototype.loadLangDb = function (fileName) {
         var json = JSON.parse(fs.readFileSync(fileName, 'utf-8'));
@@ -71,6 +88,13 @@ var TranslationDb = (function () {
             tr.splice(pos, 1);
         }
     };
+    TranslationDb.prototype.saveLangDbs = function (dir) {
+        var _this = this;
+        pathUtils.mkpathsync(dir);
+        this.langs.forEach(function (lang) {
+            _this.saveLangDb(path.join(dir, lang + ".json"), lang);
+        });
+    };
     TranslationDb.prototype.saveLangDb = function (filename, lang) {
         var pos = this.langs.indexOf(lang);
         if (pos < 0)
@@ -116,6 +140,15 @@ var TranslationDb = (function () {
         }
         list.length = 0;
     };
+    TranslationDb.prototype.clearTemporaryFlags = function () {
+        var list = this.temporaryKeyList;
+        var db = this.db;
+        for (var i = 0; i < list.length; i++) {
+            var item = db[list[i]];
+            item[2] = item[2] & ~2;
+        }
+        list.length = 0;
+    };
     TranslationDb.prototype.pruneDbOfTemporaryUnused = function () {
         var list = this.temporaryKeyList;
         var db = this.db;
@@ -128,6 +161,9 @@ var TranslationDb = (function () {
                 i--;
             }
         }
+    };
+    TranslationDb.prototype.getTemporaryStringsCount = function () {
+        return this.temporaryKeyList.length;
     };
     TranslationDb.prototype.getMessageArrayInLang = function (lang) {
         var pos = this.langs.indexOf(lang);

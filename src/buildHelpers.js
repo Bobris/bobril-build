@@ -12,14 +12,14 @@ function isBobrilG11NFunction(name, callExpression, sourceInfo) {
     return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
 }
 function extractBindings(bindings, ns, ims) {
-    if (bindings.kind === 225 /* NamedImports */) {
+    if (bindings.kind === ts.SyntaxKind.NamedImports) {
         var namedBindings = bindings;
         for (var i = 0; i < namedBindings.elements.length; i++) {
             var binding = namedBindings.elements[i];
             ims[(binding.propertyName || binding.name).text] = binding.name.text;
         }
     }
-    else if (ns == null && bindings.kind === 224 /* NamespaceImport */) {
+    else if (ns == null && bindings.kind === ts.SyntaxKind.NamespaceImport) {
         return bindings.name.text;
     }
     return ns;
@@ -37,7 +37,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         trs: []
     };
     function visit(n) {
-        if (n.kind === 222 /* ImportDeclaration */) {
+        if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             var id = n;
             var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
             var fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
@@ -50,14 +50,14 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             }
             result.sourceDeps.push([moduleSymbol.name, fn]);
         }
-        else if (n.kind === 228 /* ExportDeclaration */) {
+        else if (n.kind === ts.SyntaxKind.ExportDeclaration) {
             var ed = n;
             if (ed.moduleSpecifier) {
                 var moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
                 result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
         }
-        else if (n.kind === 168 /* CallExpression */) {
+        else if (n.kind === ts.SyntaxKind.CallExpression) {
             var ce = n;
             if (isBobrilFunction('sprite', ce, result)) {
                 var si = { callExpression: ce };
@@ -101,13 +101,13 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                     item.userNamed = true;
                 }
                 else {
-                    if (ce.parent.kind === 211 /* VariableDeclaration */) {
+                    if (ce.parent.kind === ts.SyntaxKind.VariableDeclaration) {
                         var vd = ce.parent;
                         item.name = vd.name.text;
                     }
-                    else if (ce.parent.kind === 181 /* BinaryExpression */) {
+                    else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         var be = ce.parent;
-                        if (be.operatorToken.kind === 56 /* FirstAssignment */ && be.left.kind === 69 /* Identifier */) {
+                        if (be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
                             item.name = be.left.text;
                         }
                     }
@@ -115,7 +115,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                 result.styleDefs.push(item);
             }
             else if (isBobrilG11NFunction('t', ce, result)) {
-                var item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined };
+                var item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: false };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
@@ -124,6 +124,16 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                 }
                 if (ce.arguments.length >= 3) {
                     item.hint = evalNode.evalNode(ce.arguments[2], tc, null);
+                }
+                result.trs.push(item);
+            }
+            else if (isBobrilG11NFunction('f', ce, result)) {
+                var item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: true };
+                item.message = evalNode.evalNode(ce.arguments[0], tc, null);
+                if (ce.arguments.length >= 2) {
+                    item.withParams = true;
+                    var params = evalNode.evalNode(ce.arguments[1], tc, null);
+                    item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
                 }
                 result.trs.push(item);
             }
@@ -136,28 +146,28 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
 exports.gatherSourceInfo = gatherSourceInfo;
 function createNodeFromValue(value) {
     if (value === null) {
-        var nullNode = ts.createNode(93 /* NullKeyword */);
+        var nullNode = ts.createNode(ts.SyntaxKind.NullKeyword);
         nullNode.pos = -1;
         return nullNode;
     }
     if (value === true) {
-        var result = ts.createNode(99 /* TrueKeyword */);
+        var result = ts.createNode(ts.SyntaxKind.TrueKeyword);
         result.pos = -1;
         return result;
     }
     if (value === false) {
-        var result = ts.createNode(84 /* FalseKeyword */);
+        var result = ts.createNode(ts.SyntaxKind.FalseKeyword);
         result.pos = -1;
         return result;
     }
     if (typeof value === "string") {
-        var result = ts.createNode(9 /* StringLiteral */);
+        var result = ts.createNode(ts.SyntaxKind.StringLiteral);
         result.pos = -1;
         result.text = value;
         return result;
     }
     if (typeof value === "number") {
-        var result = ts.createNode(8 /* NumericLiteral */);
+        var result = ts.createNode(ts.SyntaxKind.NumericLiteral);
         result.pos = -1;
         result.text = "" + value;
         return result;
@@ -166,7 +176,7 @@ function createNodeFromValue(value) {
 }
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;
-    var result = ts.createNode(69 /* Identifier */);
+    var result = ts.createNode(ts.SyntaxKind.Identifier);
     result.pos = -1;
     result.flags = ex.name.flags;
     result.text = name;
@@ -198,10 +208,10 @@ function createNodeArray(len) {
 function buildLambdaReturningArray(values) {
     var pos = values[0].pos;
     var end = values[values.length - 1].end;
-    var fn = ts.createNode(174 /* ArrowFunction */);
+    var fn = ts.createNode(ts.SyntaxKind.ArrowFunction);
     fn.parameters = createNodeArray(0);
-    fn.equalsGreaterThanToken = ts.createNode(34 /* EqualsGreaterThanToken */);
-    var body = ts.createNode(164 /* ArrayLiteralExpression */);
+    fn.equalsGreaterThanToken = ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
+    var body = ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
     body.elements = createNodeArray(0);
     (_a = body.elements).push.apply(_a, values);
     body.pos = pos;

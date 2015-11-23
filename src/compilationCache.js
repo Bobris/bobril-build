@@ -58,7 +58,7 @@ var CompilationCache = (function () {
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
         var jsWriteFileCallback = project.writeFileCallback;
         if (project.totalBundle) {
-            if (project.options.module != 1 /* CommonJS */)
+            if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
@@ -105,7 +105,7 @@ var CompilationCache = (function () {
         var sourceFiles = program.getSourceFiles();
         for (var i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
-            if (src.hasNoDefaultLib)
+            if (/\.d\.ts$/i.test(src.fileName))
                 continue; // skip searching default lib
             var cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
@@ -149,7 +149,7 @@ var CompilationCache = (function () {
             for (var i = 0; i < sourceFiles.length; i++) {
                 var restorationMemory = [];
                 var src = sourceFiles[i];
-                if (src.hasNoDefaultLib)
+                if (/\.d\.ts$/i.test(src.fileName))
                     continue; // skip searching default lib
                 var cached = _this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
@@ -192,7 +192,7 @@ var CompilationCache = (function () {
                     var trs = info.trs;
                     for (var j = 0; j < trs.length; j++) {
                         var message = trs[j].message;
-                        if (typeof message === 'string') {
+                        if (typeof message === 'string' && trs[j].justFormat != true) {
                             var id = project.textForTranslationReplacer(trs[j]);
                             var ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
