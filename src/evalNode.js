@@ -96,6 +96,8 @@ function evalNode(n, tc, resolveStringLiteral) {
         case ts.SyntaxKind.Identifier:
         case ts.SyntaxKind.PropertyAccessExpression: {
             var s = tc.getSymbolAtLocation(n);
+            if (s == null)
+                return undefined;
             if (((s.flags & ts.SymbolFlags.Alias) !== 0) && n.kind === ts.SyntaxKind.PropertyAccessExpression) {
                 if (s.declarations.length !== 1)
                     return undefined;

@@ -127,12 +127,18 @@ export class CompilationCache {
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
+
         if (project.totalBundle) {
             if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            let ndir = project.dir.toLowerCase();
             jsWriteFileCallback = (filename: string, content: Buffer) => {
-                project.commonJsTemp[filename.toLowerCase()] = content;
+                let nfn = filename.toLowerCase();
+                if (nfn.substr(0, ndir.length) === ndir) {
+                    nfn = nfn.substr(ndir.length + 1);
+                }
+                project.commonJsTemp[nfn] = content;
             };
         }
         project.moduleMap = project.moduleMap || Object.create(null);
@@ -263,7 +269,7 @@ export class CompilationCache {
                     let trs = info.trs;
                     for (let j = 0; j < trs.length; j++) {
                         let message = trs[j].message;
-                        if (typeof message === 'string' && trs[j].justFormat!=true) {
+                        if (typeof message === 'string' && trs[j].justFormat != true) {
                             let id = project.textForTranslationReplacer(trs[j]);
                             let ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));

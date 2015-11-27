@@ -61,8 +61,13 @@ var CompilationCache = (function () {
             if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            var ndir = project.dir.toLowerCase();
             jsWriteFileCallback = function (filename, content) {
-                project.commonJsTemp[filename.toLowerCase()] = content;
+                var nfn = filename.toLowerCase();
+                if (nfn.substr(0, ndir.length) === ndir) {
+                    nfn = nfn.substr(ndir.length + 1);
+                }
+                project.commonJsTemp[nfn] = content;
             };
         }
         project.moduleMap = project.moduleMap || Object.create(null);

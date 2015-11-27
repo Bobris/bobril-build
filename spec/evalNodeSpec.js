@@ -46,6 +46,13 @@ function createCompilerHost(currentDirectory) {
             }
         }
     }
+    function resolveModuleName(moduleName, containingFile) {
+        if (moduleName.substr(0, 1) === '.') {
+            var res = moduleName + ".ts";
+            return { resolvedFileName: res };
+        }
+        return null;
+    }
     return {
         getSourceFile: getSourceFile,
         getDefaultLibFileName: function (options) { return defaultLibFilename; },
@@ -64,6 +71,13 @@ function createCompilerHost(currentDirectory) {
         },
         readFile: function (fileName) {
             return fs.readFileSync(path.join(currentDirectory, fileName)).toString();
+        },
+        resolveModuleNames: function (moduleNames, containingFile) {
+            return moduleNames.map(function (n) {
+                var r = resolveModuleName(n, containingFile);
+                //console.log(n, containingFile, r);
+                return r;
+            });
         }
     };
 }
