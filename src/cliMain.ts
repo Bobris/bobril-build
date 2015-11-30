@@ -258,6 +258,7 @@ function startCompileProcess(path: string): ICompileProcess {
                     log(param) { console.log(param) },
                     write({ name, buffer }) {
                         writtenFileCount++;
+                        console.log(name);
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk() {
@@ -280,7 +281,6 @@ function humanTrue(val: string): boolean {
 
 function getDefaultDebugOptions() {
     return {
-        localize: false,
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
@@ -370,10 +370,12 @@ export function run() {
             let trDb = new bb.TranslationDb();
             trDb.loadLangDbs(trDir);
             if (c["addlang"]) {
+                console.log("Adding locale "+c["addlang"]);
                 trDb.addLang(c["addlang"]);
                 trDb.saveLangDbs(trDir);
             }
             if (c["removelang"]) {
+                console.log("Removing locale "+c["removelang"]);
                 trDb.removeLang(c["removelang"]);
                 trDb.saveLangDbs(trDir);
             }

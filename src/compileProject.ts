@@ -90,12 +90,8 @@ export function defineTranslationReporter(project: bb.IProject) {
     };
 }
 
-export function defineTranslationReplacer(project: bb.IProject, translationDb: bb.TranslationDb) {
-    project.textForTranslationReplacer = translationDb.addUsageOfMessage.bind(translationDb);
-}
-
 export function emitTranslationsJs(project: bb.IProject, translationDb: bb.TranslationDb) {
-    bb.writeTranslationFile('en', translationDb.getMessageArrayInLang('en'), 'en.js', project.writeFileCallback);
+    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', project.writeFileCallback);
     translationDb.langs.forEach(lang=> {
         bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), lang + '.js', project.writeFileCallback);
     });
@@ -108,7 +104,7 @@ export function compileProject(project: bb.IProject): Promise<any> {
     let trDir = path.join(project.dir, "translations");
     if (project.localize) {
         translationDb.loadLangDbs(trDir);
-        defineTranslationReplacer(project, translationDb);
+        project.compileTranslation = translationDb;
     }
     project.writeFileCallback = (fn: string, b: Buffer) => {
         let fullname = path.join(project.outputDir, fn);
@@ -116,16 +112,16 @@ export function compileProject(project: bb.IProject): Promise<any> {
         bb.mkpathsync(path.dirname(fullname));
         fs.writeFileSync(fullname, b);
     };
-    translationDb.clearUsedFlags();
+    translationDb.clearBeforeCompilation();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
         bb.updateIndexHtml(project);
-        if (project.localize) {
+        if (project.localize && translationDb.changeInMessageIds) {
             console.log("Writing localizations");
             emitTranslationsJs(project, translationDb);
         }
-        if (translationDb.langs.length > 0 && translationDb.getTemporaryStringsCount()) {
+        if (translationDb.langs.length > 0 && translationDb.addedMessage) {
             console.log("Writing translations");
             translationDb.saveLangDbs(trDir);
         }

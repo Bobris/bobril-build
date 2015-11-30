@@ -14,7 +14,8 @@ function createProject(param) {
             promise: Promise.resolve(null),
             memoryFs: Object.create(null),
             projectDir: param.dir,
-            project: bb.createProjectFromDir(param.dir)
+            project: bb.createProjectFromDir(param.dir),
+            translationDirty: false
         };
         cps[param.id] = cp;
         cp.project.logCallback = function (text) {
@@ -58,7 +59,16 @@ function setProjectOptions(param) {
     if (cp) {
         cp.promise = cp.promise.then(function () {
             Object.assign(cp.project, param.options);
-            process.send({ command: "options", param: cp.project });
+            var resp = Object.assign({}, cp.project);
+            resp.compileTranslation = undefined;
+            resp.textForTranslationReporter = undefined;
+            resp.imgBundleCache = undefined;
+            resp.projectJsonTime = undefined;
+            resp.lastwrittenIndexHtml = undefined;
+            resp.depJsFiles = undefined;
+            resp.moduleMap = undefined;
+            resp.commonJsTemp = undefined;
+            process.send({ command: "options", param: resp });
         });
     }
     else {
@@ -73,18 +83,22 @@ function compile(param) {
             cp.promise.then(function () {
                 bb.defineTranslationReporter(cp.project);
                 if (cp.project.localize) {
-                    bb.defineTranslationReplacer(cp.project, cp.translationDb);
+                    cp.translationDb.clearBeforeCompilation();
+                    cp.project.compileTranslation = cp.translationDb;
                 }
                 else {
-                    cp.project.textForTranslationReplacer = null;
+                    cp.project.compileTranslation = null;
                 }
                 cp.compilationCache.clearFileTimeModifications();
                 return cp.compilationCache.compile(cp.project).then(function () {
                     if (!cp.project.totalBundle)
                         bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
                     bb.updateIndexHtml(cp.project);
-                    if (cp.project.localize) {
+                    if (cp.project.localize && cp.translationDb.changeInMessageIds) {
                         bb.emitTranslationsJs(cp.project, cp.translationDb);
+                    }
+                    if (cp.translationDb.addedMessage) {
+                        cp.translationDirty = true;
                     }
                 }).then(function () {
                     process.send({ command: "compileOk" });

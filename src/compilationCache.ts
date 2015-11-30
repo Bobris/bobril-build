@@ -48,6 +48,12 @@ interface IResFile {
     curTime?: number;
 }
 
+export interface ICompilationTranslation {
+    startCompileFile(fn: string): void;
+    addUsageOfMessage(info: BuildHelpers.TranslationMessage): number;
+    finishCompileFile(fn: string): void;
+}
+
 export interface IProject {
     main: string | string[];
     dir: string;
@@ -60,7 +66,7 @@ export interface IProject {
     spriteMerge?: boolean;
     remapImages?: (filename: string) => string;
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
-    textForTranslationReplacer?: (message: BuildHelpers.TranslationMessage) => number;
+    compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
     mainJsFile?: string;
     // dafalt false
@@ -132,23 +138,27 @@ export class CompilationCache {
             if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
-            let ndir = project.dir.toLowerCase();
             jsWriteFileCallback = (filename: string, content: Buffer) => {
-                let nfn = filename.toLowerCase();
-                if (nfn.substr(0, ndir.length) === ndir) {
-                    nfn = nfn.substr(ndir.length + 1);
-                }
-                project.commonJsTemp[nfn] = content;
+                project.commonJsTemp[filename] = content;
             };
         }
+        let ndir = project.dir.toLowerCase();
+        let jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
+        jsWriteFileCallback = (filename: string, content: Buffer) => {
+            let nfn = filename.toLowerCase();
+            if (nfn.substr(0, ndir.length) === ndir) {
+                filename = filename.substr(ndir.length + 1);
+            }
+            jsWriteFileCallbackUnnormalized(filename, content);
+        };
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
         let mainChangedList = [];
         for (let i = 0; i < mainList.length; i++) {
             let main = mainList[i];
-            let mainCache = this.calcMaxTimeForDeps(main, project.dir);
-            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge || project.textForTranslationReplacer != null) {
+            let mainCache = this.calcMaxTimeForDeps(main, project.dir, false);
+            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge) {
                 mainChangedList.push(main);
             }
         }
@@ -187,8 +197,6 @@ export class CompilationCache {
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
-                cached.maxTimeForDeps = undefined; // invalidate to recalculate fresness of dependencies
-                this.calcMaxTimeForDeps(src.fileName, project.dir);
             }
             if (project.spriteMerge) {
                 let info = cached.info;
@@ -223,6 +231,12 @@ export class CompilationCache {
             }
         }
 
+        // Recalculate fresness of all files
+        this.clearMaxTimeForDeps();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
+        }
+
         prom = prom.then(() => {
             for (let i = 0; i < sourceFiles.length; i++) {
                 let restorationMemory = <(() => void)[]>[];
@@ -230,7 +244,7 @@ export class CompilationCache {
                 if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib
                 let cached = this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
-                    && !project.spriteMerge && project.textForTranslationReplacer == null) {
+                    && !project.spriteMerge) {
                     continue;
                 }
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
@@ -265,12 +279,13 @@ export class CompilationCache {
                         BuildHelpers.setArgumentCount(si.callExpression, 4);
                     }
                 }
-                if (project.textForTranslationReplacer) {
+                if (project.compileTranslation) {
+                    project.compileTranslation.startCompileFile(src.fileName);
                     let trs = info.trs;
                     for (let j = 0; j < trs.length; j++) {
                         let message = trs[j].message;
                         if (typeof message === 'string' && trs[j].justFormat != true) {
-                            let id = project.textForTranslationReplacer(trs[j]);
+                            let id = project.compileTranslation.addUsageOfMessage(trs[j]);
                             let ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
                             BuildHelpers.setArgument(ce, 0, id);
@@ -279,6 +294,7 @@ export class CompilationCache {
                             }
                         }
                     }
+                    project.compileTranslation.finishCompileFile(src.fileName);
                 }
                 for (let j = 0; j < info.styleDefs.length; j++) {
                     let sd = info.styleDefs[j];
@@ -445,14 +461,14 @@ export class CompilationCache {
         return cached;
     }
 
-    private calcMaxTimeForDeps(name: string, baseDir: string): ICacheFile {
+    private calcMaxTimeForDeps(name: string, baseDir: string, ignoreOutputTime: boolean): ICacheFile {
         let cached = this.getCachedFileExistence(name, baseDir);
         if (cached.maxTimeForDeps !== undefined) // It was already calculated or is being calculated
             return cached;
         cached.maxTimeForDeps = cached.curTime;
         if (cached.curTime === null) // Does not exists, that's bad full rebuild will be needed
             return cached;
-        if (cached.outputTime == null) // Output does not exists or is in unknown freshness
+        if (!ignoreOutputTime && cached.outputTime == null) // Output does not exists or is in unknown freshness
         {
             cached.maxTimeForDeps = null;
             return cached;
@@ -460,7 +476,7 @@ export class CompilationCache {
         if (cached.curTime === cached.infoTime) { // If info is fresh
             let deps = cached.info.sourceDeps;
             for (let i = 0; i < deps.length; i++) {
-                let depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir);
+                let depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir, ignoreOutputTime);
                 if (depCached.maxTimeForDeps === null) { // dependency does not exist -> rebuild to show error
                     cached.maxTimeForDeps = null;
                     return cached;

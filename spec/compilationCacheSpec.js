@@ -23,7 +23,7 @@ describe("compilationCache", function () {
             releaseStyleDefs: false,
             spriteMerge: true,
             writeFileCallback: write,
-            textForTranslationReplacer: tc.addUsageOfMessage.bind(tc)
+            compileTranslation: tc
         };
         cc.compile(project).then(function () {
             var moduleNames = Object.keys(project.moduleMap);
@@ -34,8 +34,8 @@ describe("compilationCache", function () {
                     continue;
                 moduleMap[name_1] = project.moduleMap[name_1].jsFile;
             }
-            bobrilDepsHelpers.writeSystemJsBasedDist(write, 'app.js', moduleMap);
-            bobrilDepsHelpers.writeTranslationFile('en', tc.getMessageArrayInLang('en'), 'en.js', write);
+            bobrilDepsHelpers.updateIndexHtml(project);
+            bobrilDepsHelpers.writeTranslationFile('en-US', tc.getMessageArrayInLang('en-US'), 'en-US.js', write);
             tc.addLang('cs-CZ');
             var trs = tc.getForTranslationLang('cs-CZ');
             trs[0][0] = 'Ahoj';

@@ -1,21 +1,25 @@
 import * as fs from 'fs';
 import * as BuildHelpers from './buildHelpers';
+import * as CompilationCache from './compilationCache';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as pathUtils from "./pathUtils";
 
 const indexOfLangsMessages = 4;
 
-export class TranslationDb {
+export class TranslationDb implements CompilationCache.ICompilationTranslation {
     // 0 - english message
     // 1 - hint
-    // 2 - withParams&1 temporary&2 used&4
+    // 2 - withParams&1 idAllocated references*2
     // 3 - message id
     // 4+ - message in langs[idx-4]
     db: { [messsageAndHint: string]: (string | number)[] };
-    usedKeyList: string[];
-    temporaryKeyList: string[];
     langs: string[];
+    usages: { [filename:string]: { [ key:string ]: boolean } };
+    availNumbers: number[];
+    nextFreeId: number;
+    changeInMessageIds: boolean;
+    addedMessage: boolean;
 
     constructor() {
         this.clear();
@@ -24,8 +28,10 @@ export class TranslationDb {
     clear() {
         this.db = Object.create(null);
         this.langs = [];
-        this.usedKeyList = [];
-        this.temporaryKeyList = [];
+        this.usages = Object.create(null);
+        this.availNumbers = [];
+        this.nextFreeId = 0;
+        this.changeInMessageIds = false;
     }
 
     addLang(name: string): number {
@@ -121,76 +127,105 @@ export class TranslationDb {
         }
         fs.writeFileSync(filename, JSON.stringify(items));
     }
+    
+    pruneUnusedMesssages(): void {
+        let list = Object.keys(this.db);
+        for (let i=0; i<list.length; i++) {
+            let tr = this.db[list[i]];
+            if (<number>tr[2]<2) {
+                delete this.db[list[i]];
+            }
+        }                
+    }
 
+    currentFileUsages: { [ key:string ]: boolean };
+    newFileUsages: { [key:string ]: boolean };
+    
+    allocId(): number {
+        if (this.availNumbers.length===0) {
+            return this.nextFreeId++;
+        }
+        return this.availNumbers.pop();
+    }
+    
+    freeId(id: number) {
+        this.availNumbers.push(id);
+    }
+
+    clearBeforeCompilation() {
+        this.changeInMessageIds = false;
+        this.addedMessage = false;
+    }
+    
+    startCompileFile(fn:string) {
+        this.currentFileUsages = this.usages[fn];
+        this.newFileUsages = undefined; // lazy allocated for speed
+    }
+    
     addUsageOfMessage(info: BuildHelpers.TranslationMessage): number {
         let key = this.buildKey(<string>info.message, info.hint, info.withParams);
+        if (this.newFileUsages===undefined) this.newFileUsages = Object.create(null);
+        if (this.currentFileUsages!==undefined && this.currentFileUsages[key]===true) {
+            let item = this.db[key];
+            delete this.currentFileUsages[key];
+            this.newFileUsages[key] = true;
+            return <number>item[3];
+        }
         let item = this.db[key];
+        if (this.newFileUsages[key]===true) {
+            return <number>item[3];
+        }
+        this.newFileUsages[key] = true;
         if (item === undefined) {
-            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2 | 4, this.usedKeyList.length]; // add as temporary and as used
+            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2, this.allocId()]; // add as allocated
+            this.changeInMessageIds = true;
+            this.addedMessage = true;
             this.db[key] = item;
-            this.usedKeyList.push(key);
-            this.temporaryKeyList.push(key);
+            return <number>item[3];
+        }
+        if (((<number>item[2]) & 2) === 0) {
+            item[2] = (<number>item[2]) | 2; // add allocated flag
+            item[3] = this.allocId();
+            this.changeInMessageIds = true;
         } else {
-            if (((<number>item[2]) & 4) === 0) {
-                item[2] = (<number>item[2]) | 4; // add used flag
-                item[3] = this.usedKeyList.length;
-                this.usedKeyList.push(key);
-            }
+            item[2] = (<number>item[2]) + 2; // increase allocated flag
         }
         return <number>item[3];
     }
 
-    clearUsedFlags() {
-        let list = this.usedKeyList;
-        let db = this.db;
-        for (let i = 0; i < list.length; i++) {
-            let item = db[list[i]];
-            item[2] = (<number>item[2]) & ~4;
-        }
-        list.length = 0;
-    }
-
-    clearTemporaryFlags() {
-        let list = this.temporaryKeyList;
-        let db = this.db;
-        for (let i = 0; i < list.length; i++) {
-            let item = db[list[i]];
-            item[2] = (<number>item[2]) & ~2;
-        }
-        list.length = 0;
-    }
-
-    pruneDbOfTemporaryUnused() {
-        let list = this.temporaryKeyList;
-        let db = this.db;
-        for (let i = 0; i < list.length; i++) {
-            let key = list[i];
-            let item = db[key];
-            if ((<number>item[2] & 4) === 0) { // not used
-                delete db[key];
-                list.splice(i, 1); i--;
+    finishCompileFile(fn:string) {
+        if (this.currentFileUsages!==undefined) {
+            let keys = Object.keys(this.currentFileUsages);
+            for(let i=0;i<keys.length;i++) {
+                let item = this.db[keys[i]];
+                item[2] = (<number>item[2]) - 2; // decrease allocated flag
+                if (<number>item[2]<2) {
+                    this.freeId(<number>item[3]);
+                }
             }
         }
+        this.usages[fn] = this.newFileUsages;
     }
-
-    getTemporaryStringsCount(): number {
-        return this.temporaryKeyList.length;
-    }
-
+    
     getMessageArrayInLang(lang: string): string[] {
         let pos = this.langs.indexOf(lang);
         if (pos < 0) pos = this.langs.length;
         pos += indexOfLangsMessages;
         let result = [];
-        let list = this.usedKeyList;
         let db = this.db;
+        let list = Object.keys(db);
         for (let i = 0; i < list.length; i++) {
             let item = db[list[i]];
-            if (item[pos] != null) {
-                result.push(item[pos]);
-            } else {
-                result.push(item[0]); // English as fallback
+            if (<number>item[2]>=2) {
+                if (item[pos] != null) {
+                    result[<number>item[3]]=item[pos];
+                } else {
+                    result[<number>item[3]]=item[0]; // English as fallback
+                }
             }
+        }
+        for(let i=0;i<result.length;i++) {
+            if (result[i]===undefined) result[i]="";
         }
         return result;
     }
@@ -200,8 +235,8 @@ export class TranslationDb {
         if (pos < 0) pos = this.langs.length;
         pos += indexOfLangsMessages;
         let result = [];
-        let list = this.usedKeyList;
         let db = this.db;
+        let list = Object.keys(db);
         for (let i = 0; i < list.length; i++) {
             let item = db[list[i]];
             if (item[pos] != null)

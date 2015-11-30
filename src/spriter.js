@@ -156,6 +156,12 @@ var D2Array = (function () {
             if (y <= oldDim[1])
                 y = oldDim[1];
             var n = x * y - oldDim[0] * oldDim[1];
+            if (addpx !== Infinity) {
+                if (x > y * 2 && x - oldDim[0] > 0)
+                    return false;
+                if (y > x * 2 && y - oldDim[1] > 0)
+                    return false;
+            }
             if (addpx > n) {
                 addpx = n;
                 return true;

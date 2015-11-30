@@ -246,6 +246,7 @@ function startCompileProcess(path) {
                     write: function (_a) {
                         var name = _a.name, buffer = _a.buffer;
                         writtenFileCount++;
+                        console.log(name);
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk: function () {
@@ -266,7 +267,6 @@ function humanTrue(val) {
 }
 function getDefaultDebugOptions() {
     return {
-        localize: false,
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
@@ -355,10 +355,12 @@ function run() {
         var trDb = new bb.TranslationDb();
         trDb.loadLangDbs(trDir);
         if (c["addlang"]) {
+            console.log("Adding locale " + c["addlang"]);
             trDb.addLang(c["addlang"]);
             trDb.saveLangDbs(trDir);
         }
         if (c["removelang"]) {
+            console.log("Removing locale " + c["removelang"]);
             trDb.removeLang(c["removelang"]);
             trDb.saveLangDbs(trDir);
         }

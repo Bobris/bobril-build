@@ -61,23 +61,27 @@ var CompilationCache = (function () {
             if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
-            var ndir = project.dir.toLowerCase();
             jsWriteFileCallback = function (filename, content) {
-                var nfn = filename.toLowerCase();
-                if (nfn.substr(0, ndir.length) === ndir) {
-                    nfn = nfn.substr(ndir.length + 1);
-                }
-                project.commonJsTemp[nfn] = content;
+                project.commonJsTemp[filename] = content;
             };
         }
+        var ndir = project.dir.toLowerCase();
+        var jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
+        jsWriteFileCallback = function (filename, content) {
+            var nfn = filename.toLowerCase();
+            if (nfn.substr(0, ndir.length) === ndir) {
+                filename = filename.substr(ndir.length + 1);
+            }
+            jsWriteFileCallbackUnnormalized(filename, content);
+        };
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
         this.clearMaxTimeForDeps();
         var mainChangedList = [];
         for (var i = 0; i < mainList.length; i++) {
             var main = mainList[i];
-            var mainCache = this.calcMaxTimeForDeps(main, project.dir);
-            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge || project.textForTranslationReplacer != null) {
+            var mainCache = this.calcMaxTimeForDeps(main, project.dir, false);
+            if (mainCache.maxTimeForDeps !== undefined || project.spriteMerge) {
                 mainChangedList.push(main);
             }
         }
@@ -116,8 +120,6 @@ var CompilationCache = (function () {
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
-                cached.maxTimeForDeps = undefined; // invalidate to recalculate fresness of dependencies
-                this.calcMaxTimeForDeps(src.fileName, project.dir);
             }
             if (project.spriteMerge) {
                 var info = cached.info;
@@ -150,6 +152,11 @@ var CompilationCache = (function () {
                 });
             }
         }
+        // Recalculate fresness of all files
+        this.clearMaxTimeForDeps();
+        for (var i = 0; i < sourceFiles.length; i++) {
+            this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
+        }
         prom = prom.then(function () {
             for (var i = 0; i < sourceFiles.length; i++) {
                 var restorationMemory = [];
@@ -158,7 +165,7 @@ var CompilationCache = (function () {
                     continue; // skip searching default lib
                 var cached = _this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
-                    && !project.spriteMerge && project.textForTranslationReplacer == null) {
+                    && !project.spriteMerge) {
                     continue;
                 }
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
@@ -193,12 +200,13 @@ var CompilationCache = (function () {
                         BuildHelpers.setArgumentCount(si.callExpression, 4);
                     }
                 }
-                if (project.textForTranslationReplacer) {
+                if (project.compileTranslation) {
+                    project.compileTranslation.startCompileFile(src.fileName);
                     var trs = info.trs;
                     for (var j = 0; j < trs.length; j++) {
                         var message = trs[j].message;
                         if (typeof message === 'string' && trs[j].justFormat != true) {
-                            var id = project.textForTranslationReplacer(trs[j]);
+                            var id = project.compileTranslation.addUsageOfMessage(trs[j]);
                             var ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
                             BuildHelpers.setArgument(ce, 0, id);
@@ -207,6 +215,7 @@ var CompilationCache = (function () {
                             }
                         }
                     }
+                    project.compileTranslation.finishCompileFile(src.fileName);
                 }
                 for (var j = 0; j < info.styleDefs.length; j++) {
                     var sd = info.styleDefs[j];
@@ -369,21 +378,21 @@ var CompilationCache = (function () {
         this.updateCachedFileContent(cached);
         return cached;
     };
-    CompilationCache.prototype.calcMaxTimeForDeps = function (name, baseDir) {
+    CompilationCache.prototype.calcMaxTimeForDeps = function (name, baseDir, ignoreOutputTime) {
         var cached = this.getCachedFileExistence(name, baseDir);
         if (cached.maxTimeForDeps !== undefined)
             return cached;
         cached.maxTimeForDeps = cached.curTime;
         if (cached.curTime === null)
             return cached;
-        if (cached.outputTime == null) {
+        if (!ignoreOutputTime && cached.outputTime == null) {
             cached.maxTimeForDeps = null;
             return cached;
         }
         if (cached.curTime === cached.infoTime) {
             var deps = cached.info.sourceDeps;
             for (var i = 0; i < deps.length; i++) {
-                var depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir);
+                var depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir, ignoreOutputTime);
                 if (depCached.maxTimeForDeps === null) {
                     cached.maxTimeForDeps = null;
                     return cached;

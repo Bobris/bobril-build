@@ -22,7 +22,7 @@ let page = b.createVirtualComponent({
                     {
                         tag: 'a',
                         attrs: { href: 'https://github.com/Bobris/Bobril' },
-                        children: 'Bobril GitHub pages'
+                        children: g.t('Bobril GitHub pages')
                     }
                 ]
             }
@@ -30,5 +30,4 @@ let page = b.createVirtualComponent({
     }
 });
 
-g.initGlobalization({ pathToTranslation: (locale: string) => './' + locale + '.js' });
 b.init(() => page({}));
