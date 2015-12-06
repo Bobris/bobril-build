@@ -53,7 +53,7 @@ var TranslationDb = (function () {
             var item = json[i];
             if (!Array.isArray(item))
                 throw new Error('items must be array');
-            if (item.length !== 3 || item.length !== 4)
+            if (item.length !== 3 && item.length !== 4)
                 throw new Error('items must have length==3 or 4');
             var message = item[0];
             var hint = item[1];

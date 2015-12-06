@@ -167,4 +167,4 @@ bobrilRegisterTranslations('cs-CZ',[function (n, ord) {
       : ((i >= 2 && i <= 4) && v0) ? 'few'
       : (!v0) ? 'many'
       : 'other';
-}],["Hello World! {c, number}"])
+}],["Hello World! {c, number}","Bobril GitHub pages"])
