@@ -3,8 +3,9 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
 import * as ts from "typescript";
+import * as g11n from "../node_modules/bobril-g11n/src/msgFormatParser";
 
-export function createProjectFromDir(path: string):bb.IProject {
+export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
         dir: path.replace(/\\/g, '/'),
         main: null,
@@ -22,7 +23,7 @@ function autodetectMainTs(project: bb.IProject): boolean {
         if (fs.existsSync(path.join(project.dir, fn))) {
             project.main = fn;
             project.mainJsFile = fn.replace(/\.ts$/, '.js');
-            project.logCallback("Info: Main found "+fn);
+            project.logCallback("Info: Main found " + fn);
             return true;
         }
     }
@@ -31,9 +32,9 @@ function autodetectMainTs(project: bb.IProject): boolean {
 }
 
 export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
-    let projectJsonFullPath = path.join(project.dir,'package.json');
+    let projectJsonFullPath = path.join(project.dir, 'package.json');
     let projectJsonModified = bb.fileModifiedTime(projectJsonFullPath);
-    if (projectJsonModified===project.projectJsonTime && !project.mainAutoDetected) {
+    if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected) {
         return project.main !== null;
     }
     let packageJson = null;
@@ -64,6 +65,8 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
         if (!autodetectMainTs(project)) return false;
         if (project == null) return null;
     }
+    let deps = Object.keys(packageObj.dependencies);
+    project.localize = deps.some(v=> v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) return true;
     if (typeof bobrilSection.title === 'string') {
@@ -75,18 +78,52 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     return true;
 }
 
-export function compileProject(project: bb.IProject):Promise<any> {
+export function defineTranslationReporter(project: bb.IProject) {
+    project.textForTranslationReporter = (message: bb.TranslationMessage) => {
+        if (typeof message.message != "string") return;
+        let ast = g11n.parse(<string>message.message);
+        if (typeof ast === "object" && ast.type === "error") {
+            let sc = message.callExpression.getSourceFile();
+            let pos = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
+            project.logCallback("Error: " + sc.fileName + "(" + (pos.line + 1) + "/" + (pos.character + 1) + ") " + ast.msg);
+        }
+    };
+}
+
+export function emitTranslationsJs(project: bb.IProject, translationDb: bb.TranslationDb) {
+    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', project.writeFileCallback);
+    translationDb.langs.forEach(lang=> {
+        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), lang + '.js', project.writeFileCallback);
+    });
+}
+
+export function compileProject(project: bb.IProject): Promise<any> {
     var compilationCache = new bb.CompilationCache();
     var translationDb = new bb.TranslationDb();
-	project.writeFileCallback = (fn: string, b: Buffer) => {
+    defineTranslationReporter(project);
+    let trDir = path.join(project.dir, "translations");
+    if (project.localize) {
+        translationDb.loadLangDbs(trDir);
+        project.compileTranslation = translationDb;
+    }
+    project.writeFileCallback = (fn: string, b: Buffer) => {
         let fullname = path.join(project.outputDir, fn);
-        console.log("Writing "+fullname);
+        console.log("Writing " + fullname);
         bb.mkpathsync(path.dirname(fullname));
-		fs.writeFileSync(fullname, b);	
-	};
+        fs.writeFileSync(fullname, b);
+    };
+    translationDb.clearBeforeCompilation();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
         bb.updateIndexHtml(project);
+        if (project.localize && translationDb.changeInMessageIds) {
+            console.log("Writing localizations");
+            emitTranslationsJs(project, translationDb);
+        }
+        if (translationDb.langs.length > 0 && translationDb.addedMessage) {
+            console.log("Writing translations");
+            translationDb.saveLangDbs(trDir);
+        }
     });
 }

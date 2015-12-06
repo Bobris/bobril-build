@@ -33,7 +33,7 @@ describe("bundler", function () {
             var project = {
                 dir: full,
                 main: 'main.ts',
-                options: { module: 1 /* CommonJS */, target: 1 /* ES5 */ },
+                options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
                 totalBundle: true,
                 writeFileCallback: write
             };

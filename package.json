@@ -1,6 +1,6 @@
 {
   "name": "bobril-build",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Builds Bobril Applications or Libraries",
   "main": "index.js",
   "bin": {
@@ -20,7 +20,7 @@
     "rdbg": "^1.1.0",
     "systemjs": "^0.18.9",
     "temp": "^0.8.3",
-    "typescript": "1.8.0-dev.20151019",
+    "typescript": "1.8.0-dev.20151122",
     "uglifyjs": "^2.4.10"
   },
   "devDependencies": {

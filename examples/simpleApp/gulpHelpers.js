@@ -6,7 +6,7 @@ var bobrilDepsHelpers = require('bobril-build/src/bobrilDepsHelpers');
 
 var dist = './dist/';
 var LANGUAGE_DIR = './g11n';
-var DEFAULT_LOCALE = 'en';
+var DEFAULT_LOCALE = 'en-US';
 var DIFF_SUFFIX = '_diff';
 
 var helpers = {};

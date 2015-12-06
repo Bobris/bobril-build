@@ -29,14 +29,22 @@ export function momentJsFiles(): string[] {
     return ['moment.js'];
 }
 
-export function systemJsBasedIndexHtml(mainRequire: string, moduleMap: { [name: string]: string }, title?: string) {
-    title = title || 'Bobril Application';
+export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
+    let title = project.htmlTitle || 'Bobril Application';
+    let moduleNames = Object.keys(project.moduleMap);
+    let moduleMap = <{ [name: string]: string }>Object.create(null);
+    for (let i = 0; i < moduleNames.length; i++) {
+        let name = moduleNames[i];
+        if (project.moduleMap[name].internalModule)
+            continue;
+        moduleMap[name] = project.moduleMap[name].jsFile;
+    }
     return `<html>
     <head>
         <meta charset="utf-8">
         <title>${title}</title>
     </head>
-    <body>
+    <body>${g11nInit(project)}
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
         <script type="text/javascript">
             System.config({
@@ -44,25 +52,22 @@ export function systemJsBasedIndexHtml(mainRequire: string, moduleMap: { [name: 
                 defaultJSExtensions: true,
                 map: ${JSON.stringify(moduleMap)}
             });
-            System.import('${mainRequire}');
+            System.import('${project.mainJsFile}');
         </script>
     </body>
 </html>
 `;
 }
 
-export function bundleBasedIndexHtml(title?: string) {
-    title = title || 'Bobril Application';
-    return `<html>
-    <head>
-        <meta charset="utf-8">
-        <title>${title}</title>
-    </head>
-    <body>
-        <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
-    </body>
-</html>
-`;
+function g11nInit(project: compilationCache.IProject): string {
+    if (!project.localize)
+        return "";
+    return `<script>function g11nPath(s){return "./"+s+".js"}</script>`;
+}
+
+export function bundleBasedIndexHtml(project: compilationCache.IProject) {
+    let title = project.htmlTitle || 'Bobril Application';
+    return `<html><head><meta charset="utf-8"><title>${title}</title></head><body>${g11nInit(project)}<script type="text/javascript" src="bundle.js" charset="utf-8"></script></body></html>`;
 }
 
 function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
@@ -72,17 +77,10 @@ function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: st
     }
 }
 
-export function writeSystemJsBasedDist(write: (fn: string, b: Buffer) => void, mainRequire: string, moduleMap: { [name:string]:string }): Promise<any> {
-    let prom = Promise.resolve(null);
-    write('index.html', new Buffer(systemJsBasedIndexHtml(mainRequire, moduleMap)));
-    writeDir(write, systemJsPath(), systemJsFiles());
-    return prom;
-}
-
 export function updateIndexHtml(project: compilationCache.IProject) {
     let newIndexHtml: string;
     if (project.totalBundle) {
-        newIndexHtml = bundleBasedIndexHtml(project.htmlTitle);
+        newIndexHtml = bundleBasedIndexHtml(project);
     } else {
         let moduleNames = Object.keys(project.moduleMap);
         let moduleMap = <{ [name: string]: string }>Object.create(null);
@@ -92,7 +90,7 @@ export function updateIndexHtml(project: compilationCache.IProject) {
                 continue;
             moduleMap[name] = project.moduleMap[name].jsFile;
         }
-        newIndexHtml = systemJsBasedIndexHtml(project.mainJsFile, moduleMap, project.htmlTitle);
+        newIndexHtml = systemJsBasedIndexHtml(project);
     }
     if (newIndexHtml !== project.lastwrittenIndexHtml) {
         project.writeFileCallback('index.html', new Buffer(newIndexHtml));

@@ -46,6 +46,13 @@ function createCompilerHost(currentDirectory): ts.CompilerHost {
             }
         }
     }
+    function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModule {
+        if (moduleName.substr(0, 1) === '.') {
+            let res = moduleName+".ts";
+            return { resolvedFileName: res };
+        }
+        return null;
+    }    
     return {
         getSourceFile: getSourceFile,
         getDefaultLibFileName: function(options) { return defaultLibFilename; },
@@ -63,6 +70,13 @@ function createCompilerHost(currentDirectory): ts.CompilerHost {
         },
         readFile(fileName: string): string {
             return fs.readFileSync(path.join(currentDirectory,fileName)).toString();
+        },
+        resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
+            return moduleNames.map((n) => {
+                let r = resolveModuleName(n, containingFile);
+                //console.log(n, containingFile, r);
+                return r;
+            });
         }
     };
 }

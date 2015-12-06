@@ -44,6 +44,7 @@ export interface TranslationMessage {
     withParams: boolean;
     knownParams?: string[];
     hint?: string;
+    justFormat?: boolean;
 }
 
 function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
@@ -148,7 +149,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                 }
                 result.styleDefs.push(item);
             } else if (isBobrilG11NFunction('t', ce, result)) {
-                let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined };
+                let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: false };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
@@ -159,7 +160,16 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                     item.hint = evalNode.evalNode(ce.arguments[2], tc, null);
                 }
                 result.trs.push(item);
-            }
+            } else if (isBobrilG11NFunction('f', ce, result)) {
+                let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: true };
+                item.message = evalNode.evalNode(ce.arguments[0], tc, null);
+                if (ce.arguments.length >= 2) {
+                    item.withParams = true;
+                    let params = evalNode.evalNode(ce.arguments[1], tc, null);
+                    item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
+                }
+                result.trs.push(item);
+            } 
         }
         ts.forEachChild(n, visit);
     }

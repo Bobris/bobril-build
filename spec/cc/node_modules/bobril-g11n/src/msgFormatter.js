@@ -2,6 +2,7 @@ var RuntimeFunctionGenerator_1 = require('./RuntimeFunctionGenerator');
 var localeDataStorage = require('./localeDataStorage');
 var numeral = require('numeral');
 var moment = require('moment');
+window.moment = moment;
 function AnyFormatter(locale, type, style, options) {
     var language = localeDataStorage.getLanguageFromLocale(locale);
     switch (type) {

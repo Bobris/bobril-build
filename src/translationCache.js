@@ -1,4 +1,7 @@
 var fs = require('fs');
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+var pathUtils = require("./pathUtils");
 var indexOfLangsMessages = 4;
 var TranslationDb = (function () {
     function TranslationDb() {
@@ -7,8 +10,10 @@ var TranslationDb = (function () {
     TranslationDb.prototype.clear = function () {
         this.db = Object.create(null);
         this.langs = [];
-        this.usedKeyList = [];
-        this.temporaryKeyList = [];
+        this.usages = Object.create(null);
+        this.availNumbers = [];
+        this.nextFreeId = 0;
+        this.changeInMessageIds = false;
     };
     TranslationDb.prototype.addLang = function (name) {
         var pos = this.langs.indexOf(name);
@@ -19,6 +24,20 @@ var TranslationDb = (function () {
     };
     TranslationDb.prototype.buildKey = function (message, hint, hasParams) {
         return message + '\x01\x02' + (hasParams ? '#' : '-') + (hint || '');
+    };
+    TranslationDb.prototype.loadLangDbs = function (dir) {
+        var _this = this;
+        var trFiles;
+        try {
+            trFiles = fs.readdirSync(dir).filter(function (v) { return /\.json$/i.test(v); });
+        }
+        catch (err) {
+            // ignore errors
+            return;
+        }
+        trFiles.forEach(function (v) {
+            _this.loadLangDb(path.join(dir, v));
+        });
     };
     TranslationDb.prototype.loadLangDb = function (fileName) {
         var json = JSON.parse(fs.readFileSync(fileName, 'utf-8'));
@@ -71,6 +90,13 @@ var TranslationDb = (function () {
             tr.splice(pos, 1);
         }
     };
+    TranslationDb.prototype.saveLangDbs = function (dir) {
+        var _this = this;
+        pathUtils.mkpathsync(dir);
+        this.langs.forEach(function (lang) {
+            _this.saveLangDb(path.join(dir, lang + ".json"), lang);
+        });
+    };
     TranslationDb.prototype.saveLangDb = function (filename, lang) {
         var pos = this.langs.indexOf(lang);
         if (pos < 0)
@@ -89,45 +115,76 @@ var TranslationDb = (function () {
         }
         fs.writeFileSync(filename, JSON.stringify(items));
     };
+    TranslationDb.prototype.pruneUnusedMesssages = function () {
+        var list = Object.keys(this.db);
+        for (var i = 0; i < list.length; i++) {
+            var tr = this.db[list[i]];
+            if (tr[2] < 2) {
+                delete this.db[list[i]];
+            }
+        }
+    };
+    TranslationDb.prototype.allocId = function () {
+        if (this.availNumbers.length === 0) {
+            return this.nextFreeId++;
+        }
+        return this.availNumbers.pop();
+    };
+    TranslationDb.prototype.freeId = function (id) {
+        this.availNumbers.push(id);
+    };
+    TranslationDb.prototype.clearBeforeCompilation = function () {
+        this.changeInMessageIds = false;
+        this.addedMessage = false;
+    };
+    TranslationDb.prototype.startCompileFile = function (fn) {
+        this.currentFileUsages = this.usages[fn];
+        this.newFileUsages = undefined; // lazy allocated for speed
+    };
     TranslationDb.prototype.addUsageOfMessage = function (info) {
         var key = this.buildKey(info.message, info.hint, info.withParams);
+        if (this.newFileUsages === undefined)
+            this.newFileUsages = Object.create(null);
+        if (this.currentFileUsages !== undefined && this.currentFileUsages[key] === true) {
+            var item_1 = this.db[key];
+            delete this.currentFileUsages[key];
+            this.newFileUsages[key] = true;
+            return item_1[3];
+        }
         var item = this.db[key];
+        if (this.newFileUsages[key] === true) {
+            return item[3];
+        }
+        this.newFileUsages[key] = true;
         if (item === undefined) {
-            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2 | 4, this.usedKeyList.length]; // add as temporary and as used
+            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2, this.allocId()]; // add as allocated
+            this.changeInMessageIds = true;
+            this.addedMessage = true;
             this.db[key] = item;
-            this.usedKeyList.push(key);
-            this.temporaryKeyList.push(key);
+            return item[3];
+        }
+        if ((item[2] & 2) === 0) {
+            item[2] = item[2] | 2; // add allocated flag
+            item[3] = this.allocId();
+            this.changeInMessageIds = true;
         }
         else {
-            if ((item[2] & 4) === 0) {
-                item[2] = item[2] | 4; // add used flag
-                item[3] = this.usedKeyList.length;
-                this.usedKeyList.push(key);
-            }
+            item[2] = item[2] + 2; // increase allocated flag
         }
         return item[3];
     };
-    TranslationDb.prototype.clearUsedFlags = function () {
-        var list = this.usedKeyList;
-        var db = this.db;
-        for (var i = 0; i < list.length; i++) {
-            var item = db[list[i]];
-            item[2] = item[2] & ~4;
-        }
-        list.length = 0;
-    };
-    TranslationDb.prototype.pruneDbOfTemporaryUnused = function () {
-        var list = this.temporaryKeyList;
-        var db = this.db;
-        for (var i = 0; i < list.length; i++) {
-            var key = list[i];
-            var item = db[key];
-            if ((item[2] & 4) === 0) {
-                delete db[key];
-                list.splice(i, 1);
-                i--;
+    TranslationDb.prototype.finishCompileFile = function (fn) {
+        if (this.currentFileUsages !== undefined) {
+            var keys = Object.keys(this.currentFileUsages);
+            for (var i = 0; i < keys.length; i++) {
+                var item = this.db[keys[i]];
+                item[2] = item[2] - 2; // decrease allocated flag
+                if (item[2] < 2) {
+                    this.freeId(item[3]);
+                }
             }
         }
+        this.usages[fn] = this.newFileUsages;
     };
     TranslationDb.prototype.getMessageArrayInLang = function (lang) {
         var pos = this.langs.indexOf(lang);
@@ -135,16 +192,22 @@ var TranslationDb = (function () {
             pos = this.langs.length;
         pos += indexOfLangsMessages;
         var result = [];
-        var list = this.usedKeyList;
         var db = this.db;
+        var list = Object.keys(db);
         for (var i = 0; i < list.length; i++) {
             var item = db[list[i]];
-            if (item[pos] != null) {
-                result.push(item[pos]);
+            if (item[2] >= 2) {
+                if (item[pos] != null) {
+                    result[item[3]] = item[pos];
+                }
+                else {
+                    result[item[3]] = item[0]; // English as fallback
+                }
             }
-            else {
-                result.push(item[0]); // English as fallback
-            }
+        }
+        for (var i = 0; i < result.length; i++) {
+            if (result[i] === undefined)
+                result[i] = "";
         }
         return result;
     };
@@ -154,8 +217,8 @@ var TranslationDb = (function () {
             pos = this.langs.length;
         pos += indexOfLangsMessages;
         var result = [];
-        var list = this.usedKeyList;
         var db = this.db;
+        var list = Object.keys(db);
         for (var i = 0; i < list.length; i++) {
             var item = db[list[i]];
             if (item[pos] != null)

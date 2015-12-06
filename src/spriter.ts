@@ -160,6 +160,10 @@ class D2Array {
             if (x <= oldDim[0]) x = oldDim[0];
             if (y <= oldDim[1]) y = oldDim[1];
             let n = x * y - oldDim[0] * oldDim[1];
+            if (addpx !== Infinity) {
+                if (x > y * 2 && x - oldDim[0] > 0) return false;
+                if (y > x * 2 && y - oldDim[1] > 0) return false;
+            }
             if (addpx > n) {
                 addpx = n;
                 return true;

@@ -4,6 +4,7 @@ import * as localeDataStorage from './localeDataStorage';
 declare var require: any;
 var numeral = require('numeral');
 var moment = require('moment');
+(<any>window).moment = moment;
 
 function AnyFormatter(locale: string, type: string, style: string, options: Object): (value: any, options: Object) => string {
     let language = localeDataStorage.getLanguageFromLocale(locale);

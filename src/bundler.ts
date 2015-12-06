@@ -226,7 +226,7 @@ __bbe['${name}']=module.exports; })();`);
                             newVar.definitions[0].name.thedef = symb;
                             (<uglify.IAstSimpleStatement>stm).body = newVar;
                             selfExpNames[pea.name] = true;
-                            cached.selfexports.push({ name:pea.name, node:new uglify.AST_SymbolRef({ name: newName, thedef: symb })});
+                            cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
                         }
                         if (stmbody instanceof uglify.AST_Call) {
@@ -244,7 +244,7 @@ __bbe['${name}']=module.exports; })();`);
                                         }
                                         if (cached.requires.indexOf(reqr) < 0)
                                             cached.requires.push(reqr);
-                                        cached.selfexports.push({ reexport:reqr });
+                                        cached.selfexports.push({ reexport: reqr });
                                         return null;
                                     }
                                 }
@@ -289,7 +289,7 @@ __bbe['${name}']=module.exports; })();`);
                             ast.variables.set(newName, symb);
                             symbVar.thedef = symb;
                             selfExpNames[key] = true;
-                            cached.selfexports.push({ name:key, node:new uglify.AST_SymbolRef({ name: newName, thedef: symb })});
+                            cached.selfexports.push({ name: key, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return false;
                         }
                     }
@@ -328,12 +328,12 @@ __bbe['${name}']=module.exports; })();`);
         } else if (exp.reexport) {
             let reexModule = project.cache[exp.reexport.toLowerCase()];
             if (reexModule.exports) {
-                Object.assign(cached.exports,reexModule.exports);
+                Object.assign(cached.exports, reexModule.exports);
             } else {
                 reexModule.selfexports.forEach(exp2 => {
-                   if (exp2.name) {
-                       cached.exports[exp2.name] = exp2.node;
-                   } 
+                    if (exp2.name) {
+                        cached.exports[exp2.name] = exp2.node;
+                    }
                 });
             }
         }
@@ -418,6 +418,21 @@ export function bundle(project: IBundleProject) {
                     symb.scope = undefined;
                     return symb;
                 }
+                let reqPath = (<ISymbolDef>symb.thedef).bbRequirePath;
+                if (reqPath !== undefined && transformer.parent() instanceof uglify.AST_VarDef) {
+                    let p = <uglify.IAstVarDef>(transformer.parent());
+                    if (p.value === node) {
+                        let properties = [];
+                        let extf = project.cache[reqPath.toLowerCase()];
+                        if (!extf.difficult) {
+                            let keys = Object.keys(extf.exports);
+                            keys.forEach(key=> {
+                                properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key, value: renameSymbol(extf.exports[key]) }));
+                            });
+                            return new uglify.AST_Object({ properties });
+                        }
+                    }
+                }
             }
             if (node instanceof uglify.AST_PropAccess) {
                 let propAccess = (<uglify.IAstPropAccess>node);
@@ -495,9 +510,9 @@ export function bundle(project: IBundleProject) {
     if (project.mangle !== false) {
         bundleAst.figure_out_scope();
         let rootScope = null;
-        let walker = new uglify.TreeWalker((n)=>{
-            if (n!==bundleAst && n instanceof uglify.AST_Scope) {
-                rootScope = n;              
+        let walker = new uglify.TreeWalker((n) => {
+            if (n !== bundleAst && n instanceof uglify.AST_Scope) {
+                rootScope = n;
                 return true;
             }
             return false;

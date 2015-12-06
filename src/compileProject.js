@@ -3,12 +3,13 @@ var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var fs = require("fs");
 var ts = require("typescript");
+var g11n = require("../node_modules/bobril-g11n/src/msgFormatParser");
 function createProjectFromDir(path) {
     var project = {
         dir: path.replace(/\\/g, '/'),
         main: null,
         mainJsFile: null,
-        options: { module: 1 /* CommonJS */, target: 1 /* ES5 */, skipDefaultLibCheck: true }
+        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     return project;
 }
@@ -67,6 +68,8 @@ function refreshProjectFromPackageJson(project) {
         if (project == null)
             return null;
     }
+    var deps = Object.keys(packageObj.dependencies);
+    project.localize = deps.some(function (v) { return v === "bobril-g11n"; });
     var bobrilSection = packageObj.bobril;
     if (bobrilSection == null)
         return true;
@@ -79,20 +82,55 @@ function refreshProjectFromPackageJson(project) {
     return true;
 }
 exports.refreshProjectFromPackageJson = refreshProjectFromPackageJson;
+function defineTranslationReporter(project) {
+    project.textForTranslationReporter = function (message) {
+        if (typeof message.message != "string")
+            return;
+        var ast = g11n.parse(message.message);
+        if (typeof ast === "object" && ast.type === "error") {
+            var sc = message.callExpression.getSourceFile();
+            var pos = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
+            project.logCallback("Error: " + sc.fileName + "(" + (pos.line + 1) + "/" + (pos.character + 1) + ") " + ast.msg);
+        }
+    };
+}
+exports.defineTranslationReporter = defineTranslationReporter;
+function emitTranslationsJs(project, translationDb) {
+    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', project.writeFileCallback);
+    translationDb.langs.forEach(function (lang) {
+        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), lang + '.js', project.writeFileCallback);
+    });
+}
+exports.emitTranslationsJs = emitTranslationsJs;
 function compileProject(project) {
     var compilationCache = new bb.CompilationCache();
     var translationDb = new bb.TranslationDb();
+    defineTranslationReporter(project);
+    var trDir = path.join(project.dir, "translations");
+    if (project.localize) {
+        translationDb.loadLangDbs(trDir);
+        project.compileTranslation = translationDb;
+    }
     project.writeFileCallback = function (fn, b) {
         var fullname = path.join(project.outputDir, fn);
         console.log("Writing " + fullname);
         bb.mkpathsync(path.dirname(fullname));
         fs.writeFileSync(fullname, b);
     };
+    translationDb.clearBeforeCompilation();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(function () {
         if (!project.totalBundle)
             bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
         bb.updateIndexHtml(project);
+        if (project.localize && translationDb.changeInMessageIds) {
+            console.log("Writing localizations");
+            emitTranslationsJs(project, translationDb);
+        }
+        if (translationDb.langs.length > 0 && translationDb.addedMessage) {
+            console.log("Writing translations");
+            translationDb.saveLangDbs(trDir);
+        }
     });
 }
 exports.compileProject = compileProject;
