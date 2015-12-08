@@ -40,13 +40,12 @@ gulp.task('build-src', ['clean-dist'], function () {
         }
       }
     },
-    compileTranslation: translationDb,
+    textForTranslationReplacer: translationDb.addUsageOfMessage.bind(translationDb),
     spriteMerge: false,
     writeFileCallback: helpers.write
   }).then(function () {
     bobrilDepsHelpers.writeSystemJsBasedDist(helpers.write, src + 'app.js', {})
     bobrilDepsHelpers.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', helpers.write.bind(this));
-
     helpers.importLanguages(true, translationDb);
   }).then(function () {
     return gulp.src([dist + 'index.html'])
