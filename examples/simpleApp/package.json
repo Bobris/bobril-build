@@ -15,7 +15,7 @@
     "bobril": "^4.7.0"
   },
   "devDependencies": {
-    "bobril-build": "^0.5.5",
+    "bobril-build": "^0.6.0",
     "gulp": "^3.9.0",
     "gulp-clean": "^0.3.1",
     "gulp-replace": "^0.5.4",
