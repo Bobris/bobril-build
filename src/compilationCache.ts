@@ -139,7 +139,7 @@ export class CompilationCache {
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = (filename: string, content: Buffer) => {
-                project.commonJsTemp[filename] = content;
+                project.commonJsTemp[filename.toLowerCase()] = content;
             };
         }
         let ndir = project.dir.toLowerCase();

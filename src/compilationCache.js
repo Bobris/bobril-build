@@ -62,7 +62,7 @@ var CompilationCache = (function () {
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
-                project.commonJsTemp[filename] = content;
+                project.commonJsTemp[filename.toLowerCase()] = content;
             };
         }
         var ndir = project.dir.toLowerCase();
