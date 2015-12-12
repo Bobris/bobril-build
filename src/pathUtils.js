@@ -13,6 +13,23 @@ function isAbsolutePath(name) {
     return /^([a-zA-Z]\:)?\//.test(name);
 }
 exports.isAbsolutePath = isAbsolutePath;
+function join() {
+    var paths = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        paths[_i - 0] = arguments[_i];
+    }
+    if (paths.length === 0)
+        return '';
+    var pos = paths.length - 1;
+    var p = paths[pos];
+    while (pos-- > 0) {
+        if (isAbsolutePath(p))
+            return p;
+        p = path.join(paths[pos], p);
+    }
+    return p;
+}
+exports.join = join;
 function mkpathsync(dirpath) {
     try {
         if (!fs.statSync(dirpath).isDirectory()) {

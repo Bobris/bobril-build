@@ -79,12 +79,17 @@ function refreshProjectFromPackageJson(project) {
     if (typeof bobrilSection.dir === 'string') {
         project.outputDir = bobrilSection.dir;
     }
+    if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
+        project.resourcesAreRelativeToProjectDir = bobrilSection.resourcesAreRelativeToProjectDir;
+    }
     return true;
 }
 exports.refreshProjectFromPackageJson = refreshProjectFromPackageJson;
 function defineTranslationReporter(project) {
     project.textForTranslationReporter = function (message) {
         if (typeof message.message != "string")
+            return;
+        if (!message.withParams)
             return;
         var ast = g11n.parse(message.message);
         if (typeof ast === "object" && ast.type === "error") {
