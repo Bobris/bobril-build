@@ -402,6 +402,10 @@ export function bundle(project: IBundleProject) {
             }
             topLevelNames[newname] = true;
         });
+    });
+    order.forEach((f) => {
+        if (f.difficult)
+            return;
         let transformer = new uglify.TreeTransformer((node): uglify.IAstNode => {
             if (node instanceof uglify.AST_Label) {
                 return node;
