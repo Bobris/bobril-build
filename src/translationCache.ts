@@ -15,7 +15,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     // 4+ - message in langs[idx-4]
     db: { [messsageAndHint: string]: (string | number)[] };
     langs: string[];
-    usages: { [filename:string]: { [ key:string ]: boolean } };
+    usages: { [filename: string]: { [key: string]: boolean } };
     availNumbers: number[];
     nextFreeId: number;
     changeInMessageIds: boolean;
@@ -127,27 +127,27 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         }
         fs.writeFileSync(filename, JSON.stringify(items));
     }
-    
+
     pruneUnusedMesssages(): void {
         let list = Object.keys(this.db);
-        for (let i=0; i<list.length; i++) {
+        for (let i = 0; i < list.length; i++) {
             let tr = this.db[list[i]];
-            if (<number>tr[2]<2) {
+            if (<number>tr[2] < 2) {
                 delete this.db[list[i]];
             }
-        }                
+        }
     }
 
-    currentFileUsages: { [ key:string ]: boolean };
-    newFileUsages: { [key:string ]: boolean };
-    
+    currentFileUsages: { [key: string]: boolean };
+    newFileUsages: { [key: string]: boolean };
+
     allocId(): number {
-        if (this.availNumbers.length===0) {
+        if (this.availNumbers.length === 0) {
             return this.nextFreeId++;
         }
         return this.availNumbers.pop();
     }
-    
+
     freeId(id: number) {
         this.availNumbers.push(id);
     }
@@ -156,35 +156,35 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         this.changeInMessageIds = false;
         this.addedMessage = false;
     }
-    
-    startCompileFile(fn:string) {
+
+    startCompileFile(fn: string) {
         this.currentFileUsages = this.usages[fn];
         this.newFileUsages = undefined; // lazy allocated for speed
     }
-    
+
     addUsageOfMessage(info: BuildHelpers.TranslationMessage): number {
         let key = this.buildKey(<string>info.message, info.hint, info.withParams);
-        if (this.newFileUsages===undefined) this.newFileUsages = Object.create(null);
-        if (this.currentFileUsages!==undefined && this.currentFileUsages[key]===true) {
+        if (this.newFileUsages === undefined) this.newFileUsages = Object.create(null);
+        if (this.currentFileUsages !== undefined && this.currentFileUsages[key] === true) {
             let item = this.db[key];
             delete this.currentFileUsages[key];
             this.newFileUsages[key] = true;
             return <number>item[3];
         }
         let item = this.db[key];
-        if (this.newFileUsages[key]===true) {
+        if (this.newFileUsages[key] === true) {
             return <number>item[3];
         }
         this.newFileUsages[key] = true;
         if (item === undefined) {
-            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2, this.allocId()]; // add as allocated
+            item = [info.message, info.hint, (info.withParams ? 1 : 0) + 2, this.allocId()]; // add as allocated
             this.changeInMessageIds = true;
             this.addedMessage = true;
             this.db[key] = item;
             return <number>item[3];
         }
-        if (((<number>item[2]) & 2) === 0) {
-            item[2] = (<number>item[2]) | 2; // add allocated flag
+        if ((<number>item[2]) < 2) {
+            item[2] = (<number>item[2]) + 2; // add allocated flag
             item[3] = this.allocId();
             this.changeInMessageIds = true;
         } else {
@@ -193,20 +193,20 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         return <number>item[3];
     }
 
-    finishCompileFile(fn:string) {
-        if (this.currentFileUsages!==undefined) {
+    finishCompileFile(fn: string) {
+        if (this.currentFileUsages !== undefined) {
             let keys = Object.keys(this.currentFileUsages);
-            for(let i=0;i<keys.length;i++) {
+            for (let i = 0; i < keys.length; i++) {
                 let item = this.db[keys[i]];
                 item[2] = (<number>item[2]) - 2; // decrease allocated flag
-                if (<number>item[2]<2) {
+                if (<number>item[2] < 2) {
                     this.freeId(<number>item[3]);
                 }
             }
         }
         this.usages[fn] = this.newFileUsages;
     }
-    
+
     getMessageArrayInLang(lang: string): string[] {
         let pos = this.langs.indexOf(lang);
         if (pos < 0) pos = this.langs.length;
@@ -216,16 +216,16 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         let list = Object.keys(db);
         for (let i = 0; i < list.length; i++) {
             let item = db[list[i]];
-            if (<number>item[2]>=2) {
+            if (<number>item[2] >= 2) {
                 if (item[pos] != null) {
-                    result[<number>item[3]]=item[pos];
+                    result[<number>item[3]] = item[pos];
                 } else {
-                    result[<number>item[3]]=item[0]; // English as fallback
+                    result[<number>item[3]] = item[0]; // English as fallback
                 }
             }
         }
-        for(let i=0;i<result.length;i++) {
-            if (result[i]===undefined) result[i]="";
+        for (let i = 0; i < result.length; i++) {
+            if (result[i] === undefined) result[i] = "";
         }
         return result;
     }
