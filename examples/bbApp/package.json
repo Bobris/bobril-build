@@ -12,6 +12,7 @@
   "license": "",
   "dependencies": {
     "bobril": "*",
+    "bobril-build-override-const-lib-sample": "^1.0.0",
     "bobril-g11n": "*"
   }
 }
