@@ -1,5 +1,6 @@
 import * as b from 'bobril';
 import * as g from 'bobril-g11n';
+import * as c from 'bobril-build-override-const-lib-sample';
 
 interface IPageCtx extends b.IBobrilCtx {
     counter: number;
@@ -25,6 +26,10 @@ let page = b.createVirtualComponent({
                         children: g.t('Bobril GitHub pages')
                     }
                 ]
+            },
+            {
+                tag: 'p',
+                children: "cbool:" + c.cbool + " cnum:" + c.cnum + " cstr:" + c.cstr
             }
         ];
     }

@@ -53,7 +53,7 @@ var TranslationDb = (function () {
             var item = json[i];
             if (!Array.isArray(item))
                 throw new Error('items must be array');
-            if (item.length !== 3 || item.length !== 4)
+            if (item.length !== 3 && item.length !== 4)
                 throw new Error('items must have length==3 or 4');
             var message = item[0];
             var hint = item[1];
@@ -157,14 +157,14 @@ var TranslationDb = (function () {
         }
         this.newFileUsages[key] = true;
         if (item === undefined) {
-            item = [info.message, info.hint, (info.withParams ? 1 : 0) | 2, this.allocId()]; // add as allocated
+            item = [info.message, info.hint, (info.withParams ? 1 : 0) + 2, this.allocId()]; // add as allocated
             this.changeInMessageIds = true;
             this.addedMessage = true;
             this.db[key] = item;
             return item[3];
         }
-        if ((item[2] & 2) === 0) {
-            item[2] = item[2] | 2; // add allocated flag
+        if (item[2] < 2) {
+            item[2] = item[2] + 2; // add allocated flag
             item[3] = this.allocId();
             this.changeInMessageIds = true;
         }

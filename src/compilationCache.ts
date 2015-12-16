@@ -64,6 +64,8 @@ export interface IProject {
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
     spriteMerge?: boolean;
+    resourcesAreRelativeToProjectDir?: boolean;
+    resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
     remapImages?: (filename: string) => string;
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
     compileTranslation?: ICompilationTranslation;
@@ -92,14 +94,13 @@ export interface IProject {
 }
 
 export class CompilationCache {
-    constructor(resolvePathStringLiteral?: (sl: ts.StringLiteral) => string) {
-        this.resolvePathStringLiteral = resolvePathStringLiteral || ((nn: ts.StringLiteral) => path.join(path.dirname(nn.getSourceFile().fileName), nn.text));
+    constructor() {
         this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
     }
 
-    resolvePathStringLiteral: (sl: ts.StringLiteral) => string;
+    resolvePathStringLiteral: (nn: ts.StringLiteral) => string;
     cacheFiles: { [name: string]: ICacheFile };
     defaultLibFilename: string;
     defLibPrecompiled: ts.SourceFile;
@@ -134,12 +135,14 @@ export class CompilationCache {
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
 
+        let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir? (p,s,t)=>pathUtils.join(p,t) : (p,s,t)=>pathUtils.join(path.dirname(s),t);
+        this.resolvePathStringLiteral = ((nn: ts.StringLiteral) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = (filename: string, content: Buffer) => {
-                project.commonJsTemp[filename] = content;
+                project.commonJsTemp[filename.toLowerCase()] = content;
             };
         }
         let ndir = project.dir.toLowerCase();
@@ -204,7 +207,7 @@ export class CompilationCache {
                     let si = info.sprites[j];
                     if (si.name == null)
                         continue;
-                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
             if (project.textForTranslationReporter) {
@@ -269,7 +272,7 @@ export class CompilationCache {
                         let si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        let bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                        let bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setMethod(si.callExpression, "spriteb");
                         BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
@@ -571,7 +574,7 @@ export class CompilationCache {
                 let res = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res != null) {
                     if (!/^node_modules\//i.test(moduleName)) {
-                        logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
+                        //logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
                     }
                     return { resolvedFileName: res };
                 }

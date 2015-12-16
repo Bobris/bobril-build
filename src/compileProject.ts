@@ -75,12 +75,16 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     if (typeof bobrilSection.dir === 'string') {
         project.outputDir = bobrilSection.dir;
     }
+    if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
+        project.resourcesAreRelativeToProjectDir = bobrilSection.resourcesAreRelativeToProjectDir;
+    }
     return true;
 }
 
 export function defineTranslationReporter(project: bb.IProject) {
     project.textForTranslationReporter = (message: bb.TranslationMessage) => {
         if (typeof message.message != "string") return;
+        if (!message.withParams) return;
         let ast = g11n.parse(<string>message.message);
         if (typeof ast === "object" && ast.type === "error") {
             let sc = message.callExpression.getSourceFile();

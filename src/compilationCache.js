@@ -25,8 +25,7 @@ function reportDiagnostics(diagnostics, logcb) {
     }
 }
 var CompilationCache = (function () {
-    function CompilationCache(resolvePathStringLiteral) {
-        this.resolvePathStringLiteral = resolvePathStringLiteral || (function (nn) { return path.join(path.dirname(nn.getSourceFile().fileName), nn.text); });
+    function CompilationCache() {
         this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
@@ -57,12 +56,14 @@ var CompilationCache = (function () {
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
         var jsWriteFileCallback = project.writeFileCallback;
+        var resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ? function (p, s, t) { return pathUtils.join(p, t); } : function (p, s, t) { return pathUtils.join(path.dirname(s), t); };
+        this.resolvePathStringLiteral = (function (nn) { return resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text); });
         if (project.totalBundle) {
             if (project.options.module != ts.ModuleKind.CommonJS)
                 throw Error('Total bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
-                project.commonJsTemp[filename] = content;
+                project.commonJsTemp[filename.toLowerCase()] = content;
             };
         }
         var ndir = project.dir.toLowerCase();
@@ -127,7 +128,7 @@ var CompilationCache = (function () {
                     var si = info.sprites[j];
                     if (si.name == null)
                         continue;
-                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
             if (project.textForTranslationReporter) {
@@ -190,7 +191,7 @@ var CompilationCache = (function () {
                         var si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        var bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : path.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                        var bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setMethod(si.callExpression, "spriteb");
                         BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
@@ -483,7 +484,6 @@ var CompilationCache = (function () {
                 var res_2 = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res_2 != null) {
                     if (!/^node_modules\//i.test(moduleName)) {
-                        logCallback("Wrong import '" + moduleName + "' in " + containingFile + ". You must use relative path.");
                     }
                     return { resolvedFileName: res_2 };
                 }

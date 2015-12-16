@@ -365,6 +365,10 @@ function bundle(project) {
             }
             topLevelNames[newname] = true;
         });
+    });
+    order.forEach(function (f) {
+        if (f.difficult)
+            return;
         var transformer = new uglify.TreeTransformer(function (node) {
             if (node instanceof uglify.AST_Label) {
                 return node;
