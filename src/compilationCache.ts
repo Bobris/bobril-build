@@ -19,7 +19,7 @@ function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
         output += `${diagnostic.file.fileName}(${loc.line + 1},${loc.character + 1}): `;
     }
     var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
-    output += `${category} TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine) }${ts.sys.newLine}`;
+    output += `${category} TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine)}${ts.sys.newLine}`;
     logcb(output);
 }
 
@@ -70,6 +70,7 @@ export interface IProject {
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
     compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
+    constantOverrides?: { [module: string]: { [exportName: string]: string | number | boolean } };
     mainJsFile?: string;
     // dafalt false
     localize?: boolean;
@@ -128,6 +129,65 @@ export class CompilationCache {
         }
     }
 
+    overrides: { [fn: string]: { varDecl: ts.VariableDeclaration, value: string | number | boolean }[] }
+
+    addOverride(fn: string, varDecl: ts.VariableDeclaration, value: string | number | boolean) {
+        let o = this.overrides[fn];
+        if (o == null) {
+            o = [];
+            this.overrides[fn] = o;
+        }
+        o.push({ varDecl, value });
+    }
+
+    findVarDecl(project: IProject, program: ts.Program, exports: ts.Symbol[], expName: string): ts.VariableDeclaration {
+        let tc = program.getTypeChecker();
+        let symb = exports.find(v=>v.name==expName);
+        if (symb == null) {
+            project.logCallback(`Cannot find export {expName} in {exports.map(v=>v.name).join(',')}`);
+        }
+        let decls = symb.getDeclarations();
+        if (decls.length != 1) {
+            project.logCallback(`Not unique declaration of {expName}`);
+            return null;
+        }
+        let decl = decls[0];
+        if (decl.kind === ts.SyntaxKind.ExportSpecifier) {
+            let exports2 = tc.getExportsOfModule(tc.getSymbolAtLocation((decl.parent.parent as ts.ExportDeclaration).moduleSpecifier));
+            let expName2 = (decl as ts.ExportSpecifier).propertyName.text;
+            return this.findVarDecl(project, program, exports2, expName2);
+        }
+        if (decl.kind === ts.SyntaxKind.VariableDeclaration) {
+            return decl as ts.VariableDeclaration;
+        }
+        project.logCallback(`Don't know how to override {expName} in {(<any>ts).SyntaxKind[decl.kind]}`);
+        return null;        
+    }
+    
+    prepareToApplyConstantOverride(project: IProject, program: ts.Program) {
+        let overrides = project.constantOverrides;
+        let moduleList = Object.keys(overrides);
+        let tc = program.getTypeChecker();
+        for (let i = 0; i < moduleList.length; i++) {
+            let moduleName = moduleList[i];
+            let moduleInfo = project.moduleMap[moduleName];
+            if (moduleInfo == null) {
+                project.logCallback(`Defined module override not found ({moduleName})`);
+                continue;
+            }
+            let exports = tc.getExportsOfModule((program.getSourceFile(moduleInfo.defFile) as any).symbol as ts.Symbol);
+            let overridesModule = overrides[moduleName];
+            let overridesNames = Object.keys(overridesModule);
+            for (let j = 0; j < overridesNames.length; j++) {
+                let expName = overridesNames[j];
+                let decl = this.findVarDecl(project, program, exports, expName);
+                if (decl) {
+                    this.addOverride(decl.getSourceFile().fileName, decl, overridesModule[expName]);
+                }
+            }
+        }
+    }
+
     compile(project: IProject): Promise<any> {
         let mainList = Array.isArray(project.main) ? project.main : [<string>project.main];
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
@@ -135,7 +195,7 @@ export class CompilationCache {
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
 
-        let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir? (p,s,t)=>pathUtils.join(p,t) : (p,s,t)=>pathUtils.join(path.dirname(s),t);
+        let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ? (p, s, t) => pathUtils.join(p, t) : (p, s, t) => pathUtils.join(path.dirname(s), t);
         this.resolvePathStringLiteral = ((nn: ts.StringLiteral) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             if (project.options.module != ts.ModuleKind.CommonJS)
@@ -240,6 +300,11 @@ export class CompilationCache {
             this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
         }
 
+        this.overrides = Object.create(null);
+        if (project.constantOverrides) {
+            this.prepareToApplyConstantOverride(project, program);
+        }
+
         prom = prom.then(() => {
             for (let i = 0; i < sourceFiles.length; i++) {
                 let restorationMemory = <(() => void)[]>[];
@@ -253,6 +318,10 @@ export class CompilationCache {
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
                     this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
+                }
+                let overr = this.overrides[src.fileName];
+                if (overr != null) {
+                    restorationMemory.push(BuildHelpers.applyOverrides(overr));
                 }
                 let info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {

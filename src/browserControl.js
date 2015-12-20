@@ -1,3 +1,4 @@
+"use strict";
 var web = require('browser_process');
 var rdbg = require('rdbg');
 var temp = require('temp');
@@ -106,5 +107,5 @@ var BrowserControl = (function () {
         });
     };
     return BrowserControl;
-})();
+}());
 exports.BrowserControl = BrowserControl;

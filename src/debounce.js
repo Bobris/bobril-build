@@ -1,3 +1,4 @@
+"use strict";
 function debounce(func, wait, immediate) {
     if (wait === void 0) { wait = 100; }
     var timeout, args, context, timestamp, result;

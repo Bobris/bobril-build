@@ -1,3 +1,4 @@
+"use strict";
 var bb = require('../index');
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
@@ -81,6 +82,9 @@ function refreshProjectFromPackageJson(project) {
     }
     if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
         project.resourcesAreRelativeToProjectDir = bobrilSection.resourcesAreRelativeToProjectDir;
+    }
+    if (typeof bobrilSection.constantOverrides === 'object') {
+        project.constantOverrides = bobrilSection.constantOverrides;
     }
     return true;
 }

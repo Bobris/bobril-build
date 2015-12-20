@@ -1,3 +1,4 @@
+"use strict";
 var pathUtils = require('./pathUtils');
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes

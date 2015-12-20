@@ -1,3 +1,4 @@
+"use strict";
 var fs = require("fs");
 var pnglib = require("png-async");
 require('bluebird');

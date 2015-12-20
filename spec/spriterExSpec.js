@@ -1,3 +1,4 @@
+"use strict";
 var spriter = require("../src/spriter");
 describe("spriter", function () {
     it("complex", function () {

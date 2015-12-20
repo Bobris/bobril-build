@@ -1,3 +1,4 @@
+"use strict";
 var fs = require('fs');
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
@@ -242,5 +243,5 @@ var TranslationDb = (function () {
         }
     };
     return TranslationDb;
-})();
+}());
 exports.TranslationDb = TranslationDb;

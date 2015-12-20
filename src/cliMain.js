@@ -1,3 +1,4 @@
+"use strict";
 var c = require('commander');
 var ts = require('typescript');
 var bb = require('../index');
@@ -277,10 +278,11 @@ function getDefaultDebugOptions() {
         defines: { DEBUG: true }
     };
 }
-function interactiveCommand() {
+function interactiveCommand(port) {
+    if (port === void 0) { port = 8080; }
     var server = http.createServer(handleRequest);
-    server.listen(8080, function () {
-        console.log("Server listening on: http://localhost:8080");
+    server.listen(port, function () {
+        console.log("Server listening on: http://localhost:" + port);
     });
     var compileProcess = startCompileProcess(bb.currentDirectory());
     compileProcess.refresh().then(function () {
@@ -369,10 +371,11 @@ function run() {
     c
         .command("interactive")
         .alias("i")
+        .option("-p, --port <port>", "set port for server to listen to (default 8080)")
         .description("runs web controled build ui")
-        .action(function () {
+        .action(function (c) {
         commandRunning = true;
-        interactiveCommand();
+        interactiveCommand(c["port"]);
     });
     c.command('*', null, { noHelp: true }).action(function (com) {
         console.log("Invalid command " + com);

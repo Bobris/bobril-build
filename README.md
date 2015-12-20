@@ -21,4 +21,20 @@ For development of bobril-build check out this project and start:
 	npm link
 	gulp
 
+It reads `package.json` and understands:
+
+	{
+		"typescript": {
+			"main": "pathToMain.ts"
+		},
+		"bobril": {
+			"title": "index.html Title",
+			"constantOverrides": {
+				"module_name": {
+					"export_name": "New value, it supports also number and boolean values"
+				}
+			}
+		}
+	}
+	
 It is currently not selfhosting but it will come...

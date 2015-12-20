@@ -1,3 +1,4 @@
+"use strict";
 var chokidar = require('chokidar');
 var debounce = require('./debounce');
 function watch(param) {

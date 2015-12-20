@@ -1,3 +1,4 @@
+"use strict";
 var ts = require("typescript");
 var fs = require("fs");
 var pathPlatformDependent = require("path");

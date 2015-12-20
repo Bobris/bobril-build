@@ -1,3 +1,4 @@
+"use strict";
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var uglify = require('uglifyjs');
@@ -150,7 +151,7 @@ function check(name, order, stack, project, resolveRequire) {
         cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: [], exports: null };
         if (ast.globals.has('module')) {
             cached.difficult = true;
-            ast = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; })();");
+            ast = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; }).call(window);");
             cached.ast = ast;
             project.cache[name.toLowerCase()] = cached;
             order.push(cached);

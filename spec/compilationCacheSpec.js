@@ -1,3 +1,4 @@
+"use strict";
 var compilationCache = require('../src/compilationCache');
 var translationCache = require('../src/translationCache');
 var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');

@@ -1,3 +1,4 @@
+"use strict";
 var ts = require("typescript");
 var fs = require("fs");
 var pathPlatformDependent = require("path");
@@ -47,6 +48,60 @@ var CompilationCache = (function () {
         for (var i = 0; i < names.length; i++) {
             cacheFiles[names[i]].infoTime = undefined;
             cacheFiles[names[i]].outputTime = undefined;
+        }
+    };
+    CompilationCache.prototype.addOverride = function (fn, varDecl, value) {
+        var o = this.overrides[fn];
+        if (o == null) {
+            o = [];
+            this.overrides[fn] = o;
+        }
+        o.push({ varDecl: varDecl, value: value });
+    };
+    CompilationCache.prototype.findVarDecl = function (project, program, exports, expName) {
+        var tc = program.getTypeChecker();
+        var symb = exports.find(function (v) { return v.name == expName; });
+        if (symb == null) {
+            project.logCallback("Cannot find export {expName} in {exports.map(v=>v.name).join(',')}");
+        }
+        var decls = symb.getDeclarations();
+        if (decls.length != 1) {
+            project.logCallback("Not unique declaration of {expName}");
+            return null;
+        }
+        var decl = decls[0];
+        if (decl.kind === ts.SyntaxKind.ExportSpecifier) {
+            var exports2 = tc.getExportsOfModule(tc.getSymbolAtLocation(decl.parent.parent.moduleSpecifier));
+            var expName2 = decl.propertyName.text;
+            return this.findVarDecl(project, program, exports2, expName2);
+        }
+        if (decl.kind === ts.SyntaxKind.VariableDeclaration) {
+            return decl;
+        }
+        project.logCallback("Don't know how to override {expName} in {(<any>ts).SyntaxKind[decl.kind]}");
+        return null;
+    };
+    CompilationCache.prototype.prepareToApplyConstantOverride = function (project, program) {
+        var overrides = project.constantOverrides;
+        var moduleList = Object.keys(overrides);
+        var tc = program.getTypeChecker();
+        for (var i = 0; i < moduleList.length; i++) {
+            var moduleName = moduleList[i];
+            var moduleInfo = project.moduleMap[moduleName];
+            if (moduleInfo == null) {
+                project.logCallback("Defined module override not found ({moduleName})");
+                continue;
+            }
+            var exports_1 = tc.getExportsOfModule(program.getSourceFile(moduleInfo.defFile).symbol);
+            var overridesModule = overrides[moduleName];
+            var overridesNames = Object.keys(overridesModule);
+            for (var j = 0; j < overridesNames.length; j++) {
+                var expName = overridesNames[j];
+                var decl = this.findVarDecl(project, program, exports_1, expName);
+                if (decl) {
+                    this.addOverride(decl.getSourceFile().fileName, decl, overridesModule[expName]);
+                }
+            }
         }
     };
     CompilationCache.prototype.compile = function (project) {
@@ -158,6 +213,10 @@ var CompilationCache = (function () {
         for (var i = 0; i < sourceFiles.length; i++) {
             this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
         }
+        this.overrides = Object.create(null);
+        if (project.constantOverrides) {
+            this.prepareToApplyConstantOverride(project, program);
+        }
         prom = prom.then(function () {
             for (var i = 0; i < sourceFiles.length; i++) {
                 var restorationMemory = [];
@@ -172,6 +231,10 @@ var CompilationCache = (function () {
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
                     _this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     _this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
+                }
+                var overr = _this.overrides[src.fileName];
+                if (overr != null) {
+                    restorationMemory.push(BuildHelpers.applyOverrides(overr));
                 }
                 var info = cached.info;
                 if (project.remapImages && !project.spriteMerge) {
@@ -543,5 +606,5 @@ var CompilationCache = (function () {
         };
     };
     return CompilationCache;
-})();
+}());
 exports.CompilationCache = CompilationCache;

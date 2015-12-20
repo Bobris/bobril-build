@@ -6,10 +6,12 @@
     "main": "src/app.ts"
   },
   "bobril": {
-    "title": "Bobril Hello World",
+    "title": "Bobril Constant Override Sample",
 	"constantOverrides": {
 		"bobril-build-override-const-lib-sample": {
-		    "cimp": true
+		    "cbool": true,
+			"cnum": 42,
+			"cstr": "I can customize constants imported from module"
 		}
 	}
   },
@@ -17,7 +19,6 @@
   "license": "",
   "dependencies": {
     "bobril": "*",
-    "bobril-build-override-const-lib-sample": "^1.0.0",
-    "bobril-g11n": "*"
+    "bobril-build-override-const-lib-sample": "^1.0.0"
   }
 }

@@ -1,3 +1,4 @@
+"use strict";
 var ts = require("typescript");
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
@@ -269,3 +270,17 @@ function rememberCallExpression(callExpression) {
     };
 }
 exports.rememberCallExpression = rememberCallExpression;
+function applyOverrides(overrides) {
+    var restore = [];
+    for (var i = 0; i < overrides.length; i++) {
+        var o = overrides[i];
+        restore.push({ varDecl: o.varDecl, initializer: o.varDecl.initializer });
+        o.varDecl.initializer = createNodeFromValue(o.value);
+    }
+    return function () {
+        for (var i = restore.length; i-- > 0;) {
+            restore[i].varDecl.initializer = restore[i].initializer;
+        }
+    };
+}
+exports.applyOverrides = applyOverrides;

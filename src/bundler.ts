@@ -194,7 +194,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name) }
-__bbe['${name}']=module.exports; })();`);
+__bbe['${name}']=module.exports; }).call(window);`);
             cached.ast = ast;
             project.cache[name.toLowerCase()] = cached;
             order.push(cached);

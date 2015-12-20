@@ -78,6 +78,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
         project.resourcesAreRelativeToProjectDir = bobrilSection.resourcesAreRelativeToProjectDir;
     }
+    if (typeof bobrilSection.constantOverrides === 'object') {
+        project.constantOverrides = bobrilSection.constantOverrides;
+    }
     return true;
 }
 

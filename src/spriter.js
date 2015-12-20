@@ -1,3 +1,4 @@
+"use strict";
 function spritePlace(sprites) {
     var a = new D2Array();
     sprites.sort(function (l, r) { return r.height - l.height; });
@@ -207,4 +208,4 @@ var D2Array = (function () {
         this.fill(bestx, besty, bestix, bestiy, aWidth, aHeight);
     };
     return D2Array;
-})();
+}());

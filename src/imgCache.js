@@ -1,3 +1,4 @@
+"use strict";
 var fs = require("fs");
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
@@ -89,7 +90,7 @@ var ImgCache = (function () {
         return prom;
     };
     return ImgCache;
-})();
+}());
 exports.ImgCache = ImgCache;
 var ImgBundleCache = (function () {
     function ImgBundleCache(imgCache) {
@@ -120,6 +121,8 @@ var ImgBundleCache = (function () {
         return true;
     };
     ImgBundleCache.prototype.wasChange = function () {
+        if (this.cur.length === 0)
+            return false;
         this.cur.sort(function (l, r) { if (l.key < r.key)
             return -1; if (l.key > r.key)
             return 1; return 0; });
@@ -182,5 +185,5 @@ var ImgBundleCache = (function () {
         return { width: v.bwidth, height: v.bheight, x: v.bx, y: v.by };
     };
     return ImgBundleCache;
-})();
+}());
 exports.ImgBundleCache = ImgBundleCache;
