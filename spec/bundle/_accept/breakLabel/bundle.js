@@ -1,1 +1,1 @@
-!function(){a:for(;;)for(;;)if(Math.random()>.5)break a}();
+!function(){"use strict";a:for(;;)for(;;)if(Math.random()>.5)break a}();

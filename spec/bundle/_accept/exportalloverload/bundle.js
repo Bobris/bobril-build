@@ -1,1 +1,1 @@
-!function(){function a(){return"OK"}var b=a;console.log(b())}();
+!function(){"use strict";function a(){return"OK"}var b=a;console.log(b())}();

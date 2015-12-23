@@ -29,6 +29,7 @@ function backgroundProcess() {
     register("setProjectOptions","backgroundCompileCommands");
     register("disposeProject","backgroundCompileCommands");
     register("compile","backgroundCompileCommands");
+    register("loadTranslations","backgroundCompileCommands");
 }
 
 function run() {

@@ -86,6 +86,19 @@ export function setProjectOptions(param: { id: string, options: any }) {
     }
 }
 
+export function loadTranslations(param: string) {
+    let cp = cps[param];
+    if (cp) {
+        cp.promise = cp.promise.then(() => {
+            let trDir = path.join(cp.project.dir, "translations");
+            cp.translationDb.loadLangDbs(trDir);
+            process.send({ command: "loaded" });
+        });
+    } else {
+        process.send({ command: "Cannot loadTranslations to nonexisting project", param });
+    }
+}
+
 export function compile(param: string) {
     let cp = cps[param];
     if (cp) {

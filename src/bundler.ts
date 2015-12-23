@@ -3,6 +3,7 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as pathUtils from './pathUtils';
 import * as uglify from 'uglifyjs';
+import { globalDefines } from './simpleHelpers';
 
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
@@ -208,11 +209,17 @@ __bbe['${name}']=module.exports; }).call(window);`);
             if (node instanceof uglify.AST_Block) {
                 descend();
                 (<uglify.IAstBlock>node).body = (<uglify.IAstBlock>node).body.map((stm): uglify.IAstNode => {
-                    if (stm instanceof uglify.AST_SimpleStatement) {
+                    if (stm instanceof uglify.AST_Directive) {
+                        return null;
+                    } else if (stm instanceof uglify.AST_SimpleStatement) {
                         let stmbody = (<uglify.IAstSimpleStatement>stm).body;
                         let pea = paternAssignExports(stmbody);
                         if (pea) {
                             let newName = '__export_' + pea.name;
+                            if (selfExpNames[pea.name] && stmbody instanceof uglify.AST_Assign) {
+                                (<uglify.IAstAssign>stmbody).left = new uglify.AST_SymbolRef({ name: newName, thedef: ast.variables.get(newName) });
+                                return stm;
+                            }
                             let newVar = new uglify.AST_Var({
                                 start: stmbody.start,
                                 end: stmbody.end,
@@ -222,9 +229,9 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             });
                             let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
                             symb.undeclared = false;
+                            (<ISymbolDef>symb).bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
-                            (<uglify.IAstSimpleStatement>stm).body = newVar;
                             selfExpNames[pea.name] = true;
                             cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
@@ -346,7 +353,7 @@ function renameSymbol(node: uglify.IAstNode): uglify.IAstNode {
         let symb = <uglify.IAstSymbol>node;
         if (symb.thedef == null) return node;
         let rename = (<ISymbolDef>symb.thedef).bbRename;
-        if (rename !== undefined || (<ISymbolDef>symb).bbAlwaysClone) {
+        if (rename !== undefined || (<ISymbolDef>symb.thedef).bbAlwaysClone) {
             symb = <uglify.IAstSymbol>symb.clone();
             if (rename !== undefined) {
                 symb.name = rename;
@@ -369,7 +376,7 @@ export function bundle(project: IBundleProject) {
     let order = <IFileForBundle[]>[];
     let stack = [];
     project.getMainFiles().forEach((val) => check(val, order, stack, project, resolveRequire));
-    let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){})()');
+    let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
     let topLevelNames = Object.create(null);
     let wasSomeDifficult = false;
@@ -530,5 +537,9 @@ export function bundle(project: IBundleProject) {
         beautify: project.beautify === true
     });
     bundleAst.print(os);
-    project.writeBundle(os.toString());
+    let out = os.toString();
+    if (project.compress === false) {
+        out = globalDefines(project.defines) + out;
+    }
+    project.writeBundle(out);
 }

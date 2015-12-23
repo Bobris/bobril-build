@@ -27,6 +27,7 @@ describe("bundler", () => {
                 main: 'main.ts',
                 options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
                 totalBundle: true,
+                compress: n !== "compressBug2",
                 writeFileCallback: write
             };
             cc.compile(project).then(() => {

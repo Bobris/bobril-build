@@ -2,6 +2,7 @@
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var uglify = require('uglifyjs');
+var simpleHelpers_1 = require('./simpleHelpers');
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
         enumerable: false,
@@ -165,11 +166,18 @@ function check(name, order, stack, project, resolveRequire) {
             if (node instanceof uglify.AST_Block) {
                 descend();
                 node.body = node.body.map(function (stm) {
-                    if (stm instanceof uglify.AST_SimpleStatement) {
+                    if (stm instanceof uglify.AST_Directive) {
+                        return null;
+                    }
+                    else if (stm instanceof uglify.AST_SimpleStatement) {
                         var stmbody = stm.body;
                         var pea = paternAssignExports(stmbody);
                         if (pea) {
                             var newName = '__export_' + pea.name;
+                            if (selfExpNames[pea.name] && stmbody instanceof uglify.AST_Assign) {
+                                stmbody.left = new uglify.AST_SymbolRef({ name: newName, thedef: ast.variables.get(newName) });
+                                return stm;
+                            }
                             var newVar = new uglify.AST_Var({
                                 start: stmbody.start,
                                 end: stmbody.end,
@@ -179,9 +187,9 @@ function check(name, order, stack, project, resolveRequire) {
                             });
                             var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
                             symb.undeclared = false;
+                            symb.bbAlwaysClone = true;
                             ast.variables.set(newName, symb);
                             newVar.definitions[0].name.thedef = symb;
-                            stm.body = newVar;
                             selfExpNames[pea.name] = true;
                             cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
@@ -305,7 +313,7 @@ function renameSymbol(node) {
         if (symb.thedef == null)
             return node;
         var rename = symb.thedef.bbRename;
-        if (rename !== undefined || symb.bbAlwaysClone) {
+        if (rename !== undefined || symb.thedef.bbAlwaysClone) {
             symb = symb.clone();
             if (rename !== undefined) {
                 symb.name = rename;
@@ -328,7 +336,7 @@ function bundle(project) {
     var order = [];
     var stack = [];
     project.getMainFiles().forEach(function (val) { return check(val, order, stack, project, resolveRequire); });
-    var bundleAst = uglify.parse('(function(){})()');
+    var bundleAst = uglify.parse('(function(){"use strict";})()');
     var bodyAst = bundleAst.body[0].body.expression.body;
     var topLevelNames = Object.create(null);
     var wasSomeDifficult = false;
@@ -499,6 +507,10 @@ function bundle(project) {
         beautify: project.beautify === true
     });
     bundleAst.print(os);
-    project.writeBundle(os.toString());
+    var out = os.toString();
+    if (project.compress === false) {
+        out = simpleHelpers_1.globalDefines(project.defines) + out;
+    }
+    project.writeBundle(out);
 }
 exports.bundle = bundle;

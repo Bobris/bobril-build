@@ -238,6 +238,16 @@ function startCompileProcess(path) {
                 });
             });
         },
+        loadTranslations: function () {
+            return new Promise(function (resolve, reject) {
+                compileProcess("loadTranslations", myId, {
+                    log: function (param) { console.log(param); },
+                    loaded: function () {
+                        resolve();
+                    },
+                });
+            });
+        },
         compile: function () {
             return new Promise(function (resolve, reject) {
                 var startCompilation = Date.now();
@@ -287,6 +297,8 @@ function interactiveCommand(port) {
     var compileProcess = startCompileProcess(bb.currentDirectory());
     compileProcess.refresh().then(function () {
         return compileProcess.setOptions(getDefaultDebugOptions());
+    }).then(function (opts) {
+        return compileProcess.loadTranslations();
     }).then(function (opts) {
         return compileProcess.compile();
     });

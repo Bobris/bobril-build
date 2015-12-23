@@ -1,6 +1,6 @@
 {
   "name": "bobril-build",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Builds Bobril Applications or Libraries",
   "main": "index.js",
   "bin": {

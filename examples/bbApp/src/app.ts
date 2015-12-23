@@ -30,7 +30,12 @@ let page = b.createVirtualComponent({
             {
                 tag: 'p',
                 children: "cbool:" + c.cbool + " cnum:" + c.cnum + " cstr:" + c.cstr
-            }
+            },
+			{
+				tag: 'p',
+				children: "cs-CZ",
+				component: { onClick: ()=> g.setLocale("cs-CZ") }
+			}
         ];
     }
 });

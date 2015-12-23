@@ -77,6 +77,20 @@ function setProjectOptions(param) {
     }
 }
 exports.setProjectOptions = setProjectOptions;
+function loadTranslations(param) {
+    var cp = cps[param];
+    if (cp) {
+        cp.promise = cp.promise.then(function () {
+            var trDir = path.join(cp.project.dir, "translations");
+            cp.translationDb.loadLangDbs(trDir);
+            process.send({ command: "loaded" });
+        });
+    }
+    else {
+        process.send({ command: "Cannot loadTranslations to nonexisting project", param: param });
+    }
+}
+exports.loadTranslations = loadTranslations;
 function compile(param) {
     var cp = cps[param];
     if (cp) {

@@ -4,6 +4,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from 'fs';
 import * as compilationCache from './compilationCache';
 require('bluebird');
+import { globalDefines } from './simpleHelpers';
 
 export function systemJsPath(): string {
     return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
@@ -47,6 +48,7 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
     <body>${g11nInit(project)}
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
         <script type="text/javascript">
+            ${globalDefines(project.defines)}
             System.config({
                 baseURL: '/',
                 defaultJSExtensions: true,

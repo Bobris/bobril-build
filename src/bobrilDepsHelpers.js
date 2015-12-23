@@ -4,6 +4,7 @@ var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var fs = require('fs');
 require('bluebird');
+var simpleHelpers_1 = require('./simpleHelpers');
 function systemJsPath() {
     return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
 }
@@ -38,7 +39,7 @@ function systemJsBasedIndexHtml(project) {
             continue;
         moduleMap[name_1] = project.moduleMap[name_1].jsFile;
     }
-    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            System.config({\n                baseURL: '/',\n                defaultJSExtensions: true,\n                map: " + JSON.stringify(moduleMap) + "\n            });\n            System.import('" + project.mainJsFile + "');\n        </script>\n    </body>\n</html>\n";
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"system.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            System.config({\n                baseURL: '/',\n                defaultJSExtensions: true,\n                map: " + JSON.stringify(moduleMap) + "\n            });\n            System.import('" + project.mainJsFile + "');\n        </script>\n    </body>\n</html>\n";
 }
 exports.systemJsBasedIndexHtml = systemJsBasedIndexHtml;
 function g11nInit(project) {

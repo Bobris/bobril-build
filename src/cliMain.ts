@@ -217,6 +217,7 @@ function startWatchProcess(notify: () => void) {
 interface ICompileProcess {
     refresh(): Promise<any>;
     setOptions(options: any): Promise<any>;
+    loadTranslations(): Promise<any>;
     compile(): Promise<any>;
     stop(): void;
 }
@@ -246,6 +247,16 @@ function startCompileProcess(path: string): ICompileProcess {
                     log(param) { console.log(param) },
                     options(param: any) {
                         resolve(param);
+                    },
+                });
+            });
+        },
+        loadTranslations():Promise<any> {
+            return new Promise((resolve, reject) => {
+                compileProcess("loadTranslations", myId, {
+                    log(param) { console.log(param) },
+                    loaded() {
+                        resolve();
                     },
                 });
             });
@@ -300,6 +311,8 @@ function interactiveCommand(port:number = 8080) {
     let compileProcess = startCompileProcess(bb.currentDirectory());
     compileProcess.refresh().then(()=>{
         return compileProcess.setOptions(getDefaultDebugOptions());
+    }).then((opts)=>{
+        return compileProcess.loadTranslations();
     }).then((opts)=>{
         return compileProcess.compile();
     });
