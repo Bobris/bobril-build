@@ -9,6 +9,7 @@ export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
         dir: path.replace(/\\/g, '/'),
         main: null,
+        mainIndex: null,
         mainJsFile: null,
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
@@ -21,8 +22,7 @@ function autodetectMainTs(project: bb.IProject): boolean {
     for (let i = 0; i < searchMainTsList.length; i++) {
         let fn = searchMainTsList[i];
         if (fs.existsSync(path.join(project.dir, fn))) {
-            project.main = fn;
-            project.mainJsFile = fn.replace(/\.ts$/, '.js');
+            project.mainIndex = fn;
             project.logCallback("Info: Main found " + fn);
             return true;
         }
@@ -31,18 +31,37 @@ function autodetectMainTs(project: bb.IProject): boolean {
     return false;
 }
 
+function autodetectMainExample(project: bb.IProject) {
+    if (project.mainExample == null && project.mainIndex === "index.ts") {
+        if (fs.existsSync(path.join(project.dir, "example.ts"))) {
+            project.mainExample = "example.ts";
+        }
+    }
+    if (project.mainExample != null) {
+        project.main = [project.mainIndex, project.mainExample];
+        project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');           
+    } else {
+        project.main = project.mainIndex;
+        project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');           
+    }
+}
+
 export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     let projectJsonFullPath = path.join(project.dir, 'package.json');
     let projectJsonModified = bb.fileModifiedTime(projectJsonFullPath);
     if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected) {
-        return project.main !== null;
+        return project.mainIndex !== null;
     }
     let packageJson = null;
     try {
         packageJson = fs.readFileSync(projectJsonFullPath, 'utf-8');
     } catch (err) {
         project.logCallback('Cannot read package.json ' + err + '. Autodetecting main ts file.');
-        return autodetectMainTs(project);
+        if (autodetectMainTs(project)) {
+            autodetectMainExample(project);
+            return true;
+        }
+        return false;
     }
     project.projectJsonTime = projectJsonModified;
     let packageObj = null;
@@ -54,12 +73,11 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     }
     if (packageObj.typescript && typeof packageObj.typescript.main === 'string') {
         let main = packageObj.typescript.main;
-        if (!fs.existsSync(main)) {
+        if (!fs.existsSync(path.join(project.dir, main))) {
             project.logCallback('Package.json typescript.main is ' + main + ', but this file does not exists. Aborting.');
             return false;
         }
-        project.main = main;
-        project.mainJsFile = main.replace(/\.ts$/, '.js');
+        project.mainIndex = main;
     } else {
         project.logCallback('Package.json missing typescript.main. Autodetecting main ts file.');
         if (!autodetectMainTs(project)) return false;
@@ -68,7 +86,10 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     let deps = Object.keys(packageObj.dependencies);
     project.localize = deps.some(v=> v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
-    if (bobrilSection == null) return true;
+    if (bobrilSection == null) {
+        autodetectMainExample(project);
+        return true;
+    }
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }
@@ -81,6 +102,10 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     if (typeof bobrilSection.constantOverrides === 'object') {
         project.constantOverrides = bobrilSection.constantOverrides;
     }
+    if (typeof bobrilSection.example === 'string') {
+        project.mainExample = bobrilSection.example;
+    }
+    autodetectMainExample(project);
     return true;
 }
 

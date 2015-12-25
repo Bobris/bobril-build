@@ -9,6 +9,7 @@ function createProjectFromDir(path) {
     var project = {
         dir: path.replace(/\\/g, '/'),
         main: null,
+        mainIndex: null,
         mainJsFile: null,
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
@@ -21,8 +22,7 @@ function autodetectMainTs(project) {
     for (var i = 0; i < searchMainTsList.length; i++) {
         var fn = searchMainTsList[i];
         if (fs.existsSync(path.join(project.dir, fn))) {
-            project.main = fn;
-            project.mainJsFile = fn.replace(/\.ts$/, '.js');
+            project.mainIndex = fn;
             project.logCallback("Info: Main found " + fn);
             return true;
         }
@@ -30,11 +30,26 @@ function autodetectMainTs(project) {
     project.logCallback('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
     return false;
 }
+function autodetectMainExample(project) {
+    if (project.mainExample == null && project.mainIndex === "index.ts") {
+        if (fs.existsSync(path.join(project.dir, "example.ts"))) {
+            project.mainExample = "example.ts";
+        }
+    }
+    if (project.mainExample != null) {
+        project.main = [project.mainIndex, project.mainExample];
+        project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');
+    }
+    else {
+        project.main = project.mainIndex;
+        project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');
+    }
+}
 function refreshProjectFromPackageJson(project) {
     var projectJsonFullPath = path.join(project.dir, 'package.json');
     var projectJsonModified = bb.fileModifiedTime(projectJsonFullPath);
     if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected) {
-        return project.main !== null;
+        return project.mainIndex !== null;
     }
     var packageJson = null;
     try {
@@ -42,7 +57,11 @@ function refreshProjectFromPackageJson(project) {
     }
     catch (err) {
         project.logCallback('Cannot read package.json ' + err + '. Autodetecting main ts file.');
-        return autodetectMainTs(project);
+        if (autodetectMainTs(project)) {
+            autodetectMainExample(project);
+            return true;
+        }
+        return false;
     }
     project.projectJsonTime = projectJsonModified;
     var packageObj = null;
@@ -55,12 +74,11 @@ function refreshProjectFromPackageJson(project) {
     }
     if (packageObj.typescript && typeof packageObj.typescript.main === 'string') {
         var main = packageObj.typescript.main;
-        if (!fs.existsSync(main)) {
+        if (!fs.existsSync(path.join(project.dir, main))) {
             project.logCallback('Package.json typescript.main is ' + main + ', but this file does not exists. Aborting.');
             return false;
         }
-        project.main = main;
-        project.mainJsFile = main.replace(/\.ts$/, '.js');
+        project.mainIndex = main;
     }
     else {
         project.logCallback('Package.json missing typescript.main. Autodetecting main ts file.');
@@ -72,8 +90,10 @@ function refreshProjectFromPackageJson(project) {
     var deps = Object.keys(packageObj.dependencies);
     project.localize = deps.some(function (v) { return v === "bobril-g11n"; });
     var bobrilSection = packageObj.bobril;
-    if (bobrilSection == null)
+    if (bobrilSection == null) {
+        autodetectMainExample(project);
         return true;
+    }
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }
@@ -86,6 +106,10 @@ function refreshProjectFromPackageJson(project) {
     if (typeof bobrilSection.constantOverrides === 'object') {
         project.constantOverrides = bobrilSection.constantOverrides;
     }
+    if (typeof bobrilSection.example === 'string') {
+        project.mainExample = bobrilSection.example;
+    }
+    autodetectMainExample(project);
     return true;
 }
 exports.refreshProjectFromPackageJson = refreshProjectFromPackageJson;

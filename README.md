@@ -28,6 +28,9 @@ It reads `package.json` and understands:
 			"main": "pathToMain.ts"
 		},
 		"bobril": {
+			"dir": "name of directory where to place release default is dist",
+			"resourcesAreRelativeToProjectDir": false, // this is default
+			"example": "pathToExample.ts", // sample application entry point - if main is index.ts than example.ts is searched for default
 			"title": "index.html Title",
 			"constantOverrides": {
 				"module_name": {

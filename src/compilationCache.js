@@ -559,7 +559,7 @@ var CompilationCache = (function () {
             var pkgname = "node_modules/" + moduleName + "/package.json";
             var cached = getCachedFileContent(pkgname);
             if (cached.textTime == null) {
-                throw new Error('Cannot resolve ' + moduleName + ' in ' + containingFile + '. ' + pkgname + ' not found');
+                return null;
             }
             var main;
             try {

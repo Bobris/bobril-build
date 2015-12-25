@@ -1,17 +1,15 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node"
     },
     "filesGlob": [
         "./**/*.ts",
-        "./**/*.tsx",
         "!./node_modules/**/*"
     ],
     "files": [
-        "src/app.ts",
-        "src/lightSwitch.ts",
-        "src/lightSwitch2.ts"
+        "index.ts",
+        "example.ts"
     ]
 }

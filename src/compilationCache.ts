@@ -56,6 +56,8 @@ export interface ICompilationTranslation {
 
 export interface IProject {
     main: string | string[];
+    mainIndex?: string;
+    mainExample?: string;
     dir: string;
     options: ts.CompilerOptions;
     logCallback?: (text: string) => void;
@@ -656,7 +658,7 @@ export class CompilationCache {
             let pkgname = "node_modules/" + moduleName + "/package.json";
             let cached = getCachedFileContent(pkgname);
             if (cached.textTime == null) {
-                throw new Error('Cannot resolve ' + moduleName + ' in ' + containingFile + '. ' + pkgname + ' not found');
+                return null;
             }
             let main: string;
             try {
