@@ -70,7 +70,7 @@ export function setProjectOptions(param: { id: string, options: any }) {
     if (cp) {
         cp.promise = cp.promise.then(() => {
             Object.assign(cp.project, param.options);
-            let resp:bb.IProject = Object.assign({}, cp.project);
+            let resp: bb.IProject = Object.assign({}, cp.project);
             resp.compileTranslation = undefined;
             resp.textForTranslationReporter = undefined;
             resp.imgBundleCache = undefined;
@@ -111,9 +111,16 @@ export function compile(param: string) {
                 } else {
                     cp.project.compileTranslation = null;
                 }
+                cp.project.options.sourceRoot = "bb/base/";
                 cp.compilationCache.clearFileTimeModifications();
                 return cp.compilationCache.compile(cp.project).then(() => {
-                    if (!cp.project.totalBundle) bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                    if (!cp.project.totalBundle) {
+                        if (cp.project.fastBundle) {
+                            bb.updateLoaderJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                        } else {
+                            bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                        }
+                    }
                     bb.updateIndexHtml(cp.project);
                     if (cp.project.localize && cp.translationDb.changeInMessageIds) {
                         bb.emitTranslationsJs(cp.project, cp.translationDb);
@@ -123,8 +130,8 @@ export function compile(param: string) {
                     }
                 }).then(() => {
                     process.send({ command: "compileOk" });
-                }, (err) => {
-                    process.send({ command: "compileFailed", param: err });
+                }, (err: Error) => {
+                    process.send({ command: "compileFailed", param: err.toString() });
                 });
             }).then(() => resolve(null), () => resolve(null));
         });

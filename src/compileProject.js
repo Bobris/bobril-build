@@ -153,8 +153,14 @@ function compileProject(project) {
     translationDb.clearBeforeCompilation();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(function () {
-        if (!project.totalBundle)
-            bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+        if (!project.totalBundle) {
+            if (project.fastBundle) {
+                bb.updateLoaderJsByCC(compilationCache, project.writeFileCallback);
+            }
+            else {
+                bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+            }
+        }
         bb.updateIndexHtml(project);
         if (project.localize && translationDb.changeInMessageIds) {
             console.log("Writing localizations");

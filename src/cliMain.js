@@ -22,8 +22,27 @@ function writeDist(fn, b) {
 }
 var reUrlBB = /^\/bb(?:$|\/)/;
 var distWebRoot = path.dirname(__dirname.replace(/\\/g, "/")) + "/distweb";
+var curProjectDir;
+function fileResponse(response, name) {
+    var contentStream = fs.createReadStream(name)
+        .on("open", function handleContentReadStreamOpen() {
+        contentStream.pipe(response);
+    })
+        .on("error", function handleContentReadStreamError(error) {
+        try {
+            response.setHeader("Content-Length", "0");
+            response.setHeader("Cache-Control", "max-age=0");
+            response.writeHead(500, "Server Error");
+        }
+        catch (headerError) {
+        }
+        finally {
+            response.end("500 Server Error");
+        }
+    });
+}
 function handleRequest(request, response) {
-    //console.log('Req ' + request.url);
+    console.log('Req ' + request.url);
     if (reUrlBB.test(request.url)) {
         if (request.url.length === 3) {
             response.writeHead(301, { Location: "/bb/" });
@@ -33,22 +52,11 @@ function handleRequest(request, response) {
         var name_1 = request.url.substr(4);
         if (name_1.length === 0)
             name_1 = 'index.html';
-        var contentStream = fs.createReadStream(distWebRoot + "/" + name_1)
-            .on("open", function handleContentReadStreamOpen() {
-            contentStream.pipe(response);
-        })
-            .on("error", function handleContentReadStreamError(error) {
-            try {
-                response.setHeader("Content-Length", "0");
-                response.setHeader("Cache-Control", "max-age=0");
-                response.writeHead(500, "Server Error");
-            }
-            catch (headerError) {
-            }
-            finally {
-                response.end("500 Server Error");
-            }
-        });
+        if (/^base\//.test(name_1)) {
+            fileResponse(response, curProjectDir + name_1.substr(4));
+            return;
+        }
+        fileResponse(response, distWebRoot + "/" + name_1);
         return;
     }
     if (request.url === '/') {
@@ -130,6 +138,7 @@ function presetDebugProject(project) {
     project.debugStyleDefs = true;
     project.releaseStyleDefs = false;
     project.spriteMerge = false;
+    project.fastBundle = true;
     project.totalBundle = false;
     project.compress = false;
     project.mangle = false;
@@ -265,6 +274,7 @@ function startCompileProcess(path) {
                         resolve();
                     },
                     compileFailed: function (param) {
+                        console.log(param);
                         console.log("Compilation failed in " + (Date.now() - startCompilation).toFixed(0) + "ms");
                         reject(param);
                     }
@@ -281,6 +291,7 @@ function getDefaultDebugOptions() {
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
+        fastBundle: true,
         totalBundle: false,
         compress: false,
         mangle: false,
@@ -290,11 +301,12 @@ function getDefaultDebugOptions() {
 }
 function interactiveCommand(port) {
     if (port === void 0) { port = 8080; }
+    curProjectDir = bb.currentDirectory();
     var server = http.createServer(handleRequest);
     server.listen(port, function () {
         console.log("Server listening on: http://localhost:" + port);
     });
-    var compileProcess = startCompileProcess(bb.currentDirectory());
+    var compileProcess = startCompileProcess(curProjectDir);
     compileProcess.refresh().then(function () {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then(function (opts) {
@@ -302,17 +314,8 @@ function interactiveCommand(port) {
     }).then(function (opts) {
         return compileProcess.compile();
     });
-    //browserControl.start(6666, 'chrome', 'http://localhost:8080');
     startWatchProcess(function () {
         compileProcess.refresh().then(function () { return compileProcess.compile(); });
-        /*
-        compileProcess.compile().then(() => {
-            let scriptUrl = browserControl.listScriptUrls()[0];
-            let scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
-            browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(() => {
-                browserControl.evaluate("b.invalidateStyles();b.ignoreShouldChange();");
-            });
-        });*/
     });
 }
 function run() {
@@ -322,6 +325,7 @@ function run() {
         .alias("b")
         .description("just build and stop")
         .option("-d, --dir <outputdir>", "define where to put build result (default is ./dist)")
+        .option("-f, --fast <1/0>", "quick debuggable bundling", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
@@ -335,12 +339,17 @@ function run() {
         if (!bb.refreshProjectFromPackageJson(project)) {
             process.exit(1);
         }
-        presetReleaseProject(project);
         if (c["dir"])
             project.outputDir = c["dir"];
-        project.compress = humanTrue(c["compress"]);
-        project.mangle = humanTrue(c["mangle"]);
-        project.beautify = humanTrue(c["beautify"]);
+        if (humanTrue(c["fast"])) {
+            presetDebugProject(project);
+        }
+        else {
+            presetReleaseProject(project);
+            project.compress = humanTrue(c["compress"]);
+            project.mangle = humanTrue(c["mangle"]);
+            project.beautify = humanTrue(c["beautify"]);
+        }
         if (c["localize"]) {
             project.localize = humanTrue(c["localize"]);
         }
@@ -394,7 +403,7 @@ function run() {
     });
     c.parse(process.argv);
     if (!commandRunning) {
-        interactiveCommand();
+        interactiveCommand(c["port"]);
     }
 }
 exports.run = run;

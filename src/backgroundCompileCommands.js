@@ -104,10 +104,17 @@ function compile(param) {
                 else {
                     cp.project.compileTranslation = null;
                 }
+                cp.project.options.sourceRoot = "bb/base/";
                 cp.compilationCache.clearFileTimeModifications();
                 return cp.compilationCache.compile(cp.project).then(function () {
-                    if (!cp.project.totalBundle)
-                        bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                    if (!cp.project.totalBundle) {
+                        if (cp.project.fastBundle) {
+                            bb.updateLoaderJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                        }
+                        else {
+                            bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                        }
+                    }
                     bb.updateIndexHtml(cp.project);
                     if (cp.project.localize && cp.translationDb.changeInMessageIds) {
                         bb.emitTranslationsJs(cp.project, cp.translationDb);
@@ -118,7 +125,7 @@ function compile(param) {
                 }).then(function () {
                     process.send({ command: "compileOk" });
                 }, function (err) {
-                    process.send({ command: "compileFailed", param: err });
+                    process.send({ command: "compileFailed", param: err.toString() });
                 });
             }).then(function () { return resolve(null); }, function () { return resolve(null); });
         });

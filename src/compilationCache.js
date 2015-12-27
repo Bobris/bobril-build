@@ -10,6 +10,7 @@ var BuildHelpers = require('./buildHelpers');
 var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
 var pathUtils = require('./pathUtils');
 var bundler = require('./bundler');
+var sourceMap = require('./sourceMap');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
@@ -114,11 +115,28 @@ var CompilationCache = (function () {
         var resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ? function (p, s, t) { return pathUtils.join(p, t); } : function (p, s, t) { return pathUtils.join(path.dirname(s), t); };
         this.resolvePathStringLiteral = (function (nn) { return resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text); });
         if (project.totalBundle) {
+            project.options.sourceMap = false;
+        }
+        else if (project.fastBundle) {
+            project.options.sourceMap = true;
+        }
+        if (project.totalBundle || project.fastBundle) {
             if (project.options.module != ts.ModuleKind.CommonJS)
-                throw Error('Total bundle works only with CommonJS modules');
+                throw Error('Bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
-                project.commonJsTemp[filename.toLowerCase()] = content;
+                if (/\.js\.map$/i.test(filename)) {
+                    var sm = JSON.parse(content.toString());
+                    if (sm.version !== 3) {
+                        throw Error('Unsupported version of SourceMap');
+                    }
+                    sm.mappings = new Buffer(sm.mappings);
+                    project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
+                }
+                else {
+                    project.commonJsTemp[filename.toLowerCase()] = content;
+                }
             };
         }
         var ndir = project.dir.toLowerCase();
@@ -369,6 +387,22 @@ var CompilationCache = (function () {
                 };
                 bundler.bundle(bp);
             }
+            else if (project.fastBundle) {
+                var allFilesInJsBundle = Object.keys(project.commonJsTemp);
+                var res = new sourceMap.SourceMapBuilder();
+                for (var i = 0; i < allFilesInJsBundle.length; i++) {
+                    var name_2 = allFilesInJsBundle[i];
+                    var nameWOExt = name_2.replace(/\.js$/i, '');
+                    var sm = project.sourceMapMap[nameWOExt];
+                    var content = project.commonJsTemp[name_2];
+                    res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
+                    res.addSource(content, sm);
+                    res.addLine("});");
+                }
+                res.addLine("//# sourceMappingURL=bundle.map");
+                project.writeFileCallback('bundle.map', res.toSourceMap(project.options.sourceRoot));
+                project.writeFileCallback('bundle.js', res.toContent());
+            }
             if (project.spriteMerge) {
                 bundleCache.clear(true);
             }
@@ -555,7 +589,7 @@ var CompilationCache = (function () {
                 if (previousDir === curDir)
                     break;
             } while (true);
-            // only flat node_modules currently supported
+            // only flat node_modules currently supported (means only npm 3+)
             var pkgname = "node_modules/" + moduleName + "/package.json";
             var cached = getCachedFileContent(pkgname);
             if (cached.textTime == null) {

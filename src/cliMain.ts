@@ -25,37 +25,47 @@ function writeDist(fn: string, b: Buffer) {
 
 const reUrlBB = /^\/bb(?:$|\/)/;
 const distWebRoot = path.dirname(__dirname.replace(/\\/g, "/")) + "/distweb";
+let curProjectDir: string;
+
+function fileResponse(response: http.ServerResponse, name: string) {
+    let contentStream = <fs.ReadStream>fs.createReadStream(name)
+        .on("open",
+        function handleContentReadStreamOpen() {
+            contentStream.pipe(response);
+        }
+        )
+        .on("error",
+        function handleContentReadStreamError(error) {
+            try {
+                response.setHeader("Content-Length", "0");
+                response.setHeader("Cache-Control", "max-age=0");
+                response.writeHead(500, "Server Error");
+            } catch (headerError) {
+                // We can't set a header once the headers have already
+                // been sent - catch failed attempt to overwrite the
+                // response code.
+            } finally {
+                response.end("500 Server Error");
+            }
+        }
+        );
+}
+
 function handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
-    //console.log('Req ' + request.url);
+    console.log('Req ' + request.url);
     if (reUrlBB.test(request.url)) {
-        if (request.url.length===3) {
+        if (request.url.length === 3) {
             response.writeHead(301, { Location: "/bb/" });
             response.end();
             return;
         }
         let name = request.url.substr(4);
         if (name.length === 0) name = 'index.html';
-        let contentStream = <fs.ReadStream>fs.createReadStream(distWebRoot + "/" + name)
-            .on("open",
-            function handleContentReadStreamOpen() {
-                contentStream.pipe(response);
-            }
-            )
-            .on("error",
-            function handleContentReadStreamError(error) {
-                try {
-                    response.setHeader("Content-Length", "0");
-                    response.setHeader("Cache-Control", "max-age=0");
-                    response.writeHead(500, "Server Error");
-                } catch (headerError) {
-                    // We can't set a header once the headers have already
-                    // been sent - catch failed attempt to overwrite the
-                    // response code.
-                } finally {
-                    response.end("500 Server Error");
-                }
-            }
-            );
+        if (/^base\//.test(name)) {
+            fileResponse(response, curProjectDir + name.substr(4));
+            return;
+        }
+        fileResponse(response, distWebRoot + "/" + name);
         return;
     }
     if (request.url === '/') {
@@ -135,6 +145,7 @@ function presetDebugProject(project: bb.IProject) {
     project.debugStyleDefs = true;
     project.releaseStyleDefs = false;
     project.spriteMerge = false;
+    project.fastBundle = true;
     project.totalBundle = false;
     project.compress = false;
     project.mangle = false;
@@ -225,13 +236,13 @@ interface ICompileProcess {
 let lastId = 0;
 function startCompileProcess(path: string): ICompileProcess {
     let compileProcess = startBackgroundProcess("compile", {});
-    let myId = ""+(lastId++);
+    let myId = "" + (lastId++);
     compileProcess("createProject", { id: myId, dir: path });
     return {
         stop() {
             compileProcess("disposeProject", myId, { exit() { } });
         },
-        refresh():Promise<any> {
+        refresh(): Promise<any> {
             return new Promise((resolve, reject) => {
                 compileProcess("refreshProject", myId, {
                     log(param) { console.log(param) },
@@ -241,7 +252,7 @@ function startCompileProcess(path: string): ICompileProcess {
                 });
             });
         },
-        setOptions(options: any):Promise<any> {
+        setOptions(options: any): Promise<any> {
             return new Promise((resolve, reject) => {
                 compileProcess("setProjectOptions", { id: myId, options }, {
                     log(param) { console.log(param) },
@@ -251,7 +262,7 @@ function startCompileProcess(path: string): ICompileProcess {
                 });
             });
         },
-        loadTranslations():Promise<any> {
+        loadTranslations(): Promise<any> {
             return new Promise((resolve, reject) => {
                 compileProcess("loadTranslations", myId, {
                     log(param) { console.log(param) },
@@ -261,7 +272,7 @@ function startCompileProcess(path: string): ICompileProcess {
                 });
             });
         },
-        compile():Promise<any> {
+        compile(): Promise<any> {
             return new Promise((resolve, reject) => {
                 let startCompilation = Date.now();
                 let writtenFileCount = 0;
@@ -273,10 +284,11 @@ function startCompileProcess(path: string): ICompileProcess {
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk() {
-                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated "+writtenFileCount+" file"+(writtenFileCount!==1?"s":"")+".");
+                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
                         resolve();
                     },
                     compileFailed(param) {
+                        console.log(param);
                         console.log("Compilation failed in " + (Date.now() - startCompilation).toFixed(0) + "ms");
                         reject(param);
                     }
@@ -295,6 +307,7 @@ function getDefaultDebugOptions() {
         debugStyleDefs: true,
         releaseStyleDefs: false,
         spriteMerge: false,
+        fastBundle: true,
         totalBundle: false,
         compress: false,
         mangle: false,
@@ -303,30 +316,22 @@ function getDefaultDebugOptions() {
     };
 }
 
-function interactiveCommand(port:number = 8080) {
+function interactiveCommand(port: number = 8080) {
+    curProjectDir = bb.currentDirectory();
     var server = http.createServer(handleRequest);
     server.listen(port, function() {
         console.log("Server listening on: http://localhost:" + port);
     });
-    let compileProcess = startCompileProcess(bb.currentDirectory());
-    compileProcess.refresh().then(()=>{
+    let compileProcess = startCompileProcess(curProjectDir);
+    compileProcess.refresh().then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
-    }).then((opts)=>{
+    }).then((opts) => {
         return compileProcess.loadTranslations();
-    }).then((opts)=>{
+    }).then((opts) => {
         return compileProcess.compile();
     });
-    //browserControl.start(6666, 'chrome', 'http://localhost:8080');
     startWatchProcess(() => {
-        compileProcess.refresh().then(()=>compileProcess.compile());
-        /*
-        compileProcess.compile().then(() => {
-            let scriptUrl = browserControl.listScriptUrls()[0];
-            let scriptId = browserControl.getScriptIdFromUrl(scriptUrl);
-            browserControl.setScriptSource(scriptId, memoryFs["bundle.js"].toString()).then(() => {
-                browserControl.evaluate("b.invalidateStyles();b.ignoreShouldChange();");
-            });
-        });*/
+        compileProcess.refresh().then(() => compileProcess.compile());
     });
 }
 
@@ -337,6 +342,7 @@ export function run() {
         .alias("b")
         .description("just build and stop")
         .option("-d, --dir <outputdir>", "define where to put build result (default is ./dist)")
+        .option("-f, --fast <1/0>","quick debuggable bundling", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
@@ -350,11 +356,15 @@ export function run() {
             if (!bb.refreshProjectFromPackageJson(project)) {
                 process.exit(1);
             }
-            presetReleaseProject(project);
             if (c["dir"]) project.outputDir = c["dir"];
-            project.compress = humanTrue(c["compress"]);
-            project.mangle = humanTrue(c["mangle"]);
-            project.beautify = humanTrue(c["beautify"]);
+            if (humanTrue(c["fast"])) {
+                presetDebugProject(project);
+            } else {
+                presetReleaseProject(project);
+                project.compress = humanTrue(c["compress"]);
+                project.mangle = humanTrue(c["mangle"]);
+                project.beautify = humanTrue(c["beautify"]);
+            }
             if (c["localize"]) {
                 project.localize = humanTrue(c["localize"]);
             }
@@ -376,19 +386,19 @@ export function run() {
         .description("everything around translations")
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
-        .action((c)=> {
+        .action((c) => {
             commandRunning = true;
             let project = bb.createProjectFromDir(bb.currentDirectory());
             let trDir = path.join(project.dir, "translations");
             let trDb = new bb.TranslationDb();
             trDb.loadLangDbs(trDir);
             if (c["addlang"]) {
-                console.log("Adding locale "+c["addlang"]);
+                console.log("Adding locale " + c["addlang"]);
                 trDb.addLang(c["addlang"]);
                 trDb.saveLangDbs(trDir);
             }
             if (c["removelang"]) {
-                console.log("Removing locale "+c["removelang"]);
+                console.log("Removing locale " + c["removelang"]);
                 trDb.removeLang(c["removelang"]);
                 trDb.saveLangDbs(trDir);
             }
@@ -408,6 +418,6 @@ export function run() {
     });
     c.parse(process.argv);
     if (!commandRunning) {
-        interactiveCommand();
+        interactiveCommand(c["port"]);
     }
 }

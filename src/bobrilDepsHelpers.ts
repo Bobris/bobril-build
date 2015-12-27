@@ -14,6 +14,14 @@ export function systemJsFiles(): string[] {
     return ['system.js', 'system-polyfills.js'];
 }
 
+export function loaderJsPath(): string {
+    return __dirname.replace(/\\/g, "/");
+}
+
+export function loaderJsFiles(): string[] {
+    return ["loader.js"];
+}
+
 export function numeralJsPath(): string {
     return pathUtils.dirOfNodeModule('numeral');
 }
@@ -72,6 +80,36 @@ export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     return `<html><head><meta charset="utf-8"><title>${title}</title></head><body>${g11nInit(project)}<script type="text/javascript" src="bundle.js" charset="utf-8"></script></body></html>`;
 }
 
+export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
+    let title = project.htmlTitle || 'Bobril Application';
+    let moduleNames = Object.keys(project.moduleMap);
+    let moduleMap = <{ [name: string]: string }>Object.create(null);
+    for (let i = 0; i < moduleNames.length; i++) {
+        let name = moduleNames[i];
+        if (project.moduleMap[name].internalModule)
+            continue;
+        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
+    }
+    return `<html>
+    <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+    </head>
+    <body>${g11nInit(project)}
+        <script type="text/javascript" src="loader.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            ${globalDefines(project.defines)}
+            R.map = ${JSON.stringify(moduleMap)}
+        </script>
+        <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            R.r('${project.mainJsFile.replace(/\.js$/i, "")}');
+        </script>
+    </body>
+</html>
+`;
+}
+
 function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
@@ -83,15 +121,9 @@ export function updateIndexHtml(project: compilationCache.IProject) {
     let newIndexHtml: string;
     if (project.totalBundle) {
         newIndexHtml = bundleBasedIndexHtml(project);
+    } else if (project.fastBundle) {
+        newIndexHtml = fastBundleBasedIndexHtml(project);
     } else {
-        let moduleNames = Object.keys(project.moduleMap);
-        let moduleMap = <{ [name: string]: string }>Object.create(null);
-        for (let i = 0; i < moduleNames.length; i++) {
-            let name = moduleNames[i];
-            if (project.moduleMap[name].internalModule)
-                continue;
-            moduleMap[name] = project.moduleMap[name].jsFile;
-        }
         newIndexHtml = systemJsBasedIndexHtml(project);
     }
     if (newIndexHtml !== project.lastwrittenIndexHtml) {
@@ -163,4 +195,8 @@ function writeDirFromCompilationCache(cc: compilationCache.CompilationCache, wri
 
 export function updateSystemJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
     writeDirFromCompilationCache(cc, write, systemJsPath(), systemJsFiles());
+}
+
+export function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
+    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
 }

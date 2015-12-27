@@ -147,7 +147,13 @@ export function compileProject(project: bb.IProject): Promise<any> {
     translationDb.clearBeforeCompilation();
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
-        if (!project.totalBundle) bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+        if (!project.totalBundle) {
+            if (project.fastBundle) {
+                bb.updateLoaderJsByCC(compilationCache, project.writeFileCallback);                
+            } else {
+                bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
+            }
+        }
         bb.updateIndexHtml(project);
         if (project.localize && translationDb.changeInMessageIds) {
             console.log("Writing localizations");

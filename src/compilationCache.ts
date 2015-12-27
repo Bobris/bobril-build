@@ -11,6 +11,7 @@ import * as BuildHelpers from './buildHelpers';
 import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
 import * as bundler from './bundler';
+import * as sourceMap from './sourceMap';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -77,6 +78,8 @@ export interface IProject {
     // dafalt false
     localize?: boolean;
     // default false
+    fastBundle?: boolean;
+    // default false
     totalBundle?: boolean;
     // default true
     compress?: boolean;
@@ -94,6 +97,7 @@ export interface IProject {
     depJsFiles?: { [name: string]: string };
     moduleMap?: { [name: string]: { defFile: string, jsFile: string, isDefOnly: boolean, internalModule: boolean } };
     commonJsTemp?: { [name: string]: Buffer };
+    sourceMapMap?: { [namewoext: string]: sourceMap.SourceMap };
 }
 
 export class CompilationCache {
@@ -144,7 +148,7 @@ export class CompilationCache {
 
     findVarDecl(project: IProject, program: ts.Program, exports: ts.Symbol[], expName: string): ts.VariableDeclaration {
         let tc = program.getTypeChecker();
-        let symb = exports.find(v=>v.name==expName);
+        let symb = exports.find(v => v.name == expName);
         if (symb == null) {
             project.logCallback(`Cannot find export {expName} in {exports.map(v=>v.name).join(',')}`);
         }
@@ -163,9 +167,9 @@ export class CompilationCache {
             return decl as ts.VariableDeclaration;
         }
         project.logCallback(`Don't know how to override {expName} in {(<any>ts).SyntaxKind[decl.kind]}`);
-        return null;        
+        return null;
     }
-    
+
     prepareToApplyConstantOverride(project: IProject, program: ts.Program) {
         let overrides = project.constantOverrides;
         let moduleList = Object.keys(overrides);
@@ -200,11 +204,26 @@ export class CompilationCache {
         let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ? (p, s, t) => pathUtils.join(p, t) : (p, s, t) => pathUtils.join(path.dirname(s), t);
         this.resolvePathStringLiteral = ((nn: ts.StringLiteral) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
+            project.options.sourceMap = false;
+        } else if (project.fastBundle) {
+            project.options.sourceMap = true;
+        }
+        if (project.totalBundle || project.fastBundle) {
             if (project.options.module != ts.ModuleKind.CommonJS)
-                throw Error('Total bundle works only with CommonJS modules');
+                throw Error('Bundle works only with CommonJS modules');
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
+            project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = (filename: string, content: Buffer) => {
-                project.commonJsTemp[filename.toLowerCase()] = content;
+                if (/\.js\.map$/i.test(filename)) {
+                    let sm = JSON.parse(content.toString()) as sourceMap.SourceMap;
+                    if (sm.version !== 3) {
+                        throw Error('Unsupported version of SourceMap');
+                    }
+                    sm.mappings = new Buffer(<string>sm.mappings);
+                    project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
+                } else {
+                    project.commonJsTemp[filename.toLowerCase()] = content;
+                }
             };
         }
         let ndir = project.dir.toLowerCase();
@@ -424,6 +443,7 @@ export class CompilationCache {
                     cached.outputTime = cached.textTime;
                 }
             }
+
             if (project.totalBundle) {
                 let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
                 let that = this;
@@ -456,7 +476,23 @@ export class CompilationCache {
                     }
                 };
                 bundler.bundle(bp);
+            } else if (project.fastBundle) {
+                let allFilesInJsBundle = Object.keys(project.commonJsTemp);
+                let res = new sourceMap.SourceMapBuilder();
+                for (let i = 0; i < allFilesInJsBundle.length; i++) {
+                    let name = allFilesInJsBundle[i];
+                    let nameWOExt = name.replace(/\.js$/i, '');
+                    let sm = project.sourceMapMap[nameWOExt];
+                    let content = project.commonJsTemp[name];
+                    res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
+                    res.addSource(content, sm);
+                    res.addLine("});");
+                }
+                res.addLine("//# sourceMappingURL=bundle.map");
+                project.writeFileCallback('bundle.map', res.toSourceMap(project.options.sourceRoot));
+                project.writeFileCallback('bundle.js', res.toContent());
             }
+
             if (project.spriteMerge) {
                 bundleCache.clear(true);
             }
@@ -654,7 +690,7 @@ export class CompilationCache {
                 if (previousDir === curDir)
                     break;
             } while (true);
-            // only flat node_modules currently supported
+            // only flat node_modules currently supported (means only npm 3+)
             let pkgname = "node_modules/" + moduleName + "/package.json";
             let cached = getCachedFileContent(pkgname);
             if (cached.textTime == null) {

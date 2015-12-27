@@ -43,6 +43,8 @@
         "src/cliMain.ts",
         "src/compileProject.ts",
         "src/simpleHelpers.ts",
+        "src/loader.ts",
+        "src/sourceMap.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",

@@ -13,6 +13,14 @@ function systemJsFiles() {
     return ['system.js', 'system-polyfills.js'];
 }
 exports.systemJsFiles = systemJsFiles;
+function loaderJsPath() {
+    return __dirname.replace(/\\/g, "/");
+}
+exports.loaderJsPath = loaderJsPath;
+function loaderJsFiles() {
+    return ["loader.js"];
+}
+exports.loaderJsFiles = loaderJsFiles;
 function numeralJsPath() {
     return pathUtils.dirOfNodeModule('numeral');
 }
@@ -52,6 +60,19 @@ function bundleBasedIndexHtml(project) {
     return "<html><head><meta charset=\"utf-8\"><title>" + title + "</title></head><body>" + g11nInit(project) + "<script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script></body></html>";
 }
 exports.bundleBasedIndexHtml = bundleBasedIndexHtml;
+function fastBundleBasedIndexHtml(project) {
+    var title = project.htmlTitle || 'Bobril Application';
+    var moduleNames = Object.keys(project.moduleMap);
+    var moduleMap = Object.create(null);
+    for (var i = 0; i < moduleNames.length; i++) {
+        var name_2 = moduleNames[i];
+        if (project.moduleMap[name_2].internalModule)
+            continue;
+        moduleMap[name_2] = project.moduleMap[name_2].jsFile.replace(/\.js$/i, "");
+    }
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            R.r('" + project.mainJsFile.replace(/\.js$/i, "") + "');\n        </script>\n    </body>\n</html>\n";
+}
+exports.fastBundleBasedIndexHtml = fastBundleBasedIndexHtml;
 function writeDir(write, dir, files) {
     for (var i = 0; i < files.length; i++) {
         var f = files[i];
@@ -63,15 +84,10 @@ function updateIndexHtml(project) {
     if (project.totalBundle) {
         newIndexHtml = bundleBasedIndexHtml(project);
     }
+    else if (project.fastBundle) {
+        newIndexHtml = fastBundleBasedIndexHtml(project);
+    }
     else {
-        var moduleNames = Object.keys(project.moduleMap);
-        var moduleMap = Object.create(null);
-        for (var i = 0; i < moduleNames.length; i++) {
-            var name_2 = moduleNames[i];
-            if (project.moduleMap[name_2].internalModule)
-                continue;
-            moduleMap[name_2] = project.moduleMap[name_2].jsFile;
-        }
         newIndexHtml = systemJsBasedIndexHtml(project);
     }
     if (newIndexHtml !== project.lastwrittenIndexHtml) {
@@ -141,3 +157,7 @@ function updateSystemJsByCC(cc, write) {
     writeDirFromCompilationCache(cc, write, systemJsPath(), systemJsFiles());
 }
 exports.updateSystemJsByCC = updateSystemJsByCC;
+function updateLoaderJsByCC(cc, write) {
+    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
+}
+exports.updateLoaderJsByCC = updateLoaderJsByCC;
