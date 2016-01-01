@@ -5,12 +5,14 @@ var path = pathPlatformDependent.posix; // This works everythere, just use forwa
 var fs = require("fs");
 var ts = require("typescript");
 var g11n = require("../node_modules/bobril-g11n/src/msgFormatParser");
+var glob = require("glob");
 function createProjectFromDir(path) {
     var project = {
         dir: path.replace(/\\/g, '/'),
         main: null,
         mainIndex: null,
         mainJsFile: null,
+        specGlob: "spec/**/*Spec.ts?(x)",
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     return project;
@@ -135,6 +137,22 @@ function emitTranslationsJs(project, translationDb) {
     });
 }
 exports.emitTranslationsJs = emitTranslationsJs;
+function fillMainSpec(project) {
+    return new Promise(function (resolve, reject) {
+        glob(project.specGlob, { cwd: project.dir }, function (err, matches) {
+            if (err) {
+                reject(err);
+                return;
+            }
+            if (fs.existsSync(path.join(project.dir, "typings/jasmine/jasmine.d.ts"))) {
+                matches.push("typings/jasmine/jasmine.d.ts");
+            }
+            project.mainSpec = matches;
+            resolve();
+        });
+    });
+}
+exports.fillMainSpec = fillMainSpec;
 function compileProject(project) {
     var compilationCache = new bb.CompilationCache();
     var translationDb = new bb.TranslationDb();

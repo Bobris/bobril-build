@@ -4,6 +4,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from "fs";
 import * as ts from "typescript";
 import * as g11n from "../node_modules/bobril-g11n/src/msgFormatParser";
+import * as glob from "glob";
 
 export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
@@ -11,6 +12,7 @@ export function createProjectFromDir(path: string): bb.IProject {
         main: null,
         mainIndex: null,
         mainJsFile: null,
+        specGlob: "spec/**/*Spec.ts?(x)",
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     return project;
@@ -39,10 +41,10 @@ function autodetectMainExample(project: bb.IProject) {
     }
     if (project.mainExample != null) {
         project.main = [project.mainIndex, project.mainExample];
-        project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');           
+        project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');
     } else {
         project.main = project.mainIndex;
-        project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');           
+        project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');
     }
 }
 
@@ -84,7 +86,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
         if (project == null) return null;
     }
     let deps = Object.keys(packageObj.dependencies);
-    project.localize = deps.some(v=> v === "bobril-g11n");
+    project.localize = deps.some(v => v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
         autodetectMainExample(project);
@@ -124,8 +126,24 @@ export function defineTranslationReporter(project: bb.IProject) {
 
 export function emitTranslationsJs(project: bb.IProject, translationDb: bb.TranslationDb) {
     bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', project.writeFileCallback);
-    translationDb.langs.forEach(lang=> {
+    translationDb.langs.forEach(lang => {
         bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), lang + '.js', project.writeFileCallback);
+    });
+}
+
+export function fillMainSpec(project: bb.IProject): Promise<any> {
+    return new Promise((resolve, reject) => {
+        glob(project.specGlob, { cwd: project.dir }, (err, matches) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            if (fs.existsSync(path.join(project.dir,"typings/jasmine/jasmine.d.ts"))) {
+                matches.push("typings/jasmine/jasmine.d.ts");
+            }
+            project.mainSpec = matches;
+            resolve();
+        });
     });
 }
 
@@ -149,7 +167,7 @@ export function compileProject(project: bb.IProject): Promise<any> {
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) {
             if (project.fastBundle) {
-                bb.updateLoaderJsByCC(compilationCache, project.writeFileCallback);                
+                bb.updateLoaderJsByCC(compilationCache, project.writeFileCallback);
             } else {
                 bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);
             }

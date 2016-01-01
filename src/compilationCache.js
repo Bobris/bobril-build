@@ -67,7 +67,7 @@ var CompilationCache = (function () {
         }
         var decls = symb.getDeclarations();
         if (decls.length != 1) {
-            project.logCallback("Not unique declaration of {expName}");
+            project.logCallback("Not unique declaration of " + expName);
             return null;
         }
         var decl = decls[0];
@@ -79,7 +79,7 @@ var CompilationCache = (function () {
         if (decl.kind === ts.SyntaxKind.VariableDeclaration) {
             return decl;
         }
-        project.logCallback("Don't know how to override {expName} in {(<any>ts).SyntaxKind[decl.kind]}");
+        project.logCallback("Don't know how to override " + expName + " in " + ts.SyntaxKind[decl.kind]);
         return null;
     };
     CompilationCache.prototype.prepareToApplyConstantOverride = function (project, program) {
@@ -90,7 +90,7 @@ var CompilationCache = (function () {
             var moduleName = moduleList[i];
             var moduleInfo = project.moduleMap[moduleName];
             if (moduleInfo == null) {
-                project.logCallback("Defined module override not found ({moduleName})");
+                project.logCallback("Defined module override not found (" + moduleName + ")");
                 continue;
             }
             var exports_1 = tc.getExportsOfModule(program.getSourceFile(moduleInfo.defFile).symbol);

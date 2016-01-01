@@ -73,6 +73,20 @@ function fastBundleBasedIndexHtml(project) {
     return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            R.r('" + project.mainJsFile.replace(/\.js$/i, "") + "');\n        </script>\n    </body>\n</html>\n";
 }
 exports.fastBundleBasedIndexHtml = fastBundleBasedIndexHtml;
+function fastBundleBasedTestHtml(project) {
+    var title = 'Jasmine Test';
+    var moduleNames = Object.keys(project.moduleMap);
+    var moduleMap = Object.create(null);
+    for (var i = 0; i < moduleNames.length; i++) {
+        var name_3 = moduleNames[i];
+        if (project.moduleMap[name_3].internalModule)
+            continue;
+        moduleMap[name_3] = project.moduleMap[name_3].jsFile.replace(/\.js$/i, "");
+    }
+    var reqSpec = project.mainSpec.filter(function (v) { return !/\.d.ts$/i.test(v); }).map(function (v) { return ("R.r('" + v.replace(/\.tsx?$/i, "") + "');"); }).join(' ');
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"bb/special/jasmine-core.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"bb/special/jasmine-boot.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"bb/special/loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + reqSpec + "\n        </script>\n    </body>\n</html>\n";
+}
+exports.fastBundleBasedTestHtml = fastBundleBasedTestHtml;
 function writeDir(write, dir, files) {
     for (var i = 0; i < files.length; i++) {
         var f = files[i];
@@ -96,6 +110,12 @@ function updateIndexHtml(project) {
     }
 }
 exports.updateIndexHtml = updateIndexHtml;
+function updateTestHtml(project) {
+    var newIndexHtml;
+    newIndexHtml = fastBundleBasedTestHtml(project);
+    project.writeFileCallback('test.html', new Buffer(newIndexHtml));
+}
+exports.updateTestHtml = updateTestHtml;
 function findLocaleFile(filePath, locale, ext) {
     var improved = false;
     while (true) {

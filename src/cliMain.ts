@@ -8,8 +8,8 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from "fs";
 
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
+
 var project: bb.IProject;
-var browserControl = new bb.BrowserControl();
 
 function write(fn: string, b: Buffer) {
     memoryFs[fn] = b;
@@ -51,6 +51,29 @@ function fileResponse(response: http.ServerResponse, name: string) {
         );
 }
 
+let specialFiles: { [name: string]: string | Buffer } = Object.create(null);
+
+import * as pathUtils from './pathUtils';
+
+specialFiles["loader.js"] = require.resolve("./loader.js");
+specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), 'jasmine-core/jasmine.js');
+specialFiles["jasmine-boot.js"] = require.resolve("./jasmine-boot.js");
+
+function respondSpecial(response: http.ServerResponse, name: string) {
+    let c = specialFiles[name];
+    if (c == null) {
+        console.log(`Respond Special not found ${name}`);
+        response.statusCode = 404;
+        response.end("Not found");
+        return;
+    }
+    if (typeof c === "string") {
+        c = fs.readFileSync(c as string);
+        specialFiles[name] = c;
+    }
+    response.end(c);
+}
+
 function handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
     console.log('Req ' + request.url);
     if (reUrlBB.test(request.url)) {
@@ -63,6 +86,11 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         if (name.length === 0) name = 'index.html';
         if (/^base\//.test(name)) {
             fileResponse(response, curProjectDir + name.substr(4));
+            return;
+        }
+        if (/^special\//.test(name)) {
+            name = name.substr(8);
+            respondSpecial(response, name);
             return;
         }
         fileResponse(response, distWebRoot + "/" + name);
@@ -209,15 +237,16 @@ function startBackgroundProcess(name: string, callbacks: {}): (command: string, 
 
 let watchProcess: (command: string, param?: any, callbacks?: {}) => void = null;
 
-function startWatchProcess(notify: () => void) {
+function startWatchProcess(notify: (allFiles: string[]) => void) {
     watchProcess = startBackgroundProcess("watch", {});
     let startWatchTime = Date.now();
-    watchProcess("watch", { paths: ['**/*.ts', '**/tsconfig.json', '**/package.json'] }, {
-        watchReady() {
-            console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
-        },
-        watchChange() {
-            notify();
+    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$' }, {
+        watchChange(param: string[]) {
+            if (startWatchTime != 0) {
+                console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
+                startWatchTime = 0;
+            }
+            notify(param);
         },
         exit() {
             console.log("watch process exited");
@@ -317,7 +346,6 @@ function getDefaultDebugOptions() {
 }
 
 function interactiveCommand(port: number = 8080) {
-    curProjectDir = bb.currentDirectory();
     var server = http.createServer(handleRequest);
     server.listen(port, function() {
         console.log("Server listening on: http://localhost:" + port);
@@ -328,28 +356,29 @@ function interactiveCommand(port: number = 8080) {
     }).then((opts) => {
         return compileProcess.loadTranslations();
     }).then((opts) => {
-        return compileProcess.compile();
-    });
-    startWatchProcess(() => {
-        compileProcess.refresh().then(() => compileProcess.compile());
+        startWatchProcess((allFiles: string[]) => {
+            console.log(allFiles);
+            compileProcess.refresh().then(() => compileProcess.compile());
+        });
     });
 }
 
 export function run() {
     let commandRunning = false;
+    curProjectDir = bb.currentDirectory();
     c
         .command("build")
         .alias("b")
         .description("just build and stop")
         .option("-d, --dir <outputdir>", "define where to put build result (default is ./dist)")
-        .option("-f, --fast <1/0>","quick debuggable bundling", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .option("-f, --fast <1/0>", "quick debuggable bundling", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .action((c) => {
             commandRunning = true;
-            let project = bb.createProjectFromDir(bb.currentDirectory());
+            let project = bb.createProjectFromDir(curProjectDir);
             project.logCallback = (text) => {
                 console.log(text);
             }
@@ -403,6 +432,52 @@ export function run() {
                 trDb.saveLangDbs(trDir);
             }
             process.exit(0);
+        });
+    c
+        .command("test")
+        .description("runs tests once in PhantomJs")
+        .action((c) => {
+            commandRunning = true;
+            var server = http.createServer(handleRequest);
+            server.listen(0, function() {
+                console.log("Server listening on: http://localhost:" + server.address().port);
+            });
+            console.time("compile");
+            let project = bb.createProjectFromDir(curProjectDir);
+            project.logCallback = (text) => {
+                console.log(text);
+            }
+            if (!bb.refreshProjectFromPackageJson(project)) {
+                process.exit(1);
+            }
+            var compilationCache = new bb.CompilationCache();
+            bb.fillMainSpec(project).then(() => {
+                presetDebugProject(project);
+                project.fastBundle = true;
+                project.main = project.mainSpec;
+                project.writeFileCallback = write;
+                var translationDb = new bb.TranslationDb();
+                bb.defineTranslationReporter(project);
+                let trDir = path.join(project.dir, "translations");
+                if (project.localize) {
+                    translationDb.loadLangDbs(trDir);
+                    project.compileTranslation = translationDb;
+                }
+                translationDb.clearBeforeCompilation();
+                compilationCache.clearFileTimeModifications();
+                return compilationCache.compile(project);
+            }).then(() => {
+                bb.updateTestHtml(project);
+                console.timeEnd("compile");
+                let p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), `http://localhost:${server.address().port}/test.html`]);
+                return p.finish;
+            }).then((code: number) => {
+                console.log('phantom code:' + code);
+                process.exit(0);
+            }, (err) => {
+                console.error(err);
+                process.exit(1);
+            });
         });
     c
         .command("interactive")

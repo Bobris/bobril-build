@@ -110,6 +110,39 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
 `;
 }
 
+export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
+    let title = 'Jasmine Test';
+    let moduleNames = Object.keys(project.moduleMap);
+    let moduleMap = <{ [name: string]: string }>Object.create(null);
+    for (let i = 0; i < moduleNames.length; i++) {
+        let name = moduleNames[i];
+        if (project.moduleMap[name].internalModule)
+            continue;
+        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
+    }
+    let reqSpec = project.mainSpec.filter(v=>!/\.d.ts$/i.test(v)).map(v=>`R.r('${v.replace(/\.tsx?$/i, "")}');`).join(' ');
+    return `<html>
+    <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+    </head>
+    <body>${g11nInit(project)}
+        <script type="text/javascript" src="bb/special/jasmine-core.js" charset="utf-8"></script>
+        <script type="text/javascript" src="bb/special/jasmine-boot.js" charset="utf-8"></script>
+        <script type="text/javascript" src="bb/special/loader.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            ${globalDefines(project.defines)}
+            R.map = ${JSON.stringify(moduleMap)}
+        </script>
+        <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            ${reqSpec}
+        </script>
+    </body>
+</html>
+`;
+}
+
 function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
@@ -132,6 +165,11 @@ export function updateIndexHtml(project: compilationCache.IProject) {
     }
 }
 
+export function updateTestHtml(project: compilationCache.IProject) {
+    let newIndexHtml: string;
+    newIndexHtml = fastBundleBasedTestHtml(project);
+    project.writeFileCallback('test.html', new Buffer(newIndexHtml));
+}
 
 function findLocaleFile(filePath: string, locale: string, ext: string): string {
     let improved = false;

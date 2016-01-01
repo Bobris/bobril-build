@@ -9,7 +9,6 @@ var path = pathPlatformDependent.posix; // This works everythere, just use forwa
 var fs = require("fs");
 var memoryFs = Object.create(null);
 var project;
-var browserControl = new bb.BrowserControl();
 function write(fn, b) {
     memoryFs[fn] = b;
 }
@@ -41,6 +40,25 @@ function fileResponse(response, name) {
         }
     });
 }
+var specialFiles = Object.create(null);
+var pathUtils = require('./pathUtils');
+specialFiles["loader.js"] = require.resolve("./loader.js");
+specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), 'jasmine-core/jasmine.js');
+specialFiles["jasmine-boot.js"] = require.resolve("./jasmine-boot.js");
+function respondSpecial(response, name) {
+    var c = specialFiles[name];
+    if (c == null) {
+        console.log("Respond Special not found " + name);
+        response.statusCode = 404;
+        response.end("Not found");
+        return;
+    }
+    if (typeof c === "string") {
+        c = fs.readFileSync(c);
+        specialFiles[name] = c;
+    }
+    response.end(c);
+}
 function handleRequest(request, response) {
     console.log('Req ' + request.url);
     if (reUrlBB.test(request.url)) {
@@ -54,6 +72,11 @@ function handleRequest(request, response) {
             name_1 = 'index.html';
         if (/^base\//.test(name_1)) {
             fileResponse(response, curProjectDir + name_1.substr(4));
+            return;
+        }
+        if (/^special\//.test(name_1)) {
+            name_1 = name_1.substr(8);
+            respondSpecial(response, name_1);
             return;
         }
         fileResponse(response, distWebRoot + "/" + name_1);
@@ -203,12 +226,13 @@ var watchProcess = null;
 function startWatchProcess(notify) {
     watchProcess = startBackgroundProcess("watch", {});
     var startWatchTime = Date.now();
-    watchProcess("watch", { paths: ['**/*.ts', '**/tsconfig.json', '**/package.json'] }, {
-        watchReady: function () {
-            console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
-        },
-        watchChange: function () {
-            notify();
+    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$' }, {
+        watchChange: function (param) {
+            if (startWatchTime != 0) {
+                console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
+                startWatchTime = 0;
+            }
+            notify(param);
         },
         exit: function () {
             console.log("watch process exited");
@@ -301,7 +325,6 @@ function getDefaultDebugOptions() {
 }
 function interactiveCommand(port) {
     if (port === void 0) { port = 8080; }
-    curProjectDir = bb.currentDirectory();
     var server = http.createServer(handleRequest);
     server.listen(port, function () {
         console.log("Server listening on: http://localhost:" + port);
@@ -312,14 +335,15 @@ function interactiveCommand(port) {
     }).then(function (opts) {
         return compileProcess.loadTranslations();
     }).then(function (opts) {
-        return compileProcess.compile();
-    });
-    startWatchProcess(function () {
-        compileProcess.refresh().then(function () { return compileProcess.compile(); });
+        startWatchProcess(function (allFiles) {
+            console.log(allFiles);
+            compileProcess.refresh().then(function () { return compileProcess.compile(); });
+        });
     });
 }
 function run() {
     var commandRunning = false;
+    curProjectDir = bb.currentDirectory();
     c
         .command("build")
         .alias("b")
@@ -332,7 +356,7 @@ function run() {
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .action(function (c) {
         commandRunning = true;
-        var project = bb.createProjectFromDir(bb.currentDirectory());
+        var project = bb.createProjectFromDir(curProjectDir);
         project.logCallback = function (text) {
             console.log(text);
         };
@@ -388,6 +412,52 @@ function run() {
             trDb.saveLangDbs(trDir);
         }
         process.exit(0);
+    });
+    c
+        .command("test")
+        .description("runs tests once in PhantomJs")
+        .action(function (c) {
+        commandRunning = true;
+        var server = http.createServer(handleRequest);
+        server.listen(0, function () {
+            console.log("Server listening on: http://localhost:" + server.address().port);
+        });
+        console.time("compile");
+        var project = bb.createProjectFromDir(curProjectDir);
+        project.logCallback = function (text) {
+            console.log(text);
+        };
+        if (!bb.refreshProjectFromPackageJson(project)) {
+            process.exit(1);
+        }
+        var compilationCache = new bb.CompilationCache();
+        bb.fillMainSpec(project).then(function () {
+            presetDebugProject(project);
+            project.fastBundle = true;
+            project.main = project.mainSpec;
+            project.writeFileCallback = write;
+            var translationDb = new bb.TranslationDb();
+            bb.defineTranslationReporter(project);
+            var trDir = path.join(project.dir, "translations");
+            if (project.localize) {
+                translationDb.loadLangDbs(trDir);
+                project.compileTranslation = translationDb;
+            }
+            translationDb.clearBeforeCompilation();
+            compilationCache.clearFileTimeModifications();
+            return compilationCache.compile(project);
+        }).then(function () {
+            bb.updateTestHtml(project);
+            console.timeEnd("compile");
+            var p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), ("http://localhost:" + server.address().port + "/test.html")]);
+            return p.finish;
+        }).then(function (code) {
+            console.log('phantom code:' + code);
+            process.exit(0);
+        }, function (err) {
+            console.error(err);
+            process.exit(1);
+        });
     });
     c
         .command("interactive")

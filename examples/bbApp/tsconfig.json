@@ -11,6 +11,8 @@
     ],
     "files": [
         "src/app.ts",
+        "spec/demoSpec.ts",
+        "typings/jasmine/jasmine.d.ts",
         "src/lightSwitch.ts",
         "src/lightSwitch2.ts"
     ]

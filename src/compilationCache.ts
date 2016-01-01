@@ -59,6 +59,7 @@ export interface IProject {
     main: string | string[];
     mainIndex?: string;
     mainExample?: string;
+    mainSpec?: string[];
     dir: string;
     options: ts.CompilerOptions;
     logCallback?: (text: string) => void;
@@ -74,6 +75,7 @@ export interface IProject {
     compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
     constantOverrides?: { [module: string]: { [exportName: string]: string | number | boolean } };
+    specGlob?: string;
     mainJsFile?: string;
     // dafalt false
     localize?: boolean;
@@ -154,7 +156,7 @@ export class CompilationCache {
         }
         let decls = symb.getDeclarations();
         if (decls.length != 1) {
-            project.logCallback(`Not unique declaration of {expName}`);
+            project.logCallback(`Not unique declaration of ${expName}`);
             return null;
         }
         let decl = decls[0];
@@ -166,7 +168,7 @@ export class CompilationCache {
         if (decl.kind === ts.SyntaxKind.VariableDeclaration) {
             return decl as ts.VariableDeclaration;
         }
-        project.logCallback(`Don't know how to override {expName} in {(<any>ts).SyntaxKind[decl.kind]}`);
+        project.logCallback(`Don't know how to override ${expName} in ${(<any>ts).SyntaxKind[decl.kind]}`);
         return null;
     }
 
@@ -178,7 +180,7 @@ export class CompilationCache {
             let moduleName = moduleList[i];
             let moduleInfo = project.moduleMap[moduleName];
             if (moduleInfo == null) {
-                project.logCallback(`Defined module override not found ({moduleName})`);
+                project.logCallback(`Defined module override not found (${moduleName})`);
                 continue;
             }
             let exports = tc.getExportsOfModule((program.getSourceFile(moduleInfo.defFile) as any).symbol as ts.Symbol);

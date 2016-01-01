@@ -36,7 +36,6 @@
         "src/pathUtils.ts",
         "src/spriter.ts",
         "src/translationCache.ts",
-        "src/browserControl.ts",
         "src/backgroundBasicCommands.ts",
         "src/backgroundWatchCommands.ts",
         "src/backgroundCompileCommands.ts",
@@ -45,6 +44,11 @@
         "src/simpleHelpers.ts",
         "src/loader.ts",
         "src/sourceMap.ts",
+        "src/phantomjsRunner.ts",
+        "src/jasmine-boot.ts",
+        "src/longPollingServer.ts",
+        "src/phantomjsOpen.ts",
+        "src/phantomjsRunner.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
@@ -55,8 +59,10 @@
         "typings/uglifyjs/uglifyjs.d.ts",
         "typings/chokidar/chokidar.d.ts",
         "typings/node/node.d.ts",
-        "typings/png-async/png-async.d.ts",
         "typings/jasmine/jasmine.d.ts",
-		"typings/commander/commander.d.ts"
+        "typings/png-async/png-async.d.ts",
+        "typings/commander/commander.d.ts",
+        "typings/glob/glob.d.ts",
+        "typings/minimatch/minimatch.d.ts"
     ]
 }
