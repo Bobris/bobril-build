@@ -240,7 +240,7 @@ let watchProcess: (command: string, param?: any, callbacks?: {}) => void = null;
 function startWatchProcess(notify: (allFiles: string[]) => void) {
     watchProcess = startBackgroundProcess("watch", {});
     let startWatchTime = Date.now();
-    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$' }, {
+    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$', updateTsConfig: true }, {
         watchChange(param: string[]) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");

@@ -226,7 +226,7 @@ var watchProcess = null;
 function startWatchProcess(notify) {
     watchProcess = startBackgroundProcess("watch", {});
     var startWatchTime = Date.now();
-    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$' }, {
+    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$', updateTsConfig: true }, {
         watchChange: function (param) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");

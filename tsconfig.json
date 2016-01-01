@@ -49,6 +49,7 @@
         "src/longPollingServer.ts",
         "src/phantomjsOpen.ts",
         "src/phantomjsRunner.ts",
+        "src/deepEqual.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
