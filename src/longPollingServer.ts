@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 export interface ILongPollingConnection {
     onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;
     onClose: (connection: ILongPollingConnection) => void;
+    userAgent: string;
     send(message: string, data: any): void;
     close(): void;
 }
@@ -15,6 +16,7 @@ function newRandomId(): string {
 class Connection implements ILongPollingConnection {
     onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;
     onClose: (connection: ILongPollingConnection) => void;
+    userAgent: string;
 
     owner: LongPollingServer;
     id: string;
@@ -29,6 +31,7 @@ class Connection implements ILongPollingConnection {
         this.closed = false;
         this.timeOut = null;
         this.toSend = [];
+        this.userAgent = "";
         this.reTimeout();
     }
 
@@ -80,7 +83,7 @@ class Connection implements ILongPollingConnection {
             response.end(JSON.stringify({ id: this.id, m: this.toSend }));
             this.toSend = [];
         } else if (waitAllowed) {
-            if (this.response!=null && this.response!==response) {
+            if (this.response != null && this.response !== response) {
                 this.response.end(JSON.stringify({ id: this.id, old: true }));
                 this.response = null;
             }
@@ -92,7 +95,7 @@ class Connection implements ILongPollingConnection {
         if (this.response === response) {
             this.response = null;
             this.reTimeout();
-        }        
+        }
     }
 }
 
@@ -117,7 +120,7 @@ export class LongPollingServer {
                 request.connection.destroy();
             jsonString += data;
         });
-        request.on('end', function() {
+        request.on('end', () => {
             var data;
             try {
                 data = JSON.parse(jsonString);
@@ -137,6 +140,8 @@ export class LongPollingServer {
                 this.onConnect(c);
                 waitAllowed = false;
             }
+            let ua = request.headers['user-agent'];
+            if (ua) c.userAgent = ua;
             if (data.close) {
                 c.close();
                 waitAllowed = false;

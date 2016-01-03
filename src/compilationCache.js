@@ -602,6 +602,8 @@ var CompilationCache = (function () {
             catch (e) {
                 throw new Error('Cannot parse ' + pkgname + ' ' + e);
             }
+            if (main == null)
+                main = 'index.js';
             var mainWithoutExt = main.replace(/\.[^/.]+$/, "");
             var res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
             if (res == null)

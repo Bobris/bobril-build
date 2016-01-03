@@ -10,3 +10,4 @@ export * from './src/pathUtils';
 export * from './src/debounce';
 export * from './src/compileProject';
 export * from './src/phantomjsRunner';
+export * from './src/testServer';

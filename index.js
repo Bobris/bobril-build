@@ -14,3 +14,4 @@ __export(require('./src/pathUtils'));
 __export(require('./src/debounce'));
 __export(require('./src/compileProject'));
 __export(require('./src/phantomjsRunner'));
+__export(require('./src/testServer'));

@@ -10,6 +10,7 @@ var Connection = (function () {
         this.closed = false;
         this.timeOut = null;
         this.toSend = [];
+        this.userAgent = "";
         this.reTimeout();
     }
     Connection.prototype.reTimeout = function () {
@@ -80,6 +81,7 @@ var LongPollingServer = (function () {
         this.cs = Object.create(null);
     }
     LongPollingServer.prototype.handle = function (request, response) {
+        var _this = this;
         if (request.method != 'POST') {
             response.writeHead(405, "Only POST allowed");
             response.end();
@@ -103,15 +105,18 @@ var LongPollingServer = (function () {
             }
             var c = null;
             if (data.id) {
-                c = this.cs[data.id];
+                c = _this.cs[data.id];
             }
             var waitAllowed = true;
             if (c == null) {
-                c = new Connection(this);
-                this.cs[c.id] = c;
-                this.onConnect(c);
+                c = new Connection(_this);
+                _this.cs[c.id] = c;
+                _this.onConnect(c);
                 waitAllowed = false;
             }
+            var ua = request.headers['user-agent'];
+            if (ua)
+                c.userAgent = ua;
             if (data.close) {
                 c.close();
                 waitAllowed = false;

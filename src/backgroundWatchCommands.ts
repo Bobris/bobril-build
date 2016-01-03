@@ -5,7 +5,6 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import { deepEqual } from './deepEqual';
 
-let lastFiles: { [dir: string]: string[] } = null;
 
 function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
@@ -32,7 +31,7 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
     let dirs = Object.keys(files);
     for (let i = 0; i < dirs.length; i++) {
         let d = dirs[i];
-        if (/^node_modules/i.test(d))
+        if (/^node_modules/ig.test(d))
             continue;
         let f = files[d];
         if (d === ".") {
@@ -44,7 +43,7 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
             fileList.push(d + f[j]);
     }
     fileList.sort();
-    if (deepEqual(tscfg, fileList))
+    if (deepEqual(tscfg.files, fileList))
         return;
     tscfg.files = fileList;
     try {
@@ -54,10 +53,11 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
     }
 }
 
-export function watch(param: { cwd: string, paths: string[], filter: string, updateTsConfig: boolean }) {
+export function watch(param: { cwd: string, paths: string[], filter: string }) {
     let filterRe = new RegExp(param.filter);
-    let w = chokidar.watch(param.paths, { cwd: param.cwd, ignored: /[\/\\]\./, ignoreInitial: false });
-    w.on('all', debounce.debounce((v, v2) => {
+    let lastFiles: { [dir: string]: string[] } = null;
+    let w = chokidar.watch(param.paths, { cwd: param.cwd, ignored: /[\/\\]\./, ignoreInitial: true });
+    let action = debounce.debounce((v, v2) => {
         let wa = (<any>w).getWatched();
         let k = Object.keys(wa);
         let res = Object.create(null);
@@ -67,15 +67,16 @@ export function watch(param: { cwd: string, paths: string[], filter: string, upd
             if (items.length === 0) return;
             items = items.filter((i) => filterRe.test(i));
             if (items.length === 0) return;
+            items.sort();
             res[v.replace(/\\/g, "/")] = items;
         });
         if (deepEqual(res, lastFiles)) {
             process.send({ command: "watchChange", param: null })
         } else {
             lastFiles = res;
-            if (param.updateTsConfig)
-                runUpdateTsConfig(param.cwd, res);
             process.send({ command: "watchChange", param: res });
         }
-    }));
+    });
+    w.on('ready', action);
+    w.on('all', action);
 }

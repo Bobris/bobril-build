@@ -22,22 +22,26 @@ function deepEqual(a, b) {
             }
             return true;
         }
-        if (a.prototype !== b.prototype)
+        if (a.prototype !== b.prototype) {
             return false;
+        }
         var ka = Object.keys(a);
         var kb = Object.keys(b);
-        if (ka.length != kb.length)
+        if (ka.length != kb.length) {
             return false;
+        }
         ka.sort();
         kb.sort();
         for (var i = ka.length - 1; i >= 0; i--) {
-            if (ka[i] != kb[i])
+            if (ka[i] != kb[i]) {
                 return false;
+            }
         }
         for (var i = ka.length - 1; i >= 0; i--) {
             var key = ka[i];
-            if (!deepEqual(a[key], b[key]))
+            if (!deepEqual(a[key], b[key])) {
                 return false;
+            }
         }
         return true;
     }

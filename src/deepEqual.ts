@@ -16,20 +16,26 @@ export function deepEqual(a, b) {
             }
             return true;
         }
-        if (a.prototype !== b.prototype) return false;
+        if (a.prototype !== b.prototype) {
+            return false;
+        }
         let ka = Object.keys(a);
         let kb = Object.keys(b);
-        if (ka.length != kb.length)
+        if (ka.length != kb.length) {
             return false;
+        }
         ka.sort();
         kb.sort();
         for (let i = ka.length - 1; i >= 0; i--) {
-            if (ka[i] != kb[i])
+            if (ka[i] != kb[i]) {
                 return false;
+            }
         }
         for (let i = ka.length - 1; i >= 0; i--) {
             let key = ka[i];
-            if (!deepEqual(a[key], b[key])) return false;
+            if (!deepEqual(a[key], b[key])) {
+                return false;
+            }
         }
         return true;
     }

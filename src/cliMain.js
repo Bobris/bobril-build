@@ -20,8 +20,12 @@ function writeDist(fn, b) {
     fs.writeFileSync(ofn, b);
 }
 var reUrlBB = /^\/bb(?:$|\/)/;
-var distWebRoot = path.dirname(__dirname.replace(/\\/g, "/")) + "/distweb";
+var reUrlTest = /^test(?:$|\/)/;
+var bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
+var distWebRoot = bbDirRoot + "/distweb";
+var distWebtRoot = bbDirRoot + "/distwebt";
 var curProjectDir;
+var testServer = new bb.TestServer();
 function fileResponse(response, name) {
     var contentStream = fs.createReadStream(name)
         .on("open", function handleContentReadStreamOpen() {
@@ -68,6 +72,22 @@ function handleRequest(request, response) {
             return;
         }
         var name_1 = request.url.substr(4);
+        if (name_1 === 'api/test') {
+            testServer.handle(request, response);
+            return;
+        }
+        if (reUrlTest.test(name_1)) {
+            if (request.url.length === 4) {
+                response.writeHead(301, { Location: "/bb/test/" });
+                response.end();
+                return;
+            }
+            name_1 = name_1.substr(5);
+            if (name_1.length === 0)
+                name_1 = 'index.html';
+            fileResponse(response, distWebtRoot + "/" + name_1);
+            return;
+        }
         if (name_1.length === 0)
             name_1 = 'index.html';
         if (/^base\//.test(name_1)) {
@@ -248,9 +268,9 @@ function startCompileProcess(path) {
         stop: function () {
             compileProcess("disposeProject", myId, { exit: function () { } });
         },
-        refresh: function () {
+        refresh: function (allFiles) {
             return new Promise(function (resolve, reject) {
-                compileProcess("refreshProject", myId, {
+                compileProcess("refreshProject", { id: myId, allFiles: allFiles }, {
                     log: function (param) { console.log(param); },
                     refreshed: function (param) {
                         if (param)
@@ -330,14 +350,13 @@ function interactiveCommand(port) {
         console.log("Server listening on: http://localhost:" + port);
     });
     var compileProcess = startCompileProcess(curProjectDir);
-    compileProcess.refresh().then(function () {
+    compileProcess.refresh(null).then(function () {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then(function (opts) {
         return compileProcess.loadTranslations();
     }).then(function (opts) {
         startWatchProcess(function (allFiles) {
-            console.log(allFiles);
-            compileProcess.refresh().then(function () { return compileProcess.compile(); });
+            compileProcess.refresh(allFiles).then(function () { return compileProcess.compile(); });
         });
     });
 }
@@ -360,7 +379,7 @@ function run() {
         project.logCallback = function (text) {
             console.log(text);
         };
-        if (!bb.refreshProjectFromPackageJson(project)) {
+        if (!bb.refreshProjectFromPackageJson(project, null)) {
             process.exit(1);
         }
         if (c["dir"])
@@ -427,7 +446,7 @@ function run() {
         project.logCallback = function (text) {
             console.log(text);
         };
-        if (!bb.refreshProjectFromPackageJson(project)) {
+        if (!bb.refreshProjectFromPackageJson(project, null)) {
             process.exit(1);
         }
         var compilationCache = new bb.CompilationCache();
@@ -449,11 +468,25 @@ function run() {
         }).then(function () {
             bb.updateTestHtml(project);
             console.timeEnd("compile");
-            var p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), ("http://localhost:" + server.address().port + "/test.html")]);
-            return p.finish;
+            var p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), ("http://localhost:" + server.address().port + "/bb/test/")]);
+            testServer.startTest('/test.html');
+            return Promise.race([p.finish, testServer.waitForOneResult()]);
         }).then(function (code) {
-            console.log('phantom code:' + code);
-            process.exit(0);
+            if (typeof code === "number") {
+                console.log('phantom code:' + code);
+                process.exit(1);
+            }
+            else if (code == null) {
+                console.log('test timeout on start');
+                process.exit(1);
+            }
+            else {
+                console.log(code);
+                if (code.failure)
+                    process.exit(1);
+                else
+                    process.exit(0);
+            }
         }, function (err) {
             console.error(err);
             process.exit(1);

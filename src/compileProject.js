@@ -6,13 +6,15 @@ var fs = require("fs");
 var ts = require("typescript");
 var g11n = require("../node_modules/bobril-g11n/src/msgFormatParser");
 var glob = require("glob");
+var minimatch = require("minimatch");
+var deepEqual_1 = require('./deepEqual');
 function createProjectFromDir(path) {
     var project = {
         dir: path.replace(/\\/g, '/'),
         main: null,
         mainIndex: null,
         mainJsFile: null,
-        specGlob: "spec/**/*Spec.ts?(x)",
+        specGlob: "**/*@(.s|S)pec.ts?(x)",
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     return project;
@@ -32,25 +34,113 @@ function autodetectMainTs(project) {
     project.logCallback('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
     return false;
 }
-function autodetectMainExample(project) {
+var bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
+function runUpdateTsConfig(cwd, files) {
+    var tscfgPath = path.join(cwd, 'tsconfig.json');
+    var tscfg = null;
+    if (fs.existsSync(tscfgPath)) {
+        try {
+            tscfg = JSON.parse(fs.readFileSync(tscfgPath, 'utf8'));
+        }
+        catch (e) {
+            console.log("Failed to read and parse " + tscfgPath, e);
+        }
+    }
+    if (tscfg == null) {
+        tscfg = {
+            compilerOptions: {
+                target: "es6",
+                module: "commonjs",
+                moduleResolution: "node"
+            },
+            compileOnSave: false,
+            files: []
+        };
+    }
+    var fileList = [];
+    var dirs = Object.keys(files);
+    for (var i = 0; i < dirs.length; i++) {
+        var d = dirs[i];
+        if (/^node_modules/ig.test(d))
+            continue;
+        var f = files[d];
+        if (d === ".") {
+            d = "";
+        }
+        else {
+            d = d + '/';
+        }
+        for (var j = 0; j < f.length; j++)
+            fileList.push(d + f[j]);
+    }
+    fileList.sort();
+    if (deepEqual_1.deepEqual(tscfg.files, fileList))
+        return;
+    tscfg.files = fileList;
+    try {
+        fs.writeFileSync(tscfgPath, JSON.stringify(tscfg, null, 4));
+    }
+    catch (e) {
+        console.log("Failed to read and parse " + tscfgPath, e);
+    }
+}
+function autodetectMainExample(project, allFiles) {
     if (project.mainExample == null && project.mainIndex === "index.ts") {
         if (fs.existsSync(path.join(project.dir, "example.ts"))) {
             project.mainExample = "example.ts";
         }
+    }
+    if (allFiles != null) {
+        var re = minimatch.makeRe(project.specGlob);
+        var specList = [];
+        var dirs = Object.keys(allFiles);
+        for (var i = 0; i < dirs.length; i++) {
+            var d = dirs[i];
+            var f = allFiles[d];
+            if (d === ".") {
+                d = "";
+            }
+            else {
+                d = d + '/';
+            }
+            for (var j = 0; j < f.length; j++) {
+                var ff = d + f[j];
+                if (re.test(ff))
+                    specList.push(ff);
+            }
+        }
+        if (specList.length > 0) {
+            if (allFiles["typings/jasmine"] && allFiles["typings/jasmine"].indexOf("jasmine.d.ts") >= 0) {
+                specList.push("typings/jasmine/jasmine.d.ts");
+            }
+            else {
+                allFiles[bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
+                specList.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+            }
+            project.mainSpec = specList;
+        }
+        else {
+            project.mainSpec = null;
+        }
+        runUpdateTsConfig(project.dir, allFiles);
     }
     if (project.mainExample != null) {
         project.main = [project.mainIndex, project.mainExample];
         project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');
     }
     else {
-        project.main = project.mainIndex;
+        project.main = [project.mainIndex];
         project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');
     }
+    if (project.mainSpec) {
+        (_a = project.main).push.apply(_a, project.mainSpec);
+    }
+    var _a;
 }
-function refreshProjectFromPackageJson(project) {
+function refreshProjectFromPackageJson(project, allFiles) {
     var projectJsonFullPath = path.join(project.dir, 'package.json');
     var projectJsonModified = bb.fileModifiedTime(projectJsonFullPath);
-    if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected) {
+    if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected && allFiles == null) {
         return project.mainIndex !== null;
     }
     var packageJson = null;
@@ -60,7 +150,7 @@ function refreshProjectFromPackageJson(project) {
     catch (err) {
         project.logCallback('Cannot read package.json ' + err + '. Autodetecting main ts file.');
         if (autodetectMainTs(project)) {
-            autodetectMainExample(project);
+            autodetectMainExample(project, allFiles);
             return true;
         }
         return false;
@@ -93,7 +183,7 @@ function refreshProjectFromPackageJson(project) {
     project.localize = deps.some(function (v) { return v === "bobril-g11n"; });
     var bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
-        autodetectMainExample(project);
+        autodetectMainExample(project, allFiles);
         return true;
     }
     if (typeof bobrilSection.title === 'string') {
@@ -111,7 +201,7 @@ function refreshProjectFromPackageJson(project) {
     if (typeof bobrilSection.example === 'string') {
         project.mainExample = bobrilSection.example;
     }
-    autodetectMainExample(project);
+    autodetectMainExample(project, allFiles);
     return true;
 }
 exports.refreshProjectFromPackageJson = refreshProjectFromPackageJson;
@@ -139,7 +229,7 @@ function emitTranslationsJs(project, translationDb) {
 exports.emitTranslationsJs = emitTranslationsJs;
 function fillMainSpec(project) {
     return new Promise(function (resolve, reject) {
-        glob(project.specGlob, { cwd: project.dir }, function (err, matches) {
+        glob(project.specGlob, { cwd: project.dir, ignore: "!node_modules/**/*" }, function (err, matches) {
             if (err) {
                 reject(err);
                 return;

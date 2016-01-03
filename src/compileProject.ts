@@ -5,6 +5,8 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import * as g11n from "../node_modules/bobril-g11n/src/msgFormatParser";
 import * as glob from "glob";
+import * as minimatch from "minimatch";
+import { deepEqual } from './deepEqual';
 
 export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
@@ -12,7 +14,7 @@ export function createProjectFromDir(path: string): bb.IProject {
         main: null,
         mainIndex: null,
         mainJsFile: null,
-        specGlob: "spec/**/*Spec.ts?(x)",
+        specGlob: "**/*@(.s|S)pec.ts?(x)",
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     return project;
@@ -33,25 +35,108 @@ function autodetectMainTs(project: bb.IProject): boolean {
     return false;
 }
 
-function autodetectMainExample(project: bb.IProject) {
+const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
+
+function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
+    let tscfgPath = path.join(cwd, 'tsconfig.json');
+    let tscfg = null;
+    if (fs.existsSync(tscfgPath)) {
+        try {
+            tscfg = JSON.parse(fs.readFileSync(tscfgPath, 'utf8'));
+        } catch (e) {
+            console.log("Failed to read and parse " + tscfgPath, e);
+        }
+    }
+    if (tscfg == null) {
+        tscfg = {
+            compilerOptions: {
+                target: "es6",
+                module: "commonjs",
+                moduleResolution: "node"
+            },
+            compileOnSave: false,
+            files: []
+        };
+    }
+    let fileList = [];
+    let dirs = Object.keys(files);
+    for (let i = 0; i < dirs.length; i++) {
+        let d = dirs[i];
+        if (/^node_modules/ig.test(d))
+            continue;
+        let f = files[d];
+        if (d === ".") {
+            d = "";
+        } else {
+            d = d + '/';
+        }
+        for (let j = 0; j < f.length; j++)
+            fileList.push(d + f[j]);
+    }
+    fileList.sort();
+    if (deepEqual(tscfg.files, fileList))
+        return;
+    tscfg.files = fileList;
+    try {
+        fs.writeFileSync(tscfgPath, JSON.stringify(tscfg, null, 4));
+    } catch (e) {
+        console.log("Failed to read and parse " + tscfgPath, e);
+    }
+}
+
+function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: string[] }) {
     if (project.mainExample == null && project.mainIndex === "index.ts") {
         if (fs.existsSync(path.join(project.dir, "example.ts"))) {
             project.mainExample = "example.ts";
         }
     }
+    if (allFiles != null) {
+        let re = minimatch.makeRe(project.specGlob);
+        let specList = [];
+        let dirs = Object.keys(allFiles);
+        for (let i = 0; i < dirs.length; i++) {
+            let d = dirs[i];
+            let f = allFiles[d];
+            if (d === ".") {
+                d = "";
+            } else {
+                d = d + '/';
+            }
+            for (let j = 0; j < f.length; j++) {
+                let ff = d + f[j];
+                if (re.test(ff))
+                    specList.push(ff);
+            }
+        }
+        if (specList.length > 0) {
+            if (allFiles["typings/jasmine"] && allFiles["typings/jasmine"].indexOf("jasmine.d.ts") >= 0) {
+                specList.push("typings/jasmine/jasmine.d.ts");
+            } else {
+                allFiles[bbDirRoot+"/typings/jasmine"] = ["jasmine.d.ts"];
+                specList.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+            }
+            project.mainSpec = specList;
+        } else {
+            project.mainSpec = null;
+        }
+        runUpdateTsConfig(project.dir, allFiles);
+    }
     if (project.mainExample != null) {
         project.main = [project.mainIndex, project.mainExample];
         project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');
     } else {
-        project.main = project.mainIndex;
+        project.main = [project.mainIndex];
         project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');
+    }
+    if (project.mainSpec) {
+        (<string[]>project.main).push(...project.mainSpec);
     }
 }
 
-export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
+export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { [dir: string]: string[] }): boolean {
     let projectJsonFullPath = path.join(project.dir, 'package.json');
     let projectJsonModified = bb.fileModifiedTime(projectJsonFullPath);
-    if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected) {
+    if (projectJsonModified === project.projectJsonTime && !project.mainAutoDetected && allFiles == null) {
         return project.mainIndex !== null;
     }
     let packageJson = null;
@@ -60,7 +145,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     } catch (err) {
         project.logCallback('Cannot read package.json ' + err + '. Autodetecting main ts file.');
         if (autodetectMainTs(project)) {
-            autodetectMainExample(project);
+            autodetectMainExample(project, allFiles);
             return true;
         }
         return false;
@@ -89,7 +174,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     project.localize = deps.some(v => v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
-        autodetectMainExample(project);
+        autodetectMainExample(project, allFiles);
         return true;
     }
     if (typeof bobrilSection.title === 'string') {
@@ -107,7 +192,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject): boolean {
     if (typeof bobrilSection.example === 'string') {
         project.mainExample = bobrilSection.example;
     }
-    autodetectMainExample(project);
+    autodetectMainExample(project, allFiles);
     return true;
 }
 
@@ -133,12 +218,12 @@ export function emitTranslationsJs(project: bb.IProject, translationDb: bb.Trans
 
 export function fillMainSpec(project: bb.IProject): Promise<any> {
     return new Promise((resolve, reject) => {
-        glob(project.specGlob, { cwd: project.dir }, (err, matches) => {
+        glob(project.specGlob, { cwd: project.dir, ignore: "!node_modules/**/*" }, (err, matches) => {
             if (err) {
                 reject(err);
                 return;
             }
-            if (fs.existsSync(path.join(project.dir,"typings/jasmine/jasmine.d.ts"))) {
+            if (fs.existsSync(path.join(project.dir, "typings/jasmine/jasmine.d.ts"))) {
                 matches.push("typings/jasmine/jasmine.d.ts");
             }
             project.mainSpec = matches;

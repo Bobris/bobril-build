@@ -30,10 +30,10 @@ function createProject(param) {
 }
 exports.createProject = createProject;
 function refreshProject(param) {
-    var cp = cps[param];
+    var cp = cps[param.id];
     if (cp) {
         cp.promise = cp.promise.then(function () {
-            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project) });
+            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project, param.allFiles) });
         });
     }
     else {

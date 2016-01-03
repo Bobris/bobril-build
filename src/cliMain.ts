@@ -24,8 +24,12 @@ function writeDist(fn: string, b: Buffer) {
 }
 
 const reUrlBB = /^\/bb(?:$|\/)/;
-const distWebRoot = path.dirname(__dirname.replace(/\\/g, "/")) + "/distweb";
+const reUrlTest = /^test(?:$|\/)/;
+const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
+const distWebRoot = bbDirRoot + "/distweb";
+const distWebtRoot = bbDirRoot + "/distwebt";
 let curProjectDir: string;
+let testServer = new bb.TestServer();
 
 function fileResponse(response: http.ServerResponse, name: string) {
     let contentStream = <fs.ReadStream>fs.createReadStream(name)
@@ -83,6 +87,21 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
             return;
         }
         let name = request.url.substr(4);
+        if (name === 'api/test') {
+            testServer.handle(request, response);
+            return;
+        }
+        if (reUrlTest.test(name)) {
+            if (request.url.length === 4) {
+                response.writeHead(301, { Location: "/bb/test/" });
+                response.end();
+                return;
+            }
+            name = name.substr(5);
+            if (name.length === 0) name = 'index.html';
+            fileResponse(response, distWebtRoot + "/" + name);
+            return;
+        }
         if (name.length === 0) name = 'index.html';
         if (/^base\//.test(name)) {
             fileResponse(response, curProjectDir + name.substr(4));
@@ -237,11 +256,11 @@ function startBackgroundProcess(name: string, callbacks: {}): (command: string, 
 
 let watchProcess: (command: string, param?: any, callbacks?: {}) => void = null;
 
-function startWatchProcess(notify: (allFiles: string[]) => void) {
+function startWatchProcess(notify: (allFiles: { [dir: string]: string[] }) => void) {
     watchProcess = startBackgroundProcess("watch", {});
     let startWatchTime = Date.now();
     watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$', updateTsConfig: true }, {
-        watchChange(param: string[]) {
+        watchChange(param: { [dir: string]: string[] }) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
                 startWatchTime = 0;
@@ -255,7 +274,7 @@ function startWatchProcess(notify: (allFiles: string[]) => void) {
 }
 
 interface ICompileProcess {
-    refresh(): Promise<any>;
+    refresh(allFiles: { [dir: string]: string[] }): Promise<any>;
     setOptions(options: any): Promise<any>;
     loadTranslations(): Promise<any>;
     compile(): Promise<any>;
@@ -271,9 +290,9 @@ function startCompileProcess(path: string): ICompileProcess {
         stop() {
             compileProcess("disposeProject", myId, { exit() { } });
         },
-        refresh(): Promise<any> {
+        refresh(allFiles: { [dir: string]: string[] }): Promise<any> {
             return new Promise((resolve, reject) => {
-                compileProcess("refreshProject", myId, {
+                compileProcess("refreshProject", { id: myId, allFiles }, {
                     log(param) { console.log(param) },
                     refreshed(param: boolean) {
                         if (param) resolve(); else reject(new Error("Refresh failed"));
@@ -351,14 +370,13 @@ function interactiveCommand(port: number = 8080) {
         console.log("Server listening on: http://localhost:" + port);
     });
     let compileProcess = startCompileProcess(curProjectDir);
-    compileProcess.refresh().then(() => {
+    compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
         return compileProcess.loadTranslations();
     }).then((opts) => {
-        startWatchProcess((allFiles: string[]) => {
-            console.log(allFiles);
-            compileProcess.refresh().then(() => compileProcess.compile());
+        startWatchProcess((allFiles: { [dir: string]: string[] }) => {
+            compileProcess.refresh(allFiles).then(() => compileProcess.compile());
         });
     });
 }
@@ -382,7 +400,7 @@ export function run() {
             project.logCallback = (text) => {
                 console.log(text);
             }
-            if (!bb.refreshProjectFromPackageJson(project)) {
+            if (!bb.refreshProjectFromPackageJson(project, null)) {
                 process.exit(1);
             }
             if (c["dir"]) project.outputDir = c["dir"];
@@ -447,7 +465,7 @@ export function run() {
             project.logCallback = (text) => {
                 console.log(text);
             }
-            if (!bb.refreshProjectFromPackageJson(project)) {
+            if (!bb.refreshProjectFromPackageJson(project, null)) {
                 process.exit(1);
             }
             var compilationCache = new bb.CompilationCache();
@@ -469,11 +487,23 @@ export function run() {
             }).then(() => {
                 bb.updateTestHtml(project);
                 console.timeEnd("compile");
-                let p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), `http://localhost:${server.address().port}/test.html`]);
-                return p.finish;
-            }).then((code: number) => {
-                console.log('phantom code:' + code);
-                process.exit(0);
+                let p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), `http://localhost:${server.address().port}/bb/test/`]);
+                testServer.startTest('/test.html');
+                return Promise.race<number | bb.TestResultsHolder>([p.finish, testServer.waitForOneResult()]);
+            }).then((code: number | bb.TestResultsHolder) => {
+                if (typeof code === "number") {
+                    console.log('phantom code:' + code);
+                    process.exit(1);
+                } else if (code == null) {
+                    console.log('test timeout on start');
+                    process.exit(1);
+                } else {
+                    console.log(code);
+                    if (code.failure)
+                        process.exit(1);
+                    else
+                        process.exit(0);
+                }
             }, (err) => {
                 console.error(err);
                 process.exit(1);

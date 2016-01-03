@@ -59,4 +59,4 @@ b.init(() => {
     }
 });
 
-window["bbSend"] = c.send;
+window["bbTest"] = (message: string, data: any) => c.send(message, data);

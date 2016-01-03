@@ -5,7 +5,6 @@ var fs = require('fs');
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var deepEqual_1 = require('./deepEqual');
-var lastFiles = null;
 function runUpdateTsConfig(cwd, files) {
     var tscfgPath = path.join(cwd, 'tsconfig.json');
     var tscfg = null;
@@ -32,7 +31,7 @@ function runUpdateTsConfig(cwd, files) {
     var dirs = Object.keys(files);
     for (var i = 0; i < dirs.length; i++) {
         var d = dirs[i];
-        if (/^node_modules/i.test(d))
+        if (/^node_modules/ig.test(d))
             continue;
         var f = files[d];
         if (d === ".") {
@@ -45,7 +44,7 @@ function runUpdateTsConfig(cwd, files) {
             fileList.push(d + f[j]);
     }
     fileList.sort();
-    if (deepEqual_1.deepEqual(tscfg, fileList))
+    if (deepEqual_1.deepEqual(tscfg.files, fileList))
         return;
     tscfg.files = fileList;
     try {
@@ -57,8 +56,9 @@ function runUpdateTsConfig(cwd, files) {
 }
 function watch(param) {
     var filterRe = new RegExp(param.filter);
-    var w = chokidar.watch(param.paths, { cwd: param.cwd, ignored: /[\/\\]\./, ignoreInitial: false });
-    w.on('all', debounce.debounce(function (v, v2) {
+    var lastFiles = null;
+    var w = chokidar.watch(param.paths, { cwd: param.cwd, ignored: /[\/\\]\./, ignoreInitial: true });
+    var action = debounce.debounce(function (v, v2) {
         var wa = w.getWatched();
         var k = Object.keys(wa);
         var res = Object.create(null);
@@ -71,6 +71,7 @@ function watch(param) {
             items = items.filter(function (i) { return filterRe.test(i); });
             if (items.length === 0)
                 return;
+            items.sort();
             res[v.replace(/\\/g, "/")] = items;
         });
         if (deepEqual_1.deepEqual(res, lastFiles)) {
@@ -78,10 +79,10 @@ function watch(param) {
         }
         else {
             lastFiles = res;
-            if (param.updateTsConfig)
-                runUpdateTsConfig(param.cwd, res);
             process.send({ command: "watchChange", param: res });
         }
-    }));
+    });
+    w.on('ready', action);
+    w.on('all', action);
 }
 exports.watch = watch;

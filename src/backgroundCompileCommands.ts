@@ -41,11 +41,11 @@ export function createProject(param: { id: string, dir: string }) {
     }
 }
 
-export function refreshProject(param: string) {
-    let cp = cps[param];
+export function refreshProject(param: { id: string, allFiles: { [dir: string]: string[] } }) {
+    let cp = cps[param.id];
     if (cp) {
         cp.promise = cp.promise.then(() => {
-            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project) });
+            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project, param.allFiles) });
         });
     } else {
         process.send({ command: "Cannot refresh nonexisting project", param });
