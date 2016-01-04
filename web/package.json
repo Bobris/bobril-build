@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "typescript": {
-    "main": "src/app.ts"
+    "main": "index.ts"
   },
   "bobril": {
     "title": "Bobril-Build",

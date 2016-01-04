@@ -15,20 +15,31 @@
         env.catchExceptions(true);
         var perfnow = null;
         if (window.performance) {
-            var p = performance;
+            var p = window.performance;
             perfnow = p.now || p.webkitNow || p.msNow || p.mozNow;
+            if (perfnow) {
+                var realnow = perfnow;
+                perfnow = function () { return realnow.call(p); };
+            }
         }
         if (!perfnow) {
-            perfnow = Date.now || (function () { return +(new Date()); });
+            if (Date.now) {
+                perfnow = Date.now;
+            }
+            else {
+                perfnow = (function () { return +(new Date()); });
+            }
         }
         var stack = [];
         var specStart = 0;
+        var totalStart = 0;
         env.addReporter({
             jasmineStarted: function (suiteInfo) {
                 bbTest("wholeStart", suiteInfo.totalSpecsDefined);
+                totalStart = perfnow();
             },
             jasmineDone: function () {
-                bbTest("wholeDone");
+                bbTest("wholeDone", perfnow() - totalStart);
             },
             suiteStarted: function (result) {
                 bbTest("suiteStart", result.description);

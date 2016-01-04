@@ -1,18 +1,21 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
+import { debounce } from './debounce';
+
+let uaparse: (userAgent: string, jsUserAgent: string) => Object = require('useragent').parse;
 
 export interface SuiteOrTest {
     isSuite: boolean;
     name: string;
     skipped: boolean;
     failure: boolean;
+    duration: number;
     failures: { message: string, stack: any }[];
     nested: SuiteOrTest[];
 }
 
 export interface TestResultsHolder extends SuiteOrTest {
     userAgent: string;
-    jsUserAgent: string;
     running: boolean;
     testsFailed: number;
     testsSkipped: number;
@@ -20,11 +23,14 @@ export interface TestResultsHolder extends SuiteOrTest {
     totalTests: number;
 }
 
+export interface TestSvrState {
+    agents: TestResultsHolder[];
+}
+
 class Client {
     server: TestServer;
     id: string;
     userAgent: string;
-    jsUserAgent: string;
     url: string;
     runid: number;
     idle: boolean;
@@ -41,38 +47,43 @@ class Client {
         this.curResults = null;
         connection.onClose = () => {
             delete this.server[this.id];
+            this.server.notifySomeChange();
         };
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
-            console.log("Message " + message, data);
+            //console.log("Test Message " + message, data);
             switch (message) {
                 case 'newClient': {
-                    this.userAgent = connection.userAgent;
-                    this.jsUserAgent = data.userAgent;
+                    this.userAgent = uaparse(connection.userAgent, data.userAgent).toString()
                     if (this.url)
                         this.doStart();
                     else {
                         this.connection.send("wait", null);
                     }
+                    this.server.notifySomeChange();
                     break;
                 }
                 case 'wholeStart': {
                     this.curResults.totalTests = <number>data;
                     this.suiteStack = [this.curResults];
                     this.server.notifyTestingStarted(this);
+                    this.server.notifySomeChange();
                     break;
                 }
                 case 'wholeDone': {
+                    this.curResults.duration = <number>data;
                     this.curResults.running = false;
                     this.oldResults = this.curResults;
                     this.curResults = null;
                     this.suiteStack = null;
                     this.server.notifyFinishedResults(this.oldResults);
+                    this.server.notifySomeChange();
                     break;
                 }
                 case 'suiteStart': {
                     let suite: SuiteOrTest = {
                         name: <string>data,
                         nested: [],
+                        duration: 0,
                         failure: false,
                         isSuite: true,
                         failures: [],
@@ -80,10 +91,12 @@ class Client {
                     }
                     this.suiteStack[this.suiteStack.length - 1].nested.push(suite);
                     this.suiteStack.push(suite);
+                    this.server.notifySomeChange();
                     break;
                 }
                 case 'suiteDone': {
                     let suite = this.suiteStack.pop();
+                    suite.duration = data.duration;
                     if (data.failures.length > 0)
                         suite.failures.push(...data.failures);
                     if (suite.failures.length > 0) {
@@ -92,23 +105,27 @@ class Client {
                             this.suiteStack[i].failure = true;
                         }
                     }
+                    this.server.notifySomeChange();
                     break;
                 }
                 case 'testStart': {
-                    let suite: SuiteOrTest = {
+                    let test: SuiteOrTest = {
                         name: <string>data,
                         nested: null,
+                        duration: 0,
                         failure: false,
                         isSuite: false,
                         failures: [],
                         skipped: false
                     }
-                    this.suiteStack[this.suiteStack.length - 1].nested.push(suite);
-                    this.suiteStack.push(suite);
+                    this.suiteStack[this.suiteStack.length - 1].nested.push(test);
+                    this.suiteStack.push(test);
+                    this.server.notifySomeChange();
                     break;
                 }
                 case 'testDone': {
                     let test = this.suiteStack.pop();
+                    test.duration = data.duration;
                     if (data.failures.length > 0) test.failures.push(...data.failures);
                     this.curResults.testsFinished++;
                     if (data.status === 'passed') {
@@ -116,11 +133,13 @@ class Client {
                         this.curResults.testsSkipped++;
                         test.skipped = true;
                     } else {
+                        this.curResults.testsFailed++;
                         test.failure = true;
                         for (let i = 0; i < this.suiteStack.length; i++) {
                             this.suiteStack[i].failure = true;
                         }
                     }
+                    this.server.notifySomeChange();
                     break;
                 }
             }
@@ -135,8 +154,8 @@ class Client {
         this.idle = false;
         this.curResults = {
             userAgent: this.userAgent,
-            jsUserAgent: this.jsUserAgent,
             nested: [],
+            duration: 0,
             running: true,
             totalTests: null,
             testsFinished: 0,
@@ -153,19 +172,26 @@ class Client {
 }
 
 export class TestServer {
-    lastId: number;
+    private lastId: number;
     url: string;
-    runid: number;
-    clients: { [id: string]: Client };
-    svr: longPollingServer.LongPollingServer;
+    private runid: number;
+    private clients: { [id: string]: Client };
+    private svr: longPollingServer.LongPollingServer;
+
+    onChange: () => void;
+    notifySomeChange: () => void;
 
     constructor() {
         this.lastId = 0;
         this.runid = 0;
+        this.notifySomeChange = debounce(() => {
+            if (this.onChange) this.onChange();
+        }, 500);
         this.svr = new longPollingServer.LongPollingServer(c => this.newConnection(c));
         this.clients = Object.create(null);
         this.waitOneResolver = null;
         this.waitOneTimeOut = null;
+        this.onChange = null;
     }
 
     handle(request: http.ServerRequest, response: http.ServerResponse) {
@@ -187,6 +213,7 @@ export class TestServer {
         this.clients[id] = cl;
         if (this.url)
             cl.startTest(this.url, this.runid);
+        this.notifySomeChange();
     }
 
     private waitOneResolver: (result: TestResultsHolder) => void;
@@ -215,5 +242,35 @@ export class TestServer {
         return new Promise<TestResultsHolder>((resolve, reject) => {
             this.waitOneResolver = resolve;
         });
+    }
+
+    getState(): TestSvrState {
+        let kids = Object.keys(this.clients);
+        let res: TestSvrState = {
+            agents: []
+        }
+        for (let i = 0; i < kids.length; i++) {
+            let c = this.clients[kids[i]];
+            if (c.curResults || c.oldResults) {
+                res.agents.push(c.curResults || c.oldResults);
+            } else {
+                res.agents.push({
+                    duration: 0,
+                    failure: false,
+                    failures: [],
+                    isSuite: true,
+                    name: "",
+                    nested: [],
+                    running: false,
+                    skipped: true,
+                    testsFailed: 0,
+                    testsFinished: 0,
+                    testsSkipped: 0,
+                    totalTests: 0,
+                    userAgent: c.userAgent
+                });
+            }
+        }
+        return res;
     }
 }

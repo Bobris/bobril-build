@@ -30,6 +30,13 @@ const distWebRoot = bbDirRoot + "/distweb";
 const distWebtRoot = bbDirRoot + "/distwebt";
 let curProjectDir: string;
 let testServer = new bb.TestServer();
+let mainServer = new bb.MainServer(testServer);
+let server: http.Server = null;
+let phantomJsProcess: bb.IProcess = null;
+
+function startTestsInPhantom() {
+    phantomJsProcess = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), `http://localhost:${server.address().port}/bb/test/`]);
+}
 
 function fileResponse(response: http.ServerResponse, name: string) {
     let contentStream = <fs.ReadStream>fs.createReadStream(name)
@@ -89,6 +96,10 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         let name = request.url.substr(4);
         if (name === 'api/test') {
             testServer.handle(request, response);
+            return;
+        }
+        if (name === 'api/main') {
+            mainServer.handle(request, response);
             return;
         }
         if (reUrlTest.test(name)) {
@@ -277,7 +288,7 @@ interface ICompileProcess {
     refresh(allFiles: { [dir: string]: string[] }): Promise<any>;
     setOptions(options: any): Promise<any>;
     loadTranslations(): Promise<any>;
-    compile(): Promise<any>;
+    compile(): Promise<{ hasTests: boolean }>;
     stop(): void;
 }
 
@@ -331,9 +342,9 @@ function startCompileProcess(path: string): ICompileProcess {
                         console.log(name);
                         write(name, new Buffer(buffer, "binary"));
                     },
-                    compileOk() {
+                    compileOk(param) {
                         console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
-                        resolve();
+                        resolve(param);
                     },
                     compileFailed(param) {
                         console.log(param);
@@ -364,11 +375,25 @@ function getDefaultDebugOptions() {
     };
 }
 
-function interactiveCommand(port: number = 8080) {
-    var server = http.createServer(handleRequest);
-    server.listen(port, function() {
-        console.log("Server listening on: http://localhost:" + port);
+function startHttpServer(port: number) {
+    server = http.createServer(handleRequest);
+    server.on('error', function(e) {
+        if (e.code == 'EADDRINUSE') {
+            setTimeout(function() {
+                server.close();
+                server.listen(0, function() {
+                    console.log("Server listening on: http://localhost:" + server.address().port);
+                });
+            }, 10);
+        }
     });
+    server.listen(port, function() {
+        console.log("Server listening on: http://localhost:" + server.address().port);
+    });
+}
+
+function interactiveCommand(port: number) {
+    startHttpServer(port);
     let compileProcess = startCompileProcess(curProjectDir);
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
@@ -376,7 +401,13 @@ function interactiveCommand(port: number = 8080) {
         return compileProcess.loadTranslations();
     }).then((opts) => {
         startWatchProcess((allFiles: { [dir: string]: string[] }) => {
-            compileProcess.refresh(allFiles).then(() => compileProcess.compile());
+            compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v=>{
+                if (v.hasTests) {
+                    if (phantomJsProcess==null)
+                        startTestsInPhantom();
+                    testServer.startTest('/test.html');
+                }
+            });
         });
     });
 }
@@ -456,10 +487,7 @@ export function run() {
         .description("runs tests once in PhantomJs")
         .action((c) => {
             commandRunning = true;
-            var server = http.createServer(handleRequest);
-            server.listen(0, function() {
-                console.log("Server listening on: http://localhost:" + server.address().port);
-            });
+            startHttpServer(0);
             console.time("compile");
             let project = bb.createProjectFromDir(curProjectDir);
             project.logCallback = (text) => {
@@ -487,12 +515,12 @@ export function run() {
             }).then(() => {
                 bb.updateTestHtml(project);
                 console.timeEnd("compile");
-                let p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), `http://localhost:${server.address().port}/bb/test/`]);
+                startTestsInPhantom();
                 testServer.startTest('/test.html');
-                return Promise.race<number | bb.TestResultsHolder>([p.finish, testServer.waitForOneResult()]);
+                return Promise.race<number | bb.TestResultsHolder>([phantomJsProcess.finish, testServer.waitForOneResult()]);
             }).then((code: number | bb.TestResultsHolder) => {
                 if (typeof code === "number") {
-                    console.log('phantom code:' + code);
+                    console.log('phantom result code:' + code);
                     process.exit(1);
                 } else if (code == null) {
                     console.log('test timeout on start');
@@ -512,7 +540,7 @@ export function run() {
     c
         .command("interactive")
         .alias("i")
-        .option("-p, --port <port>", "set port for server to listen to (default 8080)")
+        .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
         .description("runs web controled build ui")
         .action((c) => {
             commandRunning = true;
@@ -523,6 +551,6 @@ export function run() {
     });
     c.parse(process.argv);
     if (!commandRunning) {
-        interactiveCommand(c["port"]);
+        interactiveCommand(8080);
     }
 }

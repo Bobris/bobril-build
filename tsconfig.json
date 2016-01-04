@@ -51,6 +51,7 @@
         "src/phantomjsRunner.ts",
         "src/deepEqual.ts",
         "src/testServer.ts",
+        "src/mainServer.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",

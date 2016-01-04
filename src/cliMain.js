@@ -26,6 +26,12 @@ var distWebRoot = bbDirRoot + "/distweb";
 var distWebtRoot = bbDirRoot + "/distwebt";
 var curProjectDir;
 var testServer = new bb.TestServer();
+var mainServer = new bb.MainServer(testServer);
+var server = null;
+var phantomJsProcess = null;
+function startTestsInPhantom() {
+    phantomJsProcess = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), ("http://localhost:" + server.address().port + "/bb/test/")]);
+}
 function fileResponse(response, name) {
     var contentStream = fs.createReadStream(name)
         .on("open", function handleContentReadStreamOpen() {
@@ -74,6 +80,10 @@ function handleRequest(request, response) {
         var name_1 = request.url.substr(4);
         if (name_1 === 'api/test') {
             testServer.handle(request, response);
+            return;
+        }
+        if (name_1 === 'api/main') {
+            mainServer.handle(request, response);
             return;
         }
         if (reUrlTest.test(name_1)) {
@@ -313,9 +323,9 @@ function startCompileProcess(path) {
                         console.log(name);
                         write(name, new Buffer(buffer, "binary"));
                     },
-                    compileOk: function () {
+                    compileOk: function (param) {
                         console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
-                        resolve();
+                        resolve(param);
                     },
                     compileFailed: function (param) {
                         console.log(param);
@@ -343,12 +353,24 @@ function getDefaultDebugOptions() {
         defines: { DEBUG: true }
     };
 }
-function interactiveCommand(port) {
-    if (port === void 0) { port = 8080; }
-    var server = http.createServer(handleRequest);
-    server.listen(port, function () {
-        console.log("Server listening on: http://localhost:" + port);
+function startHttpServer(port) {
+    server = http.createServer(handleRequest);
+    server.on('error', function (e) {
+        if (e.code == 'EADDRINUSE') {
+            setTimeout(function () {
+                server.close();
+                server.listen(0, function () {
+                    console.log("Server listening on: http://localhost:" + server.address().port);
+                });
+            }, 10);
+        }
     });
+    server.listen(port, function () {
+        console.log("Server listening on: http://localhost:" + server.address().port);
+    });
+}
+function interactiveCommand(port) {
+    startHttpServer(port);
     var compileProcess = startCompileProcess(curProjectDir);
     compileProcess.refresh(null).then(function () {
         return compileProcess.setOptions(getDefaultDebugOptions());
@@ -356,7 +378,13 @@ function interactiveCommand(port) {
         return compileProcess.loadTranslations();
     }).then(function (opts) {
         startWatchProcess(function (allFiles) {
-            compileProcess.refresh(allFiles).then(function () { return compileProcess.compile(); });
+            compileProcess.refresh(allFiles).then(function () { return compileProcess.compile(); }).then(function (v) {
+                if (v.hasTests) {
+                    if (phantomJsProcess == null)
+                        startTestsInPhantom();
+                    testServer.startTest('/test.html');
+                }
+            });
         });
     });
 }
@@ -437,10 +465,7 @@ function run() {
         .description("runs tests once in PhantomJs")
         .action(function (c) {
         commandRunning = true;
-        var server = http.createServer(handleRequest);
-        server.listen(0, function () {
-            console.log("Server listening on: http://localhost:" + server.address().port);
-        });
+        startHttpServer(0);
         console.time("compile");
         var project = bb.createProjectFromDir(curProjectDir);
         project.logCallback = function (text) {
@@ -468,12 +493,12 @@ function run() {
         }).then(function () {
             bb.updateTestHtml(project);
             console.timeEnd("compile");
-            var p = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), ("http://localhost:" + server.address().port + "/bb/test/")]);
+            startTestsInPhantom();
             testServer.startTest('/test.html');
-            return Promise.race([p.finish, testServer.waitForOneResult()]);
+            return Promise.race([phantomJsProcess.finish, testServer.waitForOneResult()]);
         }).then(function (code) {
             if (typeof code === "number") {
-                console.log('phantom code:' + code);
+                console.log('phantom result code:' + code);
                 process.exit(1);
             }
             else if (code == null) {
@@ -495,7 +520,7 @@ function run() {
     c
         .command("interactive")
         .alias("i")
-        .option("-p, --port <port>", "set port for server to listen to (default 8080)")
+        .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
         .description("runs web controled build ui")
         .action(function (c) {
         commandRunning = true;
@@ -506,7 +531,7 @@ function run() {
     });
     c.parse(process.argv);
     if (!commandRunning) {
-        interactiveCommand(c["port"]);
+        interactiveCommand(8080);
     }
 }
 exports.run = run;

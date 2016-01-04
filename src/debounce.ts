@@ -1,4 +1,4 @@
-export function debounce(func: Function, wait: number = 100, immediate?: boolean): Function {
+export function debounce<T extends Function>(func: T, wait: number = 100, immediate?: boolean): T {
     var timeout, args, context, timestamp, result;
 
     function later() {
@@ -15,7 +15,7 @@ export function debounce(func: Function, wait: number = 100, immediate?: boolean
         }
     };
 
-    return function debounced() {
+    return <any>function debounced() {
         context = this;
         args = arguments;
         timestamp = Date.now();

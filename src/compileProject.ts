@@ -218,13 +218,17 @@ export function emitTranslationsJs(project: bb.IProject, translationDb: bb.Trans
 
 export function fillMainSpec(project: bb.IProject): Promise<any> {
     return new Promise((resolve, reject) => {
-        glob(project.specGlob, { cwd: project.dir, ignore: "!node_modules/**/*" }, (err, matches) => {
+        glob(project.specGlob, { cwd: project.dir, ignore: "node_modules/**/*" }, (err, matches) => {
             if (err) {
                 reject(err);
                 return;
             }
-            if (fs.existsSync(path.join(project.dir, "typings/jasmine/jasmine.d.ts"))) {
-                matches.push("typings/jasmine/jasmine.d.ts");
+            if (matches.length>0) {
+                if (fs.existsSync(path.join(project.dir, "typings/jasmine/jasmine.d.ts"))) {
+                    matches.push("typings/jasmine/jasmine.d.ts");
+                } else {
+                    matches.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+                }
             }
             project.mainSpec = matches;
             resolve();

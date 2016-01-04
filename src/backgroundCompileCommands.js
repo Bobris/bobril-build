@@ -116,6 +116,9 @@ function compile(param) {
                         }
                     }
                     bb.updateIndexHtml(cp.project);
+                    if (cp.project.mainSpec != null) {
+                        bb.updateTestHtml(cp.project);
+                    }
                     if (cp.project.localize && cp.translationDb.changeInMessageIds) {
                         bb.emitTranslationsJs(cp.project, cp.translationDb);
                     }
@@ -123,7 +126,7 @@ function compile(param) {
                         cp.translationDirty = true;
                     }
                 }).then(function () {
-                    process.send({ command: "compileOk" });
+                    process.send({ command: "compileOk", param: { hasTests: cp.project.mainSpec != null } });
                 }, function (err) {
                     process.send({ command: "compileFailed", param: err.toString() });
                 });

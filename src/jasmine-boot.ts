@@ -21,20 +21,30 @@ declare var jasmineRequire: any;
         env.catchExceptions(true);
         let perfnow: () => number = null;
         if (window.performance) {
-            let p = <any>performance;
+            let p = <any>window.performance;
             perfnow = p.now || p.webkitNow || p.msNow || p.mozNow;
+            if (perfnow) {
+                let realnow = perfnow;
+                perfnow = () => realnow.call(p);
+            }
         }
         if (!perfnow) {
-            perfnow = Date.now || (() => +(new Date()));
+            if (Date.now) {
+                perfnow = Date.now;
+            } else {
+                perfnow = (() => +(new Date()));
+            }
         }
         let stack = [];
-        let specStart: number = 0;
+        let specStart = 0;
+        let totalStart = 0;
         env.addReporter({
             jasmineStarted: (suiteInfo: { totalSpecsDefined: number }) => {
                 bbTest("wholeStart", suiteInfo.totalSpecsDefined);
+                totalStart = perfnow();
             },
             jasmineDone: () => {
-                bbTest("wholeDone");
+                bbTest("wholeDone", perfnow() - totalStart);
             },
             suiteStarted: (result: { description: string, fullName: string }) => {
                 bbTest("suiteStart", result.description);
@@ -44,11 +54,11 @@ declare var jasmineRequire: any;
                 bbTest("testStart", result.description);
                 specStart = perfnow();
             },
-            specDone: (result: { description: string, status: string, failedExpectations: { message: string, stack: any }[] }) => {
+            specDone: (result: { description: string, status: string, failedExpectations: { message: string, stack: string }[] }) => {
                 let duration = perfnow() - specStart;
                 bbTest("testDone", { name: result.description, duration, status: result.status, failures: result.failedExpectations });
             },
-            suiteDone: (result: { description: string, status: string, failedExpectations: { message: string, stack: any }[] }) => {
+            suiteDone: (result: { description: string, status: string, failedExpectations: { message: string, stack: string }[] }) => {
                 let duration = perfnow() - stack.pop();
                 bbTest("suiteDone", { name: result.description, duration, status: result.status, failures: result.failedExpectations });
             }

@@ -15,3 +15,4 @@ __export(require('./src/debounce'));
 __export(require('./src/compileProject'));
 __export(require('./src/phantomjsRunner'));
 __export(require('./src/testServer'));
+__export(require('./src/mainServer'));
