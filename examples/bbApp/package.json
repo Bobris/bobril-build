@@ -6,18 +6,12 @@
     "main": "src/app.ts"
   },
   "bobril": {
-    "title": "Bobril Hello World",
-	"constantOverrides": {
-		"bobril-build-override-const-lib-sample": {
-		    "cimp": true
-		}
-	}
+    "title": "Bobril Hello World"
   },
   "author": "",
   "license": "",
   "dependencies": {
     "bobril": "*",
-    "bobril-build-override-const-lib-sample": "^1.0.0",
     "bobril-g11n": "*"
   }
 }

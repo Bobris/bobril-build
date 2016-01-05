@@ -1,7 +1,5 @@
 import * as b from 'bobril';
 import * as g from 'bobril-g11n';
-import * as c from 'bobril-build-override-const-lib-sample';
-import comp from 'exampleComponent';
 
 interface IPageCtx extends b.IBobrilCtx {
     counter: number;
@@ -28,15 +26,11 @@ let page = b.createVirtualComponent({
                     }
                 ]
             },
-            {
-                tag: 'p',
-                children: "cbool:" + c.cbool + " cnum:" + c.cnum + " cstr:" + c.cstr
-            },
 			{
 				tag: 'p',
 				children: "cs-CZ",
 				component: { onClick: ()=> g.setLocale("cs-CZ") }
-			},comp({onAction: ()=>alert("action") }, "Click me")
+			}
         ];
     }
 });

@@ -152,7 +152,8 @@ export class CompilationCache {
         let tc = program.getTypeChecker();
         let symb = exports.find(v => v.name == expName);
         if (symb == null) {
-            project.logCallback(`Cannot find export {expName} in {exports.map(v=>v.name).join(',')}`);
+            project.logCallback(`Cannot find export ${expName} in ${exports.map(v=>v.name).join(',')}`);
+            return null;
         }
         let decls = symb.getDeclarations();
         if (decls.length != 1) {

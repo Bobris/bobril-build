@@ -63,7 +63,8 @@ var CompilationCache = (function () {
         var tc = program.getTypeChecker();
         var symb = exports.find(function (v) { return v.name == expName; });
         if (symb == null) {
-            project.logCallback("Cannot find export {expName} in {exports.map(v=>v.name).join(',')}");
+            project.logCallback("Cannot find export " + expName + " in " + exports.map(function (v) { return v.name; }).join(','));
+            return null;
         }
         var decls = symb.getDeclarations();
         if (decls.length != 1) {
