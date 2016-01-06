@@ -73,6 +73,12 @@ var Connection = (function () {
             this.reTimeout();
         }
     };
+    Connection.prototype.closeResponse = function (response) {
+        if (this.response === response) {
+            this.response = null;
+            this.reTimeout();
+        }
+    };
     return Connection;
 }());
 var LongPollingServer = (function () {
@@ -129,6 +135,9 @@ var LongPollingServer = (function () {
                 }
             }
             c.pollResponse(response, waitAllowed);
+            request.on('close', function () {
+                c.closeResponse(response);
+            });
         });
     };
     return LongPollingServer;

@@ -87,7 +87,7 @@ function handleRequest(request, response) {
             return;
         }
         if (reUrlTest.test(name_1)) {
-            if (request.url.length === 4) {
+            if (name_1.length === 4) {
                 response.writeHead(301, { Location: "/bb/test/" });
                 response.end();
                 return;
@@ -355,19 +355,18 @@ function getDefaultDebugOptions() {
 }
 function startHttpServer(port) {
     server = http.createServer(handleRequest);
+    server.on("listening", function () {
+        console.log("Server listening on: http://localhost:" + server.address().port);
+    });
     server.on('error', function (e) {
         if (e.code == 'EADDRINUSE') {
             setTimeout(function () {
                 server.close();
-                server.listen(0, function () {
-                    console.log("Server listening on: http://localhost:" + server.address().port);
-                });
+                server.listen(0);
             }, 10);
         }
     });
-    server.listen(port, function () {
-        console.log("Server listening on: http://localhost:" + server.address().port);
-    });
+    server.listen(port);
 }
 function interactiveCommand(port) {
     startHttpServer(port);

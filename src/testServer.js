@@ -12,7 +12,7 @@ var Client = (function () {
         this.oldResults = null;
         this.curResults = null;
         connection.onClose = function () {
-            delete _this.server[_this.id];
+            delete _this.server.clients[_this.id];
             _this.server.notifySomeChange();
         };
         connection.onMessage = function (connection, message, data) {

@@ -97,6 +97,13 @@ class Connection implements ILongPollingConnection {
             this.reTimeout();
         }
     }
+    
+    closeResponse(response: http.ServerResponse) {
+        if (this.response === response) {
+            this.response = null;
+            this.reTimeout();
+        }
+    }
 }
 
 export class LongPollingServer {
@@ -154,6 +161,10 @@ export class LongPollingServer {
                 }
             }
             c.pollResponse(response, waitAllowed);
+            request.on('close', () => {
+                c.closeResponse(response);            
+            });
+
         });
     }
 }

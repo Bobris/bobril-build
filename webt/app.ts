@@ -8,7 +8,7 @@ let wait = false;
 let disconnected = false;
 let testing = false;
 let testUrl = "";
-let testCounter = 0;
+let iframe: HTMLIFrameElement = null;
 
 c.onClose = () => {
     disconnected = true;
@@ -29,8 +29,11 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
         case "test": {
             testing = true;
             testUrl = data.url;
-            testCounter++;
             b.invalidate();
+            if (iframe != null) document.body.removeChild(iframe);
+            iframe = document.createElement("iframe");
+            document.body.appendChild(iframe);
+            iframe.src = testUrl;
             break;
         }
         default: {
@@ -55,7 +58,7 @@ b.init(() => {
         return [{ tag: "h2", children: "Waiting" }, { tag: "p", children: "ready to receive commands" }];
     }
     if (testing) {
-        return [{ tag: "h2", children: "Testing" }, { tag: "p", children: testUrl }, { key: "" + testCounter, tag: "iframe", attrs: { src: testUrl } }];
+        return [{ tag: "h2", children: "Testing" }, { tag: "p", children: testUrl }];
     }
 });
 

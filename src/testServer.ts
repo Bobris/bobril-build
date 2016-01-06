@@ -46,7 +46,7 @@ class Client {
         this.oldResults = null;
         this.curResults = null;
         connection.onClose = () => {
-            delete this.server[this.id];
+            delete this.server.clients[this.id];
             this.server.notifySomeChange();
         };
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
@@ -175,7 +175,7 @@ export class TestServer {
     private lastId: number;
     url: string;
     private runid: number;
-    private clients: { [id: string]: Client };
+    clients: { [id: string]: Client };
     private svr: longPollingServer.LongPollingServer;
 
     onChange: () => void;

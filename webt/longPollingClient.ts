@@ -30,6 +30,7 @@ export class Connection {
         if (this.closed)
             return;
         this.closed = true;
+        this.toSend = [];
         if (this.onClose != null)
             this.onClose(this);
         this.reSendTimer();
@@ -72,6 +73,9 @@ export class Connection {
             return;
         var xhr = new (<any>window).XMLHttpRequest();
         xhr.open("POST", this.url, true);
+        xhr.onabort = () => {
+            this.close();
+        }
         xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
                 if (xhr.status >= 300) {
@@ -98,6 +102,9 @@ export class Connection {
             return;
         var xhr = new (<any>window).XMLHttpRequest();
         xhr.open("POST", this.url, true);
+        xhr.onabort = () => {
+            this.close();
+        }
         xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
                 this.longPolling = false;
