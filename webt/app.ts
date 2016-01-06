@@ -9,15 +9,31 @@ let disconnected = false;
 let testing = false;
 let testUrl = "";
 let iframe: HTMLIFrameElement = null;
+let reconnectDelay = 0;
+
+function reconnect() {
+    disconnected = false;
+    c.connect();
+    c.send("newClient", {
+        userAgent: navigator.userAgent
+    });
+    b.invalidate();
+}
 
 c.onClose = () => {
+    connected = false;
     disconnected = true;
     b.invalidate();
+    if (reconnectDelay < 30000) reconnectDelay += 1000;
+    setTimeout(() => {
+        reconnect();
+    }, reconnectDelay);
 };
 
 c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
     if (!connected) {
         connected = true;
+        reconnectDelay = 0;
         b.invalidate();
     }
     switch (message) {
@@ -43,9 +59,7 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
     }
 };
 
-c.send("newClient", {
-    userAgent: navigator.userAgent
-});
+reconnect();
 
 b.init(() => {
     if (disconnected) {

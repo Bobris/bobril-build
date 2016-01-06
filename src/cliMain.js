@@ -362,11 +362,11 @@ function startHttpServer(port) {
         if (e.code == 'EADDRINUSE') {
             setTimeout(function () {
                 server.close();
-                server.listen(0);
+                server.listen({ port: 0, exclusive: true });
             }, 10);
         }
     });
-    server.listen(port);
+    server.listen({ port: port, exclusive: true });
 }
 function interactiveCommand(port) {
     startHttpServer(port);

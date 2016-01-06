@@ -4,7 +4,8 @@ export class Connection {
     private toSend: any[];
     private sendTimer: number;
     private closed: boolean;
-    private longPolling: boolean;
+    private longPolling: XMLHttpRequest;
+    private heartBeatTimer: number;
 
     onMessage: (connection: Connection, message: string, data: any) => void;
     onClose: (connection: Connection) => void;
@@ -17,7 +18,17 @@ export class Connection {
         this.id = "";
         this.sendTimer = -1;
         this.closed = false;
-        this.longPolling = false;
+        this.longPolling = null;
+        this.heartBeatTimer = -1;
+    }
+
+    connect() {
+        this.toSend = [];
+        this.id = "";
+        this.sendTimer = -1;
+        this.closed = false;
+        this.longPolling = null;
+        this.heartBeatTimer = -1;
         this.reSendTimer();
     }
 
@@ -29,6 +40,10 @@ export class Connection {
     close() {
         if (this.closed)
             return;
+        if (this.longPolling) {
+            this.longPolling.abort();
+            this.longPolling = null;
+        }
         this.closed = true;
         this.toSend = [];
         if (this.onClose != null)
@@ -44,7 +59,7 @@ export class Connection {
         }
     }
 
-    private parseResponse(resp: string):boolean {
+    private parseResponse(resp: string): boolean {
         var data;
         try {
             data = JSON.parse(resp);
@@ -66,7 +81,7 @@ export class Connection {
         }
         return true;
     }
-    
+
     private doSend() {
         this.sendTimer = -1;
         if (this.closed && this.id === '')
@@ -78,7 +93,7 @@ export class Connection {
         }
         xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
-                if (xhr.status >= 300) {
+                if (xhr.status < 200 || xhr.status >= 300) {
                     this.close();
                 } else {
                     if (!this.parseResponse(xhr.responseText)) {
@@ -88,6 +103,7 @@ export class Connection {
                     }
                     if (!this.longPolling)
                         this.startLongPolling();
+                    this.startHeartBeat();
                 }
             }
         }
@@ -102,15 +118,11 @@ export class Connection {
             return;
         var xhr = new (<any>window).XMLHttpRequest();
         xhr.open("POST", this.url, true);
-        xhr.onabort = () => {
-            this.close();
-        }
         xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
-                this.longPolling = false;
-                if (xhr.status >= 300) {
-                    this.startLongPolling();
-                    return;
+                this.longPolling = null;
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    this.close();
                 } else {
                     if (!this.parseResponse(xhr.responseText)) {
                         this.id = '';
@@ -118,10 +130,21 @@ export class Connection {
                         return;
                     }
                     this.startLongPolling();
+                    this.startHeartBeat();
                 }
             }
         }
         xhr.send(JSON.stringify({ id: this.id }));
-        this.longPolling = true;
+        this.longPolling = xhr;
+    }
+
+    private startHeartBeat() {
+        if (this.heartBeatTimer != -1) {
+            clearTimeout(this.heartBeatTimer);
+        }
+        this.heartBeatTimer = setTimeout(() => {
+            this.heartBeatTimer = -1;
+            this.doSend();
+        }, 30000);
     }
 }

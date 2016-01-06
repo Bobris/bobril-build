@@ -1,6 +1,7 @@
 import * as b from 'bobril';
 import * as g from 'bobril-g11n';
 
+
 interface IPageCtx extends b.IBobrilCtx {
     counter: number;
 }
