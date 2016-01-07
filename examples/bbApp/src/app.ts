@@ -1,7 +1,6 @@
 import * as b from 'bobril';
 import * as g from 'bobril-g11n';
 
-
 interface IPageCtx extends b.IBobrilCtx {
     counter: number;
 }
@@ -14,6 +13,8 @@ let page = b.createVirtualComponent({
         setInterval(() => { ctx.counter++; b.invalidate(); }, 1000);
     },
     render(ctx: IPageCtx, me: b.IBobrilNode, oldMe?: b.IBobrilCacheNode): void {
+        let m = g.getMoment();
+
         me.children = [
             b.style({ tag: 'h1', children: g.t('Hello World! {c, number}', { c: ctx.counter }) }, headerStyle),
             {
@@ -27,11 +28,17 @@ let page = b.createVirtualComponent({
                     }
                 ]
             },
-			{
-				tag: 'p',
-				children: "cs-CZ",
-				component: { onClick: ()=> g.setLocale("cs-CZ") }
-			}
+            {
+                tag: 'p', children: "Current locale: " + g.getLocale()
+            },
+            {
+                tag: 'p', children: "Moment long date format L: " + (<any>m.localeData()).longDateFormat("L")
+            },
+            {
+                tag: 'p',
+                children: "cs-CZ",
+                component: { onClick: () => g.setLocale("cs-CZ") }
+            }
         ];
     }
 });
