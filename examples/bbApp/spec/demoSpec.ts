@@ -4,6 +4,6 @@ describe("Demo suite", ()=>{
     });
 
     it("even more stuff works",()=>{
-        expect(1+2).toBe(3); 
+        expect(1+2).toBe(4); 
     });
 });

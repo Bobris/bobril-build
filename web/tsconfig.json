@@ -6,6 +6,7 @@
     },
     "compileOnSave": false,
     "files": [
-        "index.ts"
+        "index.ts",
+        "longPollingClient.ts"
     ]
 }
