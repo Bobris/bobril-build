@@ -37,7 +37,7 @@ let page = b.createVirtualComponent({
             {
                 tag: 'p',
                 children: "cs-CZ",
-                component: { onClick: () => g.setLocale("cs-CZ") }
+                component: { onClick: () => { g.setLocale("cs-CZ"); return true; } }
             }
         ];
     }
