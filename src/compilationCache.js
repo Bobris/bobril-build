@@ -400,8 +400,8 @@ var CompilationCache = (function () {
                     res.addSource(content, sm);
                     res.addLine("});");
                 }
-                res.addLine("//# sourceMappingURL=bundle.map");
-                project.writeFileCallback('bundle.map', res.toSourceMap(project.options.sourceRoot));
+                res.addLine("//# sourceMappingURL=bundle.js.map");
+                project.writeFileCallback('bundle.js.map', res.toSourceMap(project.options.sourceRoot));
                 project.writeFileCallback('bundle.js', res.toContent());
             }
             if (project.spriteMerge) {
