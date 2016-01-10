@@ -10,3 +10,17 @@ function globalDefines(defines) {
     return res;
 }
 exports.globalDefines = globalDefines;
+function removeLinkToSourceMap(content) {
+    var pos = content.length - 3;
+    while (pos >= 0) {
+        if (content[pos] === 10)
+            break;
+        pos--;
+    }
+    if (pos < content.length - 5) {
+        if (content.slice(pos + 1, pos + 4).toString() === "//#")
+            return content.slice(0, pos);
+    }
+    return content;
+}
+exports.removeLinkToSourceMap = removeLinkToSourceMap;

@@ -11,6 +11,7 @@ var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
 var pathUtils = require('./pathUtils');
 var bundler = require('./bundler');
 var sourceMap = require('./sourceMap');
+var simpleHelpers = require('./simpleHelpers');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
@@ -134,6 +135,10 @@ var CompilationCache = (function () {
                     }
                     sm.mappings = new Buffer(sm.mappings);
                     project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
+                }
+                else if (/\.js$/i.test(filename)) {
+                    content = simpleHelpers.removeLinkToSourceMap(content);
+                    project.commonJsTemp[filename.toLowerCase()] = content;
                 }
                 else {
                     project.commonJsTemp[filename.toLowerCase()] = content;

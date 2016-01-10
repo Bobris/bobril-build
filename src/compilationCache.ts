@@ -12,7 +12,8 @@ import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
 import * as bundler from './bundler';
 import * as sourceMap from './sourceMap';
-
+import * as simpleHelpers from './simpleHelpers';
+ 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
     if (diagnostic.file) {
@@ -224,6 +225,9 @@ export class CompilationCache {
                     }
                     sm.mappings = new Buffer(<string>sm.mappings);
                     project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
+                } else if (/\.js$/i.test(filename)) {
+                    content = simpleHelpers.removeLinkToSourceMap(content);
+                    project.commonJsTemp[filename.toLowerCase()] = content;
                 } else {
                     project.commonJsTemp[filename.toLowerCase()] = content;
                 }
