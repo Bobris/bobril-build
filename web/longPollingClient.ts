@@ -122,7 +122,7 @@ export class Connection {
             if (xhr.readyState === 4) {
                 this.longPolling = null;
                 if (xhr.status < 200 || xhr.status >= 300) {
-                    this.close();
+                    this.startLongPolling();
                 } else {
                     if (!this.parseResponse(xhr.responseText)) {
                         this.id = '';
