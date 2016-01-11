@@ -69,7 +69,6 @@
         "typings/glob/glob.d.ts",
         "typings/stackframe/stackframe.d.ts",
         "typings/error-stack-parser/error-stack-parser.d.ts",
-        "typings/stacktrace-gps/stacktrace-gps.d.ts",
         "typings/minimatch/minimatch.d.ts"
     ]
 }
