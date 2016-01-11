@@ -180,9 +180,111 @@ var SourceMapBuilder = (function () {
     SourceMapBuilder.prototype.toContent = function () {
         return this.outputBuffer.toBuffer();
     };
-    SourceMapBuilder.prototype.toSourceMap = function (sourceRoot) {
+    SourceMapBuilder.prototype.toSourceMapBuffer = function (sourceRoot) {
         return new Buffer(JSON.stringify({ version: 3, sourceRoot: sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer().toString() }));
+    };
+    SourceMapBuilder.prototype.toSourceMap = function (sourceRoot) {
+        return { version: 3, sourceRoot: sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer() };
     };
     return SourceMapBuilder;
 }());
 exports.SourceMapBuilder = SourceMapBuilder;
+function parseSourceMap(content) {
+    var sm = JSON.parse(content.toString());
+    if (sm.version !== 3) {
+        throw Error('Unsupported version of SourceMap');
+    }
+    sm.mappings = new Buffer(sm.mappings);
+    return sm;
+}
+exports.parseSourceMap = parseSourceMap;
+function findPosition(sourceMap, line, col) {
+    var inputMappings = (typeof sourceMap.mappings === "string") ? new Buffer(sourceMap.mappings) : sourceMap.mappings;
+    var outputLine = 1;
+    var ip = 0;
+    var inOutputCol = 0;
+    var inSourceIndex = 0;
+    var inSourceLine = 0;
+    var inSourceCol = 0;
+    var shift = 0;
+    var value = 0;
+    var valpos = 0;
+    var lastOutputCol = 0;
+    var lastSourceIndex = 0;
+    var lastSourceLine = 0;
+    var lastSourceCol = 0;
+    var res = { sourceName: null, line: null, col: null };
+    var commit = function () {
+        if (valpos === 0)
+            return;
+        if (outputLine === line && lastOutputCol <= col && col <= inOutputCol) {
+            if (lastSourceIndex < 0)
+                return res;
+            res.sourceName = sourceMap.sources[inSourceIndex];
+            res.line = lastSourceLine + 1;
+            res.col = lastSourceCol + col - lastOutputCol;
+            return res;
+        }
+        if (valpos === 1) {
+            lastSourceIndex = -1;
+        }
+        else {
+            lastSourceIndex = inSourceIndex;
+            lastSourceLine = inSourceLine;
+            lastSourceCol = inSourceCol;
+            if (outputLine === line && col == null) {
+                res.sourceName = sourceMap.sources[inSourceIndex];
+                res.line = inSourceLine + 1;
+                res.col = inSourceCol;
+                return res;
+            }
+        }
+        lastOutputCol = inOutputCol;
+        valpos = 0;
+    };
+    while (ip < inputMappings.length) {
+        var b = inputMappings[ip++];
+        if (b === 59) {
+            commit();
+            inOutputCol = 0;
+            outputLine++;
+        }
+        else if (b === 44) {
+            commit();
+        }
+        else {
+            b = charToInteger[b];
+            if (b === 255)
+                throw new Error("Invalid sourceMap");
+            value += (b & 31) << shift;
+            if (b & 32) {
+                shift += 5;
+            }
+            else {
+                var shouldNegate = value & 1;
+                value >>= 1;
+                if (shouldNegate)
+                    value = -value;
+                switch (valpos) {
+                    case 0:
+                        inOutputCol += value;
+                        break;
+                    case 1:
+                        inSourceIndex += value;
+                        break;
+                    case 2:
+                        inSourceLine += value;
+                        break;
+                    case 3:
+                        inSourceCol += value;
+                        break;
+                }
+                valpos++;
+                value = shift = 0;
+            }
+        }
+    }
+    commit();
+    return res;
+}
+exports.findPosition = findPosition;

@@ -1,8 +1,13 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
 import { debounce } from './debounce';
+import { StackFrame } from 'stackframe';
+import * as stackTrace from './stackTrace';
+import * as sourceMap from './sourceMap';
 
 let uaparse: (userAgent: string, jsUserAgent: string) => Object = require('useragent').parse;
+
+export type TestFailures = { message: string, stack: StackFrame[] }[];
 
 export interface SuiteOrTest {
     isSuite: boolean;
@@ -10,7 +15,7 @@ export interface SuiteOrTest {
     skipped: boolean;
     failure: boolean;
     duration: number;
-    failures: { message: string, stack: any }[];
+    failures: TestFailures;
     nested: SuiteOrTest[];
 }
 
@@ -98,7 +103,7 @@ class Client {
                     let suite = this.suiteStack.pop();
                     suite.duration = data.duration;
                     if (data.failures.length > 0)
-                        suite.failures.push(...data.failures);
+                        suite.failures.push(...this.convertFailures(data.failures));
                     if (suite.failures.length > 0) {
                         suite.failure = true;
                         for (let i = 0; i < this.suiteStack.length; i++) {
@@ -126,7 +131,7 @@ class Client {
                 case 'testDone': {
                     let test = this.suiteStack.pop();
                     test.duration = data.duration;
-                    if (data.failures.length > 0) test.failures.push(...data.failures);
+                    if (data.failures.length > 0) test.failures.push(...this.convertFailures(data.failures));
                     this.curResults.testsFinished++;
                     if (data.status === 'passed') {
                     } else if (data.status === 'skipped') {
@@ -145,11 +150,13 @@ class Client {
             }
         }
     }
+
     startTest(url: string, runid: number) {
         this.url = url;
         this.runid = runid;
         this.doStart();
     }
+
     doStart() {
         this.idle = false;
         this.curResults = {
@@ -169,6 +176,15 @@ class Client {
         };
         this.connection.send("test", { url: this.url });
     }
+
+    convertFailures(rawFailures: { message: string, stack: string }[]): TestFailures {
+        return rawFailures.map(rf => {
+            let st = stackTrace.parseStack(rf.stack);
+            st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
+            st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));
+            return { message: rf.message, stack: st };
+        });
+    }
 }
 
 export class TestServer {
@@ -177,11 +193,14 @@ export class TestServer {
     private runid: number;
     clients: { [id: string]: Client };
     private svr: longPollingServer.LongPollingServer;
+    sourceMapCache: { [loc: string]: sourceMap.SourceMap };
 
+    getSource: (loc: string) => Buffer;
     onChange: () => void;
     notifySomeChange: () => void;
 
     constructor() {
+        this.getSource = () => null;
         this.lastId = 0;
         this.runid = 0;
         this.notifySomeChange = debounce(() => {
@@ -199,6 +218,7 @@ export class TestServer {
     }
 
     startTest(url: string) {
+        this.sourceMapCache = Object.create(null);
         this.runid++;
         this.url = url;
         let ids = Object.keys(this.clients);

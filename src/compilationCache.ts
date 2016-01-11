@@ -219,11 +219,7 @@ export class CompilationCache {
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = (filename: string, content: Buffer) => {
                 if (/\.js\.map$/i.test(filename)) {
-                    let sm = JSON.parse(content.toString()) as sourceMap.SourceMap;
-                    if (sm.version !== 3) {
-                        throw Error('Unsupported version of SourceMap');
-                    }
-                    sm.mappings = new Buffer(<string>sm.mappings);
+                    let sm = sourceMap.parseSourceMap(content);
                     project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
                 } else if (/\.js$/i.test(filename)) {
                     content = simpleHelpers.removeLinkToSourceMap(content);
@@ -496,7 +492,7 @@ export class CompilationCache {
                     res.addLine("});");
                 }
                 res.addLine("//# sourceMappingURL=bundle.js.map");
-                project.writeFileCallback('bundle.js.map', res.toSourceMap(project.options.sourceRoot));
+                project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
                 project.writeFileCallback('bundle.js', res.toContent());
             }
 

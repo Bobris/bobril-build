@@ -30,6 +30,12 @@ const distWebRoot = bbDirRoot + "/distweb";
 const distWebtRoot = bbDirRoot + "/distwebt";
 let curProjectDir: string;
 let testServer = new bb.TestServer();
+
+testServer.getSource = (loc: string) => {
+    if (/\/bundle.js.map$/.test(loc))
+        return memoryFs["bundle.js.map"];
+    return null;
+}
 let mainServer = new bb.MainServer(testServer);
 let server: http.Server = null;
 let phantomJsProcess: bb.IProcess = null;

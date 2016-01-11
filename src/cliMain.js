@@ -26,6 +26,11 @@ var distWebRoot = bbDirRoot + "/distweb";
 var distWebtRoot = bbDirRoot + "/distwebt";
 var curProjectDir;
 var testServer = new bb.TestServer();
+testServer.getSource = function (loc) {
+    if (/\/bundle.js.map$/.test(loc))
+        return memoryFs["bundle.js.map"];
+    return null;
+};
 var mainServer = new bb.MainServer(testServer);
 var server = null;
 var phantomJsProcess = null;

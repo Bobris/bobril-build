@@ -129,11 +129,7 @@ var CompilationCache = (function () {
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
                 if (/\.js\.map$/i.test(filename)) {
-                    var sm = JSON.parse(content.toString());
-                    if (sm.version !== 3) {
-                        throw Error('Unsupported version of SourceMap');
-                    }
-                    sm.mappings = new Buffer(sm.mappings);
+                    var sm = sourceMap.parseSourceMap(content);
                     project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
                 }
                 else if (/\.js$/i.test(filename)) {
@@ -406,7 +402,7 @@ var CompilationCache = (function () {
                     res.addLine("});");
                 }
                 res.addLine("//# sourceMappingURL=bundle.js.map");
-                project.writeFileCallback('bundle.js.map', res.toSourceMap(project.options.sourceRoot));
+                project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
                 project.writeFileCallback('bundle.js', res.toContent());
             }
             if (project.spriteMerge) {

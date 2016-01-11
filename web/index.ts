@@ -3,13 +3,21 @@ import * as longPollingClient from './longPollingClient';
 
 let c = new longPollingClient.Connection('/bb/api/main');
 
+export interface StackFrame {
+    functionName?: string;
+    args?: any[];
+    fileName?: string;
+    lineNumber?: number;
+    columnNumber?: number;
+}
+
 export interface SuiteOrTest {
     isSuite: boolean;
     name: string;
     skipped: boolean;
     failure: boolean;
     duration: number;
-    failures: { message: string, stack: any }[];
+    failures: { message: string, stack: StackFrame[] }[];
     nested: SuiteOrTest[];
 }
 
@@ -65,17 +73,25 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
     }
 };
 
+function clickable(content: b.IBobrilChildren, action:()=>void):b.IBobrilNode {
+    return { children:content, component: {
+        onClick() { action(); return true; }
+    }};
+}
+
 let spanUserAgent = b.styleDef({ display: "inline-block", width: "30%" });
 let spanInfo = b.styleDef({ marginLeft: 10, display: "inline-block" });
-function getAgentsShort(): b.IBobrilChildren {
-    return testSvrState.agents.map(r => {
-        return b.styledDiv([
+let selectedStyle = b.styleDef({ background: "#ccddee" });
+
+function getAgentsShort(selectedAgent: number, setSelectedAgent: (index: number) => void): b.IBobrilChildren {
+    return testSvrState.agents.map((r, index) => {
+        return clickable(b.styledDiv([
             b.styledDiv(r.userAgent, spanUserAgent),
             b.styledDiv("Failures: " + r.testsFailed
                 + ((r.testsSkipped > 0) ? (" Skipped: " + r.testsSkipped) : "")
                 + " Successful: " + (r.testsFinished - r.testsFailed - r.testsSkipped), spanInfo),
             r.running && b.styledDiv("Running " + r.testsFinished + "/" + r.totalTests, spanInfo)
-        ]);
+        ],index===selectedAgent&&selectedStyle),()=>{ setSelectedAgent(index) });
     });
 }
 
@@ -98,10 +114,19 @@ let stackStyle = b.styleDef({
     whiteSpace: "pre-wrap"
 });
 
-function getFailuresDetail(failures: { message: string, stack: any }[]): b.IBobrilChildren {
+function stackFrameToString(sf: StackFrame) {
+    var functionName = sf.functionName || '{anonymous}';
+    var args = '(' + (sf.args || []).join(',') + ')';
+    var fileName = sf.fileName ? ('@' + sf.fileName) : '';
+    var lineNumber = sf.lineNumber != null ? (':' + sf.lineNumber) : '';
+    var columnNumber = sf.columnNumber != null ? (':' + sf.columnNumber) : '';
+    return functionName + args + fileName + lineNumber + columnNumber;
+}
+
+function getFailuresDetail(failures: { message: string, stack: StackFrame[] }[]): b.IBobrilChildren {
     return failures.map(f => [
         b.styledDiv(f.message),
-        b.styledDiv(f.stack, stackStyle)
+        b.styledDiv(f.stack.map(sf => stackFrameToString(sf)).join("\n"), stackStyle)
     ]);
 }
 
@@ -125,9 +150,18 @@ function getAgentDetail(agent: TestResultsHolder): b.IBobrilChildren {
 
 reconnect();
 
-b.init(() => [
-    { tag: "h1", children: "Bobril-build" },
-    b.styledDiv(disconnected ? "Disconnected" : connected ? "Connected" : "Connecting"),
-    getAgentsShort(),
-    testSvrState.agents.length > 0 && getAgentDetail(testSvrState.agents[0])
-]);
+let selectedAgent = -1;
+b.init(() => {
+    if (selectedAgent >= testSvrState.agents.length) {
+        selectedAgent = -1;
+    }
+    if (selectedAgent === -1 && testSvrState.agents.length>0) { 
+        selectedAgent=0; 
+    }
+    return [
+        { tag: "h1", children: "Bobril-build" },
+        b.styledDiv(disconnected ? "Disconnected" : connected ? "Connected" : "Connecting"),
+        getAgentsShort(selectedAgent, i => { selectedAgent = i; b.invalidate() }),
+        selectedAgent >= 0 && getAgentDetail(testSvrState.agents[selectedAgent])
+    ];
+});

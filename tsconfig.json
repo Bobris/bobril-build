@@ -52,6 +52,7 @@
         "src/deepEqual.ts",
         "src/testServer.ts",
         "src/mainServer.ts",
+        "src/stackTrace.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
@@ -66,6 +67,9 @@
         "typings/png-async/png-async.d.ts",
         "typings/commander/commander.d.ts",
         "typings/glob/glob.d.ts",
+        "typings/stackframe/stackframe.d.ts",
+        "typings/error-stack-parser/error-stack-parser.d.ts",
+        "typings/stacktrace-gps/stacktrace-gps.d.ts",
         "typings/minimatch/minimatch.d.ts"
     ]
 }

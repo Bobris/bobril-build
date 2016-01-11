@@ -1,6 +1,7 @@
 "use strict";
 var longPollingServer = require('./longPollingServer');
 var debounce_1 = require('./debounce');
+var stackTrace = require('./stackTrace');
 var uaparse = require('useragent').parse;
 var Client = (function () {
     function Client(owner, id, connection) {
@@ -64,7 +65,7 @@ var Client = (function () {
                     var suite = _this.suiteStack.pop();
                     suite.duration = data.duration;
                     if (data.failures.length > 0)
-                        (_a = suite.failures).push.apply(_a, data.failures);
+                        (_a = suite.failures).push.apply(_a, _this.convertFailures(data.failures));
                     if (suite.failures.length > 0) {
                         suite.failure = true;
                         for (var i = 0; i < _this.suiteStack.length; i++) {
@@ -93,7 +94,7 @@ var Client = (function () {
                     var test = _this.suiteStack.pop();
                     test.duration = data.duration;
                     if (data.failures.length > 0)
-                        (_b = test.failures).push.apply(_b, data.failures);
+                        (_b = test.failures).push.apply(_b, _this.convertFailures(data.failures));
                     _this.curResults.testsFinished++;
                     if (data.status === 'passed') {
                     }
@@ -139,11 +140,21 @@ var Client = (function () {
         };
         this.connection.send("test", { url: this.url });
     };
+    Client.prototype.convertFailures = function (rawFailures) {
+        var _this = this;
+        return rawFailures.map(function (rf) {
+            var st = stackTrace.parseStack(rf.stack);
+            st = stackTrace.enhanceStack(st, _this.server.getSource, _this.server.sourceMapCache);
+            st = st.filter(function (fr) { return !/^http\:\/\//g.test(fr.fileName); });
+            return { message: rf.message, stack: st };
+        });
+    };
     return Client;
 }());
 var TestServer = (function () {
     function TestServer() {
         var _this = this;
+        this.getSource = function () { return null; };
         this.lastId = 0;
         this.runid = 0;
         this.notifySomeChange = debounce_1.debounce(function () {
@@ -160,6 +171,7 @@ var TestServer = (function () {
         this.svr.handle(request, response);
     };
     TestServer.prototype.startTest = function (url) {
+        this.sourceMapCache = Object.create(null);
         this.runid++;
         this.url = url;
         var ids = Object.keys(this.clients);
