@@ -8,7 +8,7 @@ import * as imageOps from "./imageOps";
 import * as imgCache from "./imgCache";
 require('bluebird');
 import * as BuildHelpers from './buildHelpers';
-import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
+import * as bobrilDepsHelpers from './bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
 import * as bundler from './bundler';
 import * as sourceMap from './sourceMap';

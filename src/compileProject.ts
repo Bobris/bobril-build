@@ -3,7 +3,7 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
 import * as ts from "typescript";
-import * as g11n from "../node_modules/bobril-g11n/src/msgFormatParser";
+import * as g11n from "./msgFormatParser";
 import * as glob from "glob";
 import * as minimatch from "minimatch";
 import { deepEqual } from './deepEqual';

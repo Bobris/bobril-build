@@ -7,7 +7,7 @@ var imageOps = require("./imageOps");
 var imgCache = require("./imgCache");
 require('bluebird');
 var BuildHelpers = require('./buildHelpers');
-var bobrilDepsHelpers = require('../src/bobrilDepsHelpers');
+var bobrilDepsHelpers = require('./bobrilDepsHelpers');
 var pathUtils = require('./pathUtils');
 var bundler = require('./bundler');
 var sourceMap = require('./sourceMap');

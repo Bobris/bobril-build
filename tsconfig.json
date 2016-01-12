@@ -53,6 +53,7 @@
         "src/testServer.ts",
         "src/mainServer.ts",
         "src/stackTrace.ts",
+        "src/msgFormatParser.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
