@@ -35,7 +35,8 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         bobrilG11NImports: Object.create(null),
         sprites: [],
         styleDefs: [],
-        trs: []
+        trs: [],
+        assets: []
     };
     function visit(n) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
@@ -60,7 +61,10 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         }
         else if (n.kind === ts.SyntaxKind.CallExpression) {
             var ce = n;
-            if (isBobrilFunction('sprite', ce, result)) {
+            if (isBobrilFunction('asset', ce, result)) {
+                result.assets.push({ callExpression: ce, name: evalNode.evalNode(ce.arguments[0], tc, resolvePathStringLiteral) });
+            }
+            else if (isBobrilFunction('sprite', ce, result)) {
                 var si = { callExpression: ce };
                 for (var i = 0; i < ce.arguments.length; i++) {
                     var res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? resolvePathStringLiteral : null); // first argument is path

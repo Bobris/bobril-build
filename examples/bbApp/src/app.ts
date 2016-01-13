@@ -5,6 +5,8 @@ interface IPageCtx extends b.IBobrilCtx {
     counter: number;
 }
 
+b.asset("../node_modules/normalize.css/normalize.css");
+
 let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 });
 
 let page = b.createVirtualComponent({
@@ -27,6 +29,9 @@ let page = b.createVirtualComponent({
                         children: g.t('Bobril GitHub pages')
                     }
                 ]
+            },
+            {
+                tag: 'img', attrs: { src: b.asset('light.png') }  
             },
             {
                 tag: 'p', children: "Current locale: " + g.getLocale()

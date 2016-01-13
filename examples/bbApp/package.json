@@ -12,6 +12,7 @@
   "license": "",
   "dependencies": {
     "bobril": "*",
-    "bobril-g11n": "*"
+    "bobril-g11n": "*",
+    "normalize.css": "^3.0.3"
   }
 }

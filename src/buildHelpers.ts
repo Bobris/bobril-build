@@ -19,6 +19,12 @@ export interface SourceInfo {
     styleDefs: StyleDefInfo[];
     sprites: SpriteInfo[];
     trs: TranslationMessage[];
+    assets: AssetInfo[];
+}
+
+export interface AssetInfo {
+    callExpression: ts.CallExpression;
+    name?: string;
 }
 
 export interface StyleDefInfo {
@@ -80,7 +86,8 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
         bobrilG11NImports: Object.create(null),
         sprites: [],
         styleDefs: [],
-        trs: []
+        trs: [],
+        assets: []
     };
     function visit(n: ts.Node) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
@@ -104,7 +111,9 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
         }
         else if (n.kind === ts.SyntaxKind.CallExpression) {
             let ce = <ts.CallExpression>n;
-            if (isBobrilFunction('sprite', ce, result)) {
+            if (isBobrilFunction('asset', ce, result)) {
+                result.assets.push({ callExpression: ce, name: evalNode.evalNode(ce.arguments[0], tc, resolvePathStringLiteral) });
+            } else if (isBobrilFunction('sprite', ce, result)) {
                 let si: SpriteInfo = { callExpression: ce };
                 for (let i = 0; i < ce.arguments.length; i++) {
                     let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? resolvePathStringLiteral : null); // first argument is path
@@ -169,7 +178,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                     item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
                 }
                 result.trs.push(item);
-            } 
+            }
         }
         ts.forEachChild(n, visit);
     }
@@ -299,14 +308,14 @@ export function rememberCallExpression(callExpression: ts.CallExpression): () =>
 
 export function applyOverrides(overrides: { varDecl: ts.VariableDeclaration, value: string | number | boolean }[]): () => void {
     let restore: { varDecl: ts.VariableDeclaration, initializer: ts.Expression }[] = [];
-    for(let i=0;i<overrides.length;i++) {
+    for (let i = 0; i < overrides.length; i++) {
         let o = overrides[i];
         restore.push({ varDecl: o.varDecl, initializer: o.varDecl.initializer });
         o.varDecl.initializer = <ts.Expression>createNodeFromValue(o.value);
     }
     return () => {
-        for(let i=restore.length;i-->0;){
-            restore[i].varDecl.initializer = restore[i].initializer; 
+        for (let i = restore.length; i-- > 0;) {
+            restore[i].varDecl.initializer = restore[i].initializer;
         }
     }
 }

@@ -27,6 +27,9 @@ function reportDiagnostics(diagnostics, logcb) {
         reportDiagnostic(diagnostics[i], logcb);
     }
 }
+function isCssByExt(name) {
+    return /\.(css)$/ig.test(name);
+}
 var CompilationCache = (function () {
     function CompilationCache() {
         this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
@@ -44,6 +47,7 @@ var CompilationCache = (function () {
         if (project) {
             project.moduleMap = null;
             project.depJsFiles = null;
+            project.depAssetFiles = null;
         }
         var cacheFiles = this.cacheFiles;
         var names = Object.keys(cacheFiles);
@@ -152,6 +156,8 @@ var CompilationCache = (function () {
         };
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
+        project.depAssetFiles = project.depAssetFiles || Object.create(null);
+        project.cssToLink = project.cssToLink || [];
         this.clearMaxTimeForDeps();
         var mainChangedList = [];
         for (var i = 0; i < mainList.length; i++) {
@@ -257,18 +263,6 @@ var CompilationCache = (function () {
                     restorationMemory.push(BuildHelpers.applyOverrides(overr));
                 }
                 var info = cached.info;
-                if (project.remapImages && !project.spriteMerge) {
-                    for (var j = 0; j < info.sprites.length; j++) {
-                        var si = info.sprites[j];
-                        if (si.name == null)
-                            continue;
-                        var newname = project.remapImages(si.name);
-                        if (newname != si.name) {
-                            restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
-                            BuildHelpers.setArgument(si.callExpression, 0, newname);
-                        }
-                    }
-                }
                 if (project.spriteMerge) {
                     for (var j = 0; j < info.sprites.length; j++) {
                         var si = info.sprites[j];
@@ -283,6 +277,34 @@ var CompilationCache = (function () {
                         BuildHelpers.setArgument(si.callExpression, 3, bundlePos.y);
                         BuildHelpers.setArgumentCount(si.callExpression, 4);
                     }
+                }
+                else {
+                    for (var j = 0; j < info.sprites.length; j++) {
+                        var si = info.sprites[j];
+                        if (si.name == null)
+                            continue;
+                        var newname = si.name;
+                        if (project.remapImages)
+                            newname = project.remapImages(newname);
+                        project.depAssetFiles[si.name] = newname;
+                        restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
+                        BuildHelpers.setArgument(si.callExpression, 0, newname);
+                    }
+                }
+                for (var j = 0; j < info.assets.length; j++) {
+                    var sa = info.assets[j];
+                    if (sa.name == null) {
+                        console.log(info.sourceFile.fileName + ":" + (info.sourceFile.getLineAndCharacterOfPosition(sa.callExpression.pos).line + 1) + " Warning: Used b.asset without compile time constant - ignoring");
+                        continue;
+                    }
+                    var newname = sa.name;
+                    if (!isCssByExt(newname)) {
+                        if (project.remapImages)
+                            newname = project.remapImages(newname);
+                    }
+                    project.depAssetFiles[sa.name] = newname;
+                    restorationMemory.push(BuildHelpers.rememberCallExpression(sa.callExpression));
+                    BuildHelpers.setArgument(sa.callExpression, 0, newname);
                 }
                 if (project.compileTranslation) {
                     project.compileTranslation.startCompileFile(src.fileName);
@@ -353,6 +375,42 @@ var CompilationCache = (function () {
                         continue;
                     }
                     jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, 'utf-8'));
+                    cached.outputTime = cached.textTime;
+                }
+            }
+            var assetFiles = Object.keys(project.depAssetFiles);
+            for (var i = 0; i < assetFiles.length; i++) {
+                var assetFile = assetFiles[i];
+                var cached = _this.getCachedFileExistence(assetFile, project.dir);
+                if (cached.curTime == null) {
+                    project.logCallback('Error: Dependent ' + assetFile + ' not found');
+                    continue;
+                }
+                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    _this.updateCachedFileBuffer(cached);
+                    if (cached.bufferTime !== cached.curTime) {
+                        project.logCallback('Error: Dependent ' + assetFile + ' failed to load');
+                        continue;
+                    }
+                    if (isCssByExt(assetFile)) {
+                        // TODO extract dependencies from css file
+                        project.cssToLink.push(project.depAssetFiles[assetFile]);
+                    }
+                }
+            }
+            assetFiles = Object.keys(project.depAssetFiles);
+            for (var i = 0; i < assetFiles.length; i++) {
+                var assetFile = assetFiles[i];
+                var cached = _this.getCachedFileExistence(assetFile, project.dir);
+                if (cached.curTime == null) {
+                    continue;
+                }
+                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    _this.updateCachedFileBuffer(cached);
+                    if (cached.bufferTime !== cached.curTime) {
+                        continue;
+                    }
+                    project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
                     cached.outputTime = cached.textTime;
                 }
             }
@@ -469,6 +527,20 @@ var CompilationCache = (function () {
             cached.text = text;
         }
     };
+    CompilationCache.prototype.updateCachedFileBuffer = function (cached) {
+        if (cached.bufferTime !== cached.curTime) {
+            var buffer;
+            try {
+                buffer = fs.readFileSync(cached.fullName);
+            }
+            catch (er) {
+                cached.bufferTime = null;
+                return cached;
+            }
+            cached.bufferTime = cached.curTime;
+            cached.buffer = buffer;
+        }
+    };
     CompilationCache.prototype.getCachedFileContent = function (fileName, baseDir) {
         var cached = this.getCachedFileExistence(fileName, baseDir);
         if (cached.curTime === null) {
@@ -476,6 +548,15 @@ var CompilationCache = (function () {
             return cached;
         }
         this.updateCachedFileContent(cached);
+        return cached;
+    };
+    CompilationCache.prototype.getCachedFileBuffer = function (fileName, baseDir) {
+        var cached = this.getCachedFileExistence(fileName, baseDir);
+        if (cached.curTime === null) {
+            cached.bufferTime = null;
+            return cached;
+        }
+        this.updateCachedFileBuffer(cached);
         return cached;
     };
     CompilationCache.prototype.calcMaxTimeForDeps = function (name, baseDir, ignoreOutputTime) {

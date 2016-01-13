@@ -38,6 +38,10 @@ export function momentJsFiles(): string[] {
     return ['moment.js'];
 }
 
+function linkCss(project:compilationCache.IProject):string {
+    return project.cssToLink.map(n=>`<link rel="stylesheet" href="${n}">`).join();
+}
+
 export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
     let moduleNames = Object.keys(project.moduleMap);
@@ -51,7 +55,7 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
     return `<html>
     <head>
         <meta charset="utf-8">
-        <title>${title}</title>
+        <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
@@ -77,7 +81,7 @@ function g11nInit(project: compilationCache.IProject): string {
 
 export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
-    return `<html><head><meta charset="utf-8"><title>${title}</title></head><body>${g11nInit(project)}<script type="text/javascript" src="bundle.js" charset="utf-8"></script></body></html>`;
+    return `<html><head><meta charset="utf-8"><title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="bundle.js" charset="utf-8"></script></body></html>`;
 }
 
 export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
@@ -93,7 +97,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
     return `<html>
     <head>
         <meta charset="utf-8">
-        <title>${title}</title>
+        <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}
         <script type="text/javascript" src="loader.js" charset="utf-8"></script>
@@ -124,7 +128,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
     return `<html>
     <head>
         <meta charset="utf-8">
-        <title>${title}</title>
+        <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}
         <script type="text/javascript" src="bb/special/jasmine-core.js" charset="utf-8"></script>
