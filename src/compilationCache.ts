@@ -13,6 +13,7 @@ import * as pathUtils from './pathUtils';
 import * as bundler from './bundler';
 import * as sourceMap from './sourceMap';
 import * as simpleHelpers from './simpleHelpers';
+import * as cssHelpers from './cssHelpers';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -474,97 +475,123 @@ export class CompilationCache {
                 }
             }
 
+            let prom = Promise.resolve();
             let assetFiles = Object.keys(project.depAssetFiles);
             for (let i = 0; i < assetFiles.length; i++) {
-                let assetFile = assetFiles[i];
-                let cached = this.getCachedFileExistence(assetFile, project.dir);
-                if (cached.curTime == null) {
-                    project.logCallback('Error: Dependent ' + assetFile + ' not found');
-                    continue;
-                }
-                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
-                    this.updateCachedFileBuffer(cached);
-                    if (cached.bufferTime !== cached.curTime) {
-                        project.logCallback('Error: Dependent ' + assetFile + ' failed to load');
-                        continue;
+                prom = prom.then(v=>((i)=>{
+                    let assetFile = assetFiles[i];
+                    let cached = this.getCachedFileExistence(assetFile, project.dir);
+                    if (cached.curTime == null) {
+                        project.logCallback('Error: Dependent ' + assetFile + ' not found');
+                        return;
                     }
-                    if (isCssByExt(assetFile)) {
-                        // TODO extract dependencies from css file
-                        project.cssToLink.push(project.depAssetFiles[assetFile]);
+                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                        this.updateCachedFileBuffer(cached);
+                        if (cached.bufferTime !== cached.curTime) {
+                            return;
+                        }
+                        if (isCssByExt(assetFile)) {
+                            project.cssToLink.push(project.depAssetFiles[assetFile]);
+                            return cssHelpers.processCss(cached.buffer.toString(),assetFile,(url:string, from:string)=>{
+                                let resurl = resolvePathString(project.dir,from+"/a",url);
+                                let hi = resurl.lastIndexOf('#');
+                                let res = resurl;
+                                if (hi>0) {
+                                    res = res.substr(0,hi);
+                                }
+                                hi = resurl.lastIndexOf('?');
+                                if (hi>0) {
+                                    res = res.substr(0,hi);
+                                }
+                                project.depAssetFiles[res] = res;
+                                return resurl;
+                            }).then(v=>{
+                                project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
+                            },(e)=>{
+                                console.log(e);
+                            });
+                        }
                     }
-                }
+                    
+                })(i));
             }
             
-            assetFiles = Object.keys(project.depAssetFiles);
-            for (let i = 0; i < assetFiles.length; i++) {
-                let assetFile = assetFiles[i];
-                let cached = this.getCachedFileExistence(assetFile, project.dir);
-                if (cached.curTime == null) {
-                    continue;
-                }
-                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
-                    this.updateCachedFileBuffer(cached);
-                    if (cached.bufferTime !== cached.curTime) {
+            return prom.then(()=>{
+                let assetFiles = Object.keys(project.depAssetFiles);
+                for (let i = 0; i < assetFiles.length; i++) {
+                    let assetFile = assetFiles[i];
+                    let cached = this.getCachedFileExistence(assetFile, project.dir);
+                    if (cached.curTime == null) {
+                        project.logCallback('Error: Dependent ' + assetFile + ' not found');
                         continue;
                     }
-                    project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
-                    cached.outputTime = cached.textTime;
-                }
-            }
-
-            if (project.totalBundle) {
-                let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
-                let that = this;
-                let bp: bundler.IBundleProject = {
-                    compress: project.compress,
-                    mangle: project.mangle,
-                    beautify: project.beautify,
-                    defines: project.defines,
-                    getMainFiles() { return mainJsList; },
-                    checkFileModification(name: string): number {
-                        if (/\.js$/i.test(name)) {
-                            let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
-                            if (cached.curTime != null)
-                                return cached.outputTime;
+                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                        this.updateCachedFileBuffer(cached);
+                        if (cached.bufferTime !== cached.curTime) {
+                            project.logCallback('Error: Dependent ' + assetFile + ' failed to load');
+                            continue;
                         }
-                        let cached = that.getCachedFileContent(name, project.dir);
-                        return cached.curTime;
-                    },
-                    readContent(name: string) {
-                        let jsout = project.commonJsTemp[name.toLowerCase()];
-                        if (jsout !== undefined)
-                            return jsout.toString('utf-8');
-                        let cached = that.getCachedFileContent(name, project.dir);
-                        if (cached.textTime == null)
-                            throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
-                        return cached.text;
-                    },
-                    writeBundle(content: string) {
-                        project.writeFileCallback('bundle.js', new Buffer(content));
+                        if (!isCssByExt(assetFile)) {
+                            project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
+                        }
+                        cached.outputTime = cached.textTime;
                     }
-                };
-                bundler.bundle(bp);
-            } else if (project.fastBundle) {
-                let allFilesInJsBundle = Object.keys(project.commonJsTemp);
-                let res = new sourceMap.SourceMapBuilder();
-                for (let i = 0; i < allFilesInJsBundle.length; i++) {
-                    let name = allFilesInJsBundle[i];
-                    let nameWOExt = name.replace(/\.js$/i, '');
-                    let sm = project.sourceMapMap[nameWOExt];
-                    let content = project.commonJsTemp[name];
-                    res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
-                    res.addSource(content, sm);
-                    res.addLine("});");
                 }
-                res.addLine("//# sourceMappingURL=bundle.js.map");
-                project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
-                project.writeFileCallback('bundle.js', res.toContent());
-            }
 
-            if (project.spriteMerge) {
-                bundleCache.clear(true);
-            }
-            return null;
+                if (project.totalBundle) {
+                    let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
+                    let that = this;
+                    let bp: bundler.IBundleProject = {
+                        compress: project.compress,
+                        mangle: project.mangle,
+                        beautify: project.beautify,
+                        defines: project.defines,
+                        getMainFiles() { return mainJsList; },
+                        checkFileModification(name: string): number {
+                            if (/\.js$/i.test(name)) {
+                                let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                                if (cached.curTime != null)
+                                    return cached.outputTime;
+                            }
+                            let cached = that.getCachedFileContent(name, project.dir);
+                            return cached.curTime;
+                        },
+                        readContent(name: string) {
+                            let jsout = project.commonJsTemp[name.toLowerCase()];
+                            if (jsout !== undefined)
+                                return jsout.toString('utf-8');
+                            let cached = that.getCachedFileContent(name, project.dir);
+                            if (cached.textTime == null)
+                                throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                            return cached.text;
+                        },
+                        writeBundle(content: string) {
+                            project.writeFileCallback('bundle.js', new Buffer(content));
+                        }
+                    };
+                    bundler.bundle(bp);
+                } else if (project.fastBundle) {
+                    let allFilesInJsBundle = Object.keys(project.commonJsTemp);
+                    let res = new sourceMap.SourceMapBuilder();
+                    for (let i = 0; i < allFilesInJsBundle.length; i++) {
+                        let name = allFilesInJsBundle[i];
+                        let nameWOExt = name.replace(/\.js$/i, '');
+                        let sm = project.sourceMapMap[nameWOExt];
+                        let content = project.commonJsTemp[name];
+                        res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
+                        res.addSource(content, sm);
+                        res.addLine("});");
+                    }
+                    res.addLine("//# sourceMappingURL=bundle.js.map");
+                    project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
+                    project.writeFileCallback('bundle.js', res.toContent());
+                }
+
+                if (project.spriteMerge) {
+                    bundleCache.clear(true);
+                }
+                return null;
+            })
         });
         return prom;
     }

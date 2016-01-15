@@ -9,19 +9,6 @@
         "noLib": false
     },
     "compileOnSave": false,
-    "filesGlob": [
-        "./cli.ts",
-        "./index.ts",
-        "./src/*.ts",
-        "./spec/*.ts",
-        "./node_modules/typescript/lib/typescript.d.ts",
-        "./typings/uglifyjs/**/*.d.ts",
-        "./typings/chokidar/**/*.d.ts",
-        "./typings/node/**/*.d.ts",
-        "./typings/png-async/**/*.d.ts",
-        "./typings/jasmine/jasmine.d.ts",
-		"./typings/commander/commander.d.ts"
-    ],
     "files": [
         "cli.ts",
         "index.ts",
@@ -54,6 +41,7 @@
         "src/mainServer.ts",
         "src/stackTrace.ts",
         "src/msgFormatParser.ts",
+        "src/cssHelpers.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
@@ -70,6 +58,8 @@
         "typings/glob/glob.d.ts",
         "typings/stackframe/stackframe.d.ts",
         "typings/error-stack-parser/error-stack-parser.d.ts",
-        "typings/minimatch/minimatch.d.ts"
+        "typings/minimatch/minimatch.d.ts",
+        "typings/postcss/postcss.d.ts",
+        "typings/postcss-url/postcss-url.d.ts"
     ]
 }

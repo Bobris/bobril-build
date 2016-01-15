@@ -5,7 +5,7 @@ interface IPageCtx extends b.IBobrilCtx {
     counter: number;
 }
 
-b.asset("../node_modules/normalize.css/normalize.css");
+b.asset("bootstrap/css/bootstrap.css");
 
 let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 });
 

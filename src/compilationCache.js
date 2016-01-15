@@ -12,6 +12,7 @@ var pathUtils = require('./pathUtils');
 var bundler = require('./bundler');
 var sourceMap = require('./sourceMap');
 var simpleHelpers = require('./simpleHelpers');
+var cssHelpers = require('./cssHelpers');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
@@ -378,95 +379,123 @@ var CompilationCache = (function () {
                     cached.outputTime = cached.textTime;
                 }
             }
+            var prom = Promise.resolve();
             var assetFiles = Object.keys(project.depAssetFiles);
-            for (var i = 0; i < assetFiles.length; i++) {
-                var assetFile = assetFiles[i];
-                var cached = _this.getCachedFileExistence(assetFile, project.dir);
-                if (cached.curTime == null) {
-                    project.logCallback('Error: Dependent ' + assetFile + ' not found');
-                    continue;
-                }
-                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
-                    _this.updateCachedFileBuffer(cached);
-                    if (cached.bufferTime !== cached.curTime) {
-                        project.logCallback('Error: Dependent ' + assetFile + ' failed to load');
-                        continue;
+            var _loop_1 = function(i) {
+                prom = prom.then(function (v) { return (function (i) {
+                    var assetFile = assetFiles[i];
+                    var cached = _this.getCachedFileExistence(assetFile, project.dir);
+                    if (cached.curTime == null) {
+                        project.logCallback('Error: Dependent ' + assetFile + ' not found');
+                        return;
                     }
-                    if (isCssByExt(assetFile)) {
-                        // TODO extract dependencies from css file
-                        project.cssToLink.push(project.depAssetFiles[assetFile]);
-                    }
-                }
-            }
-            assetFiles = Object.keys(project.depAssetFiles);
-            for (var i = 0; i < assetFiles.length; i++) {
-                var assetFile = assetFiles[i];
-                var cached = _this.getCachedFileExistence(assetFile, project.dir);
-                if (cached.curTime == null) {
-                    continue;
-                }
-                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
-                    _this.updateCachedFileBuffer(cached);
-                    if (cached.bufferTime !== cached.curTime) {
-                        continue;
-                    }
-                    project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
-                    cached.outputTime = cached.textTime;
-                }
-            }
-            if (project.totalBundle) {
-                var mainJsList = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
-                var that = _this;
-                var bp = {
-                    compress: project.compress,
-                    mangle: project.mangle,
-                    beautify: project.beautify,
-                    defines: project.defines,
-                    getMainFiles: function () { return mainJsList; },
-                    checkFileModification: function (name) {
-                        if (/\.js$/i.test(name)) {
-                            var cached_1 = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
-                            if (cached_1.curTime != null)
-                                return cached_1.outputTime;
+                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                        _this.updateCachedFileBuffer(cached);
+                        if (cached.bufferTime !== cached.curTime) {
+                            return;
                         }
-                        var cached = that.getCachedFileContent(name, project.dir);
-                        return cached.curTime;
-                    },
-                    readContent: function (name) {
-                        var jsout = project.commonJsTemp[name.toLowerCase()];
-                        if (jsout !== undefined)
-                            return jsout.toString('utf-8');
-                        var cached = that.getCachedFileContent(name, project.dir);
-                        if (cached.textTime == null)
-                            throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
-                        return cached.text;
-                    },
-                    writeBundle: function (content) {
-                        project.writeFileCallback('bundle.js', new Buffer(content));
+                        if (isCssByExt(assetFile)) {
+                            project.cssToLink.push(project.depAssetFiles[assetFile]);
+                            return cssHelpers.processCss(cached.buffer.toString(), assetFile, function (url, from) {
+                                var resurl = resolvePathString(project.dir, from + "/a", url);
+                                var hi = resurl.lastIndexOf('#');
+                                var res = resurl;
+                                if (hi > 0) {
+                                    res = res.substr(0, hi);
+                                }
+                                hi = resurl.lastIndexOf('?');
+                                if (hi > 0) {
+                                    res = res.substr(0, hi);
+                                }
+                                project.depAssetFiles[res] = res;
+                                return resurl;
+                            }).then(function (v) {
+                                project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
+                            }, function (e) {
+                                console.log(e);
+                            });
+                        }
                     }
-                };
-                bundler.bundle(bp);
+                })(i); });
+            };
+            for (var i = 0; i < assetFiles.length; i++) {
+                _loop_1(i);
             }
-            else if (project.fastBundle) {
-                var allFilesInJsBundle = Object.keys(project.commonJsTemp);
-                var res = new sourceMap.SourceMapBuilder();
-                for (var i = 0; i < allFilesInJsBundle.length; i++) {
-                    var name_2 = allFilesInJsBundle[i];
-                    var nameWOExt = name_2.replace(/\.js$/i, '');
-                    var sm = project.sourceMapMap[nameWOExt];
-                    var content = project.commonJsTemp[name_2];
-                    res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
-                    res.addSource(content, sm);
-                    res.addLine("});");
+            return prom.then(function () {
+                var assetFiles = Object.keys(project.depAssetFiles);
+                for (var i = 0; i < assetFiles.length; i++) {
+                    var assetFile = assetFiles[i];
+                    var cached = _this.getCachedFileExistence(assetFile, project.dir);
+                    if (cached.curTime == null) {
+                        project.logCallback('Error: Dependent ' + assetFile + ' not found');
+                        continue;
+                    }
+                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                        _this.updateCachedFileBuffer(cached);
+                        if (cached.bufferTime !== cached.curTime) {
+                            project.logCallback('Error: Dependent ' + assetFile + ' failed to load');
+                            continue;
+                        }
+                        if (!isCssByExt(assetFile)) {
+                            project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
+                        }
+                        cached.outputTime = cached.textTime;
+                    }
                 }
-                res.addLine("//# sourceMappingURL=bundle.js.map");
-                project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
-                project.writeFileCallback('bundle.js', res.toContent());
-            }
-            if (project.spriteMerge) {
-                bundleCache.clear(true);
-            }
-            return null;
+                if (project.totalBundle) {
+                    var mainJsList = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
+                    var that = _this;
+                    var bp = {
+                        compress: project.compress,
+                        mangle: project.mangle,
+                        beautify: project.beautify,
+                        defines: project.defines,
+                        getMainFiles: function () { return mainJsList; },
+                        checkFileModification: function (name) {
+                            if (/\.js$/i.test(name)) {
+                                var cached_1 = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                                if (cached_1.curTime != null)
+                                    return cached_1.outputTime;
+                            }
+                            var cached = that.getCachedFileContent(name, project.dir);
+                            return cached.curTime;
+                        },
+                        readContent: function (name) {
+                            var jsout = project.commonJsTemp[name.toLowerCase()];
+                            if (jsout !== undefined)
+                                return jsout.toString('utf-8');
+                            var cached = that.getCachedFileContent(name, project.dir);
+                            if (cached.textTime == null)
+                                throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                            return cached.text;
+                        },
+                        writeBundle: function (content) {
+                            project.writeFileCallback('bundle.js', new Buffer(content));
+                        }
+                    };
+                    bundler.bundle(bp);
+                }
+                else if (project.fastBundle) {
+                    var allFilesInJsBundle = Object.keys(project.commonJsTemp);
+                    var res = new sourceMap.SourceMapBuilder();
+                    for (var i = 0; i < allFilesInJsBundle.length; i++) {
+                        var name_2 = allFilesInJsBundle[i];
+                        var nameWOExt = name_2.replace(/\.js$/i, '');
+                        var sm = project.sourceMapMap[nameWOExt];
+                        var content = project.commonJsTemp[name_2];
+                        res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
+                        res.addSource(content, sm);
+                        res.addLine("});");
+                    }
+                    res.addLine("//# sourceMappingURL=bundle.js.map");
+                    project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
+                    project.writeFileCallback('bundle.js', res.toContent());
+                }
+                if (project.spriteMerge) {
+                    bundleCache.clear(true);
+                }
+                return null;
+            });
         });
         return prom;
     };
