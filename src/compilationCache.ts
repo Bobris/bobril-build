@@ -14,6 +14,7 @@ import * as bundler from './bundler';
 import * as sourceMap from './sourceMap';
 import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
+import { createFileNameShortener } from './shortenFileName';
 
 function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
     var output = '';
@@ -32,7 +33,7 @@ function reportDiagnostics(diagnostics, logcb: (text: string) => void) {
     }
 }
 
-function isCssByExt(name:string):boolean {
+function isCssByExt(name: string): boolean {
     return /\.(css)$/ig.test(name);
 }
 
@@ -78,7 +79,6 @@ export interface IProject {
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
     resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
-    remapImages?: (filename: string) => string;
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
     compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
@@ -99,6 +99,7 @@ export interface IProject {
     beautify?: boolean;
     defines?: { [name: string]: any };
     outputDir?: string;
+    outputSubDir?: string;
 
     projectJsonTime?: number;
     mainAutoDetected?: boolean;
@@ -110,6 +111,8 @@ export interface IProject {
     depAssetFiles?: { [name: string]: string };
     sourceMapMap?: { [namewoext: string]: sourceMap.SourceMap };
     cssToLink?: string[];
+    bundleJs?: string;
+    bundlePng?: string;
 }
 
 export class CompilationCache {
@@ -238,6 +241,20 @@ export class CompilationCache {
                     project.commonJsTemp[filename.toLowerCase()] = content;
                 }
             };
+            project.bundleJs = "bundle.js";
+        }
+        let shortenFileName = (fn: string) => fn;
+        let shortenFileNameAddPath = shortenFileName;
+        if (project.totalBundle) {
+            shortenFileName = createFileNameShortener();
+            shortenFileNameAddPath = shortenFileName;
+            if (project.outputSubDir) {
+                shortenFileNameAddPath = (fn: string) => project.outputSubDir + "/" + shortenFileName(fn);
+            }
+            project.bundleJs = shortenFileNameAddPath(project.bundleJs);
+        }
+        if (project.spriteMerge) { // reserve always same name for bundle.png
+            shortenFileName('bundle.png');
         }
         let ndir = project.dir.toLowerCase();
         let jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
@@ -303,7 +320,7 @@ export class CompilationCache {
                     let si = info.sprites[j];
                     if (si.name == null)
                         continue;
-                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                    bundleCache.add(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
             if (project.textForTranslationReporter) {
@@ -324,7 +341,8 @@ export class CompilationCache {
                     return imageOps.savePNG2Buffer(bi);
                 });
                 prom = prom.then((b: Buffer) => {
-                    project.writeFileCallback('bundle.png', b);
+                    project.bundlePng = shortenFileNameAddPath('bundle.png');
+                    project.writeFileCallback(project.bundlePng, b);
                     return null;
                 });
             }
@@ -365,7 +383,7 @@ export class CompilationCache {
                         let si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        let bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                        let bundlePos = bundleCache.query(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setMethod(si.callExpression, "spriteb");
                         BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
@@ -379,10 +397,8 @@ export class CompilationCache {
                         let si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        let newname = si.name;
-                        if (project.remapImages)
-                            newname = project.remapImages(newname);
-                        project.depAssetFiles[si.name] = newname;
+                        let newname = pathUtils.join(project.dir, si.name);
+                        project.depAssetFiles[si.name] = shortenFileNameAddPath(newname);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setArgument(si.callExpression, 0, newname);
                     }
@@ -394,10 +410,8 @@ export class CompilationCache {
                         continue;
                     }
                     let newname = sa.name;
-                    if (!isCssByExt(newname))
-                    {
-                        if (project.remapImages)
-                            newname = project.remapImages(newname);
+                    if (!isCssByExt(newname)) {
+                        newname = shortenFileNameAddPath(newname);
                     }
                     project.depAssetFiles[sa.name] = newname;
                     restorationMemory.push(BuildHelpers.rememberCallExpression(sa.callExpression));
@@ -477,8 +491,9 @@ export class CompilationCache {
 
             let prom = Promise.resolve();
             let assetFiles = Object.keys(project.depAssetFiles);
+            let cssToMerge = [];
             for (let i = 0; i < assetFiles.length; i++) {
-                prom = prom.then(v=>((i)=>{
+                prom = prom.then(v => ((i) => {
                     let assetFile = assetFiles[i];
                     let cached = this.getCachedFileExistence(assetFile, project.dir);
                     if (cached.curTime == null) {
@@ -491,32 +506,50 @@ export class CompilationCache {
                             return;
                         }
                         if (isCssByExt(assetFile)) {
-                            project.cssToLink.push(project.depAssetFiles[assetFile]);
-                            return cssHelpers.processCss(cached.buffer.toString(),assetFile,(url:string, from:string)=>{
-                                let resurl = resolvePathString(project.dir,from+"/a",url);
-                                let hi = resurl.lastIndexOf('#');
-                                let res = resurl;
-                                if (hi>0) {
-                                    res = res.substr(0,hi);
-                                }
-                                hi = resurl.lastIndexOf('?');
-                                if (hi>0) {
-                                    res = res.substr(0,hi);
-                                }
-                                project.depAssetFiles[res] = res;
-                                return resurl;
-                            }).then(v=>{
-                                project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
-                            },(e)=>{
-                                console.log(e);
-                            });
+                            if (project.totalBundle) {
+                                cssToMerge.push({ source: cached.buffer.toString(), from: assetFile });
+                            } else {
+                                project.cssToLink.push(project.depAssetFiles[assetFile]);
+                                return cssHelpers.processCss(cached.buffer.toString(), assetFile, (url: string, from: string) => {
+                                    let hi = url.lastIndexOf('#');
+                                    let hi2 = url.lastIndexOf('?');
+                                    if (hi < 0) hi = url.length;
+                                    if (hi2 < 0) hi2 = url.length;
+                                    if (hi2 < hi) hi = hi2;
+                                    let res = resolvePathString(project.dir, from + "/a", url.substr(0, hi));
+                                    project.depAssetFiles[res] = res;
+                                    return url;
+                                }).then(v => {
+                                    project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
+                                }, (e) => {
+                                    console.log(e);
+                                });
+                            }
                         }
                     }
-                    
                 })(i));
             }
-            
-            return prom.then(()=>{
+            prom = prom.then(() => {
+                if (cssToMerge.length > 0) {
+                    return cssHelpers.concatenateCssAndMinify(cssToMerge, (url: string, from: string) => {
+                        let hi = url.lastIndexOf('#');
+                        let hi2 = url.lastIndexOf('?');
+                        if (hi < 0) hi = url.length;
+                        if (hi2 < 0) hi2 = url.length;
+                        if (hi2 < hi) hi = hi2;
+                        let res = resolvePathString(project.dir, from + "/a", url.substr(0, hi));
+                        let resres = shortenFileNameAddPath(res);
+                        project.depAssetFiles[res] = resres;
+                        return shortenFileName(res) + url.substr(hi);
+                    }).then(v => {
+                        let bundleCss = shortenFileNameAddPath('bundle.css');
+                        project.cssToLink.push(bundleCss);
+                        project.writeFileCallback(bundleCss, new Buffer(v.css));
+                    });
+                }
+            });
+
+            return prom.then(() => {
                 let assetFiles = Object.keys(project.depAssetFiles);
                 for (let i = 0; i < assetFiles.length; i++) {
                     let assetFile = assetFiles[i];
@@ -566,7 +599,7 @@ export class CompilationCache {
                             return cached.text;
                         },
                         writeBundle(content: string) {
-                            project.writeFileCallback('bundle.js', new Buffer(content));
+                            project.writeFileCallback(project.bundleJs, new Buffer(content));
                         }
                     };
                     bundler.bundle(bp);
@@ -582,9 +615,9 @@ export class CompilationCache {
                         res.addSource(content, sm);
                         res.addLine("});");
                     }
-                    res.addLine("//# sourceMappingURL=bundle.js.map");
-                    project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
-                    project.writeFileCallback('bundle.js', res.toContent());
+                    res.addLine("//# sourceMappingURL=" + shortenFileName("bundle.js") + ".map");
+                    project.writeFileCallback(project.bundleJs + '.map', res.toSourceMapBuffer(project.options.sourceRoot));
+                    project.writeFileCallback(project.bundleJs, res.toContent());
                 }
 
                 if (project.spriteMerge) {

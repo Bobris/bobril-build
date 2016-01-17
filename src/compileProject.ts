@@ -112,7 +112,7 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
             if (allFiles["typings/jasmine"] && allFiles["typings/jasmine"].indexOf("jasmine.d.ts") >= 0) {
                 specList.push("typings/jasmine/jasmine.d.ts");
             } else {
-                allFiles[bbDirRoot+"/typings/jasmine"] = ["jasmine.d.ts"];
+                allFiles[bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
                 specList.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
             }
             project.mainSpec = specList;
@@ -210,9 +210,10 @@ export function defineTranslationReporter(project: bb.IProject) {
 }
 
 export function emitTranslationsJs(project: bb.IProject, translationDb: bb.TranslationDb) {
-    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', project.writeFileCallback);
+    let prefix = project.outputSubDir ? (project.outputSubDir + "/") : "";
+    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
     translationDb.langs.forEach(lang => {
-        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), lang + '.js', project.writeFileCallback);
+        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
     });
 }
 
@@ -223,7 +224,7 @@ export function fillMainSpec(project: bb.IProject): Promise<any> {
                 reject(err);
                 return;
             }
-            if (matches.length>0) {
+            if (matches.length > 0) {
                 if (fs.existsSync(path.join(project.dir, "typings/jasmine/jasmine.d.ts"))) {
                     matches.push("typings/jasmine/jasmine.d.ts");
                 } else {

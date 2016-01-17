@@ -221,9 +221,10 @@ function defineTranslationReporter(project) {
 }
 exports.defineTranslationReporter = defineTranslationReporter;
 function emitTranslationsJs(project, translationDb) {
-    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), 'en-US.js', project.writeFileCallback);
+    var prefix = project.outputSubDir ? (project.outputSubDir + "/") : "";
+    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
     translationDb.langs.forEach(function (lang) {
-        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), lang + '.js', project.writeFileCallback);
+        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
     });
 }
 exports.emitTranslationsJs = emitTranslationsJs;

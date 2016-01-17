@@ -34,6 +34,9 @@ let page = b.createVirtualComponent({
                 tag: 'img', attrs: { src: b.asset('light.png') }  
             },
             {
+                tag: 'span', className: "glyphicon glyphicon-star", attrs: { "ariaHidden": true }
+            },
+            {
                 tag: 'p', children: "Current locale: " + g.getLocale()
             },
             {

@@ -42,6 +42,7 @@
         "src/stackTrace.ts",
         "src/msgFormatParser.ts",
         "src/cssHelpers.ts",
+        "src/shortenFileName.ts",
         "spec/bundlerSpec.ts",
         "spec/compilationCacheSpec.ts",
         "spec/evalNodeSpec.ts",
@@ -60,6 +61,7 @@
         "typings/error-stack-parser/error-stack-parser.d.ts",
         "typings/minimatch/minimatch.d.ts",
         "typings/postcss/postcss.d.ts",
-        "typings/postcss-url/postcss-url.d.ts"
+        "typings/postcss-url/postcss-url.d.ts",
+        "typings/cssnano/cssnano.d.ts"
     ]
 }

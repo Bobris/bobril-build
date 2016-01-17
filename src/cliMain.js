@@ -405,6 +405,7 @@ function run() {
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
+        .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
         .action(function (c) {
         commandRunning = true;
         var project = bb.createProjectFromDir(curProjectDir);
@@ -427,6 +428,9 @@ function run() {
         }
         if (c["localize"]) {
             project.localize = humanTrue(c["localize"]);
+        }
+        if (c["versiondir"]) {
+            project.outputSubDir = c["versiondir"];
         }
         if (!project.outputDir) {
             project.outputDir = "./dist";

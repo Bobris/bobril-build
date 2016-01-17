@@ -13,6 +13,7 @@ var bundler = require('./bundler');
 var sourceMap = require('./sourceMap');
 var simpleHelpers = require('./simpleHelpers');
 var cssHelpers = require('./cssHelpers');
+var shortenFileName_1 = require('./shortenFileName');
 function reportDiagnostic(diagnostic, logcb) {
     var output = '';
     if (diagnostic.file) {
@@ -145,6 +146,20 @@ var CompilationCache = (function () {
                     project.commonJsTemp[filename.toLowerCase()] = content;
                 }
             };
+            project.bundleJs = "bundle.js";
+        }
+        var shortenFileName = function (fn) { return fn; };
+        var shortenFileNameAddPath = shortenFileName;
+        if (project.totalBundle) {
+            shortenFileName = shortenFileName_1.createFileNameShortener();
+            shortenFileNameAddPath = shortenFileName;
+            if (project.outputSubDir) {
+                shortenFileNameAddPath = function (fn) { return project.outputSubDir + "/" + shortenFileName(fn); };
+            }
+            project.bundleJs = shortenFileNameAddPath(project.bundleJs);
+        }
+        if (project.spriteMerge) {
+            shortenFileName('bundle.png');
         }
         var ndir = project.dir.toLowerCase();
         var jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
@@ -210,7 +225,7 @@ var CompilationCache = (function () {
                     var si = info.sprites[j];
                     if (si.name == null)
                         continue;
-                    bundleCache.add(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                    bundleCache.add(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                 }
             }
             if (project.textForTranslationReporter) {
@@ -230,7 +245,8 @@ var CompilationCache = (function () {
                     return imageOps.savePNG2Buffer(bi);
                 });
                 prom = prom.then(function (b) {
-                    project.writeFileCallback('bundle.png', b);
+                    project.bundlePng = shortenFileNameAddPath('bundle.png');
+                    project.writeFileCallback(project.bundlePng, b);
                     return null;
                 });
             }
@@ -269,7 +285,7 @@ var CompilationCache = (function () {
                         var si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        var bundlePos = bundleCache.query(project.remapImages ? project.remapImages(si.name) : pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                        var bundlePos = bundleCache.query(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setMethod(si.callExpression, "spriteb");
                         BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
@@ -284,10 +300,8 @@ var CompilationCache = (function () {
                         var si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        var newname = si.name;
-                        if (project.remapImages)
-                            newname = project.remapImages(newname);
-                        project.depAssetFiles[si.name] = newname;
+                        var newname = pathUtils.join(project.dir, si.name);
+                        project.depAssetFiles[si.name] = shortenFileNameAddPath(newname);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setArgument(si.callExpression, 0, newname);
                     }
@@ -300,8 +314,7 @@ var CompilationCache = (function () {
                     }
                     var newname = sa.name;
                     if (!isCssByExt(newname)) {
-                        if (project.remapImages)
-                            newname = project.remapImages(newname);
+                        newname = shortenFileNameAddPath(newname);
                     }
                     project.depAssetFiles[sa.name] = newname;
                     restorationMemory.push(BuildHelpers.rememberCallExpression(sa.callExpression));
@@ -381,6 +394,7 @@ var CompilationCache = (function () {
             }
             var prom = Promise.resolve();
             var assetFiles = Object.keys(project.depAssetFiles);
+            var cssToMerge = [];
             var _loop_1 = function(i) {
                 prom = prom.then(function (v) { return (function (i) {
                     var assetFile = assetFiles[i];
@@ -395,25 +409,29 @@ var CompilationCache = (function () {
                             return;
                         }
                         if (isCssByExt(assetFile)) {
-                            project.cssToLink.push(project.depAssetFiles[assetFile]);
-                            return cssHelpers.processCss(cached.buffer.toString(), assetFile, function (url, from) {
-                                var resurl = resolvePathString(project.dir, from + "/a", url);
-                                var hi = resurl.lastIndexOf('#');
-                                var res = resurl;
-                                if (hi > 0) {
-                                    res = res.substr(0, hi);
-                                }
-                                hi = resurl.lastIndexOf('?');
-                                if (hi > 0) {
-                                    res = res.substr(0, hi);
-                                }
-                                project.depAssetFiles[res] = res;
-                                return resurl;
-                            }).then(function (v) {
-                                project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
-                            }, function (e) {
-                                console.log(e);
-                            });
+                            if (project.totalBundle) {
+                                cssToMerge.push({ source: cached.buffer.toString(), from: assetFile });
+                            }
+                            else {
+                                project.cssToLink.push(project.depAssetFiles[assetFile]);
+                                return cssHelpers.processCss(cached.buffer.toString(), assetFile, function (url, from) {
+                                    var hi = url.lastIndexOf('#');
+                                    var hi2 = url.lastIndexOf('?');
+                                    if (hi < 0)
+                                        hi = url.length;
+                                    if (hi2 < 0)
+                                        hi2 = url.length;
+                                    if (hi2 < hi)
+                                        hi = hi2;
+                                    var res = resolvePathString(project.dir, from + "/a", url.substr(0, hi));
+                                    project.depAssetFiles[res] = res;
+                                    return url;
+                                }).then(function (v) {
+                                    project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
+                                }, function (e) {
+                                    console.log(e);
+                                });
+                            }
                         }
                     }
                 })(i); });
@@ -421,6 +439,28 @@ var CompilationCache = (function () {
             for (var i = 0; i < assetFiles.length; i++) {
                 _loop_1(i);
             }
+            prom = prom.then(function () {
+                if (cssToMerge.length > 0) {
+                    return cssHelpers.concatenateCssAndMinify(cssToMerge, function (url, from) {
+                        var hi = url.lastIndexOf('#');
+                        var hi2 = url.lastIndexOf('?');
+                        if (hi < 0)
+                            hi = url.length;
+                        if (hi2 < 0)
+                            hi2 = url.length;
+                        if (hi2 < hi)
+                            hi = hi2;
+                        var res = resolvePathString(project.dir, from + "/a", url.substr(0, hi));
+                        var resres = shortenFileNameAddPath(res);
+                        project.depAssetFiles[res] = resres;
+                        return shortenFileName(res) + url.substr(hi);
+                    }).then(function (v) {
+                        var bundleCss = shortenFileNameAddPath('bundle.css');
+                        project.cssToLink.push(bundleCss);
+                        project.writeFileCallback(bundleCss, new Buffer(v.css));
+                    });
+                }
+            });
             return prom.then(function () {
                 var assetFiles = Object.keys(project.depAssetFiles);
                 for (var i = 0; i < assetFiles.length; i++) {
@@ -470,7 +510,7 @@ var CompilationCache = (function () {
                             return cached.text;
                         },
                         writeBundle: function (content) {
-                            project.writeFileCallback('bundle.js', new Buffer(content));
+                            project.writeFileCallback(project.bundleJs, new Buffer(content));
                         }
                     };
                     bundler.bundle(bp);
@@ -487,9 +527,9 @@ var CompilationCache = (function () {
                         res.addSource(content, sm);
                         res.addLine("});");
                     }
-                    res.addLine("//# sourceMappingURL=bundle.js.map");
-                    project.writeFileCallback('bundle.js.map', res.toSourceMapBuffer(project.options.sourceRoot));
-                    project.writeFileCallback('bundle.js', res.toContent());
+                    res.addLine("//# sourceMappingURL=" + shortenFileName("bundle.js") + ".map");
+                    project.writeFileCallback(project.bundleJs + '.map', res.toSourceMapBuffer(project.options.sourceRoot));
+                    project.writeFileCallback(project.bundleJs, res.toContent());
                 }
                 if (project.spriteMerge) {
                     bundleCache.clear(true);

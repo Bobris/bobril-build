@@ -54,13 +54,21 @@ function systemJsBasedIndexHtml(project) {
 }
 exports.systemJsBasedIndexHtml = systemJsBasedIndexHtml;
 function g11nInit(project) {
-    if (!project.localize)
+    if (!project.localize && !project.bundlePng)
         return "";
-    return "<script>function g11nPath(s){return \"./\"+s+\".js\"}</script>";
+    var res = "<script>";
+    if (project.localize) {
+        res += "function g11nPath(s){return \"./" + (project.outputSubDir ? (project.outputSubDir + "/") : "") + "\"+s+\".js\"};";
+    }
+    if (project.bundlePng) {
+        res += "var bobrilBPath=\"" + project.bundlePng + "\"";
+    }
+    res += "</script>";
+    return res;
 }
 function bundleBasedIndexHtml(project) {
     var title = project.htmlTitle || 'Bobril Application';
-    return "<html><head><meta charset=\"utf-8\"><title>" + title + "</title>" + linkCss(project) + "</head><body>" + g11nInit(project) + "<script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script></body></html>";
+    return "<html><head><meta charset=\"utf-8\"><title>" + title + "</title>" + linkCss(project) + "</head><body>" + g11nInit(project) + "<script type=\"text/javascript\" src=\"" + (project.bundleJs || "bundle.js") + "\" charset=\"utf-8\"></script></body></html>";
 }
 exports.bundleBasedIndexHtml = bundleBasedIndexHtml;
 function fastBundleBasedIndexHtml(project) {
@@ -73,7 +81,7 @@ function fastBundleBasedIndexHtml(project) {
             continue;
         moduleMap[name_2] = project.moduleMap[name_2].jsFile.replace(/\.js$/i, "");
     }
-    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>" + linkCss(project) + "\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            R.r('" + project.mainJsFile.replace(/\.js$/i, "") + "');\n        </script>\n    </body>\n</html>\n";
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>" + linkCss(project) + "\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"" + (project.bundleJs || "bundle.js") + "\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            R.r('" + project.mainJsFile.replace(/\.js$/i, "") + "');\n        </script>\n    </body>\n</html>\n";
 }
 exports.fastBundleBasedIndexHtml = fastBundleBasedIndexHtml;
 function fastBundleBasedTestHtml(project) {
@@ -87,7 +95,7 @@ function fastBundleBasedTestHtml(project) {
         moduleMap[name_3] = project.moduleMap[name_3].jsFile.replace(/\.js$/i, "");
     }
     var reqSpec = project.mainSpec.filter(function (v) { return !/\.d.ts$/i.test(v); }).map(function (v) { return ("R.r('" + v.replace(/\.tsx?$/i, "") + "');"); }).join(' ');
-    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>" + linkCss(project) + "\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"bb/special/jasmine-core.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"bb/special/jasmine-boot.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"bb/special/loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"bundle.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + reqSpec + "\n        </script>\n    </body>\n</html>\n";
+    return "<html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>" + title + "</title>" + linkCss(project) + "\n    </head>\n    <body>" + g11nInit(project) + "\n        <script type=\"text/javascript\" src=\"bb/special/jasmine-core.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"bb/special/jasmine-boot.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\" src=\"bb/special/loader.js\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + simpleHelpers_1.globalDefines(project.defines) + "\n            R.map = " + JSON.stringify(moduleMap) + "\n        </script>\n        <script type=\"text/javascript\" src=\"" + (project.bundleJs || "bundle.js") + "\" charset=\"utf-8\"></script>\n        <script type=\"text/javascript\">\n            " + reqSpec + "\n        </script>\n    </body>\n</html>\n";
 }
 exports.fastBundleBasedTestHtml = fastBundleBasedTestHtml;
 function writeDir(write, dir, files) {

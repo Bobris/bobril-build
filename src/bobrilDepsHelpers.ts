@@ -38,8 +38,8 @@ export function momentJsFiles(): string[] {
     return ['moment.js'];
 }
 
-function linkCss(project:compilationCache.IProject):string {
-    return project.cssToLink.map(n=>`<link rel="stylesheet" href="${n}">`).join();
+function linkCss(project: compilationCache.IProject): string {
+    return project.cssToLink.map(n => `<link rel="stylesheet" href="${n}">`).join();
 }
 
 export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
@@ -74,14 +74,22 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
 }
 
 function g11nInit(project: compilationCache.IProject): string {
-    if (!project.localize)
+    if (!project.localize && !project.bundlePng)
         return "";
-    return `<script>function g11nPath(s){return "./"+s+".js"}</script>`;
+    let res = "<script>";
+    if (project.localize) {
+        res += `function g11nPath(s){return "./${project.outputSubDir ? (project.outputSubDir + "/") : ""}"+s+".js"};`
+    }
+    if (project.bundlePng) {
+        res += `var bobrilBPath="${project.bundlePng}"`;
+    }
+    res += "</script>";
+    return res;
 }
 
 export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
-    return `<html><head><meta charset="utf-8"><title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="bundle.js" charset="utf-8"></script></body></html>`;
+    return `<html><head><meta charset="utf-8"><title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
 }
 
 export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
@@ -105,7 +113,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
             ${globalDefines(project.defines)}
             R.map = ${JSON.stringify(moduleMap)}
         </script>
-        <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+        <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
             R.r('${project.mainJsFile.replace(/\.js$/i, "")}');
         </script>
@@ -124,7 +132,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
     }
-    let reqSpec = project.mainSpec.filter(v=>!/\.d.ts$/i.test(v)).map(v=>`R.r('${v.replace(/\.tsx?$/i, "")}');`).join(' ');
+    let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${v.replace(/\.tsx?$/i, "")}');`).join(' ');
     return `<html>
     <head>
         <meta charset="utf-8">
@@ -138,7 +146,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
             ${globalDefines(project.defines)}
             R.map = ${JSON.stringify(moduleMap)}
         </script>
-        <script type="text/javascript" src="bundle.js" charset="utf-8"></script>
+        <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
             ${reqSpec}
         </script>
