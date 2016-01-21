@@ -170,7 +170,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
         if (!autodetectMainTs(project)) return false;
         if (project == null) return null;
     }
-    let deps = Object.keys(packageObj.dependencies);
+    let deps = Object.keys(packageObj.dependencies || {});
     project.localize = deps.some(v => v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {

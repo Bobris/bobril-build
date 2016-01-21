@@ -179,7 +179,7 @@ function refreshProjectFromPackageJson(project, allFiles) {
         if (project == null)
             return null;
     }
-    var deps = Object.keys(packageObj.dependencies);
+    var deps = Object.keys(packageObj.dependencies || {});
     project.localize = deps.some(function (v) { return v === "bobril-g11n"; });
     var bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
