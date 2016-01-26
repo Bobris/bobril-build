@@ -396,18 +396,18 @@ function bundle(project) {
                     return symb;
                 }
                 var reqPath = symb.thedef.bbRequirePath;
-                if (reqPath !== undefined && transformer.parent() instanceof uglify.AST_VarDef) {
-                    var p = (transformer.parent());
-                    if (p.value === node) {
-                        var properties = [];
-                        var extf = project.cache[reqPath.toLowerCase()];
-                        if (!extf.difficult) {
-                            var keys = Object.keys(extf.exports);
-                            keys.forEach(function (key) {
-                                properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key: key, value: renameSymbol(extf.exports[key]) }));
-                            });
-                            return new uglify.AST_Object({ properties: properties });
-                        }
+                if (reqPath !== undefined && !(transformer.parent() instanceof uglify.AST_PropAccess)) {
+                    var p = transformer.parent();
+                    if (p instanceof uglify.AST_VarDef && p.name === symb)
+                        return undefined;
+                    var properties = [];
+                    var extf = project.cache[reqPath.toLowerCase()];
+                    if (!extf.difficult) {
+                        var keys = Object.keys(extf.exports);
+                        keys.forEach(function (key) {
+                            properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key: key, value: renameSymbol(extf.exports[key]) }));
+                        });
+                        return new uglify.AST_Object({ properties: properties });
                     }
                 }
             }

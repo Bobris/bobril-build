@@ -53,6 +53,7 @@ declare module "uglifyjs" {
         walk?(walker: IWalker);
         transform?(transformer: ITransformer): IAstNode;
         TYPE?: string;
+        CTOR?: { PROPS: string[] };
         print_to_string?(options?: IOutputStreamOptions): string;
     }
 
@@ -223,7 +224,7 @@ declare module "uglifyjs" {
 
     /// A `switch` statement
     interface IAstSwitch extends IAstBlock {
-        /// the `switch` “discriminant”
+        /// the `switch` ï¿½discriminantï¿½
         expression?: IAstNode;
     }
 
@@ -435,17 +436,17 @@ declare module "uglifyjs" {
     /// A `if` statement
     const AST_If: IAST_If;
 
-    /// Base class for “jumps” (for now that's `return`, `throw`, `break` and `continue`)
+    /// Base class for ï¿½jumpsï¿½ (for now that's `return`, `throw`, `break` and `continue`)
     interface IAstJump extends IAstStatement {
     }
 
     interface IAST_Jump {
         new (props?: IAstJump): IAstJump;
     }
-    /// Base class for “jumps” (for now that's `return`, `throw`, `break` and `continue`)
+    /// Base class for ï¿½jumpsï¿½ (for now that's `return`, `throw`, `break` and `continue`)
     const AST_Jump: IAST_Jump;
 
-    /// Base class for “exits” (`return` and `throw`)
+    /// Base class for ï¿½exitsï¿½ (`return` and `throw`)
     interface IAstExit extends IAstJump {
         /// the value returned or thrown by this statement; could be null for AST_Return
         value?: IAstNode;
@@ -454,7 +455,7 @@ declare module "uglifyjs" {
     interface IAST_Exit {
         new (props?: IAstExit): IAstExit;
     }
-    /// Base class for “exits” (`return` and `throw`)
+    /// Base class for ï¿½exitsï¿½ (`return` and `throw`)
     const AST_Exit: IAST_Exit;
 
     /// A `return` statement
@@ -595,7 +596,7 @@ declare module "uglifyjs" {
 
     /// Base class for property access expressions, i.e. `a.foo` or `a["foo"]`
     interface IAstPropAccess extends IAstNode {
-        /// the “container” expression
+        /// the ï¿½containerï¿½ expression
         expression?: IAstNode;
         /// the property to access.  For AST_Dot this is always a plain string, while for AST_Sub it's an arbitrary AST_Node
         property?: IAstNode | string;
@@ -677,14 +678,14 @@ declare module "uglifyjs" {
     /// Binary expression, i.e. `a + b`
     const AST_Binary: IAST_Binary;
 
-    /// An assignment expression — `a = b + 5`
+    /// An assignment expression ï¿½ `a = b + 5`
     interface IAstAssign extends IAstBinary {
     }
 
     interface IAST_Assign {
         new (props?: IAstAssign): IAstAssign;
     }
-    /// An assignment expression — `a = b + 5`
+    /// An assignment expression ï¿½ `a = b + 5`
     const AST_Assign: IAST_Assign;
 
     /// Conditional expression using the ternary operator, i.e. `a ? b : c`

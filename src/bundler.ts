@@ -194,7 +194,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null };
         if (ast.globals.has('module')) {
             cached.difficult = true;
-            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name) }
+            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name)}
 __bbe['${name}']=module.exports; }).call(window);`);
             cached.ast = ast;
             project.cache[name.toLowerCase()] = cached;
@@ -329,7 +329,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
         check(r, order, stack, project, resolveRequire);
     });
     cached.exports = Object.create(null);
-    cached.selfexports.forEach(exp=> {
+    cached.selfexports.forEach(exp => {
         if (exp.name) {
             cached.exports[exp.name] = exp.node;
         } else if (exp.reexport) {
@@ -430,18 +430,18 @@ export function bundle(project: IBundleProject) {
                     return symb;
                 }
                 let reqPath = (<ISymbolDef>symb.thedef).bbRequirePath;
-                if (reqPath !== undefined && transformer.parent() instanceof uglify.AST_VarDef) {
-                    let p = <uglify.IAstVarDef>(transformer.parent());
-                    if (p.value === node) {
-                        let properties = [];
-                        let extf = project.cache[reqPath.toLowerCase()];
-                        if (!extf.difficult) {
-                            let keys = Object.keys(extf.exports);
-                            keys.forEach(key=> {
-                                properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key, value: renameSymbol(extf.exports[key]) }));
-                            });
-                            return new uglify.AST_Object({ properties });
-                        }
+                if (reqPath !== undefined && !(transformer.parent() instanceof uglify.AST_PropAccess)) {
+                    let p = transformer.parent();
+                    if (p instanceof uglify.AST_VarDef && (<uglify.IAstVarDef>p).name === symb)
+                        return undefined;
+                    let properties = [];
+                    let extf = project.cache[reqPath.toLowerCase()];
+                    if (!extf.difficult) {
+                        let keys = Object.keys(extf.exports);
+                        keys.forEach(key => {
+                            properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key, value: renameSymbol(extf.exports[key]) }));
+                        });
+                        return new uglify.AST_Object({ properties });
                     }
                 }
             }
