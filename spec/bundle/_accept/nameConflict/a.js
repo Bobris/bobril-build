@@ -1,1 +1,1 @@
-!function(){"use strict";function a(a,b){return a+b}function b(a,b){return a-b}var c=a,d=2;console.log(c(b(d,1),d))}();
+!function(){"use strict";function a(a,b){return a+b}function b(a,b){return a-b}var c=2;console.log(a(b(c,1),c))}();

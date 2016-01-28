@@ -180,6 +180,16 @@ function patternDefinePropertyExportsEsModule(call: uglify.IAstCall) {
     return false;
 }
 
+function isConstantSymbolRef(node: uglify.IAstNode) {
+    if (node instanceof uglify.AST_SymbolRef) {
+        let def = (<uglify.IAstSymbolRef>node).thedef;
+        if (def.undeclared) return false;
+        if (def.orig.length !== 1) return false;
+        if (def.orig[0] instanceof uglify.AST_SymbolDefun) return true;
+    }
+    return false;
+}
+
 function check(name: string, order: IFileForBundle[], stack: string[], project: IBundleProject, resolveRequire: (name: string, from: string) => string) {
     let cached: IFileForBundle = project.cache[name.toLowerCase()];
     let mod = project.checkFileModification(name);
@@ -219,6 +229,13 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             if (selfExpNames[pea.name] && stmbody instanceof uglify.AST_Assign) {
                                 (<uglify.IAstAssign>stmbody).left = new uglify.AST_SymbolRef({ name: newName, thedef: ast.variables.get(newName) });
                                 return stm;
+                            }
+                            if (isConstantSymbolRef(pea.value)) {
+                                selfExpNames[pea.name] = true;
+                                let def = <ISymbolDef>(<uglify.IAstSymbolRef>pea.value).thedef;
+                                def.bbAlwaysClone = true;
+                                cached.selfexports.push({ name: pea.name, node: pea.value });
+                                return null;
                             }
                             let newVar = new uglify.AST_Var({
                                 start: stmbody.start,
@@ -393,22 +410,29 @@ export function bundle(project: IBundleProject) {
         let suffix = f.name;
         if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
-        f.ast.variables.each((symb, name) => {
-            if ((<ISymbolDef>symb).bbRequirePath) return;
-            let newname = name;
-            if (topLevelNames[name] !== undefined) {
-                let index = 0;
-                do {
-                    index++;
-                    newname = name + "_" + suffix;
-                    if (index > 1) newname += '' + index;
-                } while (topLevelNames[newname] !== undefined);
-                (<ISymbolDef>symb).bbRename = newname;
-            } else {
-                (<ISymbolDef>symb).bbRename = undefined;
+        let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
+            if (node instanceof uglify.AST_Scope) {
+                node.variables.each((symb, name) => {
+                    if ((<ISymbolDef>symb).bbRequirePath) return;
+                    let newname = name;
+                    if ((topLevelNames[name] !== undefined) && node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined)) {
+                        let index = 0;
+                        do {
+                            index++;
+                            newname = name + "_" + suffix;
+                            if (index > 1) newname += '' + index;
+                        } while (topLevelNames[newname] !== undefined);
+                        (<ISymbolDef>symb).bbRename = newname;
+                    } else {
+                        (<ISymbolDef>symb).bbRename = undefined;
+                    }
+                    if (node===f.ast)
+                        topLevelNames[newname] = true;
+                });
             }
-            topLevelNames[newname] = true;
+            return false;
         });
+        f.ast.walk(walker);
     });
     order.forEach((f) => {
         if (f.difficult)

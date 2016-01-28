@@ -138,6 +138,18 @@ function patternDefinePropertyExportsEsModule(call) {
     }
     return false;
 }
+function isConstantSymbolRef(node) {
+    if (node instanceof uglify.AST_SymbolRef) {
+        var def = node.thedef;
+        if (def.undeclared)
+            return false;
+        if (def.orig.length !== 1)
+            return false;
+        if (def.orig[0] instanceof uglify.AST_SymbolDefun)
+            return true;
+    }
+    return false;
+}
 function check(name, order, stack, project, resolveRequire) {
     var cached = project.cache[name.toLowerCase()];
     var mod = project.checkFileModification(name);
@@ -177,6 +189,13 @@ function check(name, order, stack, project, resolveRequire) {
                             if (selfExpNames[pea.name] && stmbody instanceof uglify.AST_Assign) {
                                 stmbody.left = new uglify.AST_SymbolRef({ name: newName, thedef: ast.variables.get(newName) });
                                 return stm;
+                            }
+                            if (isConstantSymbolRef(pea.value)) {
+                                selfExpNames[pea.name] = true;
+                                var def = pea.value.thedef;
+                                def.bbAlwaysClone = true;
+                                cached.selfexports.push({ name: pea.name, node: pea.value });
+                                return null;
                             }
                             var newVar = new uglify.AST_Var({
                                 start: stmbody.start,
@@ -355,25 +374,32 @@ function bundle(project) {
             suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0)
             suffix = suffix.substr(0, suffix.indexOf('.'));
-        f.ast.variables.each(function (symb, name) {
-            if (symb.bbRequirePath)
-                return;
-            var newname = name;
-            if (topLevelNames[name] !== undefined) {
-                var index = 0;
-                do {
-                    index++;
-                    newname = name + "_" + suffix;
-                    if (index > 1)
-                        newname += '' + index;
-                } while (topLevelNames[newname] !== undefined);
-                symb.bbRename = newname;
+        var walker = new uglify.TreeWalker(function (node, descend) {
+            if (node instanceof uglify.AST_Scope) {
+                node.variables.each(function (symb, name) {
+                    if (symb.bbRequirePath)
+                        return;
+                    var newname = name;
+                    if ((topLevelNames[name] !== undefined) && node.enclosed.some(function (enclSymb) { return topLevelNames[enclSymb.name] !== undefined; })) {
+                        var index = 0;
+                        do {
+                            index++;
+                            newname = name + "_" + suffix;
+                            if (index > 1)
+                                newname += '' + index;
+                        } while (topLevelNames[newname] !== undefined);
+                        symb.bbRename = newname;
+                    }
+                    else {
+                        symb.bbRename = undefined;
+                    }
+                    if (node === f.ast)
+                        topLevelNames[newname] = true;
+                });
             }
-            else {
-                symb.bbRename = undefined;
-            }
-            topLevelNames[newname] = true;
+            return false;
         });
+        f.ast.walk(walker);
     });
     order.forEach(function (f) {
         if (f.difficult)
