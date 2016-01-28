@@ -17,7 +17,7 @@ var Client = (function () {
             _this.server.notifySomeChange();
         };
         connection.onMessage = function (connection, message, data) {
-            //console.log("Test Message " + message, data);
+            // console.log("Test Message " + message);
             switch (message) {
                 case 'newClient': {
                     _this.userAgent = uaparse(connection.userAgent, data.userAgent).toString();
@@ -30,6 +30,8 @@ var Client = (function () {
                     break;
                 }
                 case 'wholeStart': {
+                    if (_this.curResults == null)
+                        break;
                     _this.curResults.totalTests = data;
                     _this.suiteStack = [_this.curResults];
                     _this.server.notifyTestingStarted(_this);
@@ -37,6 +39,10 @@ var Client = (function () {
                     break;
                 }
                 case 'wholeDone': {
+                    if (_this.curResults == null)
+                        break;
+                    if (_this.suiteStack == null)
+                        break;
                     _this.curResults.duration = data;
                     _this.curResults.running = false;
                     _this.oldResults = _this.curResults;
@@ -47,6 +53,10 @@ var Client = (function () {
                     break;
                 }
                 case 'suiteStart': {
+                    if (_this.curResults == null)
+                        break;
+                    if (_this.suiteStack == null)
+                        break;
                     var suite = {
                         name: data,
                         nested: [],
@@ -62,6 +72,10 @@ var Client = (function () {
                     break;
                 }
                 case 'suiteDone': {
+                    if (_this.curResults == null)
+                        break;
+                    if (_this.suiteStack == null)
+                        break;
                     var suite = _this.suiteStack.pop();
                     suite.duration = data.duration;
                     if (data.failures.length > 0)
@@ -76,6 +90,10 @@ var Client = (function () {
                     break;
                 }
                 case 'testStart': {
+                    if (_this.curResults == null)
+                        break;
+                    if (_this.suiteStack == null)
+                        break;
                     var test = {
                         name: data,
                         nested: null,
@@ -91,6 +109,10 @@ var Client = (function () {
                     break;
                 }
                 case 'testDone': {
+                    if (_this.curResults == null)
+                        break;
+                    if (_this.suiteStack == null)
+                        break;
                     var test = _this.suiteStack.pop();
                     test.duration = data.duration;
                     if (data.failures.length > 0)
@@ -121,8 +143,7 @@ var Client = (function () {
         this.runid = runid;
         this.doStart();
     };
-    Client.prototype.doStart = function () {
-        this.idle = false;
+    Client.prototype.initCurResults = function () {
         this.curResults = {
             userAgent: this.userAgent,
             nested: [],
@@ -138,6 +159,10 @@ var Client = (function () {
             failures: [],
             isSuite: true
         };
+    };
+    Client.prototype.doStart = function () {
+        this.idle = false;
+        this.initCurResults();
         this.connection.send("test", { url: this.url });
     };
     Client.prototype.convertFailures = function (rawFailures) {

@@ -55,7 +55,7 @@ class Client {
             this.server.notifySomeChange();
         };
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
-            //console.log("Test Message " + message, data);
+            // console.log("Test Message " + message);
             switch (message) {
                 case 'newClient': {
                     this.userAgent = uaparse(connection.userAgent, data.userAgent).toString()
@@ -68,6 +68,7 @@ class Client {
                     break;
                 }
                 case 'wholeStart': {
+                    if (this.curResults == null) break;
                     this.curResults.totalTests = <number>data;
                     this.suiteStack = [this.curResults];
                     this.server.notifyTestingStarted(this);
@@ -75,6 +76,8 @@ class Client {
                     break;
                 }
                 case 'wholeDone': {
+                    if (this.curResults == null) break;
+                    if (this.suiteStack == null) break;
                     this.curResults.duration = <number>data;
                     this.curResults.running = false;
                     this.oldResults = this.curResults;
@@ -85,6 +88,8 @@ class Client {
                     break;
                 }
                 case 'suiteStart': {
+                    if (this.curResults == null) break;
+                    if (this.suiteStack == null) break;
                     let suite: SuiteOrTest = {
                         name: <string>data,
                         nested: [],
@@ -100,6 +105,8 @@ class Client {
                     break;
                 }
                 case 'suiteDone': {
+                    if (this.curResults == null) break;
+                    if (this.suiteStack == null) break;
                     let suite = this.suiteStack.pop();
                     suite.duration = data.duration;
                     if (data.failures.length > 0)
@@ -114,6 +121,8 @@ class Client {
                     break;
                 }
                 case 'testStart': {
+                    if (this.curResults == null) break;
+                    if (this.suiteStack == null) break;
                     let test: SuiteOrTest = {
                         name: <string>data,
                         nested: null,
@@ -129,6 +138,8 @@ class Client {
                     break;
                 }
                 case 'testDone': {
+                    if (this.curResults == null) break;
+                    if (this.suiteStack == null) break;
                     let test = this.suiteStack.pop();
                     test.duration = data.duration;
                     if (data.failures.length > 0) test.failures.push(...this.convertFailures(data.failures));
@@ -157,8 +168,7 @@ class Client {
         this.doStart();
     }
 
-    doStart() {
-        this.idle = false;
+    private initCurResults() {
         this.curResults = {
             userAgent: this.userAgent,
             nested: [],
@@ -174,6 +184,11 @@ class Client {
             failures: [],
             isSuite: true
         };
+    }
+
+    doStart() {
+        this.idle = false;
+        this.initCurResults();
         this.connection.send("test", { url: this.url });
     }
 
