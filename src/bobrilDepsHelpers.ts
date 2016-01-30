@@ -39,7 +39,7 @@ export function momentJsFiles(): string[] {
 }
 
 function linkCss(project: compilationCache.IProject): string {
-    return project.cssToLink.map(n => `<link rel="stylesheet" href="${n}">`).join();
+    return project.cssToLink.map(n => `<link rel="stylesheet" href="${n}">`).join("");
 }
 
 export function systemJsBasedIndexHtml(project: compilationCache.IProject) {

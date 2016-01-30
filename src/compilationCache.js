@@ -120,7 +120,16 @@ var CompilationCache = (function () {
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
         var jsWriteFileCallback = project.writeFileCallback;
-        var resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ? function (p, s, t) { return pathUtils.join(p, t); } : function (p, s, t) { return pathUtils.join(path.dirname(s), t); };
+        var ndir = project.dir.toLowerCase() + "/";
+        function relativizeToProject(p) {
+            var nfn = p.toLowerCase();
+            if (nfn.substr(0, ndir.length) === ndir) {
+                p = p.substr(ndir.length);
+            }
+            return p;
+        }
+        var resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ?
+            function (p, s, t) { return relativizeToProject(pathUtils.join(p, t)); } : function (p, s, t) { return relativizeToProject(pathUtils.join(path.dirname(s), t)); };
         this.resolvePathStringLiteral = (function (nn) { return resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text); });
         if (project.totalBundle) {
             project.options.sourceMap = false;
@@ -161,14 +170,9 @@ var CompilationCache = (function () {
         if (project.spriteMerge) {
             shortenFileName('bundle.png');
         }
-        var ndir = project.dir.toLowerCase();
         var jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
         jsWriteFileCallback = function (filename, content) {
-            var nfn = filename.toLowerCase();
-            if (nfn.substr(0, ndir.length) === ndir) {
-                filename = filename.substr(ndir.length + 1);
-            }
-            jsWriteFileCallbackUnnormalized(filename, content);
+            jsWriteFileCallbackUnnormalized(relativizeToProject(filename), content);
         };
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);

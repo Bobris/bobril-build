@@ -379,8 +379,8 @@ function bundle(project) {
                 node.variables.each(function (symb, name) {
                     if (symb.bbRequirePath)
                         return;
-                    var newname = name;
-                    if ((topLevelNames[name] !== undefined) && node.enclosed.some(function (enclSymb) { return topLevelNames[enclSymb.name] !== undefined; })) {
+                    var newname = symb.bbRename || name;
+                    if ((topLevelNames[name] !== undefined) && (/^__export_/.test(name) || node.enclosed.some(function (enclSymb) { return topLevelNames[enclSymb.name] !== undefined; }))) {
                         var index = 0;
                         do {
                             index++;
@@ -393,8 +393,9 @@ function bundle(project) {
                     else {
                         symb.bbRename = undefined;
                     }
-                    if (node === f.ast)
+                    if (node === f.ast) {
                         topLevelNames[newname] = true;
+                    }
                 });
             }
             return false;

@@ -38,7 +38,7 @@ function momentJsFiles() {
 }
 exports.momentJsFiles = momentJsFiles;
 function linkCss(project) {
-    return project.cssToLink.map(function (n) { return ("<link rel=\"stylesheet\" href=\"" + n + "\">"); }).join();
+    return project.cssToLink.map(function (n) { return ("<link rel=\"stylesheet\" href=\"" + n + "\">"); }).join("");
 }
 function systemJsBasedIndexHtml(project) {
     var title = project.htmlTitle || 'Bobril Application';

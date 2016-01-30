@@ -217,8 +217,18 @@ export class CompilationCache {
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
+        
+        let ndir = project.dir.toLowerCase()+"/";
+        function relativizeToProject(p: string): string {
+            let nfn = p.toLowerCase();
+            if (nfn.substr(0, ndir.length) === ndir) {
+                p = p.substr(ndir.length);
+            }
+            return p;
+        }
 
-        let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ? (p, s, t) => pathUtils.join(p, t) : (p, s, t) => pathUtils.join(path.dirname(s), t);
+        let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ?
+            (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(pathUtils.join(path.dirname(s), t));
         this.resolvePathStringLiteral = ((nn: ts.StringLiteral) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             project.options.sourceMap = false;
@@ -256,14 +266,9 @@ export class CompilationCache {
         if (project.spriteMerge) { // reserve always same name for bundle.png
             shortenFileName('bundle.png');
         }
-        let ndir = project.dir.toLowerCase();
         let jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
         jsWriteFileCallback = (filename: string, content: Buffer) => {
-            let nfn = filename.toLowerCase();
-            if (nfn.substr(0, ndir.length) === ndir) {
-                filename = filename.substr(ndir.length + 1);
-            }
-            jsWriteFileCallbackUnnormalized(filename, content);
+            jsWriteFileCallbackUnnormalized(relativizeToProject(filename), content);
         };
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);

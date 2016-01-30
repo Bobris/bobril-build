@@ -382,6 +382,7 @@ function renameSymbol(node: uglify.IAstNode): uglify.IAstNode {
     }
     return node;
 }
+
 export function bundle(project: IBundleProject) {
     project.cache = project.cache || Object.create(null);
     let fileExists = (name: string) => project.checkFileModification(name) != null;
@@ -414,8 +415,8 @@ export function bundle(project: IBundleProject) {
             if (node instanceof uglify.AST_Scope) {
                 node.variables.each((symb, name) => {
                     if ((<ISymbolDef>symb).bbRequirePath) return;
-                    let newname = name;
-                    if ((topLevelNames[name] !== undefined) && node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined)) {
+                    let newname = (<ISymbolDef>symb).bbRename || name;
+                    if ((topLevelNames[name] !== undefined) && (/^__export_/.test(name) || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
                         let index = 0;
                         do {
                             index++;
@@ -426,8 +427,9 @@ export function bundle(project: IBundleProject) {
                     } else {
                         (<ISymbolDef>symb).bbRename = undefined;
                     }
-                    if (node===f.ast)
+                    if (node === f.ast) {
                         topLevelNames[newname] = true;
+                    }
                 });
             }
             return false;
