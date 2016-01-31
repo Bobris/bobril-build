@@ -1,7 +1,7 @@
 "use strict";
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-var uglify = require('uglifyjs');
+var uglify = require('uglify-js');
 var simpleHelpers_1 = require('./simpleHelpers');
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
@@ -158,10 +158,21 @@ function check(name, order, stack, project, resolveRequire) {
         if (mod == null) {
             throw new Error('Cannot open ' + name);
         }
-        var ast = uglify.parse(project.readContent(name));
+        var fileContent = project.readContent(name);
+        var ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: [], exports: null };
+        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        var pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
+        if (pureMatch) {
+            pureMatch.forEach(function (m) {
+                m.toString().substr(m.indexOf(":") + 1).split(',').forEach(function (s) {
+                    if (s.length === 0)
+                        return;
+                    cached.pureFuncs[s.trim()] = true;
+                });
+            });
+        }
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; }).call(window);");
@@ -204,11 +215,9 @@ function check(name, order, stack, project, resolveRequire) {
                                     new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
                                 ]
                             });
-                            var symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            var symb = ast.def_variable(newVar.definitions[0].name);
                             symb.undeclared = false;
                             symb.bbAlwaysClone = true;
-                            ast.variables.set(newName, symb);
-                            newVar.definitions[0].name.thedef = symb;
                             selfExpNames[pea.name] = true;
                             cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
@@ -266,11 +275,10 @@ function check(name, order, stack, project, resolveRequire) {
                             }
                             var symbVar = new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end });
                             varDecls.push(new uglify.AST_VarDef({ name: symbVar, value: null }));
-                            var symb = new uglify.SymbolDef(ast, ast.variables.size(), symbVar);
+                            ast.def_variable(symbVar);
+                            var symb = ast.def_variable(symbVar);
                             symb.undeclared = false;
                             symb.bbAlwaysClone = true;
-                            ast.variables.set(newName, symb);
-                            symbVar.thedef = symb;
                             selfExpNames[key] = true;
                             cached.selfexports.push({ name: key, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return false;
@@ -354,6 +362,7 @@ function bundle(project) {
     };
     var order = [];
     var stack = [];
+    var pureFuncs = Object.create(null);
     project.getMainFiles().forEach(function (val) { return check(val, order, stack, project, resolveRequire); });
     var bundleAst = uglify.parse('(function(){"use strict";})()');
     var bodyAst = bundleAst.body[0].body.expression.body;
@@ -394,6 +403,8 @@ function bundle(project) {
                         symb.bbRename = undefined;
                     }
                     if (node === f.ast) {
+                        if (name in f.pureFuncs)
+                            pureFuncs[newname] = true;
                         topLevelNames[newname] = true;
                     }
                 });
@@ -512,7 +523,17 @@ function bundle(project) {
     });
     if (project.compress !== false) {
         bundleAst.figure_out_scope();
-        var compressor = uglify.Compressor({ warnings: false, global_defs: project.defines });
+        var compressor = uglify.Compressor({ warnings: false, global_defs: project.defines, pure_funcs: function (call) {
+                if (call.expression instanceof uglify.AST_SymbolRef) {
+                    var symb = call.expression;
+                    if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {
+                        if (symb.name in pureFuncs)
+                            return false;
+                    }
+                    return true;
+                }
+                return true;
+            } });
         bundleAst = bundleAst.transform(compressor);
     }
     if (project.mangle !== false) {

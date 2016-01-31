@@ -1,0 +1,17 @@
+{
+  "name": "sample",
+  "version": "1.0.0",
+  "description": "",
+  "typescript": {
+    "main": "app.ts"
+  },
+  "bobril": {
+    "title": "Bobril Dead Code"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "bobril": "*",
+    "bobril-m-icons": "^1.0.0"
+  }
+}

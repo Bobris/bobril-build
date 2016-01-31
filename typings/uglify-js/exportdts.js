@@ -1,4 +1,4 @@
-var u = require('uglifyjs');
+var u = require('uglify-js');
 
 function print(t) {
 	console.log(t); 

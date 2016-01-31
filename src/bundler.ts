@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as pathUtils from './pathUtils';
-import * as uglify from 'uglifyjs';
+import * as uglify from 'uglify-js';
 import { globalDefines } from './simpleHelpers';
 
 if (!Object.assign) {
@@ -47,6 +47,7 @@ export interface IFileForBundle {
     difficult: boolean;
     selfexports: { name?: string, node?: uglify.IAstNode, reexport?: string }[];
     exports: { [name: string]: uglify.IAstNode };
+    pureFuncs: { [name: string]: boolean };
 }
 
 export interface IBundleProject {
@@ -198,10 +199,20 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         if (mod == null) {
             throw new Error('Cannot open ' + name);
         }
-        let ast = uglify.parse(project.readContent(name));
+        let fileContent = project.readContent(name);
+        let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
+        if (pureMatch) {
+            pureMatch.forEach(m=>{
+                m.toString().substr(m.indexOf(":")+1).split(',').forEach(s=> {
+                    if (s.length===0) return;
+                    cached.pureFuncs[s.trim()]=true;
+                });
+            });
+        }
         if (ast.globals.has('module')) {
             cached.difficult = true;
             ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name)}
@@ -244,11 +255,9 @@ __bbe['${name}']=module.exports; }).call(window);`);
                                     new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
                                 ]
                             });
-                            let symb = new uglify.SymbolDef(ast, ast.variables.size(), newVar.definitions[0].name);
+                            let symb = ast.def_variable(newVar.definitions[0].name);
                             symb.undeclared = false;
                             (<ISymbolDef>symb).bbAlwaysClone = true;
-                            ast.variables.set(newName, symb);
-                            newVar.definitions[0].name.thedef = symb;
                             selfExpNames[pea.name] = true;
                             cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
@@ -307,11 +316,10 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             varDecls.push(
                                 new uglify.AST_VarDef({ name: symbVar, value: null })
                             );
-                            let symb = new uglify.SymbolDef(ast, ast.variables.size(), symbVar);
+                            ast.def_variable(symbVar)
+                            let symb = ast.def_variable(symbVar);
                             symb.undeclared = false;
                             (<ISymbolDef>symb).bbAlwaysClone = true;
-                            ast.variables.set(newName, symb);
-                            symbVar.thedef = symb;
                             selfExpNames[key] = true;
                             cached.selfexports.push({ name: key, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return false;
@@ -393,6 +401,7 @@ export function bundle(project: IBundleProject) {
     }
     let order = <IFileForBundle[]>[];
     let stack = [];
+    let pureFuncs: { [name:string]: boolean } = Object.create(null);
     project.getMainFiles().forEach((val) => check(val, order, stack, project, resolveRequire));
     let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
@@ -428,6 +437,7 @@ export function bundle(project: IBundleProject) {
                         (<ISymbolDef>symb).bbRename = undefined;
                     }
                     if (node === f.ast) {
+                        if (name in f.pureFuncs) pureFuncs[newname] = true;
                         topLevelNames[newname] = true;
                     }
                 });
@@ -540,7 +550,16 @@ export function bundle(project: IBundleProject) {
     });
     if (project.compress !== false) {
         bundleAst.figure_out_scope();
-        let compressor = uglify.Compressor({ warnings: false, global_defs: project.defines });
+        let compressor = uglify.Compressor({ warnings: false, global_defs: project.defines, pure_funcs: (call)=>{
+            if (call.expression instanceof uglify.AST_SymbolRef) {
+                let symb=(<uglify.IAstSymbolRef>call.expression);
+                if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {
+                    if (symb.name in pureFuncs) return false;                    
+                }
+                return true;
+            }
+            return true;
+        } });
         bundleAst = bundleAst.transform(compressor);
         // in future to make another pass with removing function calls with empty body
     }

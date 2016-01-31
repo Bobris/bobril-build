@@ -133,6 +133,7 @@ var CompilationCache = (function () {
         this.resolvePathStringLiteral = (function (nn) { return resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text); });
         if (project.totalBundle) {
             project.options.sourceMap = false;
+            project.options.removeComments = false;
         }
         else if (project.fastBundle) {
             project.options.sourceMap = true;

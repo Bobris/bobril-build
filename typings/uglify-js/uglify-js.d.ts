@@ -1,4 +1,4 @@
-declare module "uglifyjs" {
+declare module "uglify-js" {
     interface IDictionary<T> {
         has(key: string): boolean;
         set(key: string, val: T): IDictionary<T>;
@@ -151,6 +151,8 @@ declare module "uglifyjs" {
         enclosed?: ISymbolDef[];
         /// current index for mangling variables (used internally by the mangler) (After Scope)
         cname?: number;
+        
+        def_variable(symb: IAstSymbolRef):ISymbolDef;
     }
 
     interface IAST_Scope {
@@ -1060,6 +1062,7 @@ declare module "uglifyjs" {
     interface ICompressorOptions {
         warnings?: boolean;
         global_defs?: { [name: string]: any };
+        pure_funcs: string[] | ((call: IAstCall) => boolean);
     }
 
     interface IParseOptions {

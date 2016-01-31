@@ -232,6 +232,7 @@ export class CompilationCache {
         this.resolvePathStringLiteral = ((nn: ts.StringLiteral) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             project.options.sourceMap = false;
+            project.options.removeComments = false;
         } else if (project.fastBundle) {
             project.options.sourceMap = true;
         }
