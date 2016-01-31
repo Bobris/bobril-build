@@ -11,6 +11,7 @@ function backgroundProcess() {
     var commands = Object.create(null);
     process.on("message", function (_a) {
         var command = _a.command, param = _a.param;
+        //console.log(command, param);
         if (commands[command]) {
             require('./src/' + commands[command])[command](param);
         }

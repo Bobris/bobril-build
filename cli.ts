@@ -12,24 +12,25 @@ function printIntroLine() {
 function backgroundProcess() {
     let commands = Object.create(null);
     process.on("message", ({ command, param }) => {
+        //console.log(command, param);
         if (commands[command]) {
-            require('./src/'+commands[command])[command](param);
+            require('./src/' + commands[command])[command](param);
         } else {
-            process.send({ command:"error", param: "Unknown command "+command });            
+            process.send({ command: "error", param: "Unknown command " + command });
         }
     });
-    function register(name:string, file:string) {
+    function register(name: string, file: string) {
         commands[name] = file;
     }
-    register("ping","backgroundBasicCommands");
-    register("stop","backgroundBasicCommands");
-    register("watch","backgroundWatchCommands");
-    register("createProject","backgroundCompileCommands");
-    register("refreshProject","backgroundCompileCommands");
-    register("setProjectOptions","backgroundCompileCommands");
-    register("disposeProject","backgroundCompileCommands");
-    register("compile","backgroundCompileCommands");
-    register("loadTranslations","backgroundCompileCommands");
+    register("ping", "backgroundBasicCommands");
+    register("stop", "backgroundBasicCommands");
+    register("watch", "backgroundWatchCommands");
+    register("createProject", "backgroundCompileCommands");
+    register("refreshProject", "backgroundCompileCommands");
+    register("setProjectOptions", "backgroundCompileCommands");
+    register("disposeProject", "backgroundCompileCommands");
+    register("compile", "backgroundCompileCommands");
+    register("loadTranslations", "backgroundCompileCommands");
 }
 
 function run() {

@@ -125,11 +125,11 @@ function compile(param) {
                     if (cp.translationDb.addedMessage) {
                         cp.translationDirty = true;
                     }
-                }).then(function () {
-                    process.send({ command: "compileOk", param: { hasTests: cp.project.mainSpec != null } });
-                }, function (err) {
-                    process.send({ command: "compileFailed", param: err.toString() });
                 });
+            }).then(function () {
+                process.send({ command: "compileOk", param: { hasTests: cp.project.mainSpec != null } });
+            }, function (err) {
+                process.send({ command: "compileFailed", param: err.toString() });
             }).then(function () { return resolve(null); }, function () { return resolve(null); });
         });
     }

@@ -131,11 +131,11 @@ export function compile(param: string) {
                     if (cp.translationDb.addedMessage) {
                         cp.translationDirty = true;
                     }
-                }).then(() => {
-                    process.send({ command: "compileOk", param: { hasTests: cp.project.mainSpec != null } });
-                }, (err: Error) => {
-                    process.send({ command: "compileFailed", param: err.toString() });
                 });
+            }).then(() => {
+                process.send({ command: "compileOk", param: { hasTests: cp.project.mainSpec != null } });
+            }, (err: Error) => {
+                process.send({ command: "compileFailed", param: err.toString() });
             }).then(() => resolve(null), () => resolve(null));
         });
     } else {

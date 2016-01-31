@@ -138,8 +138,9 @@ var CompilationCache = (function () {
             project.options.sourceMap = true;
         }
         if (project.totalBundle || project.fastBundle) {
-            if (project.options.module != ts.ModuleKind.CommonJS)
-                throw Error('Bundle works only with CommonJS modules');
+            if (project.options.module != ts.ModuleKind.CommonJS) {
+                return Promise.reject(Error('Bundle works only with CommonJS modules'));
+            }
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
@@ -313,7 +314,7 @@ var CompilationCache = (function () {
                 for (var j = 0; j < info.assets.length; j++) {
                     var sa = info.assets[j];
                     if (sa.name == null) {
-                        console.log(info.sourceFile.fileName + ":" + (info.sourceFile.getLineAndCharacterOfPosition(sa.callExpression.pos).line + 1) + " Warning: Used b.asset without compile time constant - ignoring");
+                        project.logCallback(info.sourceFile.fileName + ":" + (info.sourceFile.getLineAndCharacterOfPosition(sa.callExpression.pos).line + 1) + " Warning: Used b.asset without compile time constant - ignoring");
                         continue;
                     }
                     var newname = sa.name;
@@ -433,7 +434,7 @@ var CompilationCache = (function () {
                                 }).then(function (v) {
                                     project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
                                 }, function (e) {
-                                    console.log(e);
+                                    project.logCallback(e.toString());
                                 });
                             }
                         }
@@ -509,8 +510,10 @@ var CompilationCache = (function () {
                             if (jsout !== undefined)
                                 return jsout.toString('utf-8');
                             var cached = that.getCachedFileContent(name, project.dir);
-                            if (cached.textTime == null)
-                                throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                            if (cached.textTime == null) {
+                                project.logCallback('Cannot read content of ' + name + ' in dir ' + project.dir);
+                                return "";
+                            }
                             return cached.text;
                         },
                         writeBundle: function (content) {
@@ -546,7 +549,8 @@ var CompilationCache = (function () {
     CompilationCache.prototype.copyToProjectIfChanged = function (name, dir, outName, write) {
         var cache = this.getCachedFileExistence(name, dir);
         if (cache.curTime == null) {
-            throw Error('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+            this.logCallback('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+            return;
         }
         if (cache.outputTime == null || cache.curTime > cache.outputTime) {
             var buf = fs.readFileSync(cache.fullName);
@@ -727,8 +731,10 @@ var CompilationCache = (function () {
         function resolveModuleName(moduleName, containingFile) {
             if (moduleName.substr(0, 1) === '.') {
                 var res_1 = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
-                if (res_1 == null)
-                    throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+                if (res_1 == null) {
+                    project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
+                    return null;
+                }
                 return { resolvedFileName: res_1 };
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
@@ -756,14 +762,17 @@ var CompilationCache = (function () {
                 main = JSON.parse(cached.text).main;
             }
             catch (e) {
-                throw new Error('Cannot parse ' + pkgname + ' ' + e);
+                project.logCallback('Cannot parse ' + pkgname + ' ' + e);
+                return null;
             }
             if (main == null)
                 main = 'index.js';
             var mainWithoutExt = main.replace(/\.[^/.]+$/, "");
             var res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
-            if (res == null)
-                throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+            if (res == null) {
+                project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
+                return null;
+            }
             return { resolvedFileName: res };
         }
         return {

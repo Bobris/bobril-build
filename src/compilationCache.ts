@@ -236,8 +236,9 @@ export class CompilationCache {
             project.options.sourceMap = true;
         }
         if (project.totalBundle || project.fastBundle) {
-            if (project.options.module != ts.ModuleKind.CommonJS)
-                throw Error('Bundle works only with CommonJS modules');
+            if (project.options.module != ts.ModuleKind.CommonJS) {
+                return Promise.reject(Error('Bundle works only with CommonJS modules'));
+            }
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = (filename: string, content: Buffer) => {
@@ -411,7 +412,7 @@ export class CompilationCache {
                 for (let j = 0; j < info.assets.length; j++) {
                     let sa = info.assets[j];
                     if (sa.name == null) {
-                        console.log(info.sourceFile.fileName + ":" + (info.sourceFile.getLineAndCharacterOfPosition(sa.callExpression.pos).line + 1) + " Warning: Used b.asset without compile time constant - ignoring")
+                        project.logCallback(info.sourceFile.fileName + ":" + (info.sourceFile.getLineAndCharacterOfPosition(sa.callExpression.pos).line + 1) + " Warning: Used b.asset without compile time constant - ignoring")
                         continue;
                     }
                     let newname = sa.name;
@@ -527,7 +528,7 @@ export class CompilationCache {
                                 }).then(v => {
                                     project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
                                 }, (e) => {
-                                    console.log(e);
+                                    project.logCallback(e.toString());
                                 });
                             }
                         }
@@ -599,8 +600,10 @@ export class CompilationCache {
                             if (jsout !== undefined)
                                 return jsout.toString('utf-8');
                             let cached = that.getCachedFileContent(name, project.dir);
-                            if (cached.textTime == null)
-                                throw Error('Cannot read content of ' + name + ' in dir ' + project.dir);
+                            if (cached.textTime == null) {
+                                project.logCallback('Cannot read content of ' + name + ' in dir ' + project.dir);                                
+                                return "";
+                            }
                             return cached.text;
                         },
                         writeBundle(content: string) {
@@ -637,7 +640,8 @@ export class CompilationCache {
     public copyToProjectIfChanged(name: string, dir: string, outName: string, write: (filename: string, content: Buffer) => void) {
         let cache = this.getCachedFileExistence(name, dir);
         if (cache.curTime == null) {
-            throw Error('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+            this.logCallback('Cannot copy ' + name + ' from ' + dir + ' to ' + outName + ' because it does not exist');
+            return;
         }
         if (cache.outputTime == null || cache.curTime > cache.outputTime) {
             let buf = fs.readFileSync(cache.fullName);
@@ -829,7 +833,10 @@ export class CompilationCache {
             if (moduleName.substr(0, 1) === '.') {
                 let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
                 if (res == null)
-                    throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+                    {
+                        project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
+                        return null;
+                    }
                 return { resolvedFileName: res };
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
@@ -857,13 +864,17 @@ export class CompilationCache {
             try {
                 main = JSON.parse(cached.text).main;
             } catch (e) {
-                throw new Error('Cannot parse ' + pkgname + ' ' + e);
+                project.logCallback('Cannot parse ' + pkgname + ' ' + e);
+                return null;
             }
             if (main == null) main = 'index.js';
             let mainWithoutExt = main.replace(/\.[^/.]+$/, "");
             let res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
             if (res == null)
-                throw new Error('Module ' + moduleName + ' is not valid in ' + containingFile);
+            {
+                project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
+                return null;
+            }
             return { resolvedFileName: res };
         }
 

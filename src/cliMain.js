@@ -270,7 +270,8 @@ function startWatchProcess(notify) {
             notify(param);
         },
         exit: function () {
-            console.log("watch process exited");
+            console.log("watch process exited restarting");
+            startWatchProcess(notify);
         }
     });
 }

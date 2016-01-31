@@ -285,7 +285,8 @@ function startWatchProcess(notify: (allFiles: { [dir: string]: string[] }) => vo
             notify(param);
         },
         exit() {
-            console.log("watch process exited");
+            console.log("watch process exited restarting");
+            startWatchProcess(notify);
         }
     });
 }
