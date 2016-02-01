@@ -560,7 +560,7 @@ export function bundle(project: IBundleProject) {
             }
             return true;
         } });
-        bundleAst = bundleAst.transform(compressor);
+        bundleAst = <uglify.IAstToplevel>bundleAst.transform(compressor);
         // in future to make another pass with removing function calls with empty body
     }
     if (project.mangle !== false) {
