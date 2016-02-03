@@ -11,7 +11,7 @@
 		"bobril-build-override-const-lib-sample": {
 		    "cbool": true,
 			"cnum": 42,
-			"cstr": "I can customize constants imported from module"
+			"cstr": "#44ff44"
 		}
 	}
   },

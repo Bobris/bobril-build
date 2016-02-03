@@ -306,16 +306,25 @@ export function rememberCallExpression(callExpression: ts.CallExpression): () =>
     };
 }
 
+// ts.getSymbol crashes without setting parent, but if you set parent it will ignore content in emit, that's why there is also "Harder" version 
 export function applyOverrides(overrides: { varDecl: ts.VariableDeclaration, value: string | number | boolean }[]): () => void {
     let restore: { varDecl: ts.VariableDeclaration, initializer: ts.Expression }[] = [];
     for (let i = 0; i < overrides.length; i++) {
         let o = overrides[i];
         restore.push({ varDecl: o.varDecl, initializer: o.varDecl.initializer });
         o.varDecl.initializer = <ts.Expression>createNodeFromValue(o.value);
+        o.varDecl.initializer.parent = o.varDecl;
     }
     return () => {
         for (let i = restore.length; i-- > 0;) {
             restore[i].varDecl.initializer = restore[i].initializer;
         }
+    }
+}
+
+export function applyOverridesHarder(overrides: { varDecl: ts.VariableDeclaration, value: string | number | boolean }[]) {
+    for (let i = 0; i < overrides.length; i++) {
+        let o = overrides[i];
+        o.varDecl.initializer = <ts.Expression>createNodeFromValue(o.value);
     }
 }

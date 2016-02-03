@@ -203,6 +203,11 @@ var CompilationCache = (function () {
                 reportDiagnostics(diagnostics_2, project.logCallback);
             }
         }
+        var restorationMemory = [];
+        this.overrides = Object.create(null);
+        if (project.constantOverrides) {
+            this.prepareToApplyConstantOverride(project, program);
+        }
         var bundleCache = null;
         if (project.spriteMerge) {
             if (project.imgBundleCache) {
@@ -220,6 +225,10 @@ var CompilationCache = (function () {
             var src = sourceFiles[i];
             if (/\.d\.ts$/i.test(src.fileName))
                 continue; // skip searching default lib
+            var overr = this.overrides[src.fileName];
+            if (overr != null) {
+                restorationMemory.push(BuildHelpers.applyOverrides(overr));
+            }
             var cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
@@ -262,16 +271,15 @@ var CompilationCache = (function () {
         for (var i = 0; i < sourceFiles.length; i++) {
             this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
         }
-        this.overrides = Object.create(null);
-        if (project.constantOverrides) {
-            this.prepareToApplyConstantOverride(project, program);
-        }
         prom = prom.then(function () {
             for (var i = 0; i < sourceFiles.length; i++) {
-                var restorationMemory = [];
                 var src = sourceFiles[i];
                 if (/\.d\.ts$/i.test(src.fileName))
                     continue; // skip searching default lib
+                var overr = _this.overrides[src.fileName];
+                if (overr != null) {
+                    BuildHelpers.applyOverridesHarder(overr);
+                }
                 var cached = _this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
                     && !project.spriteMerge) {
@@ -280,10 +288,6 @@ var CompilationCache = (function () {
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
                     _this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     _this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
-                }
-                var overr = _this.overrides[src.fileName];
-                if (overr != null) {
-                    restorationMemory.push(BuildHelpers.applyOverrides(overr));
                 }
                 var info = cached.info;
                 if (project.spriteMerge) {
@@ -306,7 +310,7 @@ var CompilationCache = (function () {
                         var si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        var newname = pathUtils.join(project.dir, si.name);
+                        var newname = si.name;
                         project.depAssetFiles[si.name] = shortenFileNameAddPath(newname);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setArgument(si.callExpression, 0, newname);

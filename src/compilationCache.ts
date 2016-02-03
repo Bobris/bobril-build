@@ -217,8 +217,8 @@ export class CompilationCache {
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
-        
-        let ndir = project.dir.toLowerCase()+"/";
+
+        let ndir = project.dir.toLowerCase() + "/";
         function relativizeToProject(p: string): string {
             let nfn = p.toLowerCase();
             if (nfn.substr(0, ndir.length) === ndir) {
@@ -300,6 +300,13 @@ export class CompilationCache {
             }
         }
 
+        let restorationMemory = <(() => void)[]>[];
+
+        this.overrides = Object.create(null);
+        if (project.constantOverrides) {
+            this.prepareToApplyConstantOverride(project, program);
+        }
+
         var bundleCache: imgCache.ImgBundleCache = null;
         if (project.spriteMerge) {
             if (project.imgBundleCache) {
@@ -316,6 +323,10 @@ export class CompilationCache {
         for (let i = 0; i < sourceFiles.length; i++) {
             let src = sourceFiles[i];
             if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib
+            let overr = this.overrides[src.fileName];
+            if (overr != null) {
+                restorationMemory.push(BuildHelpers.applyOverrides(overr));
+            }
             let cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
@@ -361,16 +372,14 @@ export class CompilationCache {
             this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
         }
 
-        this.overrides = Object.create(null);
-        if (project.constantOverrides) {
-            this.prepareToApplyConstantOverride(project, program);
-        }
-
         prom = prom.then(() => {
             for (let i = 0; i < sourceFiles.length; i++) {
-                let restorationMemory = <(() => void)[]>[];
                 let src = sourceFiles[i];
                 if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib
+                let overr = this.overrides[src.fileName];
+                if (overr != null) {
+                    BuildHelpers.applyOverridesHarder(overr);
+                }
                 let cached = this.getCachedFileExistence(src.fileName, project.dir);
                 if (cached.maxTimeForDeps !== null && cached.outputTime != null && cached.maxTimeForDeps <= cached.outputTime
                     && !project.spriteMerge) {
@@ -379,10 +388,6 @@ export class CompilationCache {
                 if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
                     this.addDepJsToOutput(project, bobrilDepsHelpers.numeralJsPath(), bobrilDepsHelpers.numeralJsFiles()[0]);
                     this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
-                }
-                let overr = this.overrides[src.fileName];
-                if (overr != null) {
-                    restorationMemory.push(BuildHelpers.applyOverrides(overr));
                 }
                 let info = cached.info;
                 if (project.spriteMerge) {
@@ -404,7 +409,7 @@ export class CompilationCache {
                         let si = info.sprites[j];
                         if (si.name == null)
                             continue;
-                        let newname = pathUtils.join(project.dir, si.name);
+                        let newname = si.name;
                         project.depAssetFiles[si.name] = shortenFileNameAddPath(newname);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setArgument(si.callExpression, 0, newname);
@@ -602,7 +607,7 @@ export class CompilationCache {
                                 return jsout.toString('utf-8');
                             let cached = that.getCachedFileContent(name, project.dir);
                             if (cached.textTime == null) {
-                                project.logCallback('Cannot read content of ' + name + ' in dir ' + project.dir);                                
+                                project.logCallback('Cannot read content of ' + name + ' in dir ' + project.dir);
                                 return "";
                             }
                             return cached.text;
@@ -833,11 +838,10 @@ export class CompilationCache {
         function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModule {
             if (moduleName.substr(0, 1) === '.') {
                 let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
-                if (res == null)
-                    {
-                        project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
-                        return null;
-                    }
+                if (res == null) {
+                    project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
+                    return null;
+                }
                 return { resolvedFileName: res };
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
@@ -871,8 +875,7 @@ export class CompilationCache {
             if (main == null) main = 'index.js';
             let mainWithoutExt = main.replace(/\.[^/.]+$/, "");
             let res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
-            if (res == null)
-            {
+            if (res == null) {
                 project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
                 return null;
             }

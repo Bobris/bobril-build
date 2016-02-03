@@ -274,12 +274,14 @@ function rememberCallExpression(callExpression) {
     };
 }
 exports.rememberCallExpression = rememberCallExpression;
+// ts.getSymbol crashes without setting parent, but if you set parent it will ignore content in emit, that's why there is also "Harder" version 
 function applyOverrides(overrides) {
     var restore = [];
     for (var i = 0; i < overrides.length; i++) {
         var o = overrides[i];
         restore.push({ varDecl: o.varDecl, initializer: o.varDecl.initializer });
         o.varDecl.initializer = createNodeFromValue(o.value);
+        o.varDecl.initializer.parent = o.varDecl;
     }
     return function () {
         for (var i = restore.length; i-- > 0;) {
@@ -288,3 +290,10 @@ function applyOverrides(overrides) {
     };
 }
 exports.applyOverrides = applyOverrides;
+function applyOverridesHarder(overrides) {
+    for (var i = 0; i < overrides.length; i++) {
+        var o = overrides[i];
+        o.varDecl.initializer = createNodeFromValue(o.value);
+    }
+}
+exports.applyOverridesHarder = applyOverridesHarder;
