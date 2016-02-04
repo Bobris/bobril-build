@@ -397,12 +397,22 @@ export class CompilationCache {
                             continue;
                         let bundlePos = bundleCache.query(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
-                        BuildHelpers.setMethod(si.callExpression, "spriteb");
-                        BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
-                        BuildHelpers.setArgument(si.callExpression, 1, bundlePos.height);
-                        BuildHelpers.setArgument(si.callExpression, 2, bundlePos.x);
-                        BuildHelpers.setArgument(si.callExpression, 3, bundlePos.y);
-                        BuildHelpers.setArgumentCount(si.callExpression, 4);
+                        if (si.callExpression.arguments.length >= 2 && si.color === undefined) {
+                            BuildHelpers.setMethod(si.callExpression, "spritebc");
+                            BuildHelpers.setArgumentAst(si.callExpression, 0, si.callExpression.arguments[1]);
+                            BuildHelpers.setArgument(si.callExpression, 1, bundlePos.width);
+                            BuildHelpers.setArgument(si.callExpression, 2, bundlePos.height);
+                            BuildHelpers.setArgument(si.callExpression, 3, bundlePos.x);
+                            BuildHelpers.setArgument(si.callExpression, 4, bundlePos.y);
+                            BuildHelpers.setArgumentCount(si.callExpression, 5);
+                        } else {
+                            BuildHelpers.setMethod(si.callExpression, "spriteb");
+                            BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
+                            BuildHelpers.setArgument(si.callExpression, 1, bundlePos.height);
+                            BuildHelpers.setArgument(si.callExpression, 2, bundlePos.x);
+                            BuildHelpers.setArgument(si.callExpression, 3, bundlePos.y);
+                            BuildHelpers.setArgumentCount(si.callExpression, 4);
+                        }
                     }
                 } else {
                     for (let j = 0; j < info.sprites.length; j++) {
