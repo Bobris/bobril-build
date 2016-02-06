@@ -56,6 +56,7 @@ var DynamicBuffer = (function () {
     };
     return DynamicBuffer;
 }());
+exports.DynamicBuffer = DynamicBuffer;
 function countNL(b) {
     var res = 0;
     for (var i = 0; i < b.length; i++) {

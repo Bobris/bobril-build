@@ -20,7 +20,7 @@ charToInteger.fill(255);
     integerToChar[i] = char.charCodeAt(0);
 });
 
-class DynamicBuffer {
+export class DynamicBuffer {
     buffer: Buffer;
     size: number;
 

@@ -34,7 +34,11 @@ function reportDiagnostics(diagnostics, logcb: (text: string) => void) {
 }
 
 function isCssByExt(name: string): boolean {
-    return /\.(css)$/ig.test(name);
+    return /\.css$/ig.test(name);
+}
+
+function isJsByExt(name: string): boolean {
+    return /\.js$/ig.test(name);
 }
 
 export interface ICacheFile {
@@ -432,7 +436,7 @@ export class CompilationCache {
                         continue;
                     }
                     let newname = sa.name;
-                    if (!isCssByExt(newname)) {
+                    if (!isCssByExt(newname) && !isJsByExt(newname)) {
                         newname = shortenFileNameAddPath(newname);
                     }
                     project.depAssetFiles[sa.name] = newname;
@@ -586,7 +590,7 @@ export class CompilationCache {
                             project.logCallback('Error: Dependent ' + assetFile + ' failed to load');
                             continue;
                         }
-                        if (!isCssByExt(assetFile)) {
+                        if (!isCssByExt(assetFile) && !isJsByExt(assetFile)) {
                             project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
                         }
                         cached.outputTime = cached.textTime;
@@ -623,13 +627,34 @@ export class CompilationCache {
                             return cached.text;
                         },
                         writeBundle(content: string) {
-                            project.writeFileCallback(project.bundleJs, new Buffer(content));
+                            let res = new sourceMap.DynamicBuffer(); 
+                            for (let i = 0; i < assetFiles.length; i++) {
+                                let assetFile = assetFiles[i];
+                                if (!isJsByExt(assetFile)) continue;
+                                let cached = that.getCachedFileExistence(assetFile, project.dir);
+                                if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
+                                    continue;
+                                }
+                                res.addBuffer(cached.buffer);
+                                res.addByte(10);
+                            }
+                            res.addString(content);
+                            project.writeFileCallback(project.bundleJs, res.toBuffer());
                         }
                     };
                     bundler.bundle(bp);
                 } else if (project.fastBundle) {
                     let allFilesInJsBundle = Object.keys(project.commonJsTemp);
                     let res = new sourceMap.SourceMapBuilder();
+                    for (let i = 0; i < assetFiles.length; i++) {
+                        let assetFile = assetFiles[i];
+                        if (!isJsByExt(assetFile)) continue;
+                        let cached = this.getCachedFileExistence(assetFile, project.dir);
+                        if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
+                            continue;
+                        }
+                        res.addSource(cached.buffer);
+                    }
                     for (let i = 0; i < allFilesInJsBundle.length; i++) {
                         let name = allFilesInJsBundle[i];
                         let nameWOExt = name.replace(/\.js$/i, '');

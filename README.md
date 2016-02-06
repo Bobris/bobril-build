@@ -21,7 +21,7 @@ For development of bobril-build check out this project and start:
 	npm link
 	gulp
 
-Use bobril.asset(path) to include asset to compilation. *.css files are automatically linked in index.html head.
+Use bobril.asset(path) to include asset to compilation. *.css files are automatically linked in index.html head. *.js files are automatically prepended to bundle.js.
 
 It reads `package.json` and understands:
 
