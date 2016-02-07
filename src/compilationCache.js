@@ -269,6 +269,12 @@ var CompilationCache = (function () {
                 });
             }
         }
+        project.htmlHeadExpanded = (project.htmlHead || "").replace(/<<[^>]+>>/g, function (s) {
+            s = s.substr(2, s.length - 4);
+            var shortened = shortenFileNameAddPath(s);
+            project.depAssetFiles[s] = shortened;
+            return shortened;
+        });
         // Recalculate fresness of all files
         this.clearMaxTimeForDeps();
         for (var i = 0; i < sourceFiles.length; i++) {

@@ -54,7 +54,7 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
     }
     return `<html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}
@@ -89,7 +89,7 @@ function g11nInit(project: compilationCache.IProject): string {
 
 export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
-    return `<html><head><meta charset="utf-8"><title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
+    return `<html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
 }
 
 export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
@@ -104,7 +104,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
     }
     return `<html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}
@@ -135,7 +135,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
     let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${v.replace(/\.tsx?$/i, "")}');`).join(' ');
     return `<html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}

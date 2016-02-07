@@ -189,6 +189,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }
+    if (typeof bobrilSection.head === 'string') {
+        project.htmlHead = bobrilSection.head;
+    }
     if (typeof bobrilSection.dir === 'string') {
         project.outputDir = bobrilSection.dir;
     }

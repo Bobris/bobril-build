@@ -6,7 +6,8 @@
     "main": "src/app.ts"
   },
   "bobril": {
-    "title": "Bobril Hello World"
+    "title": "Bobril Hello World",
+	"head": "<link rel=\"icon\" href=\"<<src/light.png>>\">"
   },
   "author": "",
   "license": "",

@@ -86,6 +86,7 @@ export interface IProject {
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
     compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
+    htmlHead?: string;
     constantOverrides?: { [module: string]: { [exportName: string]: string | number | boolean } };
     specGlob?: string;
     mainJsFile?: string;
@@ -114,6 +115,7 @@ export interface IProject {
     commonJsTemp?: { [name: string]: Buffer };
     depAssetFiles?: { [name: string]: string };
     sourceMapMap?: { [namewoext: string]: sourceMap.SourceMap };
+    htmlHeadExpanded?: string;
     cssToLink?: string[];
     bundleJs?: string;
     bundlePng?: string;
@@ -369,6 +371,13 @@ export class CompilationCache {
                 });
             }
         }
+
+        project.htmlHeadExpanded = (project.htmlHead || "").replace(/<<[^>]+>>/g, (s) => {
+            s = s.substr(2, s.length - 4);
+            let shortened = shortenFileNameAddPath(s);
+            project.depAssetFiles[s] = shortened;
+            return shortened;
+        });
 
         // Recalculate fresness of all files
         this.clearMaxTimeForDeps();
@@ -627,7 +636,7 @@ export class CompilationCache {
                             return cached.text;
                         },
                         writeBundle(content: string) {
-                            let res = new sourceMap.DynamicBuffer(); 
+                            let res = new sourceMap.DynamicBuffer();
                             for (let i = 0; i < assetFiles.length; i++) {
                                 let assetFile = assetFiles[i];
                                 if (!isJsByExt(assetFile)) continue;
