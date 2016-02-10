@@ -159,10 +159,10 @@ function check(name, order, stack, project, resolveRequire) {
             throw new Error('Cannot open ' + name);
         }
         var fileContent = project.readContent(name);
-        var ast = uglify.parse(fileContent);
+        var ast_1 = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
-        ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        ast_1.figure_out_scope();
+        cached = { name: name, astTime: mod, ast: ast_1, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         var pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
             pureMatch.forEach(function (m) {
@@ -173,19 +173,19 @@ function check(name, order, stack, project, resolveRequire) {
                 });
             });
         }
-        if (ast.globals.has('module')) {
+        if (ast_1.globals.has('module')) {
             cached.difficult = true;
-            ast = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; }).call(window);");
-            cached.ast = ast;
+            ast_1 = uglify.parse("(function(){ var exports = {}; var module = { exports: exports }; " + project.readContent(name) + "\n__bbe['" + name + "']=module.exports; }).call(window);");
+            cached.ast = ast_1;
             project.cache[name.toLowerCase()] = cached;
             order.push(cached);
             return;
         }
-        var exportsSymbol = ast.globals['exports'];
-        var unshiftToBody = [];
-        var selfExpNames = Object.create(null);
-        var varDecls = null;
-        var walker = new uglify.TreeWalker(function (node, descend) {
+        var exportsSymbol = ast_1.globals['exports'];
+        var unshiftToBody_1 = [];
+        var selfExpNames_1 = Object.create(null);
+        var varDecls_1 = null;
+        var walker_1 = new uglify.TreeWalker(function (node, descend) {
             if (node instanceof uglify.AST_Block) {
                 descend();
                 node.body = node.body.map(function (stm) {
@@ -197,12 +197,12 @@ function check(name, order, stack, project, resolveRequire) {
                         var pea = paternAssignExports(stmbody);
                         if (pea) {
                             var newName = '__export_' + pea.name;
-                            if (selfExpNames[pea.name] && stmbody instanceof uglify.AST_Assign) {
-                                stmbody.left = new uglify.AST_SymbolRef({ name: newName, thedef: ast.variables.get(newName) });
+                            if (selfExpNames_1[pea.name] && stmbody instanceof uglify.AST_Assign) {
+                                stmbody.left = new uglify.AST_SymbolRef({ name: newName, thedef: ast_1.variables.get(newName) });
                                 return stm;
                             }
                             if (isConstantSymbolRef(pea.value)) {
-                                selfExpNames[pea.name] = true;
+                                selfExpNames_1[pea.name] = true;
                                 var def = pea.value.thedef;
                                 def.bbAlwaysClone = true;
                                 cached.selfexports.push({ name: pea.name, node: pea.value });
@@ -215,10 +215,10 @@ function check(name, order, stack, project, resolveRequire) {
                                     new uglify.AST_VarDef({ name: new uglify.AST_SymbolVar({ name: newName, start: stmbody.start, end: stmbody.end }), value: pea.value })
                                 ]
                             });
-                            var symb = ast.def_variable(newVar.definitions[0].name);
+                            var symb = ast_1.def_variable(newVar.definitions[0].name);
                             symb.undeclared = false;
                             symb.bbAlwaysClone = true;
-                            selfExpNames[pea.name] = true;
+                            selfExpNames_1[pea.name] = true;
                             cached.selfexports.push({ name: pea.name, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return newVar;
                         }
@@ -258,28 +258,28 @@ function check(name, order, stack, project, resolveRequire) {
                 return true;
             }
             if (node instanceof uglify.AST_PropAccess) {
-                if (!(walker.parent() instanceof uglify.AST_Assign) || !(walker.parent(1) instanceof uglify.AST_SimpleStatement)) {
+                if (!(walker_1.parent() instanceof uglify.AST_Assign) || !(walker_1.parent(1) instanceof uglify.AST_SimpleStatement)) {
                     var propAccess = node;
                     if (isExports(propAccess.expression)) {
                         var key = matchPropKey(propAccess);
                         if (key) {
-                            if (selfExpNames[key])
+                            if (selfExpNames_1[key])
                                 return false;
                             var newName = '__export_' + key;
-                            if (varDecls == null) {
+                            if (varDecls_1 == null) {
                                 var vartop = uglify.parse('var a;');
                                 var stm = vartop.body[0];
-                                unshiftToBody.push(stm);
-                                varDecls = stm.definitions;
-                                varDecls.pop();
+                                unshiftToBody_1.push(stm);
+                                varDecls_1 = stm.definitions;
+                                varDecls_1.pop();
                             }
                             var symbVar = new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end });
-                            varDecls.push(new uglify.AST_VarDef({ name: symbVar, value: null }));
-                            ast.def_variable(symbVar);
-                            var symb = ast.def_variable(symbVar);
+                            varDecls_1.push(new uglify.AST_VarDef({ name: symbVar, value: null }));
+                            ast_1.def_variable(symbVar);
+                            var symb = ast_1.def_variable(symbVar);
                             symb.undeclared = false;
                             symb.bbAlwaysClone = true;
-                            selfExpNames[key] = true;
+                            selfExpNames_1[key] = true;
                             cached.selfexports.push({ name: key, node: new uglify.AST_SymbolRef({ name: newName, thedef: symb }) });
                             return false;
                         }
@@ -292,7 +292,7 @@ function check(name, order, stack, project, resolveRequire) {
                 if (reqr == null) {
                     throw new Error('require("' + req + '") not found from ' + name);
                 }
-                var parent_1 = walker.parent();
+                var parent_1 = walker_1.parent();
                 if (parent_1 instanceof uglify.AST_VarDef) {
                     var vardef = parent_1;
                     vardef.name.thedef.bbRequirePath = reqr;
@@ -302,8 +302,8 @@ function check(name, order, stack, project, resolveRequire) {
             }
             return false;
         });
-        ast.walk(walker);
-        (_a = ast.body).unshift.apply(_a, unshiftToBody);
+        ast_1.walk(walker_1);
+        (_a = ast_1.body).unshift.apply(_a, unshiftToBody_1);
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach(function (r) {
@@ -438,14 +438,14 @@ function bundle(project) {
                     var p = transformer.parent();
                     if (p instanceof uglify.AST_VarDef && p.name === symb)
                         return undefined;
-                    var properties = [];
-                    var extf = project.cache[reqPath.toLowerCase()];
-                    if (!extf.difficult) {
-                        var keys = Object.keys(extf.exports);
+                    var properties_1 = [];
+                    var extf_1 = project.cache[reqPath.toLowerCase()];
+                    if (!extf_1.difficult) {
+                        var keys = Object.keys(extf_1.exports);
                         keys.forEach(function (key) {
-                            properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key: key, value: renameSymbol(extf.exports[key]) }));
+                            properties_1.push(new uglify.AST_ObjectKeyVal({ quote: "'", key: key, value: renameSymbol(extf_1.exports[key]) }));
                         });
-                        return new uglify.AST_Object({ properties: properties });
+                        return new uglify.AST_Object({ properties: properties_1 });
                     }
                 }
             }
@@ -538,17 +538,17 @@ function bundle(project) {
     }
     if (project.mangle !== false) {
         bundleAst.figure_out_scope();
-        var rootScope = null;
+        var rootScope_1 = null;
         var walker = new uglify.TreeWalker(function (n) {
             if (n !== bundleAst && n instanceof uglify.AST_Scope) {
-                rootScope = n;
+                rootScope_1 = n;
                 return true;
             }
             return false;
         });
         bundleAst.walk(walker);
-        rootScope.uses_eval = false;
-        rootScope.uses_with = false;
+        rootScope_1.uses_eval = false;
+        rootScope_1.uses_with = false;
         bundleAst.mangle_names();
     }
     var os = uglify.OutputStream({

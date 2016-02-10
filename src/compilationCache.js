@@ -513,28 +513,28 @@ var CompilationCache = (function () {
                     }
                 }
                 if (project.totalBundle) {
-                    var mainJsList = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
-                    var that = _this;
+                    var mainJsList_1 = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
+                    var that_1 = _this;
                     var bp = {
                         compress: project.compress,
                         mangle: project.mangle,
                         beautify: project.beautify,
                         defines: project.defines,
-                        getMainFiles: function () { return mainJsList; },
+                        getMainFiles: function () { return mainJsList_1; },
                         checkFileModification: function (name) {
                             if (/\.js$/i.test(name)) {
-                                var cached_1 = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                                var cached_1 = that_1.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
                                 if (cached_1.curTime != null)
                                     return cached_1.outputTime;
                             }
-                            var cached = that.getCachedFileContent(name, project.dir);
+                            var cached = that_1.getCachedFileContent(name, project.dir);
                             return cached.curTime;
                         },
                         readContent: function (name) {
                             var jsout = project.commonJsTemp[name.toLowerCase()];
                             if (jsout !== undefined)
                                 return jsout.toString('utf-8');
-                            var cached = that.getCachedFileContent(name, project.dir);
+                            var cached = that_1.getCachedFileContent(name, project.dir);
                             if (cached.textTime == null) {
                                 project.logCallback('Cannot read content of ' + name + ' in dir ' + project.dir);
                                 return "";
@@ -547,7 +547,7 @@ var CompilationCache = (function () {
                                 var assetFile = assetFiles[i];
                                 if (!isJsByExt(assetFile))
                                     continue;
-                                var cached = that.getCachedFileExistence(assetFile, project.dir);
+                                var cached = that_1.getCachedFileExistence(assetFile, project.dir);
                                 if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
                                     continue;
                                 }
@@ -640,7 +640,7 @@ var CompilationCache = (function () {
     };
     CompilationCache.prototype.updateCachedFileContent = function (cached) {
         if (cached.textTime !== cached.curTime) {
-            var text;
+            var text = void 0;
             try {
                 text = fs.readFileSync(cached.fullName).toString();
             }
@@ -654,7 +654,7 @@ var CompilationCache = (function () {
     };
     CompilationCache.prototype.updateCachedFileBuffer = function (cached) {
         if (cached.bufferTime !== cached.curTime) {
-            var buffer;
+            var buffer = void 0;
             try {
                 buffer = fs.readFileSync(cached.fullName);
             }
@@ -727,7 +727,7 @@ var CompilationCache = (function () {
             if (isDefLib) {
                 if (cc.defLibPrecompiled)
                     return cc.defLibPrecompiled;
-                var text;
+                var text = void 0;
                 try {
                     text = fs.readFileSync(cc.defaultLibFilename).toString();
                 }

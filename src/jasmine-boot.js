@@ -13,48 +13,48 @@
     var bbTest = window.parent.bbTest;
     if (bbTest) {
         env.catchExceptions(true);
-        var perfnow = null;
+        var perfnow_1 = null;
         if (window.performance) {
-            var p = window.performance;
-            perfnow = p.now || p.webkitNow || p.msNow || p.mozNow;
-            if (perfnow) {
-                var realnow = perfnow;
-                perfnow = function () { return realnow.call(p); };
+            var p_1 = window.performance;
+            perfnow_1 = p_1.now || p_1.webkitNow || p_1.msNow || p_1.mozNow;
+            if (perfnow_1) {
+                var realnow_1 = perfnow_1;
+                perfnow_1 = function () { return realnow_1.call(p_1); };
             }
         }
-        if (!perfnow) {
+        if (!perfnow_1) {
             if (Date.now) {
-                perfnow = Date.now;
+                perfnow_1 = Date.now;
             }
             else {
-                perfnow = (function () { return +(new Date()); });
+                perfnow_1 = (function () { return +(new Date()); });
             }
         }
-        var stack = [];
-        var specStart = 0;
-        var totalStart = 0;
+        var stack_1 = [];
+        var specStart_1 = 0;
+        var totalStart_1 = 0;
         env.addReporter({
             jasmineStarted: function (suiteInfo) {
                 bbTest("wholeStart", suiteInfo.totalSpecsDefined);
-                totalStart = perfnow();
+                totalStart_1 = perfnow_1();
             },
             jasmineDone: function () {
-                bbTest("wholeDone", perfnow() - totalStart);
+                bbTest("wholeDone", perfnow_1() - totalStart_1);
             },
             suiteStarted: function (result) {
                 bbTest("suiteStart", result.description);
-                stack.push(perfnow());
+                stack_1.push(perfnow_1());
             },
             specStarted: function (result) {
                 bbTest("testStart", result.description);
-                specStart = perfnow();
+                specStart_1 = perfnow_1();
             },
             specDone: function (result) {
-                var duration = perfnow() - specStart;
+                var duration = perfnow_1() - specStart_1;
                 bbTest("testDone", { name: result.description, duration: duration, status: result.status, failures: result.failedExpectations });
             },
             suiteDone: function (result) {
-                var duration = perfnow() - stack.pop();
+                var duration = perfnow_1() - stack_1.pop();
                 bbTest("suiteDone", { name: result.description, duration: duration, status: result.status, failures: result.failedExpectations });
             }
         });
