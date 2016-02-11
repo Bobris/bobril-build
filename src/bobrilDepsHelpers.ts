@@ -52,7 +52,7 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile;
     }
-    return `<html>
+    return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
@@ -89,7 +89,7 @@ function g11nInit(project: compilationCache.IProject): string {
 
 export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
-    return `<html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
 }
 
 export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
@@ -102,7 +102,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
     }
-    return `<html>
+    return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
@@ -133,7 +133,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
         moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
     }
     let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${v.replace(/\.tsx?$/i, "")}');`).join(' ');
-    return `<html>
+    return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
