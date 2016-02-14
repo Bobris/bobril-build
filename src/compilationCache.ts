@@ -234,7 +234,7 @@ export class CompilationCache {
         }
 
         let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ?
-            (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(pathUtils.join(path.dirname(s), t));
+            (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t));
         this.resolvePathStringLiteral = ((nn: ts.StringLiteral) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             project.options.sourceMap = false;

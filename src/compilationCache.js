@@ -132,7 +132,7 @@ var CompilationCache = (function () {
             return p;
         }
         var resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ?
-            function (p, s, t) { return relativizeToProject(pathUtils.join(p, t)); } : function (p, s, t) { return relativizeToProject(pathUtils.join(path.dirname(s), t)); };
+            function (p, s, t) { return relativizeToProject(pathUtils.join(p, t)); } : function (p, s, t) { return relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t)); };
         this.resolvePathStringLiteral = (function (nn) { return resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text); });
         if (project.totalBundle) {
             project.options.sourceMap = false;
