@@ -141,10 +141,12 @@ var CompilationCache = (function () {
         else if (project.fastBundle) {
             project.options.sourceMap = true;
         }
+        project.options.allowJs = true;
+        // workaround for TypeScript does not want to overwrite JS files.
+        project.options.outDir = "virtual/";
+        project.options.rootDir = project.dir;
         if (project.totalBundle || project.fastBundle) {
-            if (project.options.module != ts.ModuleKind.CommonJS) {
-                return Promise.reject(Error('Bundle works only with CommonJS modules'));
-            }
+            project.options.module = ts.ModuleKind.CommonJS;
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
             jsWriteFileCallback = function (filename, content) {
@@ -714,7 +716,7 @@ var CompilationCache = (function () {
         var currentDirectory = project.dir;
         var logCallback = project.logCallback;
         function getCanonicalFileName(fileName) {
-            return ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
+            return fileName.toLowerCase();
         }
         function getCachedFileExistence(fileName) {
             return cc.getCachedFileExistence(fileName, currentDirectory);
@@ -751,6 +753,7 @@ var CompilationCache = (function () {
         }
         function writeFile(fileName, data, writeByteOrderMark, onError) {
             try {
+                fileName = fileName.replace(new RegExp("^" + project.options.outDir), "");
                 writeFileCallback(fileName, new Buffer(data));
             }
             catch (e) {
@@ -773,6 +776,11 @@ var CompilationCache = (function () {
                     project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule: internalModule };
                     return nameWithoutExtension + '.d.ts';
                 }
+            }
+            cached = getCachedFileExistence(nameWithoutExtension + '.js');
+            if (cached.curTime !== null) {
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
+                return nameWithoutExtension + '.js';
             }
             return null;
         }

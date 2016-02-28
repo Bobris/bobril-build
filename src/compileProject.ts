@@ -165,10 +165,20 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
             return false;
         }
         project.mainIndex = main;
+    } else if (typeof packageObj.main === 'string') {
+        let main = packageObj.main;
+        let mainTs = main.replace(/\.js$/, '.ts'); 
+        if (fs.existsSync(path.join(project.dir, mainTs))) {
+            project.mainIndex = mainTs;
+        } else if (fs.existsSync(path.join(project.dir, main))) {
+            project.mainIndex = main;
+        } else {
+            project.logCallback('Package.json main is ' + main + ', but this file does not exists even with ts extension. Aborting.');
+            return false;
+        }
     } else {
         project.logCallback('Package.json missing typescript.main. Autodetecting main ts file.');
         if (!autodetectMainTs(project)) return false;
-        if (project == null) return null;
     }
     let deps = Object.keys(packageObj.dependencies || {});
     project.localize = deps.some(v => v === "bobril-g11n");
