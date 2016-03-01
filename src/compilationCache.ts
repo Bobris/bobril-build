@@ -90,7 +90,9 @@ export interface IProject {
     constantOverrides?: { [module: string]: { [exportName: string]: string | number | boolean } };
     specGlob?: string;
     mainJsFile?: string;
-    // dafalt false
+    // forbid support JSX - it will be slightly faster
+    noBobrilJsx?: boolean;
+    // default false
     localize?: boolean;
     // default false
     fastBundle?: boolean;
@@ -241,6 +243,10 @@ export class CompilationCache {
             project.options.removeComments = false;
         } else if (project.fastBundle) {
             project.options.sourceMap = true;
+        }
+        if (!project.noBobrilJsx) {
+            project.options.jsx = ts.JsxEmit.React;
+            project.options.reactNamespace = "b";
         }
         project.options.allowJs = true;
         // workaround for TypeScript does not want to overwrite JS files.
@@ -609,7 +615,7 @@ export class CompilationCache {
                 }
 
                 if (project.totalBundle) {
-                    let mainJsList = (<string[]>mainList).map((nn) => nn.replace(/\.ts$/, '.js'));
+                    let mainJsList = (<string[]>mainList).filter((nn)=>!/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
                     let that = this;
                     let bp: bundler.IBundleProject = {
                         compress: project.compress,
@@ -620,6 +626,9 @@ export class CompilationCache {
                         checkFileModification(name: string): number {
                             if (/\.js$/i.test(name)) {
                                 let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                                if (cached.curTime != null)
+                                    return cached.outputTime;
+                                cached = that.getCachedFileContent(name.replace(/\.js$/i, '.tsx'), project.dir);
                                 if (cached.curTime != null)
                                     return cached.outputTime;
                             }

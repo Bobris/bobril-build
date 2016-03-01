@@ -14,6 +14,7 @@ export function createProjectFromDir(path: string): bb.IProject {
         main: null,
         mainIndex: null,
         mainJsFile: null,
+        noBobrilJsx: false,
         specGlob: "**/*@(.s|S)pec.ts?(x)",
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
@@ -21,7 +22,7 @@ export function createProjectFromDir(path: string): bb.IProject {
 }
 
 function autodetectMainTs(project: bb.IProject): boolean {
-    const searchMainTsList = ['index.ts', 'app.ts', 'lib.ts', 'src/index.ts', 'src/app.ts', 'src/lib.ts'];
+    const searchMainTsList = ['index.ts', 'app.ts', 'lib.ts', 'src/index.ts', 'src/app.ts', 'src/lib.ts', 'app.tsx'];
     project.mainAutoDetected = true;
     for (let i = 0; i < searchMainTsList.length; i++) {
         let fn = searchMainTsList[i];
@@ -37,27 +38,41 @@ function autodetectMainTs(project: bb.IProject): boolean {
 
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 
-function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
+function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:boolean) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
-    let tscfg = null;
+    let tscfg:any = {};
+    let origtscfg = {};
     if (fs.existsSync(tscfgPath)) {
         try {
-            tscfg = JSON.parse(fs.readFileSync(tscfgPath, 'utf8'));
+            let content =fs.readFileSync(tscfgPath, 'utf8');
+            tscfg = JSON.parse(content);
+            origtscfg = JSON.parse(content);
         } catch (e) {
             console.log("Failed to read and parse " + tscfgPath, e);
         }
     }
     if (tscfg == null) {
-        tscfg = {
-            compilerOptions: {
+        tscfg = {};
+    }
+    if (tscfg.compilerOptions==null) {
+        tscfg.compilerOptions={};
+    }
+    Object.assign(tscfg.compilerOptions,{
                 target: "es6",
                 module: "commonjs",
-                moduleResolution: "node"
-            },
-            compileOnSave: false,
-            files: []
-        };
+                moduleResolution: "node"});
+    if (jsx) {
+        Object.assign(tscfg.compilerOptions,{
+            jsx: "react",
+            reactNamespace: "b"
+        });
+    } else {
+        if (tscfg.compilerOptions.reactNamespace==="b") {
+            tscfg.compilerOptions.jsx = undefined;
+            tscfg.compilerOptions.reactNamespace = undefined;
+        }
     }
+    tscfg.compileOnSave = false;
     let fileList = [];
     let dirs = Object.keys(files);
     for (let i = 0; i < dirs.length; i++) {
@@ -73,10 +88,13 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }) {
         for (let j = 0; j < f.length; j++)
             fileList.push(d + f[j]);
     }
+    if (jsx) {
+        fileList.push("node_modules/bobril/jsx.d.ts");
+    }
     fileList.sort();
-    if (deepEqual(tscfg.files, fileList))
-        return;
     tscfg.files = fileList;
+    if (deepEqual(tscfg, origtscfg))
+        return;
     try {
         fs.writeFileSync(tscfgPath, JSON.stringify(tscfg, null, 4));
     } catch (e) {
@@ -119,17 +137,23 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
         } else {
             project.mainSpec = null;
         }
-        runUpdateTsConfig(project.dir, allFiles);
+        runUpdateTsConfig(project.dir, allFiles, !project.noBobrilJsx);
     }
     if (project.mainExample != null) {
         project.main = [project.mainIndex, project.mainExample];
-        project.mainJsFile = project.mainExample.replace(/\.ts$/, '.js');
+        project.mainJsFile = project.mainExample.replace(/\.tsx?$/, '.js');
     } else {
         project.main = [project.mainIndex];
-        project.mainJsFile = project.mainIndex.replace(/\.ts$/, '.js');
+        project.mainJsFile = project.mainIndex.replace(/\.tsx?$/, '.js');
     }
     if (project.mainSpec) {
         (<string[]>project.main).push(...project.mainSpec);
+    }
+    if (!project.noBobrilJsx) {
+        const bobriljsxdts="node_modules/bobril/jsx.d.ts";
+        if (fs.existsSync(path.join(project.dir, bobriljsxdts))) {
+            (<string[]>project.main).push(bobriljsxdts);
+        }
     }
 }
 
@@ -195,6 +219,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     }
     if (typeof bobrilSection.dir === 'string') {
         project.outputDir = bobrilSection.dir;
+    }
+    if (typeof bobrilSection.jsx === 'boolean') {
+        project.noBobrilJsx = !bobrilSection.jsx;
     }
     if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
         project.resourcesAreRelativeToProjectDir = bobrilSection.resourcesAreRelativeToProjectDir;

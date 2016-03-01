@@ -200,6 +200,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
             throw new Error('Cannot open ' + name);
         }
         let fileContent = project.readContent(name);
+        console.log(fileContent);
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();

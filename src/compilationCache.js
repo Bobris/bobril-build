@@ -141,6 +141,10 @@ var CompilationCache = (function () {
         else if (project.fastBundle) {
             project.options.sourceMap = true;
         }
+        if (!project.noBobrilJsx) {
+            project.options.jsx = ts.JsxEmit.React;
+            project.options.reactNamespace = "b";
+        }
         project.options.allowJs = true;
         // workaround for TypeScript does not want to overwrite JS files.
         project.options.outDir = "virtual/";
@@ -515,7 +519,7 @@ var CompilationCache = (function () {
                     }
                 }
                 if (project.totalBundle) {
-                    var mainJsList_1 = mainList.map(function (nn) { return nn.replace(/\.ts$/, '.js'); });
+                    var mainJsList_1 = mainList.filter(function (nn) { return !/\.d\.ts$/.test(nn); }).map(function (nn) { return nn.replace(/\.tsx?$/, '.js'); });
                     var that_1 = _this;
                     var bp = {
                         compress: project.compress,
@@ -526,6 +530,9 @@ var CompilationCache = (function () {
                         checkFileModification: function (name) {
                             if (/\.js$/i.test(name)) {
                                 var cached_1 = that_1.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
+                                if (cached_1.curTime != null)
+                                    return cached_1.outputTime;
+                                cached_1 = that_1.getCachedFileContent(name.replace(/\.js$/i, '.tsx'), project.dir);
                                 if (cached_1.curTime != null)
                                     return cached_1.outputTime;
                             }
