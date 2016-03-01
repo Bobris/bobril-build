@@ -27,7 +27,8 @@ const Button = b.createVirtualComponent<IData>({
 const buttonStyle = b.styleDef(
     {
         fontSize: "2em",
-        transition: "all 0.5s"
+        transition: "all 0.5s",
+        margin: 5
     },
     {
         "hover":
@@ -40,8 +41,9 @@ const buttonStyle = b.styleDef(
 let counter = 0;
 b.init(() => <div>
     <h1>Tsx sample</h1>
-    <p>Jsx in bobril is good fast prototyping.Do not use it in performance critical code for now.</p>
+    <p>Jsx in bobril is good fast prototyping. Do not use it in performance critical code for now.</p>
     <Button style={buttonStyle} onAction={() => { counter++; b.invalidate() } }>
         Click to increment {counter}
-    </Button>
+    </Button><br/>
+    <Button><b>Bold</b> <i>italic</i></Button>
 </div >);

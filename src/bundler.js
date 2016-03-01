@@ -159,7 +159,7 @@ function check(name, order, stack, project, resolveRequire) {
             throw new Error('Cannot open ' + name);
         }
         var fileContent = project.readContent(name);
-        console.log(fileContent);
+        //console.log(fileContent);
         var ast_1 = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast_1.figure_out_scope();
