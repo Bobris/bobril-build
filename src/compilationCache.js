@@ -14,33 +14,66 @@ var sourceMap = require('./sourceMap');
 var simpleHelpers = require('./simpleHelpers');
 var cssHelpers = require('./cssHelpers');
 var shortenFileName_1 = require('./shortenFileName');
-function reportDiagnostic(diagnostic, logcb) {
-    var output = '';
-    if (diagnostic.file) {
-        var loc = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-        output += diagnostic.file.fileName + "(" + (loc.line + 1) + "," + (loc.character + 1) + "): ";
-    }
-    var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
-    output += category + " TS" + diagnostic.code + ": " + ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine) + ts.sys.newLine;
-    logcb(output);
-}
-function reportDiagnostics(diagnostics, logcb) {
-    for (var i = 0; i < diagnostics.length; i++) {
-        reportDiagnostic(diagnostics[i], logcb);
-    }
-}
 function isCssByExt(name) {
     return /\.css$/ig.test(name);
 }
 function isJsByExt(name) {
     return /\.js$/ig.test(name);
 }
+var CompilationResult = (function () {
+    function CompilationResult() {
+        this.errors = 0;
+        this.warnings = 0;
+        this.messages = [];
+    }
+    CompilationResult.prototype.clearFileName = function (fn) {
+        for (var i = 0; i < this.messages.length; i++) {
+            var m = this.messages[i];
+            if (m.fileName === fn) {
+                if (m.isError)
+                    this.errors--;
+                else
+                    this.warnings--;
+                this.messages.splice(i, 1);
+                i--;
+            }
+        }
+    };
+    CompilationResult.prototype.addMessage = function (isError, fn, text, pos) {
+        if (isError)
+            this.errors++;
+        else
+            this.warnings++;
+        this.messages.push({ fileName: fn, isError: isError, text: text, pos: pos });
+    };
+    return CompilationResult;
+}());
+exports.CompilationResult = CompilationResult;
 var CompilationCache = (function () {
     function CompilationCache() {
         this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
+        this.compilationResult = new CompilationResult();
     }
+    CompilationCache.prototype.reportDiagnostic = function (diagnostic, logcb) {
+        var output = '';
+        var text = "TS" + diagnostic.code + ": " + ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+        if (diagnostic.file) {
+            var locStart = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+            var locEnd = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start + diagnostic.length);
+            output += diagnostic.file.fileName + "(" + (locStart.line + 1) + "," + (locStart.character + 1) + "): ";
+            this.compilationResult.addMessage(diagnostic.category === ts.DiagnosticCategory.Error, diagnostic.file.fileName, text, [locStart.line + 1, locStart.character + 1, locEnd.line + 1, locEnd.character + 1]);
+        }
+        var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
+        output += category + " " + text + ts.sys.newLine;
+        logcb(output);
+    };
+    CompilationCache.prototype.reportDiagnostics = function (diagnostics, logcb) {
+        for (var i = 0; i < diagnostics.length; i++) {
+            this.reportDiagnostic(diagnostics[i], logcb);
+        }
+    };
     CompilationCache.prototype.clearFileTimeModifications = function () {
         var cacheFiles = this.cacheFiles;
         var names = Object.keys(cacheFiles);
@@ -115,6 +148,9 @@ var CompilationCache = (function () {
                 }
             }
         }
+    };
+    CompilationCache.prototype.getResult = function () {
+        return this.compilationResult;
     };
     CompilationCache.prototype.compile = function (project) {
         var _this = this;
@@ -203,13 +239,18 @@ var CompilationCache = (function () {
         }
         var program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         var diagnostics = program.getSyntacticDiagnostics();
-        reportDiagnostics(diagnostics, project.logCallback);
+        var sourceFiles = program.getSourceFiles();
+        for (var i = 0; i < sourceFiles.length; i++) {
+            var src = sourceFiles[i];
+            this.compilationResult.clearFileName(src.fileName);
+        }
+        this.reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
             var diagnostics_1 = program.getGlobalDiagnostics();
-            reportDiagnostics(diagnostics_1, project.logCallback);
+            this.reportDiagnostics(diagnostics_1, project.logCallback);
             if (diagnostics_1.length === 0) {
                 var diagnostics_2 = program.getSemanticDiagnostics();
-                reportDiagnostics(diagnostics_2, project.logCallback);
+                this.reportDiagnostics(diagnostics_2, project.logCallback);
             }
         }
         var restorationMemory = [];
@@ -229,7 +270,6 @@ var CompilationCache = (function () {
             bundleCache.clear(false);
         }
         var tc = program.getTypeChecker();
-        var sourceFiles = program.getSourceFiles();
         for (var i = 0; i < sourceFiles.length; i++) {
             var src = sourceFiles[i];
             if (/\.d\.ts$/i.test(src.fileName))
@@ -257,7 +297,7 @@ var CompilationCache = (function () {
                 for (var j = 0; j < trs.length; j++) {
                     var message = trs[j].message;
                     if (typeof message === 'string')
-                        project.textForTranslationReporter(trs[j]);
+                        project.textForTranslationReporter(trs[j], this.compilationResult);
                 }
             }
         }

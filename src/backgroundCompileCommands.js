@@ -127,7 +127,8 @@ function compile(param) {
                     }
                 });
             }).then(function () {
-                process.send({ command: "compileOk", param: { hasTests: cp.project.mainSpec != null } });
+                var result = cp.compilationCache.getResult();
+                process.send({ command: "compileOk", param: { errors: result.errors, warnings: result.warnings, hasTests: cp.project.mainSpec != null } });
             }, function (err) {
                 process.send({ command: "compileFailed", param: err.toString() });
             }).then(function () { return resolve(null); }, function () { return resolve(null); });

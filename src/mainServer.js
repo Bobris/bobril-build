@@ -36,6 +36,18 @@ var MainServer = (function () {
         var testState = this.testSvr.getState();
         cl.connection.send("testUpdated", testState);
     };
+    MainServer.prototype.sendAll = function (message, data) {
+        var kids = Object.keys(this.clients);
+        for (var i = 0; i < kids.length; i++) {
+            this.clients[kids[i]].connection.send(message, data);
+        }
+    };
+    MainServer.prototype.nofifyCompilationStarted = function () {
+        this.sendAll("compilationStarted");
+    };
+    MainServer.prototype.notifyCompilationFinished = function (errors, warnings, time) {
+        this.sendAll("compilationFinished", { errors: errors, warnings: warnings, time: time });
+    };
     MainServer.prototype.notifyTestSvrChange = function () {
         var kids = Object.keys(this.clients);
         if (kids.length == 0)

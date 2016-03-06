@@ -93,6 +93,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             let id = <ts.ImportDeclaration>n;
             let moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
+            if (moduleSymbol == null) return;
             let fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
             let bindings = id.importClause.namedBindings;
             if (/bobril\/index\.ts/i.test(fn)) {
@@ -106,6 +107,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
             let ed = <ts.ExportDeclaration>n;
             if (ed.moduleSpecifier) {
                 let moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
+                if (moduleSymbol == null) return;
                 result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
         }

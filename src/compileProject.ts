@@ -237,14 +237,16 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
 }
 
 export function defineTranslationReporter(project: bb.IProject) {
-    project.textForTranslationReporter = (message: bb.TranslationMessage) => {
+    project.textForTranslationReporter = (message: bb.TranslationMessage, compilationResult: bb.CompilationResult) => {
         if (typeof message.message != "string") return;
         if (!message.withParams) return;
         let ast = g11n.parse(<string>message.message);
         if (typeof ast === "object" && ast.type === "error") {
             let sc = message.callExpression.getSourceFile();
-            let pos = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
-            project.logCallback("Error: " + sc.fileName + "(" + (pos.line + 1) + "/" + (pos.character + 1) + ") " + ast.msg);
+            let posStart = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
+            let posEnd = ts.getLineAndCharacterOfPosition(sc, message.callExpression.end);
+            compilationResult.addMessage(true, sc.fileName, "BB0001: "+ast.msg, [posStart.line+1, posStart.character+1,posEnd.line+1,posEnd.character+1]);
+            project.logCallback("Error: " + sc.fileName + "(" + (posStart.line + 1) + "/" + (posStart.character + 1) + ") " + ast.msg);
         }
     };
 }

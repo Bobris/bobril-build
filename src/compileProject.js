@@ -249,7 +249,7 @@ function refreshProjectFromPackageJson(project, allFiles) {
 }
 exports.refreshProjectFromPackageJson = refreshProjectFromPackageJson;
 function defineTranslationReporter(project) {
-    project.textForTranslationReporter = function (message) {
+    project.textForTranslationReporter = function (message, compilationResult) {
         if (typeof message.message != "string")
             return;
         if (!message.withParams)
@@ -257,8 +257,10 @@ function defineTranslationReporter(project) {
         var ast = g11n.parse(message.message);
         if (typeof ast === "object" && ast.type === "error") {
             var sc = message.callExpression.getSourceFile();
-            var pos = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
-            project.logCallback("Error: " + sc.fileName + "(" + (pos.line + 1) + "/" + (pos.character + 1) + ") " + ast.msg);
+            var posStart = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
+            var posEnd = ts.getLineAndCharacterOfPosition(sc, message.callExpression.end);
+            compilationResult.addMessage(true, sc.fileName, "BB0001: " + ast.msg, [posStart.line + 1, posStart.character + 1, posEnd.line + 1, posEnd.character + 1]);
+            project.logCallback("Error: " + sc.fileName + "(" + (posStart.line + 1) + "/" + (posStart.character + 1) + ") " + ast.msg);
         }
     };
 }

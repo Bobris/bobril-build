@@ -48,6 +48,21 @@ export class MainServer {
         cl.connection.send("testUpdated", testState);
     }
 
+    private sendAll(message:string, data?: any) {
+        let kids = Object.keys(this.clients);
+        for (let i = 0; i < kids.length; i++) {
+            this.clients[kids[i]].connection.send(message, data);
+        }
+    }
+
+    nofifyCompilationStarted() {
+        this.sendAll("compilationStarted");
+    }
+     
+    notifyCompilationFinished(errors: number, warnings: number, time: number) {
+        this.sendAll("compilationFinished", { errors, warnings, time });
+    }
+    
     private notifyTestSvrChange() {
         let kids = Object.keys(this.clients);
         if (kids.length == 0) return;

@@ -42,6 +42,8 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         if (n.kind === ts.SyntaxKind.ImportDeclaration) {
             var id = n;
             var moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
+            if (moduleSymbol == null)
+                return;
             var fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
             var bindings = id.importClause.namedBindings;
             if (/bobril\/index\.ts/i.test(fn)) {
@@ -56,6 +58,8 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             var ed = n;
             if (ed.moduleSpecifier) {
                 var moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
+                if (moduleSymbol == null)
+                    return;
                 result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
         }

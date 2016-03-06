@@ -16,23 +16,6 @@ import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
 import { createFileNameShortener } from './shortenFileName';
 
-function reportDiagnostic(diagnostic, logcb: (text: string) => void) {
-    var output = '';
-    if (diagnostic.file) {
-        var loc = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-        output += `${diagnostic.file.fileName}(${loc.line + 1},${loc.character + 1}): `;
-    }
-    var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
-    output += `${category} TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine)}${ts.sys.newLine}`;
-    logcb(output);
-}
-
-function reportDiagnostics(diagnostics, logcb: (text: string) => void) {
-    for (var i = 0; i < diagnostics.length; i++) {
-        reportDiagnostic(diagnostics[i], logcb);
-    }
-}
-
 function isCssByExt(name: string): boolean {
     return /\.css$/ig.test(name);
 }
@@ -83,7 +66,7 @@ export interface IProject {
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
     resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
-    textForTranslationReporter?: (message: BuildHelpers.TranslationMessage) => void;
+    textForTranslationReporter?: (message: BuildHelpers.TranslationMessage, compilationResult: CompilationResult) => void;
     compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
     htmlHead?: string;
@@ -123,11 +106,48 @@ export interface IProject {
     bundlePng?: string;
 }
 
+export interface CompilationResultMessage {
+    fileName: string;
+    isError: boolean;
+    text: string;
+    /// startLine, startCol, endLine, endCol all one based
+    pos: [number, number, number, number];
+}
+
+export class CompilationResult {
+    errors: number;
+    warnings: number;
+    messages: CompilationResultMessage[];
+
+    constructor() {
+        this.errors = 0;
+        this.warnings = 0;
+        this.messages = [];
+    }
+
+    clearFileName(fn: string) {
+        for (let i = 0; i < this.messages.length; i++) {
+            let m = this.messages[i];
+            if (m.fileName === fn) {
+                if (m.isError) this.errors--; else this.warnings--;
+                this.messages.splice(i, 1);
+                i--;
+            }
+        }
+    }
+
+    addMessage(isError: boolean, fn: string, text: string, pos: [number, number, number, number]) {
+        if (isError) this.errors++; else this.warnings++;
+        this.messages.push({ fileName: fn, isError, text, pos });
+    }
+}
+
 export class CompilationCache {
     constructor() {
         this.defaultLibFilename = path.join(path.dirname(require.resolve('typescript').replace(/\\/g, '/')), 'lib.es6.d.ts');
         this.cacheFiles = Object.create(null);
         this.imageCache = new imgCache.ImgCache();
+        this.compilationResult = new CompilationResult();
     }
 
     resolvePathStringLiteral: (nn: ts.StringLiteral) => string;
@@ -136,6 +156,28 @@ export class CompilationCache {
     defLibPrecompiled: ts.SourceFile;
     imageCache: imgCache.ImgCache;
     logCallback: (text: string) => void;
+    compilationResult: CompilationResult;
+
+    reportDiagnostic(diagnostic: ts.Diagnostic, logcb: (text: string) => void) {
+        var output = '';
+        let text = `TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`;
+        if (diagnostic.file) {
+            var locStart = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+            var locEnd = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start + diagnostic.length);
+            output += `${diagnostic.file.fileName}(${locStart.line + 1},${locStart.character + 1}): `;
+            this.compilationResult.addMessage(diagnostic.category === ts.DiagnosticCategory.Error,
+                diagnostic.file.fileName, text, [locStart.line + 1, locStart.character + 1, locEnd.line + 1, locEnd.character + 1]);
+        }
+        var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
+        output += `${category} ${text}${ts.sys.newLine}`;
+        logcb(output);
+    }
+
+    reportDiagnostics(diagnostics: ts.Diagnostic[], logcb: (text: string) => void) {
+        for (var i = 0; i < diagnostics.length; i++) {
+            this.reportDiagnostic(diagnostics[i], logcb);
+        }
+    }
 
     clearFileTimeModifications() {
         let cacheFiles = this.cacheFiles;
@@ -217,6 +259,10 @@ export class CompilationCache {
                 }
             }
         }
+    }
+
+    getResult(): CompilationResult {
+        return this.compilationResult;
     }
 
     compile(project: IProject): Promise<any> {
@@ -302,15 +348,21 @@ export class CompilationCache {
         if (mainChangedList.length === 0) {
             return Promise.resolve(null);
         }
+        
         let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
-        reportDiagnostics(diagnostics, project.logCallback);
+        let sourceFiles = program.getSourceFiles();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            let src = sourceFiles[i];
+            this.compilationResult.clearFileName(src.fileName);
+        }
+        this.reportDiagnostics(diagnostics, project.logCallback);
         if (diagnostics.length === 0) {
             let diagnostics = program.getGlobalDiagnostics();
-            reportDiagnostics(diagnostics, project.logCallback);
+            this.reportDiagnostics(diagnostics, project.logCallback);
             if (diagnostics.length === 0) {
                 let diagnostics = program.getSemanticDiagnostics();
-                reportDiagnostics(diagnostics, project.logCallback);
+                this.reportDiagnostics(diagnostics, project.logCallback);
             }
         }
 
@@ -333,7 +385,6 @@ export class CompilationCache {
         }
 
         let tc = program.getTypeChecker();
-        let sourceFiles = program.getSourceFiles();
         for (let i = 0; i < sourceFiles.length; i++) {
             let src = sourceFiles[i];
             if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib
@@ -360,7 +411,7 @@ export class CompilationCache {
                 for (let j = 0; j < trs.length; j++) {
                     let message = trs[j].message;
                     if (typeof message === 'string')
-                        project.textForTranslationReporter(trs[j]);
+                        project.textForTranslationReporter(trs[j],this.compilationResult);
                 }
             }
         }
@@ -615,7 +666,7 @@ export class CompilationCache {
                 }
 
                 if (project.totalBundle) {
-                    let mainJsList = (<string[]>mainList).filter((nn)=>!/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
+                    let mainJsList = (<string[]>mainList).filter((nn) => !/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
                     let that = this;
                     let bp: bundler.IBundleProject = {
                         compress: project.compress,
@@ -864,7 +915,7 @@ export class CompilationCache {
 
         function writeFile(fileName, data, writeByteOrderMark, onError) {
             try {
-                fileName = fileName.replace(new RegExp("^"+project.options.outDir),"");
+                fileName = fileName.replace(new RegExp("^" + project.options.outDir), "");
                 writeFileCallback(fileName, new Buffer(data));
             } catch (e) {
                 if (onError) {

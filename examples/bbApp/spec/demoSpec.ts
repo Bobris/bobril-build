@@ -7,7 +7,7 @@ describe("Demo suite", () => {
         expect(1 + 2).toBe(result);
     }
 
-    it("even more stuff works", () => {
+    it("even more stuff works or doesn't", () => {
         exampleFailure(4);
     });
 });

@@ -342,6 +342,7 @@ function startCompileProcess(path: string): ICompileProcess {
             return new Promise((resolve, reject) => {
                 let startCompilation = Date.now();
                 let writtenFileCount = 0;
+                mainServer.nofifyCompilationStarted();
                 compileProcess("compile", myId, {
                     log(param) { console.log(param) },
                     write({ name, buffer }) {
@@ -350,12 +351,16 @@ function startCompileProcess(path: string): ICompileProcess {
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk(param) {
-                        console.log("Compiled in " + (Date.now() - startCompilation).toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
+                        let time =Date.now() - startCompilation;
+                        mainServer.notifyCompilationFinished(param.errors, param.warnings, time);
+                        console.log("Compiled in " + time.toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
                         resolve(param);
                     },
                     compileFailed(param) {
+                        let time =Date.now() - startCompilation;
+                        mainServer.notifyCompilationFinished(-1, 0, time);
                         console.log(param);
-                        console.log("Compilation failed in " + (Date.now() - startCompilation).toFixed(0) + "ms");
+                        console.log("Compilation failed in " + time.toFixed(0) + "ms");
                         reject(param);
                     }
                 });
