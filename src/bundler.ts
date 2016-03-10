@@ -427,7 +427,7 @@ export function bundle(project: IBundleProject) {
                 node.variables.each((symb, name) => {
                     if ((<ISymbolDef>symb).bbRequirePath) return;
                     let newname = (<ISymbolDef>symb).bbRename || name;
-                    if ((topLevelNames[name] !== undefined) && (/^__export_/.test(name) || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
+                    if ((topLevelNames[name] !== undefined) && (node === f.ast || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
                         let index = 0;
                         do {
                             index++;

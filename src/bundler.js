@@ -391,7 +391,7 @@ function bundle(project) {
                     if (symb.bbRequirePath)
                         return;
                     var newname = symb.bbRename || name;
-                    if ((topLevelNames[name] !== undefined) && (/^__export_/.test(name) || node.enclosed.some(function (enclSymb) { return topLevelNames[enclSymb.name] !== undefined; }))) {
+                    if ((topLevelNames[name] !== undefined) && (node === f.ast || node.enclosed.some(function (enclSymb) { return topLevelNames[enclSymb.name] !== undefined; }))) {
                         var index = 0;
                         do {
                             index++;
