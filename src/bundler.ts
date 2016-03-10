@@ -127,7 +127,8 @@ function constParamOfCallRequire(node: uglify.IAstNode): string {
 function isExports(node: uglify.IAstNode) {
     if (node instanceof uglify.AST_SymbolRef) {
         let thedef = (<uglify.IAstSymbolRef>node).thedef;
-        if (thedef.global && thedef.undeclared && thedef.name === 'exports')
+        // thedef could be null because it could be already renamed/cloned ref
+        if (thedef && thedef.global && thedef.undeclared && thedef.name === 'exports')
             return true;
     }
     return false;
@@ -317,7 +318,6 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             varDecls.push(
                                 new uglify.AST_VarDef({ name: symbVar, value: null })
                             );
-                            ast.def_variable(symbVar)
                             let symb = ast.def_variable(symbVar);
                             symb.undeclared = false;
                             (<ISymbolDef>symb).bbAlwaysClone = true;

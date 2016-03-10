@@ -88,7 +88,8 @@ function constParamOfCallRequire(node) {
 function isExports(node) {
     if (node instanceof uglify.AST_SymbolRef) {
         var thedef = node.thedef;
-        if (thedef.global && thedef.undeclared && thedef.name === 'exports')
+        // thedef could be null because it could be already renamed/cloned ref
+        if (thedef && thedef.global && thedef.undeclared && thedef.name === 'exports')
             return true;
     }
     return false;
@@ -276,7 +277,6 @@ function check(name, order, stack, project, resolveRequire) {
                             }
                             var symbVar = new uglify.AST_SymbolVar({ name: newName, start: node.start, end: node.end });
                             varDecls_1.push(new uglify.AST_VarDef({ name: symbVar, value: null }));
-                            ast_1.def_variable(symbVar);
                             var symb = ast_1.def_variable(symbVar);
                             symb.undeclared = false;
                             symb.bbAlwaysClone = true;
