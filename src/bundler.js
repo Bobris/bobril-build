@@ -384,6 +384,7 @@ function bundle(project) {
             suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0)
             suffix = suffix.substr(0, suffix.indexOf('.'));
+        suffix = suffix.replace(/-/, "_");
         var walker = new uglify.TreeWalker(function (node, descend) {
             if (node instanceof uglify.AST_Scope) {
                 node.variables.each(function (symb, name) {
