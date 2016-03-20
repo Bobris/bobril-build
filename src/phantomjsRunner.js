@@ -13,7 +13,10 @@ function startPhantomJs(args) {
             phantomjs.kill();
         }
     };
-    var phantomPath = require('phantomjs').path;
+    var phantomPath = require('phantomjs-prebuilt').path;
+    if (phantomPath == null) {
+        rejectFinish(new Error("PhantomJs path is null"));
+    }
     try {
         phantomjs = child_process.spawn(phantomPath, args);
         phantomjs.stdout.pipe(process.stdout);

@@ -9,7 +9,7 @@ export function processCss(source:string,from:string,callback:(url:string, from:
 }
 
 export function concatenateCssAndMinify(inputs: { source:string, from:string }[],callback:(url:string, from:string)=>string):Promise<any> {
-    return Promise.all(inputs.map((i)=>{
+    return Promise.all<any>(inputs.map((i)=>{
         return processCss(i.source,i.from,callback);
     })).then(results => {
         let r = results[0].root;

@@ -5,7 +5,7 @@ export interface IProcess {
     kill(): void;
 }
 
-export function startPhantomJs(args:string[]): IProcess {
+export function startPhantomJs(args: string[]): IProcess {
     let resolveFinish: (code: number) => void;
     let rejectFinish: (err: Error) => void;
     let phantomjs: child_process.ChildProcess;
@@ -19,8 +19,10 @@ export function startPhantomJs(args:string[]): IProcess {
         }
     }
 
-    const phantomPath = require('phantomjs').path;
-
+    const phantomPath = require('phantomjs-prebuilt').path;
+    if (phantomPath == null) {
+        rejectFinish(new Error("PhantomJs path is null"));
+    }
     try {
         phantomjs = child_process.spawn(phantomPath, args);
         phantomjs.stdout.pipe(process.stdout);

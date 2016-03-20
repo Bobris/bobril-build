@@ -19,7 +19,7 @@
     "make-plural": "^3.0.0",
     "moment": "^2.10.6",
     "numeral": "^1.5.3",
-    "phantomjs": "*",
+    "phantomjs-prebuilt": "*",
     "png-async": "^0.9.0",
     "postcss": "^5.0.14",
     "postcss-url": "^5.0.2",
