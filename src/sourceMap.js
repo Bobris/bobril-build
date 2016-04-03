@@ -1,62 +1,6 @@
 "use strict";
+var dynamicBuffer_1 = require("./dynamicBuffer");
 var emptySourceMap = { version: 3, sources: [], mappings: new Buffer(0) };
-var charToInteger = new Buffer(256);
-var integerToChar = new Buffer(64);
-charToInteger.fill(255);
-'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split('').forEach(function (char, i) {
-    charToInteger[char.charCodeAt(0)] = i;
-    integerToChar[i] = char.charCodeAt(0);
-});
-var DynamicBuffer = (function () {
-    function DynamicBuffer() {
-        this.buffer = new Buffer(512);
-        this.size = 0;
-    }
-    DynamicBuffer.prototype.ensureCapacity = function (capacity) {
-        if (this.buffer.length >= capacity)
-            return;
-        var oldBuffer = this.buffer;
-        this.buffer = new Buffer(Math.max(oldBuffer.length * 2, capacity));
-        oldBuffer.copy(this.buffer);
-    };
-    DynamicBuffer.prototype.addByte = function (b) {
-        this.ensureCapacity(this.size + 1);
-        this.buffer[this.size++] = b;
-    };
-    DynamicBuffer.prototype.addVLQ = function (num) {
-        var clamped;
-        if (num < 0) {
-            num = (-num << 1) | 1;
-        }
-        else {
-            num <<= 1;
-        }
-        do {
-            clamped = num & 31;
-            num >>= 5;
-            if (num > 0) {
-                clamped |= 32;
-            }
-            this.addByte(integerToChar[clamped]);
-        } while (num > 0);
-    };
-    DynamicBuffer.prototype.addString = function (s) {
-        var l = Buffer.byteLength(s);
-        this.ensureCapacity(this.size + l);
-        this.buffer.write(s, this.size);
-        this.size += l;
-    };
-    DynamicBuffer.prototype.addBuffer = function (b) {
-        this.ensureCapacity(this.size + b.length);
-        b.copy(this.buffer, this.size);
-        this.size += b.length;
-    };
-    DynamicBuffer.prototype.toBuffer = function () {
-        return this.buffer.slice(0, this.size);
-    };
-    return DynamicBuffer;
-}());
-exports.DynamicBuffer = DynamicBuffer;
 function countNL(b) {
     var res = 0;
     for (var i = 0; i < b.length; i++) {
@@ -70,8 +14,8 @@ var SourceMapBuilder = (function () {
         this.lastSourceIndex = 0;
         this.lastSourceLine = 0;
         this.lastSourceCol = 0;
-        this.outputBuffer = new DynamicBuffer();
-        this.mappings = new DynamicBuffer();
+        this.outputBuffer = new dynamicBuffer_1.DynamicBuffer();
+        this.mappings = new dynamicBuffer_1.DynamicBuffer();
         this.sources = [];
     }
     SourceMapBuilder.prototype.addLine = function (text) {
@@ -141,7 +85,7 @@ var SourceMapBuilder = (function () {
                 this.mappings.addByte(44);
             }
             else {
-                b = charToInteger[b];
+                b = dynamicBuffer_1.charToInteger[b];
                 if (b === 255)
                     throw new Error("Invalid sourceMap");
                 value += (b & 31) << shift;
@@ -254,7 +198,7 @@ function findPosition(sourceMap, line, col) {
             commit();
         }
         else {
-            b = charToInteger[b];
+            b = dynamicBuffer_1.charToInteger[b];
             if (b === 255)
                 throw new Error("Invalid sourceMap");
             value += (b & 31) << shift;
