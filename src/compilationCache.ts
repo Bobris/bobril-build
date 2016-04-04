@@ -12,6 +12,7 @@ import * as bobrilDepsHelpers from './bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
 import * as bundler from './bundler';
 import * as sourceMap from './sourceMap';
+import { DynamicBuffer } from './dynamicBuffer'; 
 import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
 import { createFileNameShortener } from './shortenFileName';
@@ -698,7 +699,7 @@ export class CompilationCache {
                             return cached.text;
                         },
                         writeBundle(content: string) {
-                            let res = new sourceMap.DynamicBuffer();
+                            let res = new DynamicBuffer();
                             for (let i = 0; i < assetFiles.length; i++) {
                                 let assetFile = assetFiles[i];
                                 if (!isJsByExt(assetFile)) continue;

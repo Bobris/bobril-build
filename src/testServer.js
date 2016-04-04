@@ -2,7 +2,43 @@
 var longPollingServer = require('./longPollingServer');
 var debounce_1 = require('./debounce');
 var stackTrace = require('./stackTrace');
+var xmlWriter = require('./xmlWriter');
 var uaparse = require('useragent').parse;
+function toJUnitXml(results) {
+    var w = new xmlWriter.XmlWritter(true);
+    w.writeHeader();
+    w.beginElement("testsuites");
+    w.addAttribute("errors", "0");
+    w.addAttribute("failures", "" + results.testsFailed);
+    w.addAttribute("tests", "" + results.totalTests);
+    w.addAttribute("time", (results.duration * 0.001).toFixed(4));
+    results.nested.forEach(function (suite) {
+        w.beginElement("testsuite");
+        w.addAttribute("name", suite.name);
+        w.addAttribute("time", (suite.duration * 0.001).toFixed(4));
+        suite.nested.forEach(function (test) {
+            w.beginElement("testcase");
+            w.addAttribute("name", test.name);
+            w.addAttribute("time", (test.duration * 0.001).toFixed(4));
+            if (test.skipped) {
+                w.beginElement("skipped");
+                w.endElement();
+            }
+            else if (test.failure) {
+                test.failures.forEach(function (fail) {
+                    w.beginElement("failure");
+                    w.addAttribute("message", fail.message + "\n" + fail.stack.join("\n"));
+                    w.endElement();
+                });
+            }
+            w.endElement();
+        });
+        w.endElement();
+    });
+    w.endElement();
+    return w.getBuffer();
+}
+exports.toJUnitXml = toJUnitXml;
 var Client = (function () {
     function Client(owner, id, connection) {
         var _this = this;

@@ -351,13 +351,13 @@ function startCompileProcess(path: string): ICompileProcess {
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk(param) {
-                        let time =Date.now() - startCompilation;
+                        let time = Date.now() - startCompilation;
                         mainServer.notifyCompilationFinished(param.errors, param.warnings, time);
                         console.log("Compiled in " + time.toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
                         resolve(param);
                     },
                     compileFailed(param) {
-                        let time =Date.now() - startCompilation;
+                        let time = Date.now() - startCompilation;
                         mainServer.notifyCompilationFinished(-1, 0, time);
                         console.log(param);
                         console.log("Compilation failed in " + time.toFixed(0) + "ms");
@@ -500,6 +500,7 @@ export function run() {
     c
         .command("test")
         .description("runs tests once in PhantomJs")
+        .option("-o, --out <name>", "filename for test result as JUnit XML")
         .action((c) => {
             commandRunning = true;
             startHttpServer(0);
@@ -541,7 +542,9 @@ export function run() {
                     console.log('test timeout on start');
                     process.exit(1);
                 } else {
-                    console.log(code);
+                    if (c["out"]) {
+                        fs.writeFileSync(c["out"], bb.toJUnitXml(code));
+                    }
                     if (code.failure)
                         process.exit(1);
                     else

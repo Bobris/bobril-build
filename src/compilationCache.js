@@ -11,6 +11,7 @@ var bobrilDepsHelpers = require('./bobrilDepsHelpers');
 var pathUtils = require('./pathUtils');
 var bundler = require('./bundler');
 var sourceMap = require('./sourceMap');
+var dynamicBuffer_1 = require('./dynamicBuffer');
 var simpleHelpers = require('./simpleHelpers');
 var cssHelpers = require('./cssHelpers');
 var shortenFileName_1 = require('./shortenFileName');
@@ -591,7 +592,7 @@ var CompilationCache = (function () {
                             return cached.text;
                         },
                         writeBundle: function (content) {
-                            var res = new sourceMap.DynamicBuffer();
+                            var res = new dynamicBuffer_1.DynamicBuffer();
                             for (var i = 0; i < assetFiles.length; i++) {
                                 var assetFile = assetFiles[i];
                                 if (!isJsByExt(assetFile))

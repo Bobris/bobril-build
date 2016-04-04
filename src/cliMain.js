@@ -477,6 +477,7 @@ function run() {
     c
         .command("test")
         .description("runs tests once in PhantomJs")
+        .option("-o, --out <name>", "filename for test result as JUnit XML")
         .action(function (c) {
         commandRunning = true;
         startHttpServer(0);
@@ -520,7 +521,9 @@ function run() {
                 process.exit(1);
             }
             else {
-                console.log(code);
+                if (c["out"]) {
+                    fs.writeFileSync(c["out"], bb.toJUnitXml(code));
+                }
                 if (code.failure)
                     process.exit(1);
                 else

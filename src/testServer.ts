@@ -4,6 +4,7 @@ import { debounce } from './debounce';
 import { StackFrame } from 'stackframe';
 import * as stackTrace from './stackTrace';
 import * as sourceMap from './sourceMap';
+import * as xmlWriter from './xmlWriter';
 
 let uaparse: (userAgent: string, jsUserAgent: string) => Object = require('useragent').parse;
 
@@ -30,6 +31,40 @@ export interface TestResultsHolder extends SuiteOrTest {
 
 export interface TestSvrState {
     agents: TestResultsHolder[];
+}
+
+export function toJUnitXml(results: TestResultsHolder): Buffer {
+    let w = new xmlWriter.XmlWritter(true);
+    w.writeHeader();
+    w.beginElement("testsuites");
+    w.addAttribute("errors", "0");
+    w.addAttribute("failures", "" + results.testsFailed);
+    w.addAttribute("tests", "" + results.totalTests);
+    w.addAttribute("time", (results.duration*0.001).toFixed(4));
+    results.nested.forEach(suite => {
+        w.beginElement("testsuite");
+        w.addAttribute("name", suite.name);
+        w.addAttribute("time", (suite.duration*0.001).toFixed(4));
+        suite.nested.forEach(test => {
+            w.beginElement("testcase");
+            w.addAttribute("name", test.name);
+            w.addAttribute("time", (test.duration*0.001).toFixed(4));
+            if (test.skipped) {
+                w.beginElement("skipped");
+                w.endElement();
+            } else if (test.failure) {
+                test.failures.forEach(fail=>{
+                    w.beginElement("failure");
+                    w.addAttribute("message", fail.message+"\n"+fail.stack.join("\n"));
+                    w.endElement();
+                });
+            }
+            w.endElement();
+        });
+        w.endElement();
+    });
+    w.endElement();
+    return w.getBuffer();
 }
 
 class Client {

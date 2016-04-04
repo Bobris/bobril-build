@@ -1,14 +1,14 @@
 import { DynamicBuffer } from "./dynamicBuffer";
 
 export class XmlWritter {
-    humanReadable: boolean;
-    buf: DynamicBuffer;
-    inElement: boolean;
-    wasEndElement: boolean;
-    shouldWriteNL: boolean;
-    preserveSpaces: boolean;
-    elementStack: string[];
-    preserveStack: boolean[];
+    private humanReadable: boolean;
+    private buf: DynamicBuffer;
+    private inElement: boolean;
+    private wasEndElement: boolean;
+    private shouldWriteNL: boolean;
+    private preserveSpaces: boolean;
+    private elementStack: string[];
+    private preserveStack: boolean[];
 
     constructor(humanReadable = false) {
         this.humanReadable = humanReadable;
@@ -156,11 +156,11 @@ export class XmlWritter {
         this.buf.addString(text);
     }
 
-    indent(level: number) {
+    private indent(level: number) {
         this.buf.addSpaces(level * 2);
     }
 
-    translateString(text: string, isAttr: boolean) {
+    private translateString(text: string, isAttr: boolean) {
         let len = text.length;
         let lastIndex = 0;
         for (let i = 0; i < len; i++) {
