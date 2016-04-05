@@ -155,7 +155,8 @@ var CompilationCache = (function () {
     };
     CompilationCache.prototype.compile = function (project) {
         var _this = this;
-        var mainList = Array.isArray(project.main) ? project.main : [project.main];
+        var mainList = (Array.isArray(project.main) ? project.main : [project.main]);
+        mainList = mainList.map(function (p) { return path.normalize(p); });
         project.logCallback = project.logCallback || (function (text) { return console.log(text); });
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || (function (filename, content) { return fs.writeFileSync(filename, content); });
@@ -567,7 +568,9 @@ var CompilationCache = (function () {
                         mangle: project.mangle,
                         beautify: project.beautify,
                         defines: project.defines,
-                        getMainFiles: function () { return mainJsList_1; },
+                        getMainFiles: function () {
+                            return mainJsList_1;
+                        },
                         checkFileModification: function (name) {
                             if (/\.js$/i.test(name)) {
                                 var cached_1 = that_1.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);

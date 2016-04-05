@@ -12,7 +12,7 @@ import * as bobrilDepsHelpers from './bobrilDepsHelpers';
 import * as pathUtils from './pathUtils';
 import * as bundler from './bundler';
 import * as sourceMap from './sourceMap';
-import { DynamicBuffer } from './dynamicBuffer'; 
+import { DynamicBuffer } from './dynamicBuffer';
 import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
 import { createFileNameShortener } from './shortenFileName';
@@ -267,7 +267,8 @@ export class CompilationCache {
     }
 
     compile(project: IProject): Promise<any> {
-        let mainList = Array.isArray(project.main) ? project.main : [<string>project.main];
+        let mainList = <string[]>(Array.isArray(project.main) ? project.main : [<string>project.main]);
+        mainList = mainList.map(p => path.normalize(p));
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
         this.logCallback = project.logCallback;
         project.writeFileCallback = project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
@@ -349,7 +350,7 @@ export class CompilationCache {
         if (mainChangedList.length === 0) {
             return Promise.resolve(null);
         }
-        
+
         let program = ts.createProgram(mainChangedList, project.options, this.createCompilerHost(this, project, jsWriteFileCallback));
         let diagnostics = program.getSyntacticDiagnostics();
         let sourceFiles = program.getSourceFiles();
@@ -412,7 +413,7 @@ export class CompilationCache {
                 for (let j = 0; j < trs.length; j++) {
                     let message = trs[j].message;
                     if (typeof message === 'string')
-                        project.textForTranslationReporter(trs[j],this.compilationResult);
+                        project.textForTranslationReporter(trs[j], this.compilationResult);
                 }
             }
         }
@@ -674,7 +675,9 @@ export class CompilationCache {
                         mangle: project.mangle,
                         beautify: project.beautify,
                         defines: project.defines,
-                        getMainFiles() { return mainJsList; },
+                        getMainFiles() {
+                            return mainJsList;
+                        },
                         checkFileModification(name: string): number {
                             if (/\.js$/i.test(name)) {
                                 let cached = that.getCachedFileContent(name.replace(/\.js$/i, '.ts'), project.dir);
