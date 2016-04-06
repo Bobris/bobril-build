@@ -492,6 +492,7 @@ function run() {
         var compilationCache = new bb.CompilationCache();
         bb.fillMainSpec(project).then(function () {
             presetDebugProject(project);
+            project.options.sourceRoot = "/";
             project.fastBundle = true;
             project.main = project.mainSpec;
             project.writeFileCallback = write;

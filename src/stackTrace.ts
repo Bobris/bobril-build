@@ -10,7 +10,7 @@ export function enhanceStack(stack: StackFrame[], get: (loc: string) => Buffer, 
     let smCache = sourceMapCache || Object.create(null);
 
     function getSourceMap(loc: string): sourceMap.SourceMap {
-        let res = smCache[loc];
+        let res:sourceMap.SourceMap = smCache[loc];
         if (res !== undefined)
             return res;
         let content = get(loc);
