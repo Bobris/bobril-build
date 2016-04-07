@@ -100,7 +100,8 @@ var Client = (function () {
                         failure: false,
                         isSuite: true,
                         failures: [],
-                        skipped: false
+                        skipped: false,
+                        logs: []
                     };
                     _this.suiteStack[_this.suiteStack.length - 1].nested.push(suite);
                     _this.suiteStack.push(suite);
@@ -137,7 +138,8 @@ var Client = (function () {
                         failure: false,
                         isSuite: false,
                         failures: [],
-                        skipped: false
+                        skipped: false,
+                        logs: []
                     };
                     _this.suiteStack[_this.suiteStack.length - 1].nested.push(test);
                     _this.suiteStack.push(test);
@@ -170,6 +172,16 @@ var Client = (function () {
                     _this.server.notifySomeChange();
                     break;
                 }
+                case 'consoleLog': {
+                    if (_this.curResults == null)
+                        break;
+                    if (_this.suiteStack == null)
+                        break;
+                    var test = _this.suiteStack[_this.suiteStack.length - 1];
+                    test.logs.push(_this.convertMessageAndStack(data));
+                    _this.server.notifySomeChange();
+                    break;
+                }
             }
             var _a, _b;
         };
@@ -193,7 +205,8 @@ var Client = (function () {
             failure: false,
             skipped: false,
             failures: [],
-            isSuite: true
+            isSuite: true,
+            logs: []
         };
     };
     Client.prototype.doStart = function () {
@@ -201,14 +214,15 @@ var Client = (function () {
         this.initCurResults();
         this.connection.send("test", { url: this.url });
     };
+    Client.prototype.convertMessageAndStack = function (rawMessage) {
+        var st = stackTrace.parseStack(rawMessage.stack);
+        st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
+        st = st.filter(function (fr) { return !/^http\:\/\//g.test(fr.fileName); });
+        return { message: rawMessage.message, stack: st };
+    };
     Client.prototype.convertFailures = function (rawFailures) {
         var _this = this;
-        return rawFailures.map(function (rf) {
-            var st = stackTrace.parseStack(rf.stack);
-            st = stackTrace.enhanceStack(st, _this.server.getSource, _this.server.sourceMapCache);
-            st = st.filter(function (fr) { return !/^http\:\/\//g.test(fr.fileName); });
-            return { message: rf.message, stack: st };
-        });
+        return rawFailures.map(function (rf) { return _this.convertMessageAndStack(rf); });
     };
     return Client;
 }());
@@ -291,6 +305,7 @@ var TestServer = (function () {
                     nested: [],
                     running: false,
                     skipped: true,
+                    logs: [],
                     testsFailed: 0,
                     testsFinished: 0,
                     testsSkipped: 0,

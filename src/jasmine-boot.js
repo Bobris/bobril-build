@@ -58,6 +58,267 @@
                 bbTest("suiteDone", { name: result.description, duration: duration, status: result.status, failures: result.failedExpectations });
             }
         });
+        function realLog(message) {
+            var stack;
+            var err = new Error();
+            stack = err.stack || err.stacktrace;
+            if (!stack) {
+                try {
+                    i.crash.fast++;
+                }
+                catch (err) {
+                    stack = err.stack || err.stacktrace;
+                }
+            }
+            bbTest("consoleLog", { message: message, stack: stack });
+        }
+        // Heavily inspired by https://github.com/NV/console.js
+        if (typeof console === 'undefined') {
+            window.console = {
+                toString: function () {
+                    return 'Inspired by Console.js version 0.9';
+                }
+            };
+        }
+        var dimensions_limit_1 = 3;
+        function repeatString(text, times) {
+            if (times < 1) {
+                return '';
+            }
+            var result = text;
+            for (var i = times; --i;) {
+                result += text;
+            }
+            return result;
+        }
+        var _indent_1 = '  ';
+        function primitiveOf(object) {
+            var value = object.valueOf();
+            switch (typeof value) {
+                case "object":
+                    return "";
+                case "string":
+                    return '"' + value + '"';
+                default:
+                    return String(value);
+            }
+        }
+        function source_of(arg, limit, stack) {
+            var aType = typeof arg;
+            switch (aType) {
+                case 'string':
+                    return '"' + arg + '"';
+                case 'function':
+                    break;
+                case 'object':
+                    if (arg === null) {
+                        return 'null';
+                    }
+                    break;
+                default:
+                    return String(arg);
+            }
+            var prefix;
+            var kind = Object.prototype.toString.call(arg).slice(8, -1);
+            if (kind == 'Object') {
+                prefix = '';
+            }
+            else {
+                prefix = kind + ' ';
+                var primitive = primitiveOf(arg);
+                if (primitive) {
+                    prefix += primitive + ' ';
+                }
+            }
+            if (!limit) {
+                return prefix + '{?}';
+            }
+            // Check circular references
+            var stack_length = stack.length;
+            for (var si = 0; si < stack_length; si++) {
+                if (stack[si] === arg) {
+                    return '#';
+                }
+            }
+            stack[stack_length++] = arg;
+            var indent = repeatString(_indent_1, stack_length);
+            if (Object.getOwnPropertyNames) {
+                var keys = Object.getOwnPropertyNames(arg);
+            }
+            else {
+                keys = [];
+                for (var key in arg) {
+                    keys.push(key);
+                }
+            }
+            var result = prefix + '{';
+            if (!keys.length) {
+                return result + "}";
+            }
+            keys = keys.sort();
+            var arr_obj = [];
+            for (var n = 0, nn = keys.length; n < nn; n++) {
+                key = keys[n];
+                try {
+                    var value = source_of(arg[key], limit - 1, stack);
+                    arr_obj.push("\n" + indent + key + ': ' + value);
+                }
+                catch (e) { }
+            }
+            return result + arr_obj.join(', ') + '\n' + repeatString(_indent_1, stack_length - 1) + '}';
+        }
+        ;
+        console.dir = function dir() {
+            var result = [];
+            for (var i = 0; i < arguments.length; i++) {
+                result.push(source_of(arguments[i], dimensions_limit_1, []));
+            }
+            return realLog(result.join(_args_separator_1));
+        };
+        function _inspect(arg, within) {
+            var result = '';
+            if (Object(arg) !== arg) {
+                if (within && typeof arg == 'string') {
+                    return '"' + arg + '"';
+                }
+                return arg;
+            }
+            if (arg && arg.nodeType == 1) {
+                // Is element?
+                result = '<' + arg.tagName;
+                for (var i = 0, ii = arg.attributes.length; i < ii; i++) {
+                    if (arg.attributes[i].specified) {
+                        result += ' ' + arg.attributes[i].name + '="' + arg.attributes[i].value + '"';
+                    }
+                }
+                if (arg.childNodes && arg.childNodes.length === 0) {
+                    result += '/';
+                }
+                return result + '>';
+            }
+            var kind = Object.prototype.toString.call(arg).slice(8, -1);
+            switch (kind) {
+                case 'String':
+                    return 'String "' + arg + '"';
+                case 'Number':
+                case 'Boolean':
+                    return kind + ' ' + arg;
+                case 'Array':
+                case 'HTMLCollection':
+                case 'NodeList':
+                    // Is array-like object?
+                    result = kind == 'Array' ? '[' : kind + ' [';
+                    var arr_list = [];
+                    for (var j = 0, jj = arg.length; j < jj; j++) {
+                        arr_list[j] = _inspect(arg[j], true);
+                    }
+                    return result + arr_list.join(', ') + ']';
+                case 'Function':
+                case 'Date':
+                    return arg;
+                case 'RegExp':
+                    return "/" + arg.source + "/";
+                default:
+                    if (typeof arg === 'object') {
+                        var prefix;
+                        if (kind == 'Object') {
+                            prefix = '';
+                        }
+                        else {
+                            prefix = kind + ' ';
+                        }
+                        if (within) {
+                            return prefix + '{?}';
+                        }
+                        if (Object.getOwnPropertyNames) {
+                            var keys = Object.getOwnPropertyNames(arg);
+                        }
+                        else {
+                            keys = [];
+                            for (var key in arg) {
+                                if (arg.hasOwnProperty(key)) {
+                                    keys.push(key);
+                                }
+                            }
+                        }
+                        result = prefix + '{';
+                        if (!keys.length) {
+                            return result + "}";
+                        }
+                        keys = keys.sort();
+                        var properties = [];
+                        for (var n = 0, nn = keys.length; n < nn; n++) {
+                            key = keys[n];
+                            try {
+                                var value = _inspect(arg[key], true);
+                                properties.push(key + ': ' + value);
+                            }
+                            catch (e) { }
+                        }
+                        return result + properties.join(', ') + '}';
+                    }
+                    else {
+                        return arg;
+                    }
+            }
+        }
+        ;
+        var log_methods = ['log', 'info', 'warn', 'error', 'debug', 'dirxml'];
+        var _args_separator_1 = '\n';
+        var _interpolate_1 = /%[sdifo]/gi;
+        for (var i = 0; i < log_methods.length; i++) {
+            console[log_methods[i]] = function logger(first_arg) {
+                var result = [];
+                var args = Array.prototype.slice.call(arguments, 0);
+                if (typeof first_arg === 'string' && _interpolate_1.test(first_arg)) {
+                    args.shift();
+                    result.push(first_arg.replace(_interpolate_1, function () {
+                        return _inspect(args.shift());
+                    }));
+                }
+                for (var i = 0; i < args.length; i++) {
+                    result.push(_inspect(args[i]));
+                }
+                return realLog(result.join(_args_separator_1));
+            };
+        }
+        console.trace = function trace() {
+            realLog("trace");
+        };
+        console.assert = function assert(is_ok, message) {
+            if (!is_ok)
+                realLog('ASSERT FAIL: ' + message);
+        };
+        console.group = function group(name) {
+            realLog('\n-------- ' + name + ' --------');
+        };
+        console.groupCollapsed = console.group;
+        console.groupEnd = function groupEnd() {
+            realLog('\n\n\n');
+        };
+        var _counters_1 = {};
+        console.count = function count(title) {
+            title = title || '';
+            if (_counters_1[title]) {
+                _counters_1[title]++;
+            }
+            else {
+                _counters_1[title] = 1;
+            }
+            realLog(title + ' ' + _counters_1[title]);
+        };
+        var _timers_1 = {};
+        console.time = function time(name) {
+            var start = (new Date).getTime();
+            _timers_1[name] = {
+                'start': start
+            };
+        };
+        console.timeEnd = function timeEnd(name) {
+            var end = (new Date).getTime();
+            console.info(name + ': ' + (end - _timers_1[name].start) + 'ms');
+            _timers_1[name].end = end;
+        };
     }
     else {
         env.catchExceptions(false);

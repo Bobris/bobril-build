@@ -8,7 +8,7 @@ import * as xmlWriter from './xmlWriter';
 
 let uaparse: (userAgent: string, jsUserAgent: string) => Object = require('useragent').parse;
 
-export type TestFailures = { message: string, stack: StackFrame[] }[];
+export type MessageAndStack = { message: string, stack: StackFrame[] };
 
 export interface SuiteOrTest {
     isSuite: boolean;
@@ -16,8 +16,9 @@ export interface SuiteOrTest {
     skipped: boolean;
     failure: boolean;
     duration: number;
-    failures: TestFailures;
+    failures: MessageAndStack[];
     nested: SuiteOrTest[];
+    logs: MessageAndStack[];
 }
 
 export interface TestResultsHolder extends SuiteOrTest {
@@ -132,7 +133,8 @@ class Client {
                         failure: false,
                         isSuite: true,
                         failures: [],
-                        skipped: false
+                        skipped: false,
+                        logs: []
                     }
                     this.suiteStack[this.suiteStack.length - 1].nested.push(suite);
                     this.suiteStack.push(suite);
@@ -165,7 +167,8 @@ class Client {
                         failure: false,
                         isSuite: false,
                         failures: [],
-                        skipped: false
+                        skipped: false,
+                        logs: []
                     }
                     this.suiteStack[this.suiteStack.length - 1].nested.push(test);
                     this.suiteStack.push(test);
@@ -193,6 +196,14 @@ class Client {
                     this.server.notifySomeChange();
                     break;
                 }
+                case 'consoleLog': {
+                    if (this.curResults == null) break;
+                    if (this.suiteStack == null) break;
+                    let test = this.suiteStack[this.suiteStack.length-1];
+                    test.logs.push(this.convertMessageAndStack(data));
+                    this.server.notifySomeChange();
+                    break;
+                }
             }
         }
     }
@@ -217,7 +228,8 @@ class Client {
             failure: false,
             skipped: false,
             failures: [],
-            isSuite: true
+            isSuite: true,
+            logs: []
         };
     }
 
@@ -227,13 +239,15 @@ class Client {
         this.connection.send("test", { url: this.url });
     }
 
-    convertFailures(rawFailures: { message: string, stack: string }[]): TestFailures {
-        return rawFailures.map(rf => {
-            let st = stackTrace.parseStack(rf.stack);
-            st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
-            st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));
-            return { message: rf.message, stack: st };
-        });
+    convertMessageAndStack( rawMessage: { message: string, stack: string }): MessageAndStack {
+        let st = stackTrace.parseStack(rawMessage.stack);
+        st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
+        st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));
+        return { message: rawMessage.message, stack: st };
+    }
+    
+    convertFailures(rawFailures: { message: string, stack: string }[]): MessageAndStack[] {
+        return rawFailures.map(rf => this.convertMessageAndStack(rf));
     }
 }
 
@@ -333,6 +347,7 @@ export class TestServer {
                     nested: [],
                     running: false,
                     skipped: true,
+                    logs: [],
                     testsFailed: 0,
                     testsFinished: 0,
                     testsSkipped: 0,

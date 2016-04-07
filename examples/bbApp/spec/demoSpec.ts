@@ -1,5 +1,6 @@
 describe("Demo suite", () => {
     it("works", () => {
+        console.log("Hello from console.log", { complex: true, obj: 42 });
         expect(1 + 1).toBe(2);
     });
 

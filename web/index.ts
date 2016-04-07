@@ -19,6 +19,7 @@ export interface SuiteOrTest {
     duration: number;
     failures: { message: string, stack: StackFrame[] }[];
     nested: SuiteOrTest[];
+    logs: { message: string, stack: StackFrame[] }[];
 }
 
 export interface TestResultsHolder extends SuiteOrTest {
@@ -123,7 +124,7 @@ function stackFrameToString(sf: StackFrame) {
     return functionName + args + fileName + lineNumber + columnNumber;
 }
 
-function getFailuresDetail(failures: { message: string, stack: StackFrame[] }[]): b.IBobrilChildren {
+function getMessagesDetails(failures: { message: string, stack: StackFrame[] }[]): b.IBobrilChildren {
     return failures.map(f => [
         b.styledDiv(f.message),
         b.styledDiv(f.stack.map(sf => stackFrameToString(sf)).join("\n"), stackStyle)
@@ -133,7 +134,8 @@ function getFailuresDetail(failures: { message: string, stack: StackFrame[] }[])
 function getTestDetail(a: SuiteOrTest): b.IBobrilChildren {
     return [
         b.styledDiv(a.name, suiteDivStyle),
-        (a.failures && a.failures.length > 0) && b.styledDiv(getFailuresDetail(a.failures), suiteChildrenIndentStyle)
+        (a.failures && a.failures.length > 0) && b.styledDiv(getMessagesDetails(a.failures), suiteChildrenIndentStyle),
+        (a.logs && a.logs.length > 0) && b.styledDiv(getMessagesDetails(a.logs), suiteChildrenIndentStyle)
     ];
 }
 
