@@ -4,19 +4,36 @@ var debounce_1 = require('./debounce');
 var stackTrace = require('./stackTrace');
 var xmlWriter = require('./xmlWriter');
 var uaparse = require('useragent').parse;
-function toJUnitXml(results) {
-    var w = new xmlWriter.XmlWritter(true);
-    w.writeHeader();
-    w.beginElement("testsuites");
-    w.addAttribute("errors", "0");
-    w.addAttribute("failures", "" + results.testsFailed);
-    w.addAttribute("tests", "" + results.totalTests);
-    w.addAttribute("time", (results.duration * 0.001).toFixed(4));
-    results.nested.forEach(function (suite) {
+function writeJUnitSystemOut(w, test) {
+    if (!test.logs || test.logs.length == 0)
+        return;
+    w.beginElementPreserveSpaces("system-out", true);
+    test.logs.forEach(function (m) {
+        w.addPCData(m.message + "\n  " + m.stack.join("\n  ") + "\n");
+    });
+    w.endElement();
+}
+function recursiveWriteJUnit(w, suite, name) {
+    var duration = 0;
+    var count = 0;
+    var flat = true;
+    suite.nested.forEach(function (n) {
+        if (n.isSuite) {
+            flat = false;
+            return;
+        }
+        count++;
+        duration += n.duration;
+    });
+    if (flat)
+        duration = suite.duration;
+    if (count > 0) {
         w.beginElement("testsuite");
-        w.addAttribute("name", suite.name);
-        w.addAttribute("time", (suite.duration * 0.001).toFixed(4));
+        w.addAttribute("name", name || "root");
+        w.addAttribute("time", (duration * 0.001).toFixed(4));
         suite.nested.forEach(function (test) {
+            if (test.isSuite)
+                return;
             w.beginElement("testcase");
             w.addAttribute("name", test.name);
             w.addAttribute("time", (test.duration * 0.001).toFixed(4));
@@ -31,10 +48,29 @@ function toJUnitXml(results) {
                     w.endElement();
                 });
             }
+            writeJUnitSystemOut(w, test);
             w.endElement();
         });
+        writeJUnitSystemOut(w, suite);
         w.endElement();
-    });
+    }
+    if (!flat) {
+        suite.nested.forEach(function (n) {
+            if (n.isSuite) {
+                recursiveWriteJUnit(w, n, (name ? name + "." : "") + n.name);
+            }
+        });
+    }
+}
+function toJUnitXml(results) {
+    var w = new xmlWriter.XmlWritter(true);
+    w.writeHeader();
+    w.beginElement("testsuites");
+    w.addAttribute("errors", "0");
+    w.addAttribute("failures", "" + results.testsFailed);
+    w.addAttribute("tests", "" + results.totalTests);
+    w.addAttribute("time", (results.duration * 0.001).toFixed(4));
+    recursiveWriteJUnit(w, results, "");
     w.endElement();
     return w.getBuffer();
 }

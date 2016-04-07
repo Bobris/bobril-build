@@ -11,4 +11,12 @@ describe("Demo suite", () => {
     it("even more stuff works or doesn't", () => {
         exampleFailure(4);
     });
+    
+    describe("Nested suite", () => {
+       it("nests", ()=> {
+           console.time("Yes");
+           console.dir(it);
+           console.timeEnd("Yes");
+       });
+    });
 });

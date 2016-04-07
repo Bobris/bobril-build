@@ -23,6 +23,10 @@ For development of bobril-build check out this project and start:
 
 Use bobril.asset(path) to include asset to compilation. *.css files are automatically linked in index.html head. *.js files are automatically prepended to bundle.js.
 
+Jenkins integration (in memory compile, run tests in PhantomJs, write result in JUnit xml format):
+
+	bb test -o junitTestResult.xml
+
 It reads `package.json` and understands:
 
 	{

@@ -34,6 +34,62 @@ export interface TestSvrState {
     agents: TestResultsHolder[];
 }
 
+function writeJUnitSystemOut(w: xmlWriter.XmlWritter, test: SuiteOrTest) {
+    if (!test.logs || test.logs.length == 0) return;
+    w.beginElementPreserveSpaces("system-out", true);
+    test.logs.forEach(m => {
+        w.addPCData(m.message + "\n  " + m.stack.join("\n  ") + "\n");
+    });
+    w.endElement();
+}
+
+function recursiveWriteJUnit(w: xmlWriter.XmlWritter, suite: SuiteOrTest, name: string) {
+    let duration = 0;
+    let count = 0;
+    let flat = true;
+    suite.nested.forEach(n => {
+        if (n.isSuite) {
+            flat = false;
+            return;
+        }
+        count++;
+        duration += n.duration;
+    });
+    if (flat) duration = suite.duration;
+    if (count > 0) {
+        w.beginElement("testsuite");
+        w.addAttribute("name", name || "root");
+        w.addAttribute("time", (duration * 0.001).toFixed(4));
+        suite.nested.forEach(test => {
+            if (test.isSuite) return;
+            w.beginElement("testcase");
+            w.addAttribute("name", test.name);
+            w.addAttribute("time", (test.duration * 0.001).toFixed(4));
+            if (test.skipped) {
+                w.beginElement("skipped");
+                w.endElement();
+            } else if (test.failure) {
+                test.failures.forEach(fail => {
+                    w.beginElement("failure");
+                    w.addAttribute("message", fail.message + "\n" + fail.stack.join("\n"));
+                    w.endElement();
+                });
+            }
+            writeJUnitSystemOut(w, test);
+            w.endElement();
+        });
+        writeJUnitSystemOut(w, suite);
+        w.endElement();
+    }
+    if (!flat) {
+        suite.nested.forEach(n => {
+            if (n.isSuite) {
+                recursiveWriteJUnit(w, n, (name ? name + "." : "") + n.name);
+            }
+        });
+    }
+}
+
 export function toJUnitXml(results: TestResultsHolder): Buffer {
     let w = new xmlWriter.XmlWritter(true);
     w.writeHeader();
@@ -41,29 +97,8 @@ export function toJUnitXml(results: TestResultsHolder): Buffer {
     w.addAttribute("errors", "0");
     w.addAttribute("failures", "" + results.testsFailed);
     w.addAttribute("tests", "" + results.totalTests);
-    w.addAttribute("time", (results.duration*0.001).toFixed(4));
-    results.nested.forEach(suite => {
-        w.beginElement("testsuite");
-        w.addAttribute("name", suite.name);
-        w.addAttribute("time", (suite.duration*0.001).toFixed(4));
-        suite.nested.forEach(test => {
-            w.beginElement("testcase");
-            w.addAttribute("name", test.name);
-            w.addAttribute("time", (test.duration*0.001).toFixed(4));
-            if (test.skipped) {
-                w.beginElement("skipped");
-                w.endElement();
-            } else if (test.failure) {
-                test.failures.forEach(fail=>{
-                    w.beginElement("failure");
-                    w.addAttribute("message", fail.message+"\n"+fail.stack.join("\n"));
-                    w.endElement();
-                });
-            }
-            w.endElement();
-        });
-        w.endElement();
-    });
+    w.addAttribute("time", (results.duration * 0.001).toFixed(4));
+    recursiveWriteJUnit(w, results, "");
     w.endElement();
     return w.getBuffer();
 }
@@ -199,7 +234,7 @@ class Client {
                 case 'consoleLog': {
                     if (this.curResults == null) break;
                     if (this.suiteStack == null) break;
-                    let test = this.suiteStack[this.suiteStack.length-1];
+                    let test = this.suiteStack[this.suiteStack.length - 1];
                     test.logs.push(this.convertMessageAndStack(data));
                     this.server.notifySomeChange();
                     break;
@@ -239,13 +274,13 @@ class Client {
         this.connection.send("test", { url: this.url });
     }
 
-    convertMessageAndStack( rawMessage: { message: string, stack: string }): MessageAndStack {
+    convertMessageAndStack(rawMessage: { message: string, stack: string }): MessageAndStack {
         let st = stackTrace.parseStack(rawMessage.stack);
         st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
         st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));
         return { message: rawMessage.message, stack: st };
     }
-    
+
     convertFailures(rawFailures: { message: string, stack: string }[]): MessageAndStack[] {
         return rawFailures.map(rf => this.convertMessageAndStack(rf));
     }
