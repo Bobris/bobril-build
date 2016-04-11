@@ -4,6 +4,8 @@ var postcssUrl = require('postcss-url');
 var cssnano = require('cssnano');
 function processCss(source, from, callback) {
     return postcss([postcssUrl({ url: function (oldUrl, decl, from, dirname, to, options, result) {
+                if (oldUrl.startsWith("data:"))
+                    return oldUrl;
                 return callback(oldUrl, from);
             } })]).process(source, { from: from });
 }

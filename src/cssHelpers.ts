@@ -4,6 +4,7 @@ import * as cssnano from 'cssnano';
 
 export function processCss(source:string,from:string,callback:(url:string, from:string)=>string):Promise<any> {
    return postcss([postcssUrl({ url: (oldUrl:string, decl:any, from:string, dirname:string, to:string, options:any, result:any)=>{
+       if (oldUrl.startsWith("data:")) return oldUrl;
        return callback(oldUrl, from);
    }})]).process(source, { from });
 }
