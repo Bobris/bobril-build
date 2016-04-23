@@ -105,6 +105,7 @@ export interface IProject {
     cssToLink?: string[];
     bundleJs?: string;
     bundlePng?: string;
+    realRootRel?: string;
 }
 
 export interface CompilationResultMessage {
@@ -447,6 +448,12 @@ export class CompilationCache {
         }
 
         prom = prom.then(() => {
+            project.realRootRel = path.relative((<any>program).getCommonSourceDirectory(),project.dir);
+            if (project.realRootRel==".") {
+                project.realRootRel="";
+            } else {
+                project.realRootRel = project.realRootRel+"/";
+            }
             for (let i = 0; i < sourceFiles.length; i++) {
                 let src = sourceFiles[i];
                 if (/\.d\.ts$/i.test(src.fileName)) continue; // skip searching default lib

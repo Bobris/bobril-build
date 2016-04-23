@@ -329,6 +329,13 @@ var CompilationCache = (function () {
             this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
         }
         prom = prom.then(function () {
+            project.realRootRel = path.relative(program.getCommonSourceDirectory(), project.dir);
+            if (project.realRootRel == ".") {
+                project.realRootRel = "";
+            }
+            else {
+                project.realRootRel = project.realRootRel + "/";
+            }
             for (var i = 0; i < sourceFiles.length; i++) {
                 var src = sourceFiles[i];
                 if (/\.d\.ts$/i.test(src.fileName))

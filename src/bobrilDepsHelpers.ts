@@ -115,7 +115,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
         </script>
         <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
-            R.r('${project.mainJsFile.replace(/\.js$/i, "")}');
+            R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');
         </script>
     </body>
 </html>
@@ -132,7 +132,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
     }
-    let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${v.replace(/\.tsx?$/i, "")}');`).join(' ');
+    let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${project.realRootRel}${v.replace(/\.tsx?$/i, "")}');`).join(' ');
     return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
