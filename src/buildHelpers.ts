@@ -95,11 +95,13 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
             let moduleSymbol = tc.getSymbolAtLocation(id.moduleSpecifier);
             if (moduleSymbol == null) return;
             let fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
-            let bindings = id.importClause.namedBindings;
-            if (/bobril\/index\.ts/i.test(fn)) {
-                result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
-            } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
-                result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
+            if (id.importClause) {
+                let bindings = id.importClause.namedBindings;
+                if (/bobril\/index\.ts/i.test(fn)) {
+                    result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
+                } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
+                    result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
+                }
             }
             result.sourceDeps.push([moduleSymbol.name, fn]);
         }

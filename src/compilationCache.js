@@ -330,10 +330,7 @@ var CompilationCache = (function () {
         }
         prom = prom.then(function () {
             project.realRootRel = path.relative(program.getCommonSourceDirectory(), project.dir);
-            if (project.realRootRel == ".") {
-                project.realRootRel = "";
-            }
-            else {
+            if (project.realRootRel !== "") {
                 project.realRootRel = project.realRootRel + "/";
             }
             for (var i = 0; i < sourceFiles.length; i++) {

@@ -448,11 +448,9 @@ export class CompilationCache {
         }
 
         prom = prom.then(() => {
-            project.realRootRel = path.relative((<any>program).getCommonSourceDirectory(),project.dir);
-            if (project.realRootRel==".") {
-                project.realRootRel="";
-            } else {
-                project.realRootRel = project.realRootRel+"/";
+            project.realRootRel = path.relative((<any>program).getCommonSourceDirectory(), project.dir);
+            if (project.realRootRel !== "") {
+                project.realRootRel = project.realRootRel + "/";
             }
             for (let i = 0; i < sourceFiles.length; i++) {
                 let src = sourceFiles[i];
@@ -1007,12 +1005,12 @@ export class CompilationCache {
 
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function(options) { return cc.defaultLibFilename; },
+            getDefaultLibFileName: function (options) { return cc.defaultLibFilename; },
             writeFile: writeFile,
-            getCurrentDirectory: function() { return currentDirectory; },
-            useCaseSensitiveFileNames: function() { return ts.sys.useCaseSensitiveFileNames; },
+            getCurrentDirectory: function () { return currentDirectory; },
+            useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
             getCanonicalFileName: getCanonicalFileName,
-            getNewLine: function() { return '\n'; },
+            getNewLine: function () { return '\n'; },
             fileExists(fileName: string): boolean {
                 if (fileName === cc.defaultLibFilename) return true;
                 let cached = getCachedFileExistence(fileName);

@@ -45,12 +45,14 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             if (moduleSymbol == null)
                 return;
             var fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
-            var bindings = id.importClause.namedBindings;
-            if (/bobril\/index\.ts/i.test(fn)) {
-                result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
-            }
-            else if (/bobril-g11n\/index\.ts/i.test(fn)) {
-                result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
+            if (id.importClause) {
+                var bindings = id.importClause.namedBindings;
+                if (/bobril\/index\.ts/i.test(fn)) {
+                    result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
+                }
+                else if (/bobril-g11n\/index\.ts/i.test(fn)) {
+                    result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
+                }
             }
             result.sourceDeps.push([moduleSymbol.name, fn]);
         }
