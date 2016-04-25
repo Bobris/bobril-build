@@ -71,7 +71,7 @@ function defaultResolveRequire(name, from, fileExists, readFile) {
     return null;
 }
 function isRequire(symbolDef) {
-    return symbolDef.undeclared && symbolDef.global && symbolDef.name === 'require';
+    return symbolDef != null && symbolDef.undeclared && symbolDef.global && symbolDef.name === 'require';
 }
 function constParamOfCallRequire(node) {
     if (node instanceof uglify.AST_Call) {

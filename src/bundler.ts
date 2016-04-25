@@ -107,7 +107,7 @@ function defaultResolveRequire(name: string, from: string, fileExists: (name: st
 }
 
 function isRequire(symbolDef: uglify.ISymbolDef) {
-    return symbolDef.undeclared && symbolDef.global && symbolDef.name === 'require';
+    return symbolDef != null && symbolDef.undeclared && symbolDef.global && symbolDef.name === 'require';
 }
 
 function constParamOfCallRequire(node: uglify.IAstNode): string {
