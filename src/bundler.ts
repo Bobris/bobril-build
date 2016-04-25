@@ -10,7 +10,7 @@ if (!Object.assign) {
         enumerable: false,
         configurable: true,
         writable: true,
-        value: function(target) {
+        value: function (target) {
             'use strict';
             if (target === undefined || target === null) {
                 throw new TypeError('Cannot convert first argument to object');
@@ -208,10 +208,10 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
         cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
-            pureMatch.forEach(m=>{
-                m.toString().substr(m.indexOf(":")+1).split(',').forEach(s=> {
-                    if (s.length===0) return;
-                    cached.pureFuncs[s.trim()]=true;
+            pureMatch.forEach(m => {
+                m.toString().substr(m.indexOf(":") + 1).split(',').forEach(s => {
+                    if (s.length === 0) return;
+                    cached.pureFuncs[s.trim()] = true;
                 });
             });
         }
@@ -402,7 +402,7 @@ export function bundle(project: IBundleProject) {
     }
     let order = <IFileForBundle[]>[];
     let stack = [];
-    let pureFuncs: { [name:string]: boolean } = Object.create(null);
+    let pureFuncs: { [name: string]: boolean } = Object.create(null);
     project.getMainFiles().forEach((val) => check(val, order, stack, project, resolveRequire));
     let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
@@ -421,7 +421,7 @@ export function bundle(project: IBundleProject) {
         let suffix = f.name;
         if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
-        suffix = suffix.replace(/-/,"_");
+        suffix = suffix.replace(/-/, "_");
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Scope) {
                 node.variables.each((symb, name) => {
@@ -502,6 +502,9 @@ export function bundle(project: IBundleProject) {
                     if (stm instanceof uglify.AST_Var) {
                         let varn = <uglify.IAstVar>stm;
                         if (varn.definitions.length === 0) return false;
+                    } else if (stm instanceof uglify.AST_SimpleStatement) {
+                        let stmbody = (<uglify.IAstSimpleStatement>stm).body;
+                        if (constParamOfCallRequire(stmbody) != null) return false;
                     }
                     return true;
                 });
@@ -552,16 +555,18 @@ export function bundle(project: IBundleProject) {
     });
     if (project.compress !== false) {
         bundleAst.figure_out_scope();
-        let compressor = uglify.Compressor({ warnings: false, global_defs: project.defines, pure_funcs: (call)=>{
-            if (call.expression instanceof uglify.AST_SymbolRef) {
-                let symb=(<uglify.IAstSymbolRef>call.expression);
-                if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {
-                    if (symb.name in pureFuncs) return false;                    
+        let compressor = uglify.Compressor({
+            warnings: false, global_defs: project.defines, pure_funcs: (call) => {
+                if (call.expression instanceof uglify.AST_SymbolRef) {
+                    let symb = (<uglify.IAstSymbolRef>call.expression);
+                    if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {
+                        if (symb.name in pureFuncs) return false;
+                    }
+                    return true;
                 }
                 return true;
             }
-            return true;
-        } });
+        });
         bundleAst = <uglify.IAstToplevel>bundleAst.transform(compressor);
         // in future to make another pass with removing function calls with empty body
     }

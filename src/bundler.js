@@ -472,6 +472,11 @@ function bundle(project) {
                         if (varn.definitions.length === 0)
                             return false;
                     }
+                    else if (stm instanceof uglify.AST_SimpleStatement) {
+                        var stmbody = stm.body;
+                        if (constParamOfCallRequire(stmbody) != null)
+                            return false;
+                    }
                     return true;
                 });
             }
@@ -525,7 +530,8 @@ function bundle(project) {
     });
     if (project.compress !== false) {
         bundleAst.figure_out_scope();
-        var compressor = uglify.Compressor({ warnings: false, global_defs: project.defines, pure_funcs: function (call) {
+        var compressor = uglify.Compressor({
+            warnings: false, global_defs: project.defines, pure_funcs: function (call) {
                 if (call.expression instanceof uglify.AST_SymbolRef) {
                     var symb = call.expression;
                     if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {
@@ -535,7 +541,8 @@ function bundle(project) {
                     return true;
                 }
                 return true;
-            } });
+            }
+        });
         bundleAst = bundleAst.transform(compressor);
     }
     if (project.mangle !== false) {
