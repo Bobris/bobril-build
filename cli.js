@@ -19,9 +19,7 @@ function backgroundProcess() {
         else if (command == 'callPlugins') {
             var methodName = param['method'];
             var entryMethod = plugins_1.getEntryMethod(methodName);
-            if (methodName === null)
-                return;
-            require('./src/backgroundCompileCommands')['executePlugins'](methodName);
+            require('./src/backgroundCompileCommands')['executePlugins'](entryMethod);
         }
         else {
             process.send({ command: "error", param: "Unknown command " + command });

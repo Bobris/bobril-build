@@ -124,6 +124,7 @@ function loadPlugins() {
     if (pluginsLoaded) return plugins;
     pluginsLoaded = true;
     let pluginsPath = getPluginsDirectory();
+    if (!fs.existsSync(pluginsPath)) return null;
     let files = fs.readdirSync(pluginsPath);
     if (files.length == 0) return null;
     plugins = {};

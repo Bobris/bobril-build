@@ -334,7 +334,7 @@ function startCompileProcess(path: string): ICompileProcess {
             return new Promise((resolve, reject) => {
                 compileProcess("callPlugins", { id: myId, method: method }, {
                     log(param) { console.log(param) },
-                    options(param: any) {
+                    finished(param: any) {
                         resolve(param);
                     },
                 });

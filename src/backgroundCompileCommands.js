@@ -140,7 +140,9 @@ function compile(param) {
 }
 exports.compile = compile;
 function executePlugins(pluginsFunc) {
-    console.log("backgroundCompileCommands");
-    pluginsFunc();
+    var res = null;
+    if (pluginsFunc)
+        res = pluginsFunc();
+    process.send({ command: "finished", param: res });
 }
 exports.executePlugins = executePlugins;

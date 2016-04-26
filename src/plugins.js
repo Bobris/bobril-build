@@ -112,6 +112,8 @@ function loadPlugins() {
         return plugins;
     pluginsLoaded = true;
     var pluginsPath = getPluginsDirectory();
+    if (!fs.existsSync(pluginsPath))
+        return null;
     var files = fs.readdirSync(pluginsPath);
     if (files.length == 0)
         return null;

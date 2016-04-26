@@ -144,7 +144,8 @@ export function compile(param: string) {
     }
 }
 
-export function executePlugins(pluginsFunc) {
-    console.log("backgroundCompileCommands");
-    pluginsFunc();
+export function executePlugins(pluginsFunc: ()=>any) {
+    let res = null;
+    if (pluginsFunc) res = pluginsFunc();
+    process.send({ command: "finished", param: res });
 } 
