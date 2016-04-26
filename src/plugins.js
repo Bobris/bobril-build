@@ -1,8 +1,9 @@
 "use strict";
-var spawnSync = require('child_process').spawnSync;
+var child_process_1 = require('child_process');
 var simpleHelpers_1 = require('./simpleHelpers');
-var path = require('path');
-var fs = require('fs');
+var pathPlatformDependent = require("path");
+var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+var fs = require("fs");
 var _workingDirectory = "";
 function getBobrilHomeDirectory() {
     var homeDirectory = simpleHelpers_1.getUserHome();
@@ -23,7 +24,7 @@ function isPluginInstalled(pluginName) {
 }
 function runProcess(installCommand) {
     console.log(installCommand);
-    var subProcess = spawnSync('cmd', ['/c', installCommand], {
+    var subProcess = child_process_1.spawnSync('cmd', ['/c', installCommand], {
         cwd: _workingDirectory,
         env: process.env,
         stdio: 'inherit'

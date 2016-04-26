@@ -1,7 +1,8 @@
-var spawnSync = require('child_process').spawnSync;
-import {getUserHome} from './simpleHelpers';
-import * as path from 'path';
-import * as fs from 'fs';
+import { spawnSync } from 'child_process';
+import { getUserHome } from './simpleHelpers';
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+import * as fs from "fs";
 
 let _workingDirectory = "";
 
@@ -143,7 +144,7 @@ export function getEntryMethod(methodName) {
     if (!pluginsLoaded) loadPlugins();
     if (plugins === null || !plugins.hasOwnProperty(methodName)) return null;
 
-    return function() {
+    return function () {
         for (let i = 0; i < plugins[methodName].length; i++) {
             plugins[methodName][i](arguments);
         }

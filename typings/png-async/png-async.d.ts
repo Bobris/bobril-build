@@ -50,9 +50,9 @@ declare module 'png-async' {
         end(data?: any): void;
         bitblt(dst: Image, sx: number, sy: number, w: number, h: number, dx: number, dy: number): Image;
 
-        on(event: string, listener: Function): Image;
-        once(event: string, listener: Function): Image;
-        removeListener(event: string, listener: Function): Image;
-        removeAllListeners(event: string): Image;
+        on(event: string, listener: Function): this;
+        once(event: string, listener: Function): this;
+        removeListener(event: string, listener: Function): this;
+        removeAllListeners(event: string): this;
     }
 }
