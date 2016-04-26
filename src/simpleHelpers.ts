@@ -20,3 +20,7 @@ export function removeLinkToSourceMap(content: Buffer): Buffer {
     }
     return content;
 }
+
+export function getUserHome() {
+    return process.env.HOME || process.env.USERPROFILE;
+}

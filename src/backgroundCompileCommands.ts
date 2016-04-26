@@ -143,3 +143,8 @@ export function compile(param: string) {
         process.send({ command: "Cannot compile nonexisting project", param });
     }
 }
+
+export function executePlugins(pluginsFunc) {
+    console.log("backgroundCompileCommands");
+    pluginsFunc();
+} 

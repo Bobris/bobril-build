@@ -2,6 +2,7 @@ import * as childProcess from 'child_process';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
+import {getEntryMethod} from "./src/plugins"
 
 function printIntroLine() {
     let pp = pathPlatformDependent.join(__dirname, 'package.json');
@@ -15,7 +16,14 @@ function backgroundProcess() {
         //console.log(command, param);
         if (commands[command]) {
             require('./src/' + commands[command])[command](param);
-        } else {
+        }
+        else if (command == 'callPlugins') {
+            let methodName = param['method'];
+            let entryMethod=getEntryMethod(methodName);
+            if(methodName===null)return;
+            require('./src/backgroundCompileCommands')['executePlugins'](methodName);
+        }
+        else {
             process.send({ command: "error", param: "Unknown command " + command });
         }
     });
