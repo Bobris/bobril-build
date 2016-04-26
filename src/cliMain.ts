@@ -6,6 +6,7 @@ import * as childProcess from 'child_process';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
+import * as plugins from "./plugins"
 
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 
@@ -294,6 +295,7 @@ function startWatchProcess(notify: (allFiles: { [dir: string]: string[] }) => vo
 interface ICompileProcess {
     refresh(allFiles: { [dir: string]: string[] }): Promise<any>;
     setOptions(options: any): Promise<any>;
+    callPlugins(method: string): Promise<any>;
     loadTranslations(): Promise<any>;
     compile(): Promise<{ hasTests: boolean }>;
     stop(): void;
@@ -321,6 +323,16 @@ function startCompileProcess(path: string): ICompileProcess {
         setOptions(options: any): Promise<any> {
             return new Promise((resolve, reject) => {
                 compileProcess("setProjectOptions", { id: myId, options }, {
+                    log(param) { console.log(param) },
+                    options(param: any) {
+                        resolve(param);
+                    },
+                });
+            });
+        },
+        callPlugins(method: string): Promise<any> {
+            return new Promise((resolve, reject) => {
+                compileProcess("callPlugins", { id: myId, method: method }, {
                     log(param) { console.log(param) },
                     options(param: any) {
                         resolve(param);
@@ -409,6 +421,8 @@ function interactiveCommand(port: number) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
+        return compileProcess.callPlugins("afterStartCompileProcess");
+    }).then((opts) => {
         return compileProcess.loadTranslations();
     }).then((opts) => {
         startWatchProcess((allFiles: { [dir: string]: string[] }) => {
@@ -424,6 +438,7 @@ function interactiveCommand(port: number) {
 }
 
 export function run() {
+    plugins.init(__dirname);
     let commandRunning = false;
     curProjectDir = bb.currentDirectory();
     c
@@ -568,6 +583,7 @@ export function run() {
     c.command('*', null, { noHelp: true }).action((com) => {
         console.log("Invalid command " + com);
     });
+    plugins.registerCommands(c, function(value) { commandRunning = true });
     c.parse(process.argv);
     if (!commandRunning) {
         interactiveCommand(8080);

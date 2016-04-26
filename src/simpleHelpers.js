@@ -24,3 +24,7 @@ function removeLinkToSourceMap(content) {
     return content;
 }
 exports.removeLinkToSourceMap = removeLinkToSourceMap;
+function getUserHome() {
+    return process.env.HOME || process.env.USERPROFILE;
+}
+exports.getUserHome = getUserHome;

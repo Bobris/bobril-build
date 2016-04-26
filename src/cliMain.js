@@ -7,6 +7,7 @@ var childProcess = require('child_process');
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var fs = require("fs");
+var plugins = require("./plugins");
 var memoryFs = Object.create(null);
 var project;
 function write(fn, b) {
@@ -307,6 +308,16 @@ function startCompileProcess(path) {
                 });
             });
         },
+        callPlugins: function (method) {
+            return new Promise(function (resolve, reject) {
+                compileProcess("callPlugins", { id: myId, method: method }, {
+                    log: function (param) { console.log(param); },
+                    options: function (param) {
+                        resolve(param);
+                    },
+                });
+            });
+        },
         loadTranslations: function () {
             return new Promise(function (resolve, reject) {
                 compileProcess("loadTranslations", myId, {
@@ -385,6 +396,8 @@ function interactiveCommand(port) {
     compileProcess.refresh(null).then(function () {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then(function (opts) {
+        return compileProcess.callPlugins("afterStartCompileProcess");
+    }).then(function (opts) {
         return compileProcess.loadTranslations();
     }).then(function (opts) {
         startWatchProcess(function (allFiles) {
@@ -399,6 +412,7 @@ function interactiveCommand(port) {
     });
 }
 function run() {
+    plugins.init(__dirname);
     var commandRunning = false;
     curProjectDir = bb.currentDirectory();
     c
@@ -547,6 +561,7 @@ function run() {
     c.command('*', null, { noHelp: true }).action(function (com) {
         console.log("Invalid command " + com);
     });
+    plugins.registerCommands(c, function (value) { commandRunning = true; });
     c.parse(process.argv);
     if (!commandRunning) {
         interactiveCommand(8080);

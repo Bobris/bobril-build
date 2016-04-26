@@ -139,3 +139,8 @@ function compile(param) {
     }
 }
 exports.compile = compile;
+function executePlugins(pluginsFunc) {
+    console.log("backgroundCompileCommands");
+    pluginsFunc();
+}
+exports.executePlugins = executePlugins;

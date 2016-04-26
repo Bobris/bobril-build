@@ -113,8 +113,11 @@ function autodetectMainExample(project, allFiles) {
         var re = minimatch.makeRe(project.specGlob);
         var specList = [];
         var dirs = Object.keys(allFiles);
+        var containsJasmineDefFile = false;
         for (var i = 0; i < dirs.length; i++) {
             var d = dirs[i];
+            if (d.indexOf('node_modules') != -1)
+                continue;
             var f = allFiles[d];
             if (d === ".") {
                 d = "";
@@ -126,13 +129,14 @@ function autodetectMainExample(project, allFiles) {
                 var ff = d + f[j];
                 if (re.test(ff))
                     specList.push(ff);
+                if (f[j] == 'jasmine.d.ts') {
+                    specList.push(ff);
+                    containsJasmineDefFile = true;
+                }
             }
         }
         if (specList.length > 0) {
-            if (allFiles["typings/jasmine"] && allFiles["typings/jasmine"].indexOf("jasmine.d.ts") >= 0) {
-                specList.push("typings/jasmine/jasmine.d.ts");
-            }
-            else {
+            if (!containsJasmineDefFile) {
                 allFiles[bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
                 specList.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
             }

@@ -2,6 +2,7 @@
 var pathPlatformDependent = require("path");
 var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 var fs = require("fs");
+var plugins_1 = require("./src/plugins");
 function printIntroLine() {
     var pp = pathPlatformDependent.join(__dirname, 'package.json');
     var bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
@@ -14,6 +15,13 @@ function backgroundProcess() {
         //console.log(command, param);
         if (commands[command]) {
             require('./src/' + commands[command])[command](param);
+        }
+        else if (command == 'callPlugins') {
+            var methodName = param['method'];
+            var entryMethod = plugins_1.getEntryMethod(methodName);
+            if (methodName === null)
+                return;
+            require('./src/backgroundCompileCommands')['executePlugins'](methodName);
         }
         else {
             process.send({ command: "error", param: "Unknown command " + command });
