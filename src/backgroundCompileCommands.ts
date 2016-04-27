@@ -1,4 +1,4 @@
-import * as bb from '../index';
+import * as bb from './index';
 import * as ts from 'typescript';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes

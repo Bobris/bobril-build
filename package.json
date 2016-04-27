@@ -1,8 +1,9 @@
 {
   "name": "bobril-build",
-  "version": "0.33.2",
+  "version": "0.34.0",
   "description": "Builds Bobril Applications or Libraries",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "bin": {
     "bb": "./bin/bb"
   },
@@ -29,10 +30,7 @@
     "useragent": "^2.1.8"
   },
   "devDependencies": {
-    "graceful-fs": "^4.1.3",
-    "gulp": "^3.9.1",
-    "jasmine": "*",
-    "through2": "^2.0.1"
+    "jasmine": "*"
   },
   "scripts": {
     "test": "jasmine"

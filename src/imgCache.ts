@@ -9,7 +9,7 @@ function normalizeFileName(fn: string): string {
     return fn.replace(/\\/g, "/").toLowerCase();
 }
 
-interface ImageInfo {
+export interface ImageInfo {
     fullName: string;
     normalizedFullName: string;
     oldModified: Date;
@@ -103,7 +103,7 @@ export class ImgCache {
     }
 }
 
-interface ImageBundleInfo {
+export interface ImageBundleInfo {
     key: string;
     normalizedFullName: string;
     color: string;

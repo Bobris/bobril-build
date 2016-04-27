@@ -8,7 +8,7 @@
 			"request": "attach",
 			// Port to attach to.
 			"port": 5858,
-			"sourceMaps": false
+			"sourceMaps": true
 		}
 	]
 }

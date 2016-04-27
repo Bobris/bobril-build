@@ -1,7 +1,9 @@
-var b = require("./bobril");
-var assets = require("./assets/assets");
-var hereIcon = "here";
-var $a = b.sprite("image", 0);
-var $b = b.sprite("here", 1);
-var $c = b.sprite("Error", 2);
-var $d = b.t("Hello");
+"use strict";
+const b = require("./bobril");
+const assets = require("./assets/assets");
+const hereIcon = "here";
+let $a = b.sprite("image");
+let $b = b.sprite(hereIcon);
+let $c = b.sprite(assets.addIcon);
+let $d = b.t("Hello");
+//# sourceMappingURL=main.js.map

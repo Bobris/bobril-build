@@ -1,23 +1,25 @@
-import * as compilationCache from '../src/compilationCache';
-import * as translationCache from '../src/translationCache';
-import * as bobrilDepsHelpers from '../src/bobrilDepsHelpers';
+import * as compilationCache from '../dist/compilationCache';
+import * as translationCache from '../dist/translationCache';
+import * as bobrilDepsHelpers from '../dist/bobrilDepsHelpers';
 import * as ts from "typescript";
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
-import * as pathUtils from '../src/pathUtils';
+import * as pathUtils from '../dist/pathUtils';
+
+const specdirname = path.join(__dirname.replace(/\\/g, "/"),"../spec");
 
 describe("compilationCache", () => {
     it("works", (done) => {
         var cc = new compilationCache.CompilationCache();
         var tc = new translationCache.TranslationDb();
         function write(fn: string, b: Buffer) {
-            let dir = path.dirname(path.join(__dirname.replace(/\\/g,'/'), 'ccout', fn));
+            let dir = path.dirname(path.join(specdirname, 'ccout', fn));
             pathUtils.mkpathsync(dir);
-            fs.writeFileSync(path.join(__dirname.replace(/\\/g,'/'), 'ccout', fn), b);
+            fs.writeFileSync(path.join(specdirname, 'ccout', fn), b);
         }
         let project:compilationCache.IProject = {
-            dir: path.join(__dirname.replace(/\\/g,'/'), 'cc'),
+            dir: path.join(specdirname, 'cc'),
             main: 'app.ts',
             options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
             debugStyleDefs: true,

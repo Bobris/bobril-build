@@ -1,9 +1,9 @@
 "use strict";
-var ts = require("typescript");
-var fs = require("fs");
-var pathPlatformDependent = require("path");
-var path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-var evalNode_1 = require("../src/evalNode");
+const ts = require("typescript");
+const fs = require("fs");
+const pathPlatformDependent = require("path");
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const evalNode_1 = require("../dist/evalNode");
 var defaultLibFilename = path.join(path.dirname(require.resolve("typescript").replace(/\\/g, "/")), "lib.es6.d.ts");
 var lastLibPrecompiled;
 function createCompilerHost(currentDirectory) {
@@ -49,7 +49,7 @@ function createCompilerHost(currentDirectory) {
     }
     function resolveModuleName(moduleName, containingFile) {
         if (moduleName.substr(0, 1) === '.') {
-            var res = moduleName + ".ts";
+            let res = moduleName + ".ts";
             return { resolvedFileName: res };
         }
         return null;
@@ -62,7 +62,7 @@ function createCompilerHost(currentDirectory) {
         useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
         getCanonicalFileName: getCanonicalFileName,
         getNewLine: function () { return '\n'; },
-        fileExists: function (fileName) {
+        fileExists(fileName) {
             try {
                 return fs.statSync(path.join(currentDirectory, fileName)).isFile();
             }
@@ -70,12 +70,12 @@ function createCompilerHost(currentDirectory) {
                 return false;
             }
         },
-        readFile: function (fileName) {
+        readFile(fileName) {
             return fs.readFileSync(path.join(currentDirectory, fileName)).toString();
         },
-        resolveModuleNames: function (moduleNames, containingFile) {
-            return moduleNames.map(function (n) {
-                var r = resolveModuleName(n, containingFile);
+        resolveModuleNames(moduleNames, containingFile) {
+            return moduleNames.map((n) => {
+                let r = resolveModuleName(n, containingFile);
                 //console.log(n, containingFile, r);
                 return r;
             });
@@ -97,9 +97,10 @@ function reportDiagnostics(diagnostics) {
         reportDiagnostic(diagnostics[i]);
     }
 }
-describe("evalNode", function () {
-    var testpath = path.join(__dirname.replace(/\\/g, "/"), "evalNode");
-    var di = fs.readdirSync(testpath).sort();
+const specdirname = path.join(__dirname.replace(/\\/g, "/"), "../spec");
+describe("evalNode", () => {
+    let testpath = path.join(specdirname, "evalNode");
+    let di = fs.readdirSync(testpath).sort();
     try {
         fs.mkdirSync(path.join(testpath, "_accept"));
     }
@@ -110,12 +111,12 @@ describe("evalNode", function () {
     }
     catch (err) { }
     ;
-    di.forEach(function (n) {
+    di.forEach(n => {
         if (n[0] === ".")
             return;
         if (n[0] === "_")
             return;
-        it(n, function () {
+        it(n, () => {
             var full = path.join(testpath, n);
             var program = ts.createProgram(["main.ts"], { module: ts.ModuleKind.CommonJS }, createCompilerHost(full));
             var diagnostics = program.getSyntacticDiagnostics();
@@ -128,7 +129,7 @@ describe("evalNode", function () {
                     reportDiagnostics(diagnostics);
                 }
             }
-            var accc = "";
+            let accc = "";
             var tc = program.getTypeChecker();
             var mainsource = program.getSourceFile("main.ts");
             function visit(n) {
@@ -136,7 +137,7 @@ describe("evalNode", function () {
                     var ce = n;
                     if (ce.expression.getText() === "console.log") {
                         if (ce.arguments.length === 1) {
-                            var res = evalNode_1.evalNode(ce.arguments[0], tc, null);
+                            let res = evalNode_1.evalNode(ce.arguments[0], tc, null);
                             if (res === undefined)
                                 res = "undefined";
                             if (typeof res === "object")
@@ -150,7 +151,7 @@ describe("evalNode", function () {
             }
             visit(mainsource);
             fs.writeFileSync(path.join(testpath, "_accept", n + ".txt"), accc);
-            var expc = "";
+            let expc = "";
             try {
                 expc = fs.readFileSync(path.join(testpath, "_expected", n + ".txt")).toString();
             }
@@ -163,3 +164,4 @@ describe("evalNode", function () {
         });
     });
 });
+//# sourceMappingURL=evalNodeSpec.js.map

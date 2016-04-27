@@ -122,7 +122,7 @@ class Client {
         this.oldResults = null;
         this.curResults = null;
         connection.onClose = () => {
-            delete this.server.clients[this.id];
+            this.server.deleteClientById(this.id);
             this.server.notifySomeChange();
         };
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
@@ -142,7 +142,7 @@ class Client {
                     if (this.curResults == null) break;
                     this.curResults.totalTests = <number>data;
                     this.suiteStack = [this.curResults];
-                    this.server.notifyTestingStarted(this);
+                    this.server.notifyTestingStarted();
                     this.server.notifySomeChange();
                     break;
                 }
@@ -290,7 +290,7 @@ export class TestServer {
     private lastId: number;
     url: string;
     private runid: number;
-    clients: { [id: string]: Client };
+    private clients: { [id: string]: Client };
     private svr: longPollingServer.LongPollingServer;
     sourceMapCache: { [loc: string]: sourceMap.SourceMap };
 
@@ -312,6 +312,10 @@ export class TestServer {
         this.onChange = null;
     }
 
+    deleteClientById(id: string) {
+        delete this.clients[id];
+    }
+    
     handle(request: http.ServerRequest, response: http.ServerResponse) {
         this.svr.handle(request, response);
     }
@@ -338,7 +342,7 @@ export class TestServer {
     private waitOneResolver: (result: TestResultsHolder) => void;
     private waitOneTimeOut: NodeJS.Timer;
 
-    notifyTestingStarted(client: Client) {
+    notifyTestingStarted() {
         if (this.waitOneTimeOut != null) {
             clearTimeout(this.waitOneTimeOut);
             this.waitOneTimeOut = null;

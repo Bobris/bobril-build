@@ -1,6 +1,6 @@
 import * as c from 'commander';
 import * as ts from 'typescript';
-import * as bb from '../index';
+import * as bb from './index';
 import * as http from 'http';
 import * as childProcess from 'child_process';
 import * as pathPlatformDependent from "path";
@@ -242,7 +242,7 @@ function presetReleaseProject(project: bb.IProject) {
 }
 
 function startBackgroundProcess(name: string, callbacks: {}): (command: string, param?: any, callbacks?: {}) => void {
-    let child = childProcess.fork(path.dirname(__dirname.replace(/\\/g, "/")) + "/cli", ["background"]);
+    let child = childProcess.fork(__dirname.replace(/\\/g, "/") + "/cli", ["background"]);
     let currentCallbacks = callbacks || {};
     if (!currentCallbacks["error"]) {
         currentCallbacks["error"] = (param) => {

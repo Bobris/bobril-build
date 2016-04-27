@@ -1,4 +1,4 @@
-import * as spriter from "../src/spriter";
+import * as spriter from "../dist/spriter";
 
 describe("spriter", () => {
     it("zero", () => {

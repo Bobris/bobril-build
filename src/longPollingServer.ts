@@ -13,7 +13,7 @@ function newRandomId(): string {
     return crypto.randomBytes(20).toString("base64");
 }
 
-class Connection implements ILongPollingConnection {
+export class Connection implements ILongPollingConnection {
     onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;
     onClose: (connection: ILongPollingConnection) => void;
     userAgent: string;
