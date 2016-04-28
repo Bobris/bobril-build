@@ -3,6 +3,7 @@ import * as ts from 'typescript';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
+import * as plugins from "./pluginsLoader"
 
 interface ICompleteProject {
     compilationCache: bb.CompilationCache;
@@ -144,8 +145,10 @@ export function compile(param: string) {
     }
 }
 
-export function executePlugins(pluginsFunc: ()=>any) {
-    let res = null;
-    if (pluginsFunc) res = pluginsFunc();
+export function executePlugins(param: any) {
+    let cp = cps[param.id];
+    if (!cp)
+        process.send({ command: "Cannot compile nonexisting project", param });
+    let res = plugins.pluginsLoader.executeEntryMethod(param.method, cp.project);
     process.send({ command: "finished", param: res });
 } 

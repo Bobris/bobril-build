@@ -15,4 +15,4 @@ export declare function setProjectOptions(param: {
 }): void;
 export declare function loadTranslations(param: string): void;
 export declare function compile(param: string): void;
-export declare function executePlugins(pluginsFunc: () => any): void;
+export declare function executePlugins(param: any): void;

@@ -7,6 +7,7 @@ import * as g11n from "./msgFormatParser";
 import * as glob from "glob";
 import * as minimatch from "minimatch";
 import { deepEqual } from './deepEqual';
+import * as plugins from "./pluginsLoader";
 
 export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
@@ -299,6 +300,9 @@ export function compileProject(project: bb.IProject): Promise<any> {
         fs.writeFileSync(fullname, b);
     };
     translationDb.clearBeforeCompilation();
+    
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterStartCompileProcess,project);
+    
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) {

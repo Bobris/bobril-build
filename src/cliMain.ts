@@ -6,7 +6,7 @@ import * as childProcess from 'child_process';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
-import * as plugins from "./plugins"
+import * as plugins from "./pluginsLoader"
 
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 
@@ -295,7 +295,7 @@ function startWatchProcess(notify: (allFiles: { [dir: string]: string[] }) => vo
 interface ICompileProcess {
     refresh(allFiles: { [dir: string]: string[] }): Promise<any>;
     setOptions(options: any): Promise<any>;
-    callPlugins(method: string): Promise<any>;
+    callPlugins(method: plugins.EntryMethodType): Promise<any>;
     loadTranslations(): Promise<any>;
     compile(): Promise<{ hasTests: boolean }>;
     stop(): void;
@@ -330,7 +330,7 @@ function startCompileProcess(path: string): ICompileProcess {
                 });
             });
         },
-        callPlugins(method: string): Promise<any> {
+        callPlugins(method: plugins.EntryMethodType): Promise<any> {
             return new Promise((resolve, reject) => {
                 compileProcess("callPlugins", { id: myId, method: method }, {
                     log(param) { console.log(param) },
@@ -401,12 +401,12 @@ function getDefaultDebugOptions() {
 
 function startHttpServer(port: number) {
     server = http.createServer(handleRequest);
-    server.on("listening", function() {
+    server.on("listening", function () {
         console.log("Server listening on: http://localhost:" + server.address().port);
     });
-    server.on('error', function(e) {
+    server.on('error', function (e) {
         if (e.code == 'EADDRINUSE') {
-            setTimeout(function() {
+            setTimeout(function () {
                 server.close();
                 server.listen({ port: 0, exclusive: true });
             }, 10);
@@ -421,7 +421,7 @@ function interactiveCommand(port: number) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
-        return compileProcess.callPlugins("afterStartCompileProcess");
+        return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {
         return compileProcess.loadTranslations();
     }).then((opts) => {
@@ -438,7 +438,6 @@ function interactiveCommand(port: number) {
 }
 
 export function run() {
-    plugins.init(__dirname);
     let commandRunning = false;
     curProjectDir = bb.currentDirectory();
     c
@@ -583,8 +582,11 @@ export function run() {
     c.command('*', null, { noHelp: true }).action((com) => {
         console.log("Invalid command " + com);
     });
-    plugins.registerCommands(c, function(value) { commandRunning = true });
-    c.parse(process.argv);
+    plugins.pluginsLoader.registerCommands(c, function (value) { commandRunning = true });
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () {
+        commandRunning = true;
+    });
+    let res = c.parse(process.argv);
     if (!commandRunning) {
         interactiveCommand(8080);
     }

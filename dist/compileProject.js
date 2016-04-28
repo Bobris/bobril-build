@@ -8,6 +8,7 @@ const g11n = require("./msgFormatParser");
 const glob = require("glob");
 const minimatch = require("minimatch");
 const deepEqual_1 = require('./deepEqual');
+const plugins = require("./pluginsLoader");
 function createProjectFromDir(path) {
     let project = {
         dir: path.replace(/\\/g, '/'),
@@ -313,6 +314,7 @@ function compileProject(project) {
         fs.writeFileSync(fullname, b);
     };
     translationDb.clearBeforeCompilation();
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterStartCompileProcess, project);
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) {

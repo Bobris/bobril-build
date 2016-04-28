@@ -2,6 +2,7 @@
 const bb = require('./index');
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const plugins = require("./pluginsLoader");
 let cps = Object.create(null);
 function createProject(param) {
     let cp = cps[param.id];
@@ -139,10 +140,11 @@ function compile(param) {
     }
 }
 exports.compile = compile;
-function executePlugins(pluginsFunc) {
-    let res = null;
-    if (pluginsFunc)
-        res = pluginsFunc();
+function executePlugins(param) {
+    let cp = cps[param.id];
+    if (!cp)
+        process.send({ command: "Cannot compile nonexisting project", param: param });
+    let res = plugins.pluginsLoader.executeEntryMethod(param.method, cp.project);
     process.send({ command: "finished", param: res });
 }
 exports.executePlugins = executePlugins;
