@@ -4,6 +4,7 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader"
+import * as dep from "./dependenciesChecker"
 
 interface ICompleteProject {
     compilationCache: bb.CompilationCache;
@@ -147,8 +148,20 @@ export function compile(param: string) {
 
 export function executePlugins(param: any) {
     let cp = cps[param.id];
-    if (!cp)
+    if (!cp) {
         process.send({ command: "Cannot compile nonexisting project", param });
+        return;
+    }
     let res = plugins.pluginsLoader.executeEntryMethod(param.method, cp.project);
     process.send({ command: "finished", param: res });
-} 
+}
+
+export function installDependencies(param: any) {
+    let cp = cps[param.id];
+    if (!cp) {
+        process.send({ command: "Cannot compile nonexisting project", param });
+        return;
+    }
+    let res = dep.installMissingDependencies(cp.project);
+    process.send({ command: "finished", param: res });
+}

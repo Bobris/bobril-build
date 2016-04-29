@@ -88,6 +88,9 @@ export interface IProject {
     bundleJs?: string;
     bundlePng?: string;
     realRootRel?: string;
+    dependencies?: string[];
+    devDependencies?: string[];
+    npmRegistry?: string;
 }
 export interface CompilationResultMessage {
     fileName: string;

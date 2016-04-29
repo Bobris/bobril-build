@@ -8,6 +8,7 @@ const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
+const depChecker = require("./dependenciesChecker");
 var memoryFs = Object.create(null);
 var project;
 function write(fn, b) {
@@ -307,6 +308,16 @@ function startCompileProcess(path) {
                 });
             });
         },
+        installDependencies() {
+            return new Promise((resolve, reject) => {
+                compileProcess("installDependencies", { id: myId }, {
+                    log(param) { console.log(param); },
+                    finished(param) {
+                        resolve(param);
+                    },
+                });
+            });
+        },
         callPlugins(method) {
             return new Promise((resolve, reject) => {
                 compileProcess("callPlugins", { id: myId, method: method }, {
@@ -394,6 +405,8 @@ function interactiveCommand(port) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
+        return compileProcess.installDependencies();
+    }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {
         return compileProcess.loadTranslations();
@@ -453,6 +466,8 @@ function run() {
             project.outputDir = "./dist";
         }
         console.time("compile");
+        if (!depChecker.installMissingDependencies(project))
+            process.exit(1);
         bb.compileProject(project).then(() => {
             console.timeEnd("compile");
             process.exit(0);
@@ -558,10 +573,9 @@ function run() {
     c.command('*', null, { noHelp: true }).action((com) => {
         console.log("Invalid command " + com);
     });
-    plugins.pluginsLoader.registerCommands(c, function (value) { commandRunning = true; });
-    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () {
-        commandRunning = true;
-    });
+    plugins.pluginsLoader.registerCommands(c, function () { commandRunning = true; });
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () { commandRunning = true; });
+    depChecker.registerCommands(c, function () { commandRunning = true; });
     let res = c.parse(process.argv);
     if (!commandRunning) {
         interactiveCommand(8080);

@@ -7,6 +7,7 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader"
+import * as depChecker from "./dependenciesChecker"
 
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 
@@ -297,6 +298,7 @@ interface ICompileProcess {
     setOptions(options: any): Promise<any>;
     callPlugins(method: plugins.EntryMethodType): Promise<any>;
     loadTranslations(): Promise<any>;
+    installDependencies(): Promise<any>;
     compile(): Promise<{ hasTests: boolean }>;
     stop(): void;
 }
@@ -329,6 +331,17 @@ function startCompileProcess(path: string): ICompileProcess {
                     },
                 });
             });
+        },
+        installDependencies(): Promise<any> {
+            return new Promise((resolve, reject) => {
+                compileProcess("installDependencies", { id: myId }, {
+                    log(param) { console.log(param) },
+                    finished(param: any) {
+                        resolve(param);
+                    },
+                });
+            });
+
         },
         callPlugins(method: plugins.EntryMethodType): Promise<any> {
             return new Promise((resolve, reject) => {
@@ -421,6 +434,8 @@ function interactiveCommand(port: number) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
+        return compileProcess.installDependencies();
+    }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {
         return compileProcess.loadTranslations();
@@ -479,6 +494,8 @@ export function run() {
                 project.outputDir = "./dist";
             }
             console.time("compile");
+            if(!depChecker.installMissingDependencies(project))
+                process.exit(1);
             bb.compileProject(project).then(() => {
                 console.timeEnd("compile");
                 process.exit(0);
@@ -582,10 +599,11 @@ export function run() {
     c.command('*', null, { noHelp: true }).action((com) => {
         console.log("Invalid command " + com);
     });
-    plugins.pluginsLoader.registerCommands(c, function (value) { commandRunning = true });
-    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () {
-        commandRunning = true;
-    });
+
+    plugins.pluginsLoader.registerCommands(c, function () { commandRunning = true });
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () { commandRunning = true; });
+    depChecker.registerCommands(c, function () { commandRunning = true })
+
     let res = c.parse(process.argv);
     if (!commandRunning) {
         interactiveCommand(8080);

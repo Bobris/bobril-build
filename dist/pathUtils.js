@@ -54,4 +54,28 @@ function fileModifiedTime(path) {
     }
 }
 exports.fileModifiedTime = fileModifiedTime;
+function recursiveRemoveDir(path) {
+    if (!fs.existsSync(path))
+        return;
+    fs.readdirSync(path).forEach(function (file, index) {
+        var curPath = path + "/" + file;
+        if (fs.lstatSync(curPath).isDirectory()) {
+            recursiveRemoveDirSync(curPath);
+        }
+        else {
+            fs.unlinkSync(curPath);
+        }
+    });
+    fs.rmdirSync(path);
+}
+function recursiveRemoveDirSync(path) {
+    try {
+        recursiveRemoveDir(path);
+    }
+    catch (ex) {
+        return false;
+    }
+    return true;
+}
+exports.recursiveRemoveDirSync = recursiveRemoveDirSync;
 //# sourceMappingURL=pathUtils.js.map

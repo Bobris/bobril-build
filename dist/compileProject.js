@@ -193,6 +193,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
         project.logCallback('Package.json cannot be parsed. ' + err);
         return false;
     }
+    if (packageObj.publishConfig && packageObj.publishConfig.registry) {
+        project.npmRegistry = packageObj.publishConfig.registry;
+    }
     if (packageObj.typescript && typeof packageObj.typescript.main === 'string') {
         let main = packageObj.typescript.main;
         if (!fs.existsSync(path.join(project.dir, main))) {
@@ -220,8 +223,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
         if (!autodetectMainTs(project))
             return false;
     }
-    let deps = Object.keys(packageObj.dependencies || {});
-    project.localize = deps.some(v => v === "bobril-g11n");
+    project.devDependencies = Object.keys(packageObj.devDependencies || {});
+    project.dependencies = Object.keys(packageObj.dependencies || {});
+    project.localize = project.dependencies.some(v => v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
         autodetectMainExample(project, allFiles);

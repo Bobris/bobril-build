@@ -1,4 +1,4 @@
-import { spawnSync } from 'child_process';
+import * as processUtils from './processUtils';
 import { getUserHome } from './simpleHelpers';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
@@ -46,23 +46,13 @@ class PluginLoader implements IPluginLoader {
         return fs.existsSync(pluginPath);
     }
 
-    runProcess(installCommand: string): boolean {
-        var subProcess = spawnSync('cmd', ['/c', installCommand], {
-            cwd: this.__dirname,
-            env: process.env,
-            stdio: 'inherit'
-        });
-        console.log();
-        return subProcess.status === 0;
-    }
-
     install(pluginName: string): boolean {
         if (this.isPluginInstalled(pluginName)) {
             if (!this.uninstall(pluginName))
                 return false;
         }
         let installCommand = this.cmdToolName + ' install --prefix ' + this.escapeCmdPath(this.getBobrilHomeDirectory()) + ' ' + pluginName;
-        if (!this.runProcess(installCommand)) {
+        if (!processUtils.runProcess(installCommand)) {
             console.log('Plugin ' + pluginName + ' can not be installed.');
             return false;
         }
@@ -71,7 +61,7 @@ class PluginLoader implements IPluginLoader {
 
     uninstall(pluginName: string): boolean {
         let uninstallCommand = this.cmdToolName + " uninstall --prefix " + this.escapeCmdPath(this.getBobrilHomeDirectory()) + " " + pluginName;
-        if (!this.runProcess(uninstallCommand)) {
+        if (!processUtils.runProcess(uninstallCommand)) {
             console.log('Plugin ' + pluginName + ' can not be uninstalled.');
             return false;
         }
@@ -90,7 +80,7 @@ class PluginLoader implements IPluginLoader {
         let target = this.escapeCmdPath(workingDirectory);
 
         let linkCommand = 'mklink /J ' + link + ' ' + target + '';
-        if (!this.runProcess(linkCommand)) {
+        if (!processUtils.runProcess(linkCommand)) {
             console.log('Plugin can not be linked.');
             return false;
         }
@@ -155,14 +145,14 @@ class PluginLoader implements IPluginLoader {
         return result;
     }
 
-    registerCommands(c, commandRunningCallback) {
+    registerCommands(c: commander.IExportedCommand, consumeCommand: Function) {
         c
             .command("plugins")
             .option("-i, --install <pluginName>", "install plugin")
             .option("-u, --uninstall <pluginName>", "uninstall plugin")
             .option("-l, --link", "link plugin")
             .action((c) => {
-                commandRunningCallback(true);
+                consumeCommand(true);
                 if (c.hasOwnProperty("install")) {
                     if (!c["install"]) {
                         console.log("Plugin name is not specified.");

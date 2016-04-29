@@ -4,3 +4,4 @@ export declare function isAbsolutePath(name: string): boolean;
 export declare function join(...paths: string[]): string;
 export declare function mkpathsync(dirpath: string): void;
 export declare function fileModifiedTime(path: string): number;
+export declare function recursiveRemoveDirSync(path: string): Boolean;
