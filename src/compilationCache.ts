@@ -16,6 +16,7 @@ import { DynamicBuffer } from './dynamicBuffer';
 import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
 import { createFileNameShortener } from './shortenFileName';
+import {AdditionalResources}  from './AdditionalResources'
 
 function isCssByExt(name: string): boolean {
     return /\.css$/ig.test(name);
@@ -106,9 +107,10 @@ export interface IProject {
     bundleJs?: string;
     bundlePng?: string;
     realRootRel?: string;
-    dependencies?:string[];
-    devDependencies?:string[];
-    npmRegistry?:string;
+    dependencies?: string[];
+    devDependencies?: string[];
+    npmRegistry?: string;
+    additionalResourcesDirectory?: string;
 }
 
 export interface CompilationResultMessage {

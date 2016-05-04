@@ -91,6 +91,7 @@ export interface IProject {
     dependencies?: string[];
     devDependencies?: string[];
     npmRegistry?: string;
+    additionalResourcesDirectory?: string;
 }
 export interface CompilationResultMessage {
     fileName: string;

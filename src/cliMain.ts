@@ -8,10 +8,11 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader"
 import * as depChecker from "./dependenciesChecker"
+import {AdditionalResources}  from './AdditionalResources'
 
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 
-var project: bb.IProject;
+var serverAdditionalResources: AdditionalResources;
 
 function write(fn: string, b: Buffer) {
     memoryFs[fn] = b;
@@ -139,6 +140,13 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         return;
     }
     let f = memoryFs[request.url.substr(1)];
+    if (f) {
+        response.end(f);
+        return;
+    }
+    if (serverAdditionalResources == null)
+        serverAdditionalResources = createAdditionalResources(null);
+    f = serverAdditionalResources.tryGetFileContent(request.url.substr(1));
     if (f) {
         response.end(f);
         return;
@@ -452,6 +460,19 @@ function interactiveCommand(port: number) {
     });
 }
 
+function createAdditionalResources(project: bb.IProject) {
+    if (project == null) {
+        project = bb.createProjectFromDir(curProjectDir);
+        project.logCallback = (text) => {
+            console.log(text);
+        }
+        if (!bb.refreshProjectFromPackageJson(project, null)) {
+            process.exit(1);
+        }
+    }
+    return new AdditionalResources(project);
+}
+
 export function run() {
     let commandRunning = false;
     curProjectDir = bb.currentDirectory();
@@ -494,10 +515,11 @@ export function run() {
                 project.outputDir = "./dist";
             }
             console.time("compile");
-            if(!depChecker.installMissingDependencies(project))
+            if (!depChecker.installMissingDependencies(project))
                 process.exit(1);
             bb.compileProject(project).then(() => {
                 console.timeEnd("compile");
+                createAdditionalResources(project).copyFilesToOuputDir();
                 process.exit(0);
             }, (err) => {
                 console.error(err);

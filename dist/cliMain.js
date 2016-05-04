@@ -9,8 +9,9 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
 const depChecker = require("./dependenciesChecker");
+const AdditionalResources_1 = require('./AdditionalResources');
 var memoryFs = Object.create(null);
-var project;
+var serverAdditionalResources;
 function write(fn, b) {
     memoryFs[fn] = b;
 }
@@ -124,6 +125,13 @@ function handleRequest(request, response) {
         return;
     }
     let f = memoryFs[request.url.substr(1)];
+    if (f) {
+        response.end(f);
+        return;
+    }
+    if (serverAdditionalResources == null)
+        serverAdditionalResources = createAdditionalResources(null);
+    f = serverAdditionalResources.tryGetFileContent(request.url.substr(1));
     if (f) {
         response.end(f);
         return;
@@ -422,6 +430,18 @@ function interactiveCommand(port) {
         });
     });
 }
+function createAdditionalResources(project) {
+    if (project == null) {
+        project = bb.createProjectFromDir(curProjectDir);
+        project.logCallback = (text) => {
+            console.log(text);
+        };
+        if (!bb.refreshProjectFromPackageJson(project, null)) {
+            process.exit(1);
+        }
+    }
+    return new AdditionalResources_1.AdditionalResources(project);
+}
 function run() {
     let commandRunning = false;
     curProjectDir = bb.currentDirectory();
@@ -470,6 +490,7 @@ function run() {
             process.exit(1);
         bb.compileProject(project).then(() => {
             console.timeEnd("compile");
+            createAdditionalResources(project).copyFilesToOuputDir();
             process.exit(0);
         }, (err) => {
             console.error(err);

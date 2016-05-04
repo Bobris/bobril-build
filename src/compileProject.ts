@@ -8,6 +8,7 @@ import * as glob from "glob";
 import * as minimatch from "minimatch";
 import { deepEqual } from './deepEqual';
 import * as plugins from "./pluginsLoader";
+import {AdditionalResources}  from './AdditionalResources'
 
 export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
@@ -39,13 +40,13 @@ function autodetectMainTs(project: bb.IProject): boolean {
 
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 
-function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:boolean) {
+function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx: boolean) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
-    let tscfg:any = {};
+    let tscfg: any = {};
     let origtscfg = {};
     if (fs.existsSync(tscfgPath)) {
         try {
-            let content =fs.readFileSync(tscfgPath, 'utf8');
+            let content = fs.readFileSync(tscfgPath, 'utf8');
             tscfg = JSON.parse(content);
             origtscfg = JSON.parse(content);
         } catch (e) {
@@ -55,20 +56,21 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:
     if (tscfg == null) {
         tscfg = {};
     }
-    if (tscfg.compilerOptions==null) {
-        tscfg.compilerOptions={};
+    if (tscfg.compilerOptions == null) {
+        tscfg.compilerOptions = {};
     }
-    Object.assign(tscfg.compilerOptions,{
-                target: "es6",
-                module: "commonjs",
-                moduleResolution: "node"});
+    Object.assign(tscfg.compilerOptions, {
+        target: "es6",
+        module: "commonjs",
+        moduleResolution: "node"
+    });
     if (jsx) {
-        Object.assign(tscfg.compilerOptions,{
+        Object.assign(tscfg.compilerOptions, {
             jsx: "react",
             reactNamespace: "b"
         });
     } else {
-        if (tscfg.compilerOptions.reactNamespace==="b") {
+        if (tscfg.compilerOptions.reactNamespace === "b") {
             tscfg.compilerOptions.jsx = undefined;
             tscfg.compilerOptions.reactNamespace = undefined;
         }
@@ -113,10 +115,10 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
         let re = minimatch.makeRe(project.specGlob);
         let specList = [];
         let dirs = Object.keys(allFiles);
-        let containsJasmineDefFile=false;
+        let containsJasmineDefFile = false;
         for (let i = 0; i < dirs.length; i++) {
             let d = dirs[i];
-            if(d.indexOf('node_modules')!=-1)continue;
+            if (d.indexOf('node_modules') != -1) continue;
             let f = allFiles[d];
             if (d === ".") {
                 d = "";
@@ -125,12 +127,15 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
             }
             for (let j = 0; j < f.length; j++) {
                 let ff = d + f[j];
+                if (f[j] == 'jasmine.d.ts') {
+                    if (!containsJasmineDefFile) {
+                        specList.push(ff);
+                        containsJasmineDefFile = true;
+                    }
+                    continue;
+                }
                 if (re.test(ff))
                     specList.push(ff);
-                if(f[j]=='jasmine.d.ts'){
-                   specList.push(ff);
-                   containsJasmineDefFile=true; 
-                }
             }
         }
         if (specList.length > 0) {
@@ -155,7 +160,7 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
         (<string[]>project.main).push(...project.mainSpec);
     }
     if (!project.noBobrilJsx) {
-        const bobriljsxdts="node_modules/bobril/jsx.d.ts";
+        const bobriljsxdts = "node_modules/bobril/jsx.d.ts";
         if (fs.existsSync(path.join(project.dir, bobriljsxdts))) {
             (<string[]>project.main).push(bobriljsxdts);
         }
@@ -187,8 +192,8 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
         project.logCallback('Package.json cannot be parsed. ' + err);
         return false;
     }
-    if(packageObj.publishConfig && packageObj.publishConfig.registry){
-        project.npmRegistry=packageObj.publishConfig.registry;
+    if (packageObj.publishConfig && packageObj.publishConfig.registry) {
+        project.npmRegistry = packageObj.publishConfig.registry;
     }
     if (packageObj.typescript && typeof packageObj.typescript.main === 'string') {
         let main = packageObj.typescript.main;
@@ -199,7 +204,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
         project.mainIndex = main;
     } else if (typeof packageObj.main === 'string') {
         let main = packageObj.main;
-        let mainTs = main.replace(/\.js$/, '.ts'); 
+        let mainTs = main.replace(/\.js$/, '.ts');
         if (fs.existsSync(path.join(project.dir, mainTs))) {
             project.mainIndex = mainTs;
         } else if (fs.existsSync(path.join(project.dir, main))) {
@@ -241,6 +246,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     if (typeof bobrilSection.example === 'string') {
         project.mainExample = bobrilSection.example;
     }
+    if (typeof bobrilSection.additionalResourcesDirectory==='string'){
+        project.additionalResourcesDirectory=bobrilSection.additionalResourcesDirectory;
+    }
     autodetectMainExample(project, allFiles);
     return true;
 }
@@ -254,7 +262,7 @@ export function defineTranslationReporter(project: bb.IProject) {
             let sc = message.callExpression.getSourceFile();
             let posStart = ts.getLineAndCharacterOfPosition(sc, message.callExpression.pos);
             let posEnd = ts.getLineAndCharacterOfPosition(sc, message.callExpression.end);
-            compilationResult.addMessage(true, sc.fileName, "BB0001: "+ast.msg, [posStart.line+1, posStart.character+1,posEnd.line+1,posEnd.character+1]);
+            compilationResult.addMessage(true, sc.fileName, "BB0001: " + ast.msg, [posStart.line + 1, posStart.character + 1, posEnd.line + 1, posEnd.character + 1]);
             project.logCallback("Error: " + sc.fileName + "(" + (posStart.line + 1) + "/" + (posStart.character + 1) + ") " + ast.msg);
         }
     };
@@ -304,9 +312,9 @@ export function compileProject(project: bb.IProject): Promise<any> {
         fs.writeFileSync(fullname, b);
     };
     translationDb.clearBeforeCompilation();
-    
-    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterStartCompileProcess,project);
-    
+
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterStartCompileProcess, project);
+
     compilationCache.clearFileTimeModifications();
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) {

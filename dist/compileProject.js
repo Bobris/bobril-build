@@ -60,7 +60,8 @@ function runUpdateTsConfig(cwd, files, jsx) {
     Object.assign(tscfg.compilerOptions, {
         target: "es6",
         module: "commonjs",
-        moduleResolution: "node" });
+        moduleResolution: "node"
+    });
     if (jsx) {
         Object.assign(tscfg.compilerOptions, {
             jsx: "react",
@@ -128,12 +129,15 @@ function autodetectMainExample(project, allFiles) {
             }
             for (let j = 0; j < f.length; j++) {
                 let ff = d + f[j];
+                if (f[j] == 'jasmine.d.ts') {
+                    if (!containsJasmineDefFile) {
+                        specList.push(ff);
+                        containsJasmineDefFile = true;
+                    }
+                    continue;
+                }
                 if (re.test(ff))
                     specList.push(ff);
-                if (f[j] == 'jasmine.d.ts') {
-                    specList.push(ff);
-                    containsJasmineDefFile = true;
-                }
             }
         }
         if (specList.length > 0) {
@@ -251,6 +255,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
     }
     if (typeof bobrilSection.example === 'string') {
         project.mainExample = bobrilSection.example;
+    }
+    if (typeof bobrilSection.additionalResourcesDirectory === 'string') {
+        project.additionalResourcesDirectory = bobrilSection.additionalResourcesDirectory;
     }
     autodetectMainExample(project, allFiles);
     return true;
