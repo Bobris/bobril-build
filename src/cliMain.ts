@@ -13,9 +13,10 @@ import {AdditionalResources}  from './AdditionalResources'
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 
 var serverAdditionalResources: AdditionalResources;
+var serverProject: bb.IProject;
 
 function write(fn: string, b: Buffer) {
-    memoryFs[fn] = b;
+    memoryFs[fn.toLowerCase()] = b;
 }
 
 function writeDist(fn: string, b: Buffer) {
@@ -111,6 +112,11 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
             mainServer.handle(request, response);
             return;
         }
+        if (name === 'api/projectdirectory') {
+            let project = initServerProject();
+            response.end(project.dir);
+            return;
+        }
         if (reUrlTest.test(name)) {
             if (name.length === 4) {
                 response.writeHead(301, { Location: "/bb/test/" });
@@ -139,18 +145,19 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         response.end(memoryFs['index.html']);
         return;
     }
-    let f = memoryFs[request.url.substr(1)];
+    let f = memoryFs[request.url.substr(1).toLowerCase()];
     if (f) {
         response.end(f);
         return;
     }
     if (serverAdditionalResources == null)
-        serverAdditionalResources = createAdditionalResources(null);
+        serverAdditionalResources = createAdditionalResources(initServerProject());
     f = serverAdditionalResources.tryGetFileContent(request.url.substr(1));
     if (f) {
         response.end(f);
         return;
     }
+
     response.statusCode = 404;
     response.end('Not found');
 }
@@ -460,16 +467,19 @@ function interactiveCommand(port: number) {
     });
 }
 
-function createAdditionalResources(project: bb.IProject) {
-    if (project == null) {
-        project = bb.createProjectFromDir(curProjectDir);
-        project.logCallback = (text) => {
-            console.log(text);
-        }
-        if (!bb.refreshProjectFromPackageJson(project, null)) {
-            process.exit(1);
-        }
+function initServerProject(): bb.IProject {
+    if (serverProject) return serverProject;
+    serverProject = bb.createProjectFromDir(curProjectDir);
+    serverProject.logCallback = (text) => {
+        console.log(text);
     }
+    if (!bb.refreshProjectFromPackageJson(serverProject, null)) {
+        process.exit(1);
+    }
+    return serverProject;
+}
+
+function createAdditionalResources(project: bb.IProject) {
     return new AdditionalResources(project);
 }
 
@@ -623,7 +633,9 @@ export function run() {
     });
 
     plugins.pluginsLoader.registerCommands(c, function () { commandRunning = true });
-    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () { commandRunning = true; });
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () {
+        commandRunning = true;
+    });
     depChecker.registerCommands(c, function () { commandRunning = true })
 
     let res = c.parse(process.argv);

@@ -12,8 +12,9 @@ const depChecker = require("./dependenciesChecker");
 const AdditionalResources_1 = require('./AdditionalResources');
 var memoryFs = Object.create(null);
 var serverAdditionalResources;
+var serverProject;
 function write(fn, b) {
-    memoryFs[fn] = b;
+    memoryFs[fn.toLowerCase()] = b;
 }
 function writeDist(fn, b) {
     let ofn = path.join('dist', fn);
@@ -94,6 +95,11 @@ function handleRequest(request, response) {
             mainServer.handle(request, response);
             return;
         }
+        if (name === 'api/projectdirectory') {
+            let project = initServerProject();
+            response.end(project.dir);
+            return;
+        }
         if (reUrlTest.test(name)) {
             if (name.length === 4) {
                 response.writeHead(301, { Location: "/bb/test/" });
@@ -124,13 +130,13 @@ function handleRequest(request, response) {
         response.end(memoryFs['index.html']);
         return;
     }
-    let f = memoryFs[request.url.substr(1)];
+    let f = memoryFs[request.url.substr(1).toLowerCase()];
     if (f) {
         response.end(f);
         return;
     }
     if (serverAdditionalResources == null)
-        serverAdditionalResources = createAdditionalResources(null);
+        serverAdditionalResources = createAdditionalResources(initServerProject());
     f = serverAdditionalResources.tryGetFileContent(request.url.substr(1));
     if (f) {
         response.end(f);
@@ -430,16 +436,19 @@ function interactiveCommand(port) {
         });
     });
 }
-function createAdditionalResources(project) {
-    if (project == null) {
-        project = bb.createProjectFromDir(curProjectDir);
-        project.logCallback = (text) => {
-            console.log(text);
-        };
-        if (!bb.refreshProjectFromPackageJson(project, null)) {
-            process.exit(1);
-        }
+function initServerProject() {
+    if (serverProject)
+        return serverProject;
+    serverProject = bb.createProjectFromDir(curProjectDir);
+    serverProject.logCallback = (text) => {
+        console.log(text);
+    };
+    if (!bb.refreshProjectFromPackageJson(serverProject, null)) {
+        process.exit(1);
     }
+    return serverProject;
+}
+function createAdditionalResources(project) {
     return new AdditionalResources_1.AdditionalResources(project);
 }
 function run() {
@@ -595,7 +604,9 @@ function run() {
         console.log("Invalid command " + com);
     });
     plugins.pluginsLoader.registerCommands(c, function () { commandRunning = true; });
-    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () { commandRunning = true; });
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () {
+        commandRunning = true;
+    });
     depChecker.registerCommands(c, function () { commandRunning = true; });
     let res = c.parse(process.argv);
     if (!commandRunning) {

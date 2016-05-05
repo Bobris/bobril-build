@@ -1,9 +1,9 @@
-var R = ((name, fn) => {
+var R = (function (name, fn) {
     R.m[name.toLowerCase()] = { fn: fn, exports: undefined };
 });
 R.m = Object.create(null);
-R.r = (name, parent) => {
-    let p = R.map[name];
+R.r = function (name, parent) {
+    var p = R.map[name];
     if (p == null)
         p = name;
     if (p[0] === '.') {
@@ -11,7 +11,7 @@ R.r = (name, parent) => {
         parts.push('..');
         parts = parts.concat(p.split("/"));
         var newParts = [];
-        for (let i = 0, l = parts.length; i < l; i++) {
+        for (var i = 0, l = parts.length; i < l; i++) {
             var part = parts[i];
             if (!part || part === ".")
                 continue;
@@ -22,12 +22,12 @@ R.r = (name, parent) => {
         }
         p = newParts.join("/");
     }
-    let m = R.m[p.toLowerCase()];
+    var m = R.m[p.toLowerCase()];
     if (m == null)
         throw new Error("Module " + name + " in " + (parent || "/") + " not registered");
     if (m.exports !== undefined)
         return m.exports;
     m.exports = {};
-    m.fn.call(window, (name) => R.r(name, p), m, m.exports);
+    m.fn.call(window, function (name) { return R.r(name, p); }, m, m.exports);
     return m.exports;
 };

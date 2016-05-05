@@ -23,7 +23,9 @@
 			"problemMatcher": "$tsc",
 			"args": [
 				"-p",
-				"srcHelpers"
+				"srcHelpers",
+				"-t",
+				"es5"
 			]
 		},
 		{
