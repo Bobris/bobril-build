@@ -39,4 +39,11 @@ export declare class TranslationDb implements CompilationCache.ICompilationTrans
     getMessageArrayInLang(lang: string): string[];
     getForTranslationLang(lang: string): [string, string, string, number, string][];
     setForTranslationLang(lang: string, trs: [string, string, string, number, string][]): void;
+    importTranslatedLanguages(filePath: string): boolean;
+    private importTranslatedLanguagesInternal(filePath, callback);
+    private exportLanguageItem(source, hint);
+    exportUntranslatedLanguages(filePath: string): boolean;
+    makeUnionOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean;
+    makeSubtractOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean;
+    private saveExportedLanguages(outputPath, data);
 }

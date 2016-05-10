@@ -485,6 +485,7 @@ function createAdditionalResources(project: bb.IProject) {
 
 export function run() {
     let commandRunning = false;
+    let range = [];
     curProjectDir = bb.currentDirectory();
     c
         .command("build")
@@ -542,6 +543,10 @@ export function run() {
         .description("everything around translations")
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
+        .option("-e, --export <path>", "export untranslated languages")
+        .option("-i, --import <path>", "import translated languages")
+        .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
+        .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
         .action((c) => {
             commandRunning = true;
             let project = bb.createProjectFromDir(bb.currentDirectory());
@@ -557,6 +562,35 @@ export function run() {
                 console.log("Removing locale " + c["removelang"]);
                 trDb.removeLang(c["removelang"]);
                 trDb.saveLangDbs(trDir);
+            }
+            if (c["export"]) {
+                console.log("Export untranslated languages into file " + c["export"] + ".");
+                if (!trDb.exportUntranslatedLanguages(c["export"]))
+                    process.exit(1);
+            }
+            if (c["import"]) {
+                console.log("Import translated languages from file " + c["import"] + ".");
+                if (!trDb.importTranslatedLanguages(c["import"]))
+                    process.exit(1);
+                trDb.saveLangDbs(trDir);
+            }
+            if (c["union"]) {
+                let uArgs = c["union"].split(',');
+                if (uArgs.length != 3) {
+                    console.log("Invalid count of parameters.")
+                    process.exit(1);
+                }
+                if (!trDb.makeUnionOfExportedLanguages(uArgs[0], uArgs[1], uArgs[2]))
+                    process.exit(1);
+            }
+            if(c["subtract"]){
+                let uArgs = c["subtract"].split(',');
+                if (uArgs.length != 3) {
+                    console.log("Invalid count of parameters.")
+                    process.exit(1);
+                }
+                if (!trDb.makeSubtractOfExportedLanguages(uArgs[0], uArgs[1], uArgs[2]))
+                    process.exit(1);
             }
             process.exit(0);
         });

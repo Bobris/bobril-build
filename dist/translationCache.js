@@ -240,6 +240,129 @@ class TranslationDb {
             item[pos] = row[0];
         }
     }
+    importTranslatedLanguages(filePath) {
+        try {
+            let language = path.basename(filePath, ".txt");
+            let languageIndex = this.langs.indexOf(language);
+            if (languageIndex == -1)
+                throw "Language '" + language + "' does not exist. Probably file name is not valid.";
+            this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
+                let key = this.buildKey(source, hint, true);
+                let trs = this.db[key];
+                if (trs)
+                    trs[4 + languageIndex] = target;
+                key = this.buildKey(source, hint, false);
+                trs = this.db[key];
+                if (trs)
+                    trs[4 + languageIndex] = target;
+            });
+            return true;
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+    }
+    importTranslatedLanguagesInternal(filePath, callback) {
+        let content = fs.readFileSync(filePath, "utf-8");
+        content = content.replace(/\r\n|\n|\r/g, "\n");
+        let lines = content.split("\n");
+        for (let i = 0; i < lines.length;) {
+            if (lines[i].length == 0) {
+                i++;
+                continue;
+            }
+            if (lines[i][0] != 'S' || lines[i][1] != ':')
+                throw "Invalid file format. (" + lines[i] + ")";
+            if (lines[i + 1][0] != 'I' || lines[i + 1][1] != ':')
+                throw "Invalid file format. (" + lines[i + 1] + ")";
+            if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':')
+                throw "Invalid file format. (" + lines[i + 2] + ")";
+            let source = lines[i].substr(2);
+            let hint = lines[i + 1].substr(2);
+            let target = lines[i + 2].substr(2);
+            callback(source, hint, target);
+            i += 3;
+        }
+    }
+    exportLanguageItem(source, hint) {
+        let content = "";
+        content += 'S:' + source + '\r\n';
+        content += 'I:' + (hint ? hint : '') + '\r\n';
+        content += 'T:\r\n';
+        return content;
+    }
+    exportUntranslatedLanguages(filePath) {
+        try {
+            let content = "";
+            let db = this.db;
+            for (let key in db) {
+                let trs = db[key];
+                for (let i = 0; i < this.langs.length; i++) {
+                    if (trs[i + 4])
+                        continue;
+                    content += this.exportLanguageItem(trs[0], trs[1]);
+                    break;
+                }
+            }
+            if (content.length > 0) {
+                fs.writeFileSync(filePath, content, 'utf-8');
+            }
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+        return true;
+    }
+    makeUnionOfExportedLanguages(filePath1, filePath2, outputPath) {
+        try {
+            let data;
+            data = Object.create(null);
+            let THIS = this;
+            let fn = function (source, hint, target) {
+                data[THIS.buildKey(source, hint, false)] = { 'source': source, 'hint': hint };
+            };
+            this.importTranslatedLanguagesInternal(filePath1, fn);
+            this.importTranslatedLanguagesInternal(filePath2, fn);
+            this.saveExportedLanguages(outputPath, data);
+            return true;
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+    }
+    makeSubtractOfExportedLanguages(filePath1, filePath2, outputPath) {
+        try {
+            let data;
+            data = Object.create(null);
+            this.importTranslatedLanguagesInternal(filePath1, (source, hint, target) => {
+                data[this.buildKey(source, hint, false)] = { 'source': source, 'hint': hint };
+            });
+            this.importTranslatedLanguagesInternal(filePath2, (source, hint, target) => {
+                let key = this.buildKey(source, hint, false);
+                if (data[key]) {
+                    delete data[key];
+                }
+            });
+            this.saveExportedLanguages(outputPath, data);
+            return true;
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+    }
+    saveExportedLanguages(outputPath, data) {
+        let content = "";
+        for (let key in data) {
+            content += this.exportLanguageItem(data[key].source, data[key].hint);
+        }
+        if (content.length > 0) {
+            fs.writeFileSync(outputPath, content, 'utf-8');
+        }
+    }
 }
 exports.TranslationDb = TranslationDb;
 //# sourceMappingURL=translationCache.js.map
