@@ -57,11 +57,11 @@ export class AdditionalResources {
             let filePath = path.join(directory, file);
             if (fs.lstatSync(filePath).isDirectory()) {
                 this.recursiveCopyFiles(filePath, path.join(subDirPath, file));
-                return;
+            } else {
+                let outputdir = this.project.outputDir;
+                let destPath = path.resolve(outputdir, subDirPath, file);
+                this.copyToProjectIfChanged(filePath, destPath);
             }
-            let outputdir = this.project.outputDir;
-            let destPath = path.resolve(outputdir, subDirPath, file);
-            this.copyToProjectIfChanged(filePath, destPath);
         }
     }
 
