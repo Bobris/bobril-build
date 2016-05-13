@@ -6,6 +6,7 @@ export class Connection {
     private closed: boolean;
     private longPolling: XMLHttpRequest;
     private heartBeatTimer: number;
+    private processingBatch = false;
 
     onMessage: (connection: Connection, message: string, data: any) => void;
     onClose: (connection: Connection) => void;
@@ -29,6 +30,7 @@ export class Connection {
         this.closed = false;
         this.longPolling = null;
         this.heartBeatTimer = -1;
+        this.processingBatch = false;
         this.reSendTimer();
     }
 
@@ -84,7 +86,7 @@ export class Connection {
 
     private doSend() {
         this.sendTimer = -1;
-        if (this.closed && this.id === '')
+        if ((this.closed && this.id === '') || this.processingBatch)
             return;
         var xhr = new (<any>window).XMLHttpRequest();
         xhr.open("POST", this.url, true);
@@ -92,6 +94,7 @@ export class Connection {
             this.close();
         }
         xhr.onreadystatechange = () => {
+            this.processingBatch = false;
             if (xhr.readyState === 4) {
                 if (xhr.status < 200 || xhr.status >= 300) {
                     this.close();
@@ -106,7 +109,10 @@ export class Connection {
                     this.startHeartBeat();
                 }
             }
+            if (this.toSend.length > 0)
+                this.doSend();
         }
+        this.processingBatch = true;
         xhr.send(JSON.stringify(this.closed ? { id: this.id, close: true } : { id: this.id, m: this.toSend }));
         if (this.closed)
             this.id = "";

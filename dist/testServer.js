@@ -249,6 +249,9 @@ class Client {
         this.connection.send("test", { url: this.url });
     }
     convertMessageAndStack(rawMessage) {
+        if (!rawMessage.stack) {
+            return { message: rawMessage.message, stack: [] };
+        }
         let st = stackTrace.parseStack(rawMessage.stack);
         st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
         st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));

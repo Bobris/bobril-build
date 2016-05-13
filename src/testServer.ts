@@ -275,6 +275,9 @@ class Client {
     }
 
     convertMessageAndStack(rawMessage: { message: string, stack: string }): MessageAndStack {
+        if (!rawMessage.stack) {
+            return { message: rawMessage.message, stack: [] };
+        }        
         let st = stackTrace.parseStack(rawMessage.stack);
         st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
         st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));
