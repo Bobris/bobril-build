@@ -9,6 +9,7 @@ export declare function momentJsPath(): string;
 export declare function momentJsFiles(): string[];
 export declare function systemJsBasedIndexHtml(project: compilationCache.IProject): string;
 export declare function bundleBasedIndexHtml(project: compilationCache.IProject): string;
+export declare function examplesListIndexHtml(fileNames: string[], project: compilationCache.IProject): string;
 export declare function fastBundleBasedIndexHtml(project: compilationCache.IProject): string;
 export declare function fastBundleBasedTestHtml(project: compilationCache.IProject): string;
 export declare function updateIndexHtml(project: compilationCache.IProject): void;

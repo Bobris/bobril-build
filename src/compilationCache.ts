@@ -56,7 +56,7 @@ export interface ICompilationTranslation {
 export interface IProject {
     main: string | string[];
     mainIndex?: string;
-    mainExample?: string;
+    mainExamples: string[];
     mainSpec?: string[];
     dir: string;
     options: ts.CompilerOptions;

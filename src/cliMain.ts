@@ -182,6 +182,7 @@ function createProjectFromPackageJson(): bb.IProject {
         dir: process.cwd().replace(/\\/g, '/'),
         main: 'src/app.ts',
         mainJsFile: 'src/app.js',
+        mainExamples: [],
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     let packageJson = null;
@@ -508,7 +509,7 @@ export function run() {
                 process.exit(1);
             }
             if (c["dir"]) project.outputDir = c["dir"];
-            if (humanTrue(c["fast"])) {
+            if (humanTrue(c["fast"]) || project.mainExamples.length > 1) {
                 presetDebugProject(project);
             } else {
                 presetReleaseProject(project);
@@ -583,7 +584,7 @@ export function run() {
                 if (!trDb.makeUnionOfExportedLanguages(uArgs[0], uArgs[1], uArgs[2]))
                     process.exit(1);
             }
-            if(c["subtract"]){
+            if (c["subtract"]) {
                 let uArgs = c["subtract"].split(',');
                 if (uArgs.length != 3) {
                     console.log("Invalid count of parameters.")

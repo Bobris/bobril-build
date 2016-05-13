@@ -17,6 +17,7 @@ export function createProjectFromDir(path: string): bb.IProject {
         mainIndex: null,
         mainJsFile: null,
         noBobrilJsx: false,
+        mainExamples: [],
         specGlob: "**/*@(.s|S)pec.ts?(x)",
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
@@ -106,9 +107,9 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:
 }
 
 function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: string[] }) {
-    if (project.mainExample == null && project.mainIndex === "index.ts") {
+    if (project.mainExamples.length == 0 && project.mainIndex === "index.ts") {
         if (fs.existsSync(path.join(project.dir, "example.ts"))) {
-            project.mainExample = "example.ts";
+            project.mainExamples.push(path.join(project.dir, "example.ts"));
         }
     }
     if (allFiles != null) {
@@ -149,9 +150,14 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
         }
         runUpdateTsConfig(project.dir, allFiles, !project.noBobrilJsx);
     }
-    if (project.mainExample != null) {
-        project.main = [project.mainIndex, project.mainExample];
-        project.mainJsFile = project.mainExample.replace(/\.tsx?$/, '.js');
+    if (project.mainExamples.length > 0) {
+        if (project.mainExamples.length == 1) {
+            project.main = [project.mainIndex, project.mainExamples[0]];
+            project.mainJsFile = project.mainExamples[0].replace(/\.tsx?$/, '.js');
+        }
+        else {
+            project.main = JSON.parse(JSON.stringify(project.mainExamples));
+        }
     } else {
         project.main = [project.mainIndex];
         project.mainJsFile = project.mainIndex.replace(/\.tsx?$/, '.js');
@@ -244,10 +250,30 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
         project.constantOverrides = bobrilSection.constantOverrides;
     }
     if (typeof bobrilSection.example === 'string') {
-        project.mainExample = bobrilSection.example;
+        project.mainExamples = [];
+        try {
+            if (fs.lstatSync(bobrilSection.example).isDirectory()) {
+                let files = fs.readdirSync(bobrilSection.example);
+                for (let i = 0; i < files.length; i++) {
+                    let file = path.join(bobrilSection.example, files[i]);
+                    if (fs.lstatSync(file).isDirectory()) continue;
+                    project.mainExamples.push(file);
+                }
+            }
+            else {
+                project.mainExamples.push(path.join(project.dir, bobrilSection.example));
+            }
+        } catch (err) {
+            project.logCallback('Cannot read examples ' + err + '. Autodetecting main ts file.');
+            if (autodetectMainTs(project)) {
+                autodetectMainExample(project, allFiles);
+                return true;
+            }
+            return false;
+        }
     }
-    if (typeof bobrilSection.additionalResourcesDirectory==='string'){
-        project.additionalResourcesDirectory=bobrilSection.additionalResourcesDirectory;
+    if (typeof bobrilSection.additionalResourcesDirectory === 'string') {
+        project.additionalResourcesDirectory = bobrilSection.additionalResourcesDirectory;
     }
     autodetectMainExample(project, allFiles);
     return true;

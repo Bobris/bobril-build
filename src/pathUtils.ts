@@ -69,4 +69,8 @@ export function recursiveRemoveDirSync(path: string): Boolean {
         return false;
     }
     return true;
-} 
+}
+
+export function normalizePath(path: string) {
+    return path.replace(/\\/g, '/');
+}

@@ -89,6 +89,24 @@ function bundleBasedIndexHtml(project) {
     return `<!DOCTYPE html><html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
 }
 exports.bundleBasedIndexHtml = bundleBasedIndexHtml;
+function examplesListIndexHtml(fileNames, project) {
+    let testList = "";
+    for (let i = 0; i < fileNames.length; i++) {
+        testList += `<li><a href="${fileNames[i]}">` + path.basename(fileNames[i], ".html") + '</a></li>';
+    }
+    let title = project.htmlTitle || 'Bobril Application';
+    return `<!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">${project.htmlHeadExpanded}
+            <title>${title}</title>${linkCss(project)}
+        </head>
+        <body>
+        <ul>${testList}</ul>
+        </body>
+    </html>`;
+}
+exports.examplesListIndexHtml = examplesListIndexHtml;
 function fastBundleBasedIndexHtml(project) {
     let title = project.htmlTitle || 'Bobril Application';
     let moduleNames = Object.keys(project.moduleMap);
@@ -164,7 +182,21 @@ function updateIndexHtml(project) {
         newIndexHtml = bundleBasedIndexHtml(project);
     }
     else if (project.fastBundle) {
-        newIndexHtml = fastBundleBasedIndexHtml(project);
+        if (project.mainExamples.length <= 1) {
+            newIndexHtml = fastBundleBasedIndexHtml(project);
+        }
+        else {
+            let fileNames = [];
+            for (let i = 0; i < project.mainExamples.length; i++) {
+                let examplePath = project.mainExamples[i];
+                let fileName = path.basename(examplePath).replace(/\.tsx?$/, '.html');
+                project.mainJsFile = examplePath.replace(/\.tsx?$/, '.js');
+                let content = fastBundleBasedIndexHtml(project);
+                project.writeFileCallback(fileName, new Buffer(content));
+                fileNames.push(fileName);
+            }
+            newIndexHtml = examplesListIndexHtml(fileNames, project);
+        }
     }
     else {
         newIndexHtml = systemJsBasedIndexHtml(project);

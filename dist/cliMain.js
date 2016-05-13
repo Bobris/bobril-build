@@ -164,6 +164,7 @@ function createProjectFromPackageJson() {
         dir: process.cwd().replace(/\\/g, '/'),
         main: 'src/app.ts',
         mainJsFile: 'src/app.js',
+        mainExamples: [],
         options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
     };
     let packageJson = null;
@@ -477,7 +478,7 @@ function run() {
         }
         if (c["dir"])
             project.outputDir = c["dir"];
-        if (humanTrue(c["fast"])) {
+        if (humanTrue(c["fast"]) || project.mainExamples.length > 1) {
             presetDebugProject(project);
         }
         else {

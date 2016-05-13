@@ -4,6 +4,7 @@ const simpleHelpers_1 = require('./simpleHelpers');
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
+const pathUtils = require("./pathUtils");
 (function (EntryMethodType) {
     EntryMethodType[EntryMethodType["registerCommands"] = 0] = "registerCommands";
     EntryMethodType[EntryMethodType["afterStartCompileProcess"] = 1] = "afterStartCompileProcess";
@@ -64,6 +65,9 @@ class PluginLoader {
         }
         let link = this.escapeCmdPath(path.join(this.getPluginsDirectory(), pluginName));
         let target = this.escapeCmdPath(workingDirectory);
+        if (!fs.existsSync(link)) {
+            pathUtils.mkpathsync(path.dirname(pathUtils.normalizePath(link)));
+        }
         let linkCommand = 'mklink /J ' + link + ' ' + target + '';
         if (!processUtils.runProcess(linkCommand)) {
             console.log('Plugin can not be linked.');
@@ -142,22 +146,22 @@ class PluginLoader {
             if (c.hasOwnProperty("install")) {
                 if (!c["install"]) {
                     console.log("Plugin name is not specified.");
-                    return;
+                    process.exit(1);
                 }
                 this.install(c["install"]);
-                return;
+                process.exit(0);
             }
             if (c.hasOwnProperty("uninstall")) {
                 if (!c["uninstall"]) {
                     console.log("Plugin name is not specified.");
-                    return;
+                    process.exit(1);
                 }
                 this.uninstall(c["uninstall"]);
-                return;
+                process.exit(0);
             }
             if (c.hasOwnProperty("link")) {
                 this.link();
-                return;
+                process.exit(0);
             }
         });
     }

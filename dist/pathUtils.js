@@ -78,4 +78,8 @@ function recursiveRemoveDirSync(path) {
     return true;
 }
 exports.recursiveRemoveDirSync = recursiveRemoveDirSync;
+function normalizePath(path) {
+    return path.replace(/\\/g, '/');
+}
+exports.normalizePath = normalizePath;
 //# sourceMappingURL=pathUtils.js.map
