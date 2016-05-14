@@ -109,7 +109,7 @@ function runUpdateTsConfig(cwd, files, jsx) {
 function autodetectMainExample(project, allFiles) {
     if (project.mainExamples.length == 0 && project.mainIndex === "index.ts") {
         if (fs.existsSync(path.join(project.dir, "example.ts"))) {
-            project.mainExamples.push(path.join(project.dir, "example.ts"));
+            project.mainExamples.push("example.ts");
         }
     }
     if (allFiles != null) {
@@ -159,7 +159,7 @@ function autodetectMainExample(project, allFiles) {
             project.mainJsFile = project.mainExamples[0].replace(/\.tsx?$/, '.js');
         }
         else {
-            project.main = JSON.parse(JSON.stringify(project.mainExamples));
+            project.main = project.mainExamples;
         }
     }
     else {
@@ -268,11 +268,11 @@ function refreshProjectFromPackageJson(project, allFiles) {
                     let file = path.join(bobrilSection.example, files[i]);
                     if (fs.lstatSync(file).isDirectory())
                         continue;
-                    project.mainExamples.push(file);
+                    project.mainExamples.push(path.relative(project.dir, file));
                 }
             }
             else {
-                project.mainExamples.push(path.join(project.dir, bobrilSection.example));
+                project.mainExamples.push(bobrilSection.example);
             }
         }
         catch (err) {

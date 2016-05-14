@@ -109,7 +109,7 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:
 function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: string[] }) {
     if (project.mainExamples.length == 0 && project.mainIndex === "index.ts") {
         if (fs.existsSync(path.join(project.dir, "example.ts"))) {
-            project.mainExamples.push(path.join(project.dir, "example.ts"));
+            project.mainExamples.push("example.ts");
         }
     }
     if (allFiles != null) {
@@ -156,7 +156,7 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
             project.mainJsFile = project.mainExamples[0].replace(/\.tsx?$/, '.js');
         }
         else {
-            project.main = JSON.parse(JSON.stringify(project.mainExamples));
+            project.main = project.mainExamples;
         }
     } else {
         project.main = [project.mainIndex];
@@ -257,11 +257,11 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
                 for (let i = 0; i < files.length; i++) {
                     let file = path.join(bobrilSection.example, files[i]);
                     if (fs.lstatSync(file).isDirectory()) continue;
-                    project.mainExamples.push(file);
+                    project.mainExamples.push(path.relative(project.dir,file));
                 }
             }
             else {
-                project.mainExamples.push(path.join(project.dir, bobrilSection.example));
+                project.mainExamples.push(bobrilSection.example);
             }
         } catch (err) {
             project.logCallback('Cannot read examples ' + err + '. Autodetecting main ts file.');
