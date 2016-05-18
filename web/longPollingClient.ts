@@ -94,8 +94,8 @@ export class Connection {
             this.close();
         }
         xhr.onreadystatechange = () => {
-            this.processingBatch = false;
             if (xhr.readyState === 4) {
+                this.processingBatch = false;
                 if (xhr.status < 200 || xhr.status >= 300) {
                     this.close();
                 } else {
@@ -108,9 +108,9 @@ export class Connection {
                         this.startLongPolling();
                     this.startHeartBeat();
                 }
-            }
-            if (this.toSend.length > 0)
+                if (this.toSend.length > 0)
                 this.doSend();
+            }
         }
         this.processingBatch = true;
         xhr.send(JSON.stringify(this.closed ? { id: this.id, close: true } : { id: this.id, m: this.toSend }));

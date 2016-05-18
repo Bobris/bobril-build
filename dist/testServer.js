@@ -193,7 +193,7 @@ class Client {
                     this.curResults.testsFinished++;
                     if (data.status === 'passed') {
                     }
-                    else if (data.status === 'skipped') {
+                    else if (data.status === 'skipped' || data.status === 'pending') {
                         this.curResults.testsSkipped++;
                         test.skipped = true;
                     }
