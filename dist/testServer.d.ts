@@ -7,6 +7,8 @@ export declare type MessageAndStack = {
     stack: StackFrame[];
 };
 export interface SuiteOrTest {
+    id: number;
+    parentId: number;
     isSuite: boolean;
     name: string;
     skipped: boolean;

@@ -1,5 +1,7 @@
 import * as b from 'bobril';
 import * as longPollingClient from './longPollingClient';
+import * as testReportAnalyzer from './testReportAnalyzer';
+import * as styles from './styles';
 
 let c = new longPollingClient.Connection('/bb/api/main');
 
@@ -13,6 +15,8 @@ export interface StackFrame {
 
 export interface SuiteOrTest {
     isSuite: boolean;
+    id: number;
+    parentId: number;
     name: string;
     skipped: boolean;
     failure: boolean;
@@ -80,40 +84,17 @@ function clickable(content: b.IBobrilChildren, action:()=>void):b.IBobrilNode {
     }};
 }
 
-let spanUserAgent = b.styleDef({ display: "inline-block", width: "30%" });
-let spanInfo = b.styleDef({ marginLeft: 10, display: "inline-block" });
-let selectedStyle = b.styleDef({ background: "#ccddee" });
-
 function getAgentsShort(selectedAgent: number, setSelectedAgent: (index: number) => void): b.IBobrilChildren {
     return testSvrState.agents.map((r, index) => {
         return clickable(b.styledDiv([
-            b.styledDiv(r.userAgent, spanUserAgent),
+            b.styledDiv(r.userAgent, styles.spanUserAgent),
             b.styledDiv("Failures: " + r.testsFailed
                 + ((r.testsSkipped > 0) ? (" Skipped: " + r.testsSkipped) : "")
-                + " Successful: " + (r.testsFinished - r.testsFailed - r.testsSkipped), spanInfo),
-            r.running && b.styledDiv("Running " + r.testsFinished + "/" + r.totalTests, spanInfo)
-        ],index===selectedAgent&&selectedStyle),()=>{ setSelectedAgent(index) });
+                + " Successful: " + (r.testsFinished - r.testsFailed - r.testsSkipped), styles.spanInfo),
+            r.running && b.styledDiv("Running " + r.testsFinished + "/" + r.totalTests, styles.spanInfo)
+        ], index === selectedAgent&&styles.selectedStyle),() => { setSelectedAgent(index) });
     });
 }
-
-let suiteDivStyle = b.styleDef({
-    fontSize: "20px"
-});
-
-let suiteChildrenIndentStyle = b.styleDef({
-    marginLeft: 20
-});
-
-function getSuiteDetail(a: SuiteOrTest): b.IBobrilChildren {
-    return [
-        b.styledDiv(a.name, suiteDivStyle),
-        b.styledDiv(getSuitesDetail(a.nested), suiteChildrenIndentStyle)
-    ];
-}
-
-let stackStyle = b.styleDef({
-    whiteSpace: "pre-wrap"
-});
 
 function stackFrameToString(sf: StackFrame) {
     var functionName = sf.functionName || '{anonymous}';
@@ -127,15 +108,29 @@ function stackFrameToString(sf: StackFrame) {
 function getMessagesDetails(failures: { message: string, stack: StackFrame[] }[]): b.IBobrilChildren {
     return failures.map(f => [
         b.styledDiv(f.message),
-        b.styledDiv(f.stack.map(sf => stackFrameToString(sf)).join("\n"), stackStyle)
+        b.styledDiv(f.stack.map(sf => stackFrameToString(sf)).join("\n"), styles.stackStyle)
     ]);
 }
 
 function getTestDetail(a: SuiteOrTest): b.IBobrilChildren {
+    let isFailed = a.failures && a.failures.length > 0;
+    let hasLogs = a.logs && a.logs.length > 0;
+    let isSuccessful = !isFailed && !hasLogs && !a.skipped;
     return [
-        b.styledDiv(a.name, suiteDivStyle),
-        (a.failures && a.failures.length > 0) && b.styledDiv(getMessagesDetails(a.failures), suiteChildrenIndentStyle),
-        (a.logs && a.logs.length > 0) && b.styledDiv(getMessagesDetails(a.logs), suiteChildrenIndentStyle)
+        b.styledDiv(a.name, styles.suiteDivStyle, 
+            isFailed && styles.failedStyle, 
+            a.skipped && styles.skippedStyle, 
+            isSuccessful && styles.successfulStyle
+        ),
+        isFailed && b.styledDiv(getMessagesDetails(a.failures), styles.suiteChildrenIndentStyle),
+        hasLogs && b.styledDiv(getMessagesDetails(a.logs), styles.suiteChildrenIndentStyle)
+    ];
+}
+
+function getSuiteDetail(a: SuiteOrTest): b.IBobrilChildren {
+    return [
+        b.styledDiv(a.name, styles.suiteDivStyle),
+        b.styledDiv(getSuitesDetail(a.nested), styles.suiteChildrenIndentStyle)
     ];
 }
 
@@ -143,11 +138,29 @@ function getSuitesDetail(a: SuiteOrTest[]): b.IBobrilChildren {
     return a.map(v => v.isSuite ? getSuiteDetail(v) : getTestDetail(v));
 }
 
+function getSuites(a: SuiteOrTest[], title: string): b.IBobrilChildren {
+    return a.length > 0 && [
+        { tag: "h3", children: title },
+        getSuitesDetail(a)
+    ]
+}
+
 function getAgentDetail(agent: TestResultsHolder): b.IBobrilChildren {
-    return [
-        { tag: "h2", children: agent.userAgent + " details" },
-        getSuitesDetail(agent.nested)
+    let results = testReportAnalyzer.analyze(agent.nested);
+    let suites = [
+        getSuites(results.failed, "Failed"),
+        getSuites(results.logged, "Logged")
     ];
+    let skippedSuites = getSuites(results.skipped, "Skipped");
+    let passedSuites = getSuites(results.passed, "Successful");
+    if (results.skipped.length > results.passed.length) {
+        suites.push(passedSuites);
+        suites.push(skippedSuites);
+    } else {
+        suites.push(skippedSuites);
+        suites.push(passedSuites);
+    }
+    return [ { tag: "h2", children: agent.userAgent + " details" }, suites ];
 }
 
 reconnect();
@@ -157,8 +170,8 @@ b.init(() => {
     if (selectedAgent >= testSvrState.agents.length) {
         selectedAgent = -1;
     }
-    if (selectedAgent === -1 && testSvrState.agents.length>0) { 
-        selectedAgent=0; 
+    if (selectedAgent === -1 && testSvrState.agents.length > 0) { 
+        selectedAgent = 0; 
     }
     return [
         { tag: "h1", children: "Bobril-build" },
