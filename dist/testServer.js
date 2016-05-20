@@ -104,6 +104,7 @@ class Client {
                     if (this.curResults == null)
                         break;
                     this.curResults.totalTests = data;
+                    this.suiteId = 0;
                     this.suiteStack = [this.curResults];
                     this.server.notifyTestingStarted();
                     this.server.notifySomeChange();
@@ -129,6 +130,8 @@ class Client {
                     if (this.suiteStack == null)
                         break;
                     let suite = {
+                        id: ++this.suiteId,
+                        parentId: this.suiteStack[this.suiteStack.length - 1].id,
                         name: data,
                         nested: [],
                         duration: 0,
@@ -167,6 +170,8 @@ class Client {
                     if (this.suiteStack == null)
                         break;
                     let test = {
+                        id: ++this.suiteId,
+                        parentId: this.suiteStack[this.suiteStack.length - 1].id,
                         name: data,
                         nested: null,
                         duration: 0,
@@ -193,7 +198,7 @@ class Client {
                     this.curResults.testsFinished++;
                     if (data.status === 'passed') {
                     }
-                    else if (data.status === 'skipped' || data.status === 'pending') {
+                    else if (data.status === 'skipped' || data.status === 'pending' || data.status === 'disabled') {
                         this.curResults.testsSkipped++;
                         test.skipped = true;
                     }
@@ -235,6 +240,8 @@ class Client {
             testsFinished: 0,
             testsFailed: 0,
             testsSkipped: 0,
+            id: 0,
+            parentId: 0,
             name: "",
             failure: false,
             skipped: false,
@@ -337,6 +344,8 @@ class TestServer {
                     failure: false,
                     failures: [],
                     isSuite: true,
+                    id: 0,
+                    parentId: 0,
                     name: "",
                     nested: [],
                     running: false,
