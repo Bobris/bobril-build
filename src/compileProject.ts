@@ -255,7 +255,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
             if (fs.lstatSync(bobrilSection.example).isDirectory()) {
                 let files = fs.readdirSync(bobrilSection.example);
                 for (let i = 0; i < files.length; i++) {
-                    let file = path.join(bobrilSection.example, files[i]);
+                    let file = path.join(project.dir,bobrilSection.example, files[i]);
                     if (fs.lstatSync(file).isDirectory()) continue;
                     project.mainExamples.push(path.relative(project.dir,file));
                 }
