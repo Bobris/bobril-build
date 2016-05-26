@@ -2,6 +2,8 @@
 Helper tool to build Bobril applications
 Mainly it will support copying sprites, building big sprites. support i18n. All this during optimal TypeScript compilation.
 
+Changelog: https://github.com/Bobris/Bobril-build/blob/master/CHANGELOG.md
+
 How to use:
 
 	npm install bobril-build -g

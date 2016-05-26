@@ -944,6 +944,11 @@ export class CompilationCache {
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
                 return nameWithoutExtension + '.ts';
             }
+            cached = getCachedFileExistence(nameWithoutExtension + '.tsx');
+            if (cached.curTime !== null) {
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                return nameWithoutExtension + '.tsx';
+            }
             cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
             if (cached.curTime !== null) {
                 cached = getCachedFileExistence(nameWithoutExtension + '.js');
