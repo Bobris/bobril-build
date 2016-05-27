@@ -16,7 +16,7 @@ import { DynamicBuffer } from './dynamicBuffer';
 import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
 import { createFileNameShortener } from './shortenFileName';
-import {AdditionalResources}  from './AdditionalResources'
+import {AdditionalResources}  from './additionalResources'
 
 function isCssByExt(name: string): boolean {
     return /\.css$/ig.test(name);
