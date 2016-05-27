@@ -8,7 +8,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader"
 import * as depChecker from "./dependenciesChecker"
-import {AdditionalResources}  from './AdditionalResources'
+import {AdditionalResources}  from './additionalResources'
 import * as chalk from 'chalk';
 import * as notifier from 'node-notifier';
 

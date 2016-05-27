@@ -8,7 +8,7 @@ import * as glob from "glob";
 import * as minimatch from "minimatch";
 import { deepEqual } from './deepEqual';
 import * as plugins from "./pluginsLoader";
-import {AdditionalResources}  from './AdditionalResources'
+import {AdditionalResources}  from './additionalResources'
 
 export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
