@@ -13,7 +13,9 @@
 			"problemMatcher": "$tsc",
 			"args": [
 				"-p",
-				"src"
+				"src",
+				"--newLine",
+				"LF"
 			]
 		},
 		{
