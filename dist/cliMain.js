@@ -9,7 +9,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
 const depChecker = require("./dependenciesChecker");
-const AdditionalResources_1 = require('./AdditionalResources');
+const additionalResources_1 = require('./additionalResources');
 const chalk = require('chalk');
 const notifier = require('node-notifier');
 var memoryFs = Object.create(null);
@@ -466,7 +466,7 @@ function initServerProject() {
     return serverProject;
 }
 function createAdditionalResources(project) {
-    return new AdditionalResources_1.AdditionalResources(project);
+    return new additionalResources_1.AdditionalResources(project);
 }
 function run() {
     let commandRunning = false;
