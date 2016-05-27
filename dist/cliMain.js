@@ -10,6 +10,8 @@ const fs = require("fs");
 const plugins = require("./pluginsLoader");
 const depChecker = require("./dependenciesChecker");
 const AdditionalResources_1 = require('./AdditionalResources');
+const chalk = require('chalk');
+const notifier = require('node-notifier');
 var memoryFs = Object.create(null);
 var serverAdditionalResources;
 var serverProject;
@@ -79,7 +81,7 @@ function respondSpecial(response, name) {
     response.end(c);
 }
 function handleRequest(request, response) {
-    console.log('Req ' + request.url);
+    // console.log('Req ' + request.url);
     if (reUrlBB.test(request.url)) {
         if (request.url.length === 3) {
             response.writeHead(301, { Location: "/bb/" });
@@ -292,10 +294,10 @@ function startWatchProcess(notify) {
     });
 }
 let lastId = 0;
-function startCompileProcess(path) {
+function startCompileProcess(compilationPath) {
     let compileProcess = startBackgroundProcess("compile", {});
     let myId = "" + (lastId++);
-    compileProcess("createProject", { id: myId, dir: path });
+    compileProcess("createProject", { id: myId, dir: compilationPath });
     return {
         stop() {
             compileProcess("disposeProject", myId, { exit() { } });
@@ -362,20 +364,34 @@ function startCompileProcess(path) {
                     log(param) { console.log(param); },
                     write({ name, buffer }) {
                         writtenFileCount++;
-                        console.log(name);
+                        //console.log(name);
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk(param) {
                         let time = Date.now() - startCompilation;
                         mainServer.notifyCompilationFinished(param.errors, param.warnings, time);
-                        console.log("Compiled in " + time.toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
+                        let message = "Compiled in " + time.toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".";
+                        console.log(chalk.green(message));
+                        notifier.notify({
+                            title: 'BB - build successfull',
+                            message: message,
+                            icon: path.join(bbDirRoot, 'assets/notify-icons/success.png')
+                        });
                         resolve(param);
                     },
                     compileFailed(param) {
                         let time = Date.now() - startCompilation;
                         mainServer.notifyCompilationFinished(-1, 0, time);
                         console.log(param);
-                        console.log("Compilation failed in " + time.toFixed(0) + "ms");
+                        let message = "Compilation failed in " + time.toFixed(0) + "ms";
+                        console.log(chalk.red(message));
+                        notifier.notify({
+                            title: 'BB - build failed',
+                            message: message,
+                            icon: path.join(bbDirRoot, 'assets/notify-icons/error.png'),
+                            wait: true,
+                            sticky: true
+                        });
                         reject(param);
                     }
                 });
@@ -402,7 +418,7 @@ function getDefaultDebugOptions() {
 function startHttpServer(port) {
     server = http.createServer(handleRequest);
     server.on("listening", function () {
-        console.log("Server listening on: http://localhost:" + server.address().port);
+        console.log("Server listening on: " + chalk.cyan(" http://localhost:" + server.address().port));
     });
     server.on('error', function (e) {
         if (e.code == 'EADDRINUSE') {
