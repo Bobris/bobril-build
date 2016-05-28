@@ -1,4 +1,4 @@
-import { SuiteOrTest } from './index';
+import { SuiteOrTest } from './state';
 
 export interface SeparatedTests {
     failed: SuiteOrTest[];

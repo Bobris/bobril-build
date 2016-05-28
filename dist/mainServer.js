@@ -42,8 +42,8 @@ class MainServer {
     nofifyCompilationStarted() {
         this.sendAll("compilationStarted");
     }
-    notifyCompilationFinished(errors, warnings, time) {
-        this.sendAll("compilationFinished", { errors: errors, warnings: warnings, time: time });
+    notifyCompilationFinished(errors, warnings, time, messages) {
+        this.sendAll("compilationFinished", { errors: errors, warnings: warnings, time: time, messages: messages });
     }
     notifyTestSvrChange() {
         let kids = Object.keys(this.clients);

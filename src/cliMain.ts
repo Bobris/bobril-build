@@ -395,24 +395,51 @@ function startCompileProcess(compilationPath: string): ICompileProcess {
                     },
                     compileOk(param) {
                         let time = Date.now() - startCompilation;
-                        mainServer.notifyCompilationFinished(param.errors, param.warnings, time);
-                        let message = "Compiled in " + time.toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".";
-                        console.log(chalk.green(message));
-                        notifier.notify({
-                            title: 'BB - build successfull',
-                            message: message,
-                            icon: path.join(bbDirRoot, 'assets/notify-icons/success.png')
-                        });
+                        mainServer.notifyCompilationFinished(param.errors, param.warnings, time, param.messages);
+                        let message = "Compiled in " + time.toFixed(0) + "ms.";
+                        if (param.errors > 0 || param.warnings > 0) {
+                            message += " Found";
+                            if (param.errors > 0) {
+                                message += " " + param.errors + " error" + (param.errors !== 1 ? "s" : "");
+                                if (param.warnings > 0)
+                                    message += " and";
+                            }
+                            if (param.warnings > 0) {
+                                message += " " + param.warnings + " warning" + (param.warnings !== 1 ? "s" : "");
+                            }
+                            message += ".";
+                        }
+                        if (writtenFileCount>0) {
+                            message += " Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".";
+                        }
+                        if (param.errors > 0) {
+                            console.log(chalk.red(message));
+                            notifier.notify({
+                                title: 'BB - build failed',
+                                message: message,
+                                icon: path.join(bbDirRoot, 'assets/notify-icons/error.png'),
+                                wait: true,
+                                sticky: true
+                            });
+                        }
+                        else {
+                            console.log(chalk.green(message));
+                            notifier.notify({
+                                title: 'BB - build successfull',
+                                message: message,
+                                icon: path.join(bbDirRoot, 'assets/notify-icons/success.png')
+                            });
+                        }
                         resolve(param);
                     },
                     compileFailed(param) {
                         let time = Date.now() - startCompilation;
-                        mainServer.notifyCompilationFinished(-1, 0, time);
+                        mainServer.notifyCompilationFinished(-1, 0, time, []);
                         console.log(param);
                         let message = "Compilation failed in " + time.toFixed(0) + "ms";
                         console.log(chalk.red(message));
                         notifier.notify({
-                            title: 'BB - build failed',
+                            title: 'BB - build critically failed',
                             message: message,
                             icon: path.join(bbDirRoot, 'assets/notify-icons/error.png'),
                             wait: true,

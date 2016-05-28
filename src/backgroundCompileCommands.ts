@@ -136,7 +136,7 @@ export function compile(param: string) {
                 });
             }).then(() => {
                 let result = cp.compilationCache.getResult();
-                process.send({ command: "compileOk", param: { errors: result.errors, warnings: result.warnings, hasTests: cp.project.mainSpec != null } });
+                process.send({ command: "compileOk", param: { errors: result.errors, warnings: result.warnings, messages: result.messages, hasTests: cp.project.mainSpec != null } });
             }, (err: Error) => {
                 process.send({ command: "compileFailed", param: err.toString() });
             }).then(() => resolve(null), () => resolve(null));

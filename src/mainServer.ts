@@ -1,6 +1,7 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
 import * as testServer from './testServer';
+import { CompilationResultMessage } from './defs';
 
 class Client {
     server: MainServer;
@@ -59,8 +60,8 @@ export class MainServer {
         this.sendAll("compilationStarted");
     }
      
-    notifyCompilationFinished(errors: number, warnings: number, time: number) {
-        this.sendAll("compilationFinished", { errors, warnings, time });
+    notifyCompilationFinished(errors: number, warnings: number, time: number, messages: CompilationResultMessage[]) {
+        this.sendAll("compilationFinished", { errors, warnings, time, messages });
     }
     
     private notifyTestSvrChange() {
