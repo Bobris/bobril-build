@@ -1,5 +1,7 @@
 "use strict";
 const longPollingServer = require('./longPollingServer');
+const pathPlatformDependent = require("path");
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 class Client {
     constructor(owner, id, connection) {
         this.server = owner;
@@ -9,14 +11,22 @@ class Client {
             delete this.server[this.id];
         };
         connection.onMessage = (connection, message, data) => {
-            console.log("Main Message " + message, data);
             switch (message) {
+                case "focusPlace": {
+                    this.server.sendAll(message, { fn: path.join(this.server.dir, data.fn), pos: data.pos });
+                    break;
+                }
+                default: {
+                    console.log("Main Message " + message, data);
+                    break;
+                }
             }
         };
     }
 }
 class MainServer {
     constructor(testSvr) {
+        this.dir = "";
         this.lastId = 0;
         this.testSvr = testSvr;
         this.clients = Object.create(null);
@@ -25,6 +35,9 @@ class MainServer {
     }
     handle(request, response) {
         this.svr.handle(request, response);
+    }
+    setProjectDir(dir) {
+        this.dir = dir;
     }
     newConnection(c) {
         let id = "" + this.lastId++;

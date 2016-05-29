@@ -36,7 +36,9 @@ function stackFrameToString(sf: s.StackFrame) {
 function getMessagesDetails(failures: { message: string, stack: s.StackFrame[] }[]): b.IBobrilChildren {
     return failures.map(f => [
         b.styledDiv(f.message),
-        b.styledDiv(f.stack.map(sf => stackFrameToString(sf)).join("\n"), styles.stackStyle)
+        b.styledDiv(f.stack.map(sf => clickable(b.styledDiv(stackFrameToString(sf)), () => {
+            com.focusPlace(sf.fileName, [sf.lineNumber, sf.columnNumber]);
+        }), styles.stackStyle))
     ]);
 }
 
@@ -96,12 +98,14 @@ function getBuildStatus() {
     return b.styledDiv([
         s.building && b.styledDiv("Build in progress"),
         b.styledDiv("Last Build Result Errors: " + l.errors + " Warnings: " + l.warnings + " Duration: " + l.time + "ms"),
-        l.messages.map(m => b.styledDiv(
+        l.messages.map(m => clickable(b.styledDiv(
             [
                 b.styledDiv((m.isError ? "Error: " : "Warning: ") + m.text, m.isError ? styles.errorMessage : styles.warningMessage),
                 b.styledDiv(`${m.fileName} (${m.pos[0]}:${m.pos[1]}-${m.pos[2]}:${m.pos[3]})`, styles.filePos)
             ]
-        ))
+        ), () => {
+            com.focusPlace(m.fileName, m.pos);
+        }))
     ]);
 }
 

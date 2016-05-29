@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.38.0
+--
+
+New features
+-
+
+Positions informations on bb web are clickable and they focus that place in VSCode (needs latest Bobril extension)
+
 0.37.0
 --
 

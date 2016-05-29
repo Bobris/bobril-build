@@ -7,10 +7,12 @@ export declare class MainServer {
     private clients;
     private svr;
     private testSvr;
+    dir: string;
     constructor(testSvr: testServer.TestServer);
     handle(request: http.ServerRequest, response: http.ServerResponse): void;
+    setProjectDir(dir: string): void;
     newConnection(c: longPollingServer.ILongPollingConnection): void;
-    private sendAll(message, data?);
+    sendAll(message: string, data?: any): void;
     nofifyCompilationStarted(): void;
     notifyCompilationFinished(errors: number, warnings: number, time: number, messages: CompilationResultMessage[]): void;
     private notifyTestSvrChange();

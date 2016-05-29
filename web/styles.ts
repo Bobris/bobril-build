@@ -15,7 +15,7 @@ export const selectedStyle = b.styleDef({
 });
 
 export const stackStyle = b.styleDef({
-    whiteSpace: "pre-wrap"
+    marginLeft: 20
 });
 
 export const suiteDivStyle = b.styleDef({

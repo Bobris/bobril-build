@@ -458,6 +458,7 @@ function startHttpServer(port) {
     server.listen({ port: port, exclusive: true });
 }
 function interactiveCommand(port) {
+    mainServer.setProjectDir(curProjectDir);
     startHttpServer(port);
     let compileProcess = startCompileProcess(curProjectDir);
     compileProcess.refresh(null).then(() => {

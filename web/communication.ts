@@ -42,9 +42,17 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
             b.invalidate();
             break;
         }
+        case "focusPlace": {
+            // ignore because this is not editor
+            break;
+        }
         default: {
             console.log("Unknown message: " + message, data);
             break;
         }
     }
 };
+
+export function focusPlace(fn: string, pos: number[]) {
+    c.send("focusPlace", { fn, pos });
+}
