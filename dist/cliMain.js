@@ -539,6 +539,9 @@ function run() {
         if (!project.outputDir) {
             project.outputDir = "./dist";
         }
+        if (project.fastBundle) {
+            project.options.sourceRoot = path.relative(project.outputDir, ".");
+        }
         console.time("compile");
         if (!depChecker.installMissingDependencies(project))
             process.exit(1);
