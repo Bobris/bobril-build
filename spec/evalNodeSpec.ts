@@ -2,7 +2,7 @@ import * as ts from "typescript";
 import * as fs from "fs";
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-import { evalNode } from "../src/evalNode";
+import { evalNode } from "../dist/evalNode";
 
 var defaultLibFilename = path.join(path.dirname(require.resolve("typescript").replace(/\\/g, "/")), "lib.es6.d.ts");
 
@@ -98,8 +98,10 @@ function reportDiagnostics(diagnostics) {
     }
 }
 
+const specdirname = path.join(__dirname.replace(/\\/g, "/"),"../spec");
+
 describe("evalNode", () => {
-    let testpath = path.join(__dirname.replace(/\\/g, "/"), "evalNode");
+    let testpath = path.join(specdirname, "evalNode");
     let di = fs.readdirSync(testpath).sort();
     try { fs.mkdirSync(path.join(testpath, "_accept")); } catch (err) { };
     try { fs.mkdirSync(path.join(testpath, "_expected")); } catch (err) { };

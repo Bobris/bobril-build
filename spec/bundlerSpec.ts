@@ -1,13 +1,15 @@
 import * as ts from "typescript";
 import * as fs from "fs";
-import * as compilationCache from '../src/compilationCache';
-import * as translationCache from '../src/translationCache';
+import * as compilationCache from '../dist/compilationCache';
+import * as translationCache from '../dist/translationCache';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-import * as pathUtils from '../src/pathUtils';
+import * as pathUtils from '../dist/pathUtils';
+
+const specdirname = path.join(__dirname.replace(/\\/g, "/"),"../spec");
 
 describe("bundler", () => {
-    let testpath = path.join(__dirname.replace(/\\/g, "/"), "bundle");
+    let testpath = path.join(specdirname, "bundle");
     let di = fs.readdirSync(testpath).sort();
     try { fs.mkdirSync(path.join(testpath, "_accept")); } catch (err) { };
     try { fs.mkdirSync(path.join(testpath, "_expect")); } catch (err) { };
@@ -27,6 +29,7 @@ describe("bundler", () => {
                 main: 'main.ts',
                 options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
                 totalBundle: true,
+                compress: n !== "compressBug2",
                 writeFileCallback: write
             };
             cc.compile(project).then(() => {

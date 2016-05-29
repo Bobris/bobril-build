@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "sourceMap": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": false,
+        "moduleResolution": "node",
+        "noLib": false
+    },
+    "compileOnSave": true,
+    "exclude": [
+        "cc",
+        "ccout",
+        "bundle",
+        "complexGatherInfo",
+        "evalNode"
+    ]
+}

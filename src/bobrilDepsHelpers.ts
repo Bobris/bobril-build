@@ -4,6 +4,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from 'fs';
 import * as compilationCache from './compilationCache';
 require('bluebird');
+import { globalDefines } from './simpleHelpers';
 
 export function systemJsPath(): string {
     return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
@@ -11,6 +12,14 @@ export function systemJsPath(): string {
 
 export function systemJsFiles(): string[] {
     return ['system.js', 'system-polyfills.js'];
+}
+
+export function loaderJsPath(): string {
+    return __dirname.replace(/\\/g, "/");
+}
+
+export function loaderJsFiles(): string[] {
+    return ["loader.js"];
 }
 
 export function numeralJsPath(): string {
@@ -29,6 +38,10 @@ export function momentJsFiles(): string[] {
     return ['moment.js'];
 }
 
+function linkCss(project: compilationCache.IProject): string {
+    return project.cssToLink.map(n => `<link rel="stylesheet" href="${n}">`).join("");
+}
+
 export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
     let moduleNames = Object.keys(project.moduleMap);
@@ -39,14 +52,15 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile;
     }
-    return `<html>
+    return `<!DOCTYPE html><html>
     <head>
-        <meta charset="utf-8">
-        <title>${title}</title>
+        <meta charset="utf-8">${project.htmlHeadExpanded}
+        <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
         <script type="text/javascript">
+            ${globalDefines(project.defines)}
             System.config({
                 baseURL: '/',
                 defaultJSExtensions: true,
@@ -60,14 +74,103 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
 }
 
 function g11nInit(project: compilationCache.IProject): string {
-    if (!project.localize)
+    if (!project.localize && !project.bundlePng)
         return "";
-    return `<script>function g11nPath(s){return "./"+s+".js"}</script>`;
+    let res = "<script>";
+    if (project.localize) {
+        res += `function g11nPath(s){return "./${project.outputSubDir ? (project.outputSubDir + "/") : ""}"+s+".js"};`
+    }
+    if (project.bundlePng) {
+        res += `var bobrilBPath="${project.bundlePng}"`;
+    }
+    res += "</script>";
+    return res;
 }
 
 export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
-    return `<html><head><meta charset="utf-8"><title>${title}</title></head><body>${g11nInit(project)}<script type="text/javascript" src="bundle.js" charset="utf-8"></script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
+}
+
+export function examplesListIndexHtml(fileNames: string[], project: compilationCache.IProject) {
+    let testList = "";
+    for (let i = 0; i < fileNames.length; i++) {
+        testList += `<li><a href="${fileNames[i]}">` + path.basename(fileNames[i], ".html") + '</a></li>';
+    }
+    let title = project.htmlTitle || 'Bobril Application';
+    return `<!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">${project.htmlHeadExpanded}
+            <title>${title}</title>${linkCss(project)}
+        </head>
+        <body>
+        <ul>${testList}</ul>
+        </body>
+    </html>`;
+}
+
+export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
+    let title = project.htmlTitle || 'Bobril Application';
+    let moduleNames = Object.keys(project.moduleMap);
+    let moduleMap = <{ [name: string]: string }>Object.create(null);
+    for (let i = 0; i < moduleNames.length; i++) {
+        let name = moduleNames[i];
+        if (project.moduleMap[name].internalModule)
+            continue;
+        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
+    }
+    return `<!DOCTYPE html><html>
+    <head>
+        <meta charset="utf-8">${project.htmlHeadExpanded}
+        <title>${title}</title>${linkCss(project)}
+    </head>
+    <body>${g11nInit(project)}
+        <script type="text/javascript" src="loader.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            ${globalDefines(project.defines)}
+            R.map = ${JSON.stringify(moduleMap)}
+        </script>
+        <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
+        <script type="text/javascript">
+            R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');
+        </script>
+    </body>
+</html>
+`;
+}
+
+export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
+    let title = 'Jasmine Test';
+    let moduleNames = Object.keys(project.moduleMap);
+    let moduleMap = <{ [name: string]: string }>Object.create(null);
+    for (let i = 0; i < moduleNames.length; i++) {
+        let name = moduleNames[i];
+        if (project.moduleMap[name].internalModule)
+            continue;
+        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
+    }
+    let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${project.realRootRel}${v.replace(/\.tsx?$/i, "")}');`).join(' ');
+    return `<!DOCTYPE html><html>
+    <head>
+        <meta charset="utf-8">${project.htmlHeadExpanded}
+        <title>${title}</title>${linkCss(project)}
+    </head>
+    <body>${g11nInit(project)}
+        <script type="text/javascript" src="bb/special/jasmine-core.js" charset="utf-8"></script>
+        <script type="text/javascript" src="bb/special/jasmine-boot.js" charset="utf-8"></script>
+        <script type="text/javascript" src="bb/special/loader.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            ${globalDefines(project.defines)}
+            R.map = ${JSON.stringify(moduleMap)}
+        </script>
+        <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
+        <script type="text/javascript">
+            ${reqSpec}
+        </script>
+    </body>
+</html>
+`;
 }
 
 function writeDir(write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
@@ -81,15 +184,23 @@ export function updateIndexHtml(project: compilationCache.IProject) {
     let newIndexHtml: string;
     if (project.totalBundle) {
         newIndexHtml = bundleBasedIndexHtml(project);
-    } else {
-        let moduleNames = Object.keys(project.moduleMap);
-        let moduleMap = <{ [name: string]: string }>Object.create(null);
-        for (let i = 0; i < moduleNames.length; i++) {
-            let name = moduleNames[i];
-            if (project.moduleMap[name].internalModule)
-                continue;
-            moduleMap[name] = project.moduleMap[name].jsFile;
+    } else if (project.fastBundle) {
+        if (project.mainExamples.length <= 1) {
+            newIndexHtml = fastBundleBasedIndexHtml(project);
         }
+        else {
+            let fileNames = [];
+            for (let i = 0; i < project.mainExamples.length; i++) {
+                let examplePath = project.mainExamples[i];
+                let fileName = path.basename(examplePath).replace(/\.tsx?$/, '.html');
+                project.mainJsFile = examplePath.replace(/\.tsx?$/, '.js');
+                let content = fastBundleBasedIndexHtml(project);
+                project.writeFileCallback(fileName, new Buffer(content));
+                fileNames.push(fileName);
+            }
+            newIndexHtml = examplesListIndexHtml(fileNames, project);
+        }
+    } else {
         newIndexHtml = systemJsBasedIndexHtml(project);
     }
     if (newIndexHtml !== project.lastwrittenIndexHtml) {
@@ -98,6 +209,11 @@ export function updateIndexHtml(project: compilationCache.IProject) {
     }
 }
 
+export function updateTestHtml(project: compilationCache.IProject) {
+    let newIndexHtml: string;
+    newIndexHtml = fastBundleBasedTestHtml(project);
+    project.writeFileCallback('test.html', new Buffer(newIndexHtml));
+}
 
 function findLocaleFile(filePath: string, locale: string, ext: string): string {
     let improved = false;
@@ -161,4 +277,8 @@ function writeDirFromCompilationCache(cc: compilationCache.CompilationCache, wri
 
 export function updateSystemJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
     writeDirFromCompilationCache(cc, write, systemJsPath(), systemJsFiles());
+}
+
+export function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
+    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
 }

@@ -47,3 +47,30 @@ export function fileModifiedTime(path: string): number {
         return null;
     }
 }
+
+function recursiveRemoveDir(path: string) {
+    if (!fs.existsSync(path)) return;
+    fs.readdirSync(path).forEach(function (file, index) {
+        var curPath = path + "/" + file;
+        if (fs.lstatSync(curPath).isDirectory()) {
+            recursiveRemoveDirSync(curPath);
+        } else {
+            fs.unlinkSync(curPath);
+        }
+    });
+    fs.rmdirSync(path);
+}
+
+export function recursiveRemoveDirSync(path: string): Boolean {
+    try {
+        recursiveRemoveDir(path);
+    }
+    catch (ex) {
+        return false;
+    }
+    return true;
+}
+
+export function normalizePath(path: string) {
+    return path.replace(/\\/g, '/');
+}

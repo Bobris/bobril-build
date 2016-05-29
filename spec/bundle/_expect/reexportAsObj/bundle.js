@@ -1,1 +1,0 @@
-!function(){function a(a,b){return a+b}var b=a,c={fn:b};console.log(c.fn(1,2))}();

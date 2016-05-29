@@ -1,8 +1,10 @@
-import * as bb from '../index';
+import * as bb from './index';
 import * as ts from 'typescript';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
+import * as plugins from "./pluginsLoader"
+import * as dep from "./dependenciesChecker"
 
 interface ICompleteProject {
     compilationCache: bb.CompilationCache;
@@ -41,11 +43,11 @@ export function createProject(param: { id: string, dir: string }) {
     }
 }
 
-export function refreshProject(param: string) {
-    let cp = cps[param];
+export function refreshProject(param: { id: string, allFiles: { [dir: string]: string[] } }) {
+    let cp = cps[param.id];
     if (cp) {
         cp.promise = cp.promise.then(() => {
-            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project) });
+            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project, param.allFiles) });
         });
     } else {
         process.send({ command: "Cannot refresh nonexisting project", param });
@@ -70,7 +72,7 @@ export function setProjectOptions(param: { id: string, options: any }) {
     if (cp) {
         cp.promise = cp.promise.then(() => {
             Object.assign(cp.project, param.options);
-            let resp:bb.IProject = Object.assign({}, cp.project);
+            let resp: bb.IProject = Object.assign({}, cp.project);
             resp.compileTranslation = undefined;
             resp.textForTranslationReporter = undefined;
             resp.imgBundleCache = undefined;
@@ -86,6 +88,19 @@ export function setProjectOptions(param: { id: string, options: any }) {
     }
 }
 
+export function loadTranslations(param: string) {
+    let cp = cps[param];
+    if (cp) {
+        cp.promise = cp.promise.then(() => {
+            let trDir = path.join(cp.project.dir, "translations");
+            cp.translationDb.loadLangDbs(trDir);
+            process.send({ command: "loaded" });
+        });
+    } else {
+        process.send({ command: "Cannot loadTranslations to nonexisting project", param });
+    }
+}
+
 export function compile(param: string) {
     let cp = cps[param];
     if (cp) {
@@ -98,24 +113,55 @@ export function compile(param: string) {
                 } else {
                     cp.project.compileTranslation = null;
                 }
+                cp.project.options.sourceRoot = "bb/base/";
                 cp.compilationCache.clearFileTimeModifications();
                 return cp.compilationCache.compile(cp.project).then(() => {
-                    if (!cp.project.totalBundle) bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                    if (!cp.project.totalBundle) {
+                        if (cp.project.fastBundle) {
+                            bb.updateLoaderJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                        } else {
+                            bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                        }
+                    }
                     bb.updateIndexHtml(cp.project);
+                    if (cp.project.mainSpec != null) {
+                        bb.updateTestHtml(cp.project);
+                    }
                     if (cp.project.localize && cp.translationDb.changeInMessageIds) {
                         bb.emitTranslationsJs(cp.project, cp.translationDb);
                     }
                     if (cp.translationDb.addedMessage) {
                         cp.translationDirty = true;
                     }
-                }).then(() => {
-                    process.send({ command: "compileOk" });
-                }, (err) => {
-                    process.send({ command: "compileFailed", param: err });
                 });
+            }).then(() => {
+                let result = cp.compilationCache.getResult();
+                process.send({ command: "compileOk", param: { errors: result.errors, warnings: result.warnings, messages: result.messages, hasTests: cp.project.mainSpec != null } });
+            }, (err: Error) => {
+                process.send({ command: "compileFailed", param: err.toString() });
             }).then(() => resolve(null), () => resolve(null));
         });
     } else {
         process.send({ command: "Cannot compile nonexisting project", param });
     }
+}
+
+export function executePlugins(param: any) {
+    let cp = cps[param.id];
+    if (!cp) {
+        process.send({ command: "Cannot compile nonexisting project", param });
+        return;
+    }
+    let res = plugins.pluginsLoader.executeEntryMethod(param.method, cp.project);
+    process.send({ command: "finished", param: res });
+}
+
+export function installDependencies(param: any) {
+    let cp = cps[param.id];
+    if (!cp) {
+        process.send({ command: "Cannot compile nonexisting project", param });
+        return;
+    }
+    let res = dep.installMissingDependencies(cp.project);
+    process.send({ command: "finished", param: res });
 }

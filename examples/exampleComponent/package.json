@@ -1,0 +1,16 @@
+{
+  "name": "bobril-button",
+  "version": "1.0.0",
+  "description": "Standart html button with callback",
+  "typescript": {
+    "main": "index.ts"
+  },
+  "bobril": {
+    "example": "example.ts"
+  },
+  "author": "Boris Letocha",
+  "license": "MIT",
+  "dependencies": {
+    "bobril": "*"
+  }
+}

@@ -1,0 +1,1 @@
+!function(){"use strict";function a(a,b){return a+b}var b={fn:a};console.log(b.fn(1,2))}();

@@ -1,0 +1,16 @@
+{
+  "name": "sample",
+  "version": "1.0.0",
+  "description": "",
+  "typescript": {
+    "main": "app.ts"
+  },
+  "bobril": {
+    "title": "Bobril using JS asset"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "bobril": "*"
+  }
+}

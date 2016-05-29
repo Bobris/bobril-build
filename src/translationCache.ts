@@ -48,12 +48,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     loadLangDbs(dir: string) {
         let trFiles: string[];
         try {
-            trFiles = fs.readdirSync(dir).filter(v=> /\.json$/i.test(v));
+            trFiles = fs.readdirSync(dir).filter(v => /\.json$/i.test(v));
         } catch (err) {
             // ignore errors
             return;
         }
-        trFiles.forEach(v=> {
+        trFiles.forEach(v => {
             this.loadLangDb(path.join(dir, v));
         });
     }
@@ -106,7 +106,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
     saveLangDbs(dir: string) {
         pathUtils.mkpathsync(dir);
-        this.langs.forEach(lang=> {
+        this.langs.forEach(lang => {
             this.saveLangDb(path.join(dir, lang + ".json"), lang);
         });
     }
@@ -256,6 +256,129 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             if (typeof row[0] !== 'string') continue;
             let item = db[row[4]];
             item[pos] = row[0];
+        }
+    }
+
+    public importTranslatedLanguages(filePath: string): boolean {
+        try {
+            let language = path.basename(filePath, ".txt");
+            let languageIndex = this.langs.indexOf(language);
+            if (languageIndex == -1) throw "Language '" + language + "' does not exist. Probably file name is not valid.";
+            this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
+                let key = this.buildKey(source, hint, true);
+                let trs = this.db[key];
+                if (trs) trs[4 + languageIndex] = target;
+                key = this.buildKey(source, hint, false);
+                trs = this.db[key];
+                if (trs) trs[4 + languageIndex] = target;
+            });
+            return true;
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+    }
+
+    private importTranslatedLanguagesInternal(filePath: string, callback: (source: string, hint: string, target: string) => void) {
+        let content = fs.readFileSync(filePath, "utf-8");
+        content = content.replace(/\r\n|\n|\r/g, "\n");
+        let lines = content.split("\n");
+        for (let i = 0; i < lines.length;) {
+            if (lines[i].length == 0) {
+                i++;
+                continue;
+            }
+            if (lines[i][0] != 'S' || lines[i][1] != ':') throw "Invalid file format. (" + lines[i] + ")";
+            if (lines[i + 1][0] != 'I' || lines[i + 1][1] != ':') throw "Invalid file format. (" + lines[i + 1] + ")";
+            if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':') throw "Invalid file format. (" + lines[i + 2] + ")";
+            let source = lines[i].substr(2);
+            let hint = lines[i + 1].substr(2);
+            let target = lines[i + 2].substr(2);
+            callback(source, hint, target);
+            i += 3;
+        }
+    }
+
+    private exportLanguageItem(source: string | number, hint: string | number): string {
+        let content = "";
+        content += 'S:' + source + '\r\n';
+        content += 'I:' + (hint ? hint : '') + '\r\n';
+        content += 'T:\r\n';
+        return content;
+    }
+
+    public exportUntranslatedLanguages(filePath: string): boolean {
+        try {
+            let content = "";
+            let db = this.db;
+            for (let key in db) {
+                let trs = db[key];
+                for (let i = 0; i < this.langs.length; i++) {
+                    if (trs[i + 4]) continue;
+                    content += this.exportLanguageItem(trs[0], trs[1]);
+                    break;
+                }
+            }
+            if (content.length > 0) {
+                fs.writeFileSync(filePath, content, 'utf-8')
+            }
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+        return true;
+    }
+
+    public makeUnionOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean {
+        try {
+            let data: { messsageAndHint: string, data: { source: string, hint: string } };
+            data = Object.create(null);
+            let THIS = this;
+            let fn = function (source: string, hint: string, target: string) {
+                data[THIS.buildKey(source, hint, false)] = { 'source': source, 'hint': hint }
+            }
+            this.importTranslatedLanguagesInternal(filePath1, fn);
+            this.importTranslatedLanguagesInternal(filePath2, fn);
+            this.saveExportedLanguages(outputPath, data);
+            return true;
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+    }
+
+    public makeSubtractOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean {
+        try {
+            let data: { messsageAndHint: string, data: { source: string, hint: string } };
+            data = Object.create(null);
+            this.importTranslatedLanguagesInternal(filePath1, (source: string, hint: string, target: string) => {
+                data[this.buildKey(source, hint, false)] = { 'source': source, 'hint': hint }
+            });
+            this.importTranslatedLanguagesInternal(filePath2, (source: string, hint: string, target: string) => {
+                let key = this.buildKey(source, hint, false);
+                if (data[key]) {
+                    delete data[key];
+                }
+            });
+            this.saveExportedLanguages(outputPath, data);
+            return true;
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+    }
+
+    private saveExportedLanguages(outputPath: string, data: { messsageAndHint: string, data: { source: string, hint: string } }) {
+        let content = "";
+        for (let key in data) {
+            content += this.exportLanguageItem(data[key].source, data[key].hint);
+        }
+        if (content.length > 0) {
+            fs.writeFileSync(outputPath, content, 'utf-8')
         }
     }
 }

@@ -5,6 +5,7 @@ gh-pages/
 *.sln.ide/
 node_modules/
 !/spec/cc/node_modules
+/examples/**/tsconfig.json
 
 # =========================
 # Operating System Files

@@ -9,7 +9,7 @@ function normalizeFileName(fn: string): string {
     return fn.replace(/\\/g, "/").toLowerCase();
 }
 
-interface ImageInfo {
+export interface ImageInfo {
     fullName: string;
     normalizedFullName: string;
     oldModified: Date;
@@ -103,7 +103,7 @@ export class ImgCache {
     }
 }
 
-interface ImageBundleInfo {
+export interface ImageBundleInfo {
     key: string;
     normalizedFullName: string;
     color: string;
@@ -157,6 +157,7 @@ export class ImgBundleCache {
     }
 
     wasChange(): boolean {
+        if (this.cur.length === 0) return false;
         this.cur.sort((l: ImageBundleInfo, r: ImageBundleInfo) => { if (l.key < r.key) return -1; if (l.key > r.key) return 1; return 0; });
         if (this.old.length != this.cur.length) return true;
         if (this.imgCache.wasChange())
@@ -193,7 +194,7 @@ export class ImgBundleCache {
                     img = imageOps.cloneImage(img);
                     imageOps.replaceColor(img, c.ibi.color);
                 }
-                imageOps.drawImage(img, bundleImg, c.x, c.y, c.ibi.x||0, c.ibi.y||0, c.width, c.height);
+                imageOps.drawImage(img, bundleImg, c.x, c.y, c.ibi.x || 0, c.ibi.y || 0, c.width, c.height);
             }
             return bundleImg;
         });

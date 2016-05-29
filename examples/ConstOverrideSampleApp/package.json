@@ -1,0 +1,24 @@
+{
+  "name": "sample",
+  "version": "1.0.0",
+  "description": "",
+  "typescript": {
+    "main": "src/app.ts"
+  },
+  "bobril": {
+    "title": "Bobril Constant Override Sample",
+	"constantOverrides": {
+		"bobril-build-override-const-lib-sample": {
+		    "cbool": true,
+			"cnum": 42,
+			"cstr": "#44ff44"
+		}
+	}
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "bobril": "*",
+    "bobril-build-override-const-lib-sample": "^1.0.0"
+  }
+}

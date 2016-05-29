@@ -1,3 +1,4 @@
+"use strict";
 var b = require('bobril');
 var bobril_g11n_1 = require('bobril-g11n');
 bobril_g11n_1.initGlobalization({
