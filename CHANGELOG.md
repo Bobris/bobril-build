@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.39.1
+--
+
+Fixes
+-
+
+Not returning error code when there are some build errors.
+
 0.39.0
 --
 
