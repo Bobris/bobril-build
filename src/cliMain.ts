@@ -409,7 +409,7 @@ function startCompileProcess(compilationPath: string): ICompileProcess {
                             }
                             message += ".";
                         }
-                        if (writtenFileCount>0) {
+                        if (writtenFileCount > 0) {
                             message += " Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".";
                         }
                         if (param.errors > 0) {
@@ -545,6 +545,7 @@ export function run() {
         .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
         .action((c) => {
             commandRunning = true;
+            let start = Date.now();
             let project = bb.createProjectFromDir(curProjectDir);
             project.logCallback = (text) => {
                 console.log(text);
@@ -571,15 +572,17 @@ export function run() {
                 project.outputDir = "./dist";
             }
             if (project.fastBundle) {
-                project.options.sourceRoot = path.relative(project.outputDir,".");
+                project.options.sourceRoot = path.relative(project.outputDir, ".");
             }
-            console.time("compile");
             if (!depChecker.installMissingDependencies(project))
                 process.exit(1);
-            bb.compileProject(project).then(() => {
-                console.timeEnd("compile");
-                createAdditionalResources(project).copyFilesToOuputDir();
-                process.exit(0);
+            bb.compileProject(project).then((result: bb.CompilationResult) => {
+                if (result.errors == 0 && createAdditionalResources(project).copyFilesToOuputDir()) {
+                    console.log(chalk.green("Build finished succesfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
+                    process.exit(0);
+                }
+                console.error(chalk.red("There was " + result.errors + " during build"));
+                process.exit(1);
             }, (err) => {
                 console.error(err);
                 process.exit(1);

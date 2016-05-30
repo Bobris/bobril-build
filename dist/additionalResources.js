@@ -38,9 +38,11 @@ class AdditionalResources {
         try {
             let directoryPath = path.join(this.project.dir, this.project.additionalResourcesDirectory);
             this.recursiveCopyFiles(directoryPath, "");
+            return true;
         }
         catch (ex) {
             this.project.logCallback("Additional file can not be copied. (" + ex + ")");
+            return false;
         }
     }
     recursiveCopyFiles(directory, subDirPath) {

@@ -6,4 +6,4 @@ export declare function refreshProjectFromPackageJson(project: bb.IProject, allF
 export declare function defineTranslationReporter(project: bb.IProject): void;
 export declare function emitTranslationsJs(project: bb.IProject, translationDb: bb.TranslationDb): void;
 export declare function fillMainSpec(project: bb.IProject): Promise<any>;
-export declare function compileProject(project: bb.IProject): Promise<any>;
+export declare function compileProject(project: bb.IProject): Promise<bb.CompilationResult>;
