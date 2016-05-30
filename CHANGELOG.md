@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.39.0
+--
+
+New features
+-
+
+New command line parameter for "bb b" using "-s 1" will preserve classNames in styleDefs, using "-s 2" will even add classNames where missing in styleDef, and finally "-s 0" will remove classNames this is default for release build.
+
 0.38.0
 --
 

@@ -509,6 +509,7 @@ function run() {
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .option("-s, --style <0/1/2>", "override styleDef className preservation level", /^(0|1|2)$/, "")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
         .action((c) => {
@@ -530,6 +531,23 @@ function run() {
             project.compress = humanTrue(c["compress"]);
             project.mangle = humanTrue(c["mangle"]);
             project.beautify = humanTrue(c["beautify"]);
+        }
+        switch (c["style"]) {
+            case "0": {
+                project.debugStyleDefs = false;
+                project.releaseStyleDefs = true;
+                break;
+            }
+            case "1": {
+                project.debugStyleDefs = false;
+                project.releaseStyleDefs = false;
+                break;
+            }
+            case "2": {
+                project.debugStyleDefs = true;
+                project.releaseStyleDefs = false;
+                break;
+            }
         }
         if (c["localize"]) {
             project.localize = humanTrue(c["localize"]);

@@ -8,7 +8,7 @@ interface IPageCtx extends b.IBobrilCtx {
 
 b.asset("bootstrap/css/bootstrap.css");
 
-let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 });
+let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 }, null, "header");
 
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
