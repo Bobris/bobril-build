@@ -33,7 +33,7 @@ class AdditionalResources {
     }
     copyFilesToOuputDir() {
         if (this.project.additionalResourcesDirectory == null)
-            return null;
+            return true;
         this.project.logCallback("Coping additional resources...");
         try {
             let directoryPath = path.join(this.project.dir, this.project.additionalResourcesDirectory);

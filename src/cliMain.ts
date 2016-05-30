@@ -599,7 +599,7 @@ export function run() {
                     console.log(chalk.green("Build finished succesfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
                     process.exit(0);
                 }
-                console.error(chalk.red("There was " + result.errors + " during build"));
+                console.error(chalk.red("There was " + result.errors + " errors during build"));
                 process.exit(1);
             }, (err) => {
                 console.error(err);
@@ -703,7 +703,7 @@ export function run() {
                     console.log(chalk.red("Skipping testing due to " + result.errors + " errors in build."));
                     process.exit(1);
                 }
-                console.log(chalk.green("Build finished with "+result.warnings+" warnings. Starting tests."));
+                console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
                 startTestsInPhantom();
                 testServer.startTest('/test.html');
                 return Promise.race<number | bb.TestResultsHolder>([phantomJsProcess.finish, testServer.waitForOneResult()]);
@@ -718,10 +718,14 @@ export function run() {
                     if (c["out"]) {
                         fs.writeFileSync(c["out"], bb.toJUnitXml(code));
                     }
-                    if (code.failure)
+                    if (code.failure) {
+                        console.log(chalk.red(code.totalTests + " tests finished with " + code.testsFailed + " failures."));
                         process.exit(1);
-                    else
+                    }
+                    else {
+                        console.log(chalk.green(code.totalTests + " tests finished without failures."));
                         process.exit(0);
+                    }
                 }
             }, (err) => {
                 console.error(err);
