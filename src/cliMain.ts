@@ -563,7 +563,7 @@ export function run() {
                 project.mangle = humanTrue(c["mangle"]);
                 project.beautify = humanTrue(c["beautify"]);
             }
-            switch(c["style"]) {
+            switch (c["style"]) {
                 case "0": {
                     project.debugStyleDefs = false;
                     project.releaseStyleDefs = true;
@@ -698,6 +698,12 @@ export function run() {
             }).then(() => {
                 bb.updateTestHtml(project);
                 console.timeEnd("compile");
+                let result = compilationCache.getResult();
+                if (result.errors != 0) {
+                    console.log(chalk.red("Skipping testing due to " + result.errors + " errors in build."));
+                    process.exit(1);
+                }
+                console.log(chalk.green("Build finished with "+result.warnings+" warnings. Starting tests."));
                 startTestsInPhantom();
                 testServer.startTest('/test.html');
                 return Promise.race<number | bb.TestResultsHolder>([phantomJsProcess.finish, testServer.waitForOneResult()]);

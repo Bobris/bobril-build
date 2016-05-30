@@ -668,6 +668,12 @@ function run() {
         }).then(() => {
             bb.updateTestHtml(project);
             console.timeEnd("compile");
+            let result = compilationCache.getResult();
+            if (result.errors != 0) {
+                console.log(chalk.red("Skipping testing due to " + result.errors + " errors in build."));
+                process.exit(1);
+            }
+            console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
             startTestsInPhantom();
             testServer.startTest('/test.html');
             return Promise.race([phantomJsProcess.finish, testServer.waitForOneResult()]);
