@@ -510,6 +510,7 @@ function run() {
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-s, --style <0/1/2>", "override styleDef className preservation level", /^(0|1|2)$/, "")
+        .option("-p, --sprite <0/1>", "enable/disable creation of sprites")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
         .action((c) => {
@@ -526,6 +527,9 @@ function run() {
             project.outputDir = c["dir"];
         if (humanTrue(c["fast"]) || project.mainExamples.length > 1) {
             presetDebugProject(project);
+            if (!humanTrue(c["fast"])) {
+                project.spriteMerge = true;
+            }
         }
         else {
             presetReleaseProject(project);
@@ -558,6 +562,9 @@ function run() {
         }
         if (!project.outputDir) {
             project.outputDir = "./dist";
+        }
+        if (c["sprite"]) {
+            project.spriteMerge = humanTrue(c["sprite"]);
         }
         if (project.fastBundle) {
             project.options.sourceRoot = path.relative(project.outputDir, ".");

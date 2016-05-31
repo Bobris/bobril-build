@@ -1,6 +1,15 @@
 CHANGELOG
 ===
 
+0.40.0
+--
+
+New features
+-
+
+Allow to override spriting in build. Also multiple examples have spriting enabled by default.
+
+
 0.39.1
 --
 
