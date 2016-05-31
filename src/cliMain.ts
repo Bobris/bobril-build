@@ -228,7 +228,7 @@ function createProjectFromPackageJson(): bb.IProject {
 function presetDebugProject(project: bb.IProject) {
     project.debugStyleDefs = true;
     project.releaseStyleDefs = false;
-    project.spriteMerge = false;
+    project.spriteMerge = true;
     project.fastBundle = true;
     project.totalBundle = false;
     project.compress = false;
