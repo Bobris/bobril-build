@@ -61,7 +61,7 @@ function defaultResolveRequire(name, from, fileExists, readFile) {
             tryName = path.join(curDir, 'node_modules', name, 'index.js');
             if (fileExists(tryName))
                 return tryName;
-            return null;
+            console.log("Ignoring invalid module " + path.join(curDir, 'node_modules', name));
         }
         oldDir = curDir;
         curDir = path.dirname(curDir);

@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.40.1
+--
+
+Fix
+-
+
+Ignore invalid packages in bundler.
+
 0.40.0
 --
 
