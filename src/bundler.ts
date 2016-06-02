@@ -97,7 +97,7 @@ function defaultResolveRequire(name: string, from: string, fileExists: (name: st
             if (fileExists(tryName)) return tryName;
             tryName = path.join(curDir, 'node_modules', name, 'index.js');
             if (fileExists(tryName)) return tryName;
-            console.log("Ignoring invalid module "+path.join(curDir, 'node_modules', name));
+            console.log("Ignoring invalid module " + path.join(curDir, 'node_modules', name));
             // Invalid module, continue search up in tree
         }
         oldDir = curDir;
@@ -193,7 +193,7 @@ function isConstantSymbolRef(node: uglify.IAstNode) {
     return false;
 }
 
-function check(name: string, order: IFileForBundle[], stack: string[], project: IBundleProject, resolveRequire: (name: string, from: string) => string) {
+function check(name: string, order: IFileForBundle[], visited: string[], project: IBundleProject, resolveRequire: (name: string, from: string) => string) {
     let cached: IFileForBundle = project.cache[name.toLowerCase()];
     let mod = project.checkFileModification(name);
     let reexportDef: uglify.ISymbolDef = null;
@@ -202,6 +202,7 @@ function check(name: string, order: IFileForBundle[], stack: string[], project: 
             throw new Error('Cannot open ' + name);
         }
         let fileContent = project.readContent(name);
+        //console.log("============== START " + name);
         //console.log(fileContent);
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
@@ -350,10 +351,10 @@ __bbe['${name}']=module.exports; }).call(window);`);
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {
-        if (stack.indexOf(r) >= 0)
+        if (visited.indexOf(r) >= 0)
             return;
-        stack.push(r);
-        check(r, order, stack, project, resolveRequire);
+        visited.push(r);
+        check(r, order, visited, project, resolveRequire);
     });
     cached.exports = Object.create(null);
     cached.selfexports.forEach(exp => {
@@ -402,9 +403,14 @@ export function bundle(project: IBundleProject) {
         return lowResolveRequire(name, from, fileExists, readFile);
     }
     let order = <IFileForBundle[]>[];
-    let stack = [];
+    let visited = [];
     let pureFuncs: { [name: string]: boolean } = Object.create(null);
-    project.getMainFiles().forEach((val) => check(val, order, stack, project, resolveRequire));
+    project.getMainFiles().forEach((val) => {
+        if (visited.indexOf(val) >= 0)
+            return;
+        visited.push(val);
+        check(val, order, visited, project, resolveRequire);
+    });
     let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
     let topLevelNames = Object.create(null);
