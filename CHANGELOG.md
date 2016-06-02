@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.40.2
+--
+
+Fix
+-
+
+Bundler wrongly handled multiple main files if they include each other.
+
 0.40.1
 --
 
