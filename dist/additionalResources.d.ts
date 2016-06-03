@@ -10,7 +10,7 @@ export declare class AdditionalResources {
     project: bb.IProject;
     constructor(project: bb.IProject);
     tryGetFileContent(fileName: string): Buffer;
-    copyFilesToOuputDir(): any;
+    copyFilesToOuputDir(): boolean;
     private recursiveCopyFiles(directory, subDirPath);
     private getCachedFileExistence(filePath);
     private getFileTimeStamp(filePath);

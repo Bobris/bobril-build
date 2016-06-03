@@ -15,7 +15,7 @@ export const selectedStyle = b.styleDef({
 });
 
 export const stackStyle = b.styleDef({
-    whiteSpace: "pre-wrap"
+    marginLeft: 20
 });
 
 export const suiteDivStyle = b.styleDef({
@@ -36,4 +36,17 @@ export const skippedStyle = b.styleDef({
 
 export const successfulStyle = b.styleDef({
     color: "blue"
+});
+
+export const filePos = b.styleDef({
+    fontSize: "0.8em",
+    color: "#444"
+});
+
+export const errorMessage = b.styleDef({
+    color: "red"
+});
+
+export const warningMessage = b.styleDef({
+    color: "darkorange"
 });

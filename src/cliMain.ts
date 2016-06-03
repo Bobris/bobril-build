@@ -9,6 +9,8 @@ import * as fs from "fs";
 import * as plugins from "./pluginsLoader"
 import * as depChecker from "./dependenciesChecker"
 import {AdditionalResources}  from './additionalResources'
+import * as chalk from 'chalk';
+import * as notifier from 'node-notifier';
 
 var memoryFs: { [name: string]: Buffer } = Object.create(null);
 
@@ -96,7 +98,7 @@ function respondSpecial(response: http.ServerResponse, name: string) {
 }
 
 function handleRequest(request: http.ServerRequest, response: http.ServerResponse) {
-    console.log('Req ' + request.url);
+    // console.log('Req ' + request.url);
     if (reUrlBB.test(request.url)) {
         if (request.url.length === 3) {
             response.writeHead(301, { Location: "/bb/" });
@@ -320,10 +322,10 @@ interface ICompileProcess {
 }
 
 let lastId = 0;
-function startCompileProcess(path: string): ICompileProcess {
+function startCompileProcess(compilationPath: string): ICompileProcess {
     let compileProcess = startBackgroundProcess("compile", {});
     let myId = "" + (lastId++);
-    compileProcess("createProject", { id: myId, dir: path });
+    compileProcess("createProject", { id: myId, dir: compilationPath });
     return {
         stop() {
             compileProcess("disposeProject", myId, { exit() { } });
@@ -388,20 +390,61 @@ function startCompileProcess(path: string): ICompileProcess {
                     log(param) { console.log(param) },
                     write({ name, buffer }) {
                         writtenFileCount++;
-                        console.log(name);
+                        //console.log(name);
                         write(name, new Buffer(buffer, "binary"));
                     },
                     compileOk(param) {
                         let time = Date.now() - startCompilation;
-                        mainServer.notifyCompilationFinished(param.errors, param.warnings, time);
-                        console.log("Compiled in " + time.toFixed(0) + "ms. Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".");
+                        mainServer.notifyCompilationFinished(param.errors, param.warnings, time, param.messages);
+                        let message = "Compiled in " + time.toFixed(0) + "ms.";
+                        if (param.errors > 0 || param.warnings > 0) {
+                            message += " Found";
+                            if (param.errors > 0) {
+                                message += " " + param.errors + " error" + (param.errors !== 1 ? "s" : "");
+                                if (param.warnings > 0)
+                                    message += " and";
+                            }
+                            if (param.warnings > 0) {
+                                message += " " + param.warnings + " warning" + (param.warnings !== 1 ? "s" : "");
+                            }
+                            message += ".";
+                        }
+                        if (writtenFileCount > 0) {
+                            message += " Updated " + writtenFileCount + " file" + (writtenFileCount !== 1 ? "s" : "") + ".";
+                        }
+                        if (param.errors > 0) {
+                            console.log(chalk.red(message));
+                            notifier.notify({
+                                title: 'BB - build failed',
+                                message: message,
+                                icon: path.join(bbDirRoot, 'assets/notify-icons/error.png'),
+                                wait: true,
+                                sticky: true
+                            });
+                        }
+                        else {
+                            console.log(chalk.green(message));
+                            notifier.notify({
+                                title: 'BB - build successfull',
+                                message: message,
+                                icon: path.join(bbDirRoot, 'assets/notify-icons/success.png')
+                            });
+                        }
                         resolve(param);
                     },
                     compileFailed(param) {
                         let time = Date.now() - startCompilation;
-                        mainServer.notifyCompilationFinished(-1, 0, time);
+                        mainServer.notifyCompilationFinished(-1, 0, time, []);
                         console.log(param);
-                        console.log("Compilation failed in " + time.toFixed(0) + "ms");
+                        let message = "Compilation failed in " + time.toFixed(0) + "ms";
+                        console.log(chalk.red(message));
+                        notifier.notify({
+                            title: 'BB - build critically failed',
+                            message: message,
+                            icon: path.join(bbDirRoot, 'assets/notify-icons/error.png'),
+                            wait: true,
+                            sticky: true
+                        });
                         reject(param);
                     }
                 });
@@ -431,7 +474,7 @@ function getDefaultDebugOptions() {
 function startHttpServer(port: number) {
     server = http.createServer(handleRequest);
     server.on("listening", function () {
-        console.log("Server listening on: http://localhost:" + server.address().port);
+        console.log("Server listening on: " + chalk.cyan(" http://localhost:" + server.address().port));
     });
     server.on('error', function (e) {
         if (e.code == 'EADDRINUSE') {
@@ -445,6 +488,7 @@ function startHttpServer(port: number) {
 }
 
 function interactiveCommand(port: number) {
+    mainServer.setProjectDir(curProjectDir);
     startHttpServer(port);
     let compileProcess = startCompileProcess(curProjectDir);
     compileProcess.refresh(null).then(() => {
@@ -497,10 +541,13 @@ export function run() {
         .option("-c, --compress <1/0>", "remove dead code", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-m, --mangle <1/0>", "minify names", /^(true|false|1|0|t|f|y|n)$/i, "1")
         .option("-b, --beautify <1/0>", "readable formatting", /^(true|false|1|0|t|f|y|n)$/i, "0")
+        .option("-s, --style <0/1/2>", "override styleDef className preservation level", /^(0|1|2)$/, "")
+        .option("-p, --sprite <0/1>", "enable/disable creation of sprites")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
         .action((c) => {
             commandRunning = true;
+            let start = Date.now();
             let project = bb.createProjectFromDir(curProjectDir);
             project.logCallback = (text) => {
                 console.log(text);
@@ -511,11 +558,31 @@ export function run() {
             if (c["dir"]) project.outputDir = c["dir"];
             if (humanTrue(c["fast"]) || project.mainExamples.length > 1) {
                 presetDebugProject(project);
+                if (!humanTrue(c["fast"])) {
+                    project.spriteMerge = true;
+                }
             } else {
                 presetReleaseProject(project);
                 project.compress = humanTrue(c["compress"]);
                 project.mangle = humanTrue(c["mangle"]);
                 project.beautify = humanTrue(c["beautify"]);
+            }
+            switch (c["style"]) {
+                case "0": {
+                    project.debugStyleDefs = false;
+                    project.releaseStyleDefs = true;
+                    break;
+                }
+                case "1": {
+                    project.debugStyleDefs = false;
+                    project.releaseStyleDefs = false;
+                    break;
+                }
+                case "2": {
+                    project.debugStyleDefs = true;
+                    project.releaseStyleDefs = false;
+                    break;
+                }
             }
             if (c["localize"]) {
                 project.localize = humanTrue(c["localize"]);
@@ -526,13 +593,21 @@ export function run() {
             if (!project.outputDir) {
                 project.outputDir = "./dist";
             }
-            console.time("compile");
+            if (c["sprite"]) {
+                project.spriteMerge = humanTrue(c["sprite"]);
+            }
+            if (project.fastBundle) {
+                project.options.sourceRoot = path.relative(project.outputDir, ".");
+            }
             if (!depChecker.installMissingDependencies(project))
                 process.exit(1);
-            bb.compileProject(project).then(() => {
-                console.timeEnd("compile");
-                createAdditionalResources(project).copyFilesToOuputDir();
-                process.exit(0);
+            bb.compileProject(project).then((result: bb.CompilationResult) => {
+                if (result.errors == 0 && createAdditionalResources(project).copyFilesToOuputDir()) {
+                    console.log(chalk.green("Build finished succesfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
+                    process.exit(0);
+                }
+                console.error(chalk.red("There was " + result.errors + " errors during build"));
+                process.exit(1);
             }, (err) => {
                 console.error(err);
                 process.exit(1);
@@ -630,6 +705,12 @@ export function run() {
             }).then(() => {
                 bb.updateTestHtml(project);
                 console.timeEnd("compile");
+                let result = compilationCache.getResult();
+                if (result.errors != 0) {
+                    console.log(chalk.red("Skipping testing due to " + result.errors + " errors in build."));
+                    process.exit(1);
+                }
+                console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
                 startTestsInPhantom();
                 testServer.startTest('/test.html');
                 return Promise.race<number | bb.TestResultsHolder>([phantomJsProcess.finish, testServer.waitForOneResult()]);
@@ -644,10 +725,14 @@ export function run() {
                     if (c["out"]) {
                         fs.writeFileSync(c["out"], bb.toJUnitXml(code));
                     }
-                    if (code.failure)
+                    if (code.failure) {
+                        console.log(chalk.red(code.totalTests + " tests finished with " + code.testsFailed + " failures."));
                         process.exit(1);
-                    else
+                    }
+                    else {
+                        console.log(chalk.green(code.totalTests + " tests finished without failures."));
                         process.exit(0);
+                    }
                 }
             }, (err) => {
                 console.error(err);

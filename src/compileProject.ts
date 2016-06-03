@@ -322,7 +322,7 @@ export function fillMainSpec(project: bb.IProject): Promise<any> {
     });
 }
 
-export function compileProject(project: bb.IProject): Promise<any> {
+export function compileProject(project: bb.IProject): Promise<bb.CompilationResult> {
     var compilationCache = new bb.CompilationCache();
     var translationDb = new bb.TranslationDb();
     defineTranslationReporter(project);
@@ -359,5 +359,6 @@ export function compileProject(project: bb.IProject): Promise<any> {
             console.log("Writing translations");
             translationDb.saveLangDbs(trDir);
         }
+        return compilationCache.getResult();
     });
 }

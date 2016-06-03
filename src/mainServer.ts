@@ -1,6 +1,9 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
 import * as testServer from './testServer';
+import { CompilationResultMessage } from './defs';
+import * as pathPlatformDependent from "path";
+const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 
 class Client {
     server: MainServer;
@@ -14,8 +17,15 @@ class Client {
             delete this.server[this.id];
         };
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
-            console.log("Main Message " + message, data);
             switch (message) {
+                case "focusPlace": {
+                    this.server.sendAll(message, { fn: path.join(this.server.dir, data.fn), pos: data.pos });
+                    break;
+                }
+                default: {
+                    console.log("Main Message " + message, data);
+                    break;
+                }
             }
         }
     }
@@ -27,8 +37,10 @@ export class MainServer {
     private clients: { [id: string]: Client };
     private svr: longPollingServer.LongPollingServer;
     private testSvr: testServer.TestServer;
+    dir: string;
 
     constructor(testSvr: testServer.TestServer) {
+        this.dir = "";
         this.lastId = 0;
         this.testSvr = testSvr;
         this.clients = Object.create(null);
@@ -40,6 +52,10 @@ export class MainServer {
         this.svr.handle(request, response);
     }
 
+    setProjectDir(dir: string) {
+        this.dir = dir;    
+    }
+    
     newConnection(c: longPollingServer.ILongPollingConnection) {
         let id = "" + this.lastId++;
         let cl = new Client(this, id, c);
@@ -48,7 +64,7 @@ export class MainServer {
         cl.connection.send("testUpdated", testState);
     }
 
-    private sendAll(message:string, data?: any) {
+    sendAll(message: string, data?: any) {
         let kids = Object.keys(this.clients);
         for (let i = 0; i < kids.length; i++) {
             this.clients[kids[i]].connection.send(message, data);
@@ -58,11 +74,11 @@ export class MainServer {
     nofifyCompilationStarted() {
         this.sendAll("compilationStarted");
     }
-     
-    notifyCompilationFinished(errors: number, warnings: number, time: number) {
-        this.sendAll("compilationFinished", { errors, warnings, time });
+
+    notifyCompilationFinished(errors: number, warnings: number, time: number, messages: CompilationResultMessage[]) {
+        this.sendAll("compilationFinished", { errors, warnings, time, messages });
     }
-    
+
     private notifyTestSvrChange() {
         let kids = Object.keys(this.clients);
         if (kids.length == 0) return;

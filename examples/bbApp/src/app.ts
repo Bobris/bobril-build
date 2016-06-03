@@ -1,5 +1,6 @@
 import * as b from 'bobril';
 import * as g from 'bobril-g11n';
+import lightSwitch from './lightSwitch';
 
 interface IPageCtx extends b.IBobrilCtx {
     counter: number;
@@ -7,7 +8,7 @@ interface IPageCtx extends b.IBobrilCtx {
 
 b.asset("bootstrap/css/bootstrap.css");
 
-let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 });
+let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 }, null, "header");
 
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
@@ -31,8 +32,9 @@ let page = b.createVirtualComponent({
                 ]
             },
             {
-                tag: 'img', attrs: { src: b.asset('light.png') }  
+                tag: 'img', attrs: { src: b.asset('light.png') }
             },
+            lightSwitch({ value: false, onChange: () => { } }),
             {
                 tag: 'span', className: "glyphicon glyphicon-star", attrs: { "ariaHidden": true }
             },

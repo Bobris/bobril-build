@@ -61,7 +61,7 @@ function defaultResolveRequire(name, from, fileExists, readFile) {
             tryName = path.join(curDir, 'node_modules', name, 'index.js');
             if (fileExists(tryName))
                 return tryName;
-            return null;
+            console.log("Ignoring invalid module " + path.join(curDir, 'node_modules', name));
         }
         oldDir = curDir;
         curDir = path.dirname(curDir);
@@ -151,7 +151,7 @@ function isConstantSymbolRef(node) {
     }
     return false;
 }
-function check(name, order, stack, project, resolveRequire) {
+function check(name, order, visited, project, resolveRequire) {
     let cached = project.cache[name.toLowerCase()];
     let mod = project.checkFileModification(name);
     let reexportDef = null;
@@ -160,6 +160,7 @@ function check(name, order, stack, project, resolveRequire) {
             throw new Error('Cannot open ' + name);
         }
         let fileContent = project.readContent(name);
+        //console.log("============== START " + name);
         //console.log(fileContent);
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
@@ -309,10 +310,10 @@ __bbe['${name}']=module.exports; }).call(window);`);
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {
-        if (stack.indexOf(r) >= 0)
+        if (visited.indexOf(r) >= 0)
             return;
-        stack.push(r);
-        check(r, order, stack, project, resolveRequire);
+        visited.push(r);
+        check(r, order, visited, project, resolveRequire);
     });
     cached.exports = Object.create(null);
     cached.selfexports.forEach(exp => {
@@ -362,9 +363,14 @@ function bundle(project) {
         return lowResolveRequire(name, from, fileExists, readFile);
     };
     let order = [];
-    let stack = [];
+    let visited = [];
     let pureFuncs = Object.create(null);
-    project.getMainFiles().forEach((val) => check(val, order, stack, project, resolveRequire));
+    project.getMainFiles().forEach((val) => {
+        if (visited.indexOf(val) >= 0)
+            return;
+        visited.push(val);
+        check(val, order, visited, project, resolveRequire);
+    });
     let bundleAst = uglify.parse('(function(){"use strict";})()');
     let bodyAst = bundleAst.body[0].body.expression.body;
     let topLevelNames = Object.create(null);

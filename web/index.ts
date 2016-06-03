@@ -1,102 +1,30 @@
 import * as b from 'bobril';
-import * as longPollingClient from './longPollingClient';
 import * as testReportAnalyzer from './testReportAnalyzer';
 import * as styles from './styles';
+import * as s from './state';
+import * as com from './communication';
 
-let c = new longPollingClient.Connection('/bb/api/main');
-
-export interface StackFrame {
-    functionName?: string;
-    args?: any[];
-    fileName?: string;
-    lineNumber?: number;
-    columnNumber?: number;
-}
-
-export interface SuiteOrTest {
-    isSuite: boolean;
-    id: number;
-    parentId: number;
-    name: string;
-    skipped: boolean;
-    failure: boolean;
-    duration: number;
-    failures: { message: string, stack: StackFrame[] }[];
-    nested: SuiteOrTest[];
-    logs: { message: string, stack: StackFrame[] }[];
-}
-
-export interface TestResultsHolder extends SuiteOrTest {
-    userAgent: string;
-    running: boolean;
-    testsFailed: number;
-    testsSkipped: number;
-    testsFinished: number;
-    totalTests: number;
-}
-
-export interface TestSvrState {
-    agents: TestResultsHolder[];
-}
-
-let connected = false;
-let disconnected = false;
-let testSvrState: TestSvrState = { agents: [] };
-let reconnectDelay = 0;
-
-function reconnect() {
-    disconnected = false;
-    c.connect();
-    b.invalidate();
-}
-
-c.onClose = () => {
-    connected = false;
-    disconnected = true;
-    b.invalidate();
-    if (reconnectDelay < 30000) reconnectDelay += 1000;
-    setTimeout(() => {
-        reconnect();
-    }, reconnectDelay);
-};
-
-c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
-    if (!connected) {
-        connected = true;
-        b.invalidate();
-    }
-    switch (message) {
-        case "testUpdated": {
-            testSvrState = data;
-            b.invalidate();
-            break;
+function clickable(content: b.IBobrilChildren, action: () => void): b.IBobrilNode {
+    return {
+        children: content, component: {
+            onClick() { action(); return true; }
         }
-        default: {
-            console.log("Unknown message: " + message, data);
-            break;
-        }
-    }
-};
-
-function clickable(content: b.IBobrilChildren, action:()=>void):b.IBobrilNode {
-    return { children:content, component: {
-        onClick() { action(); return true; }
-    }};
+    };
 }
 
 function getAgentsShort(selectedAgent: number, setSelectedAgent: (index: number) => void): b.IBobrilChildren {
-    return testSvrState.agents.map((r, index) => {
+    return s.testSvrState.agents.map((r, index) => {
         return clickable(b.styledDiv([
             b.styledDiv(r.userAgent, styles.spanUserAgent),
             b.styledDiv("Failures: " + r.testsFailed
                 + ((r.testsSkipped > 0) ? (" Skipped: " + r.testsSkipped) : "")
                 + " Successful: " + (r.testsFinished - r.testsFailed - r.testsSkipped), styles.spanInfo),
             r.running && b.styledDiv("Running " + r.testsFinished + "/" + r.totalTests, styles.spanInfo)
-        ], index === selectedAgent&&styles.selectedStyle),() => { setSelectedAgent(index) });
+        ], index === selectedAgent && styles.selectedStyle), () => { setSelectedAgent(index) });
     });
 }
 
-function stackFrameToString(sf: StackFrame) {
+function stackFrameToString(sf: s.StackFrame) {
     var functionName = sf.functionName || '{anonymous}';
     var args = '(' + (sf.args || []).join(',') + ')';
     var fileName = sf.fileName ? ('@' + sf.fileName) : '';
@@ -105,21 +33,23 @@ function stackFrameToString(sf: StackFrame) {
     return functionName + args + fileName + lineNumber + columnNumber;
 }
 
-function getMessagesDetails(failures: { message: string, stack: StackFrame[] }[]): b.IBobrilChildren {
+function getMessagesDetails(failures: { message: string, stack: s.StackFrame[] }[]): b.IBobrilChildren {
     return failures.map(f => [
         b.styledDiv(f.message),
-        b.styledDiv(f.stack.map(sf => stackFrameToString(sf)).join("\n"), styles.stackStyle)
+        b.styledDiv(f.stack.map(sf => clickable(b.styledDiv(stackFrameToString(sf)), () => {
+            com.focusPlace(sf.fileName, [sf.lineNumber, sf.columnNumber]);
+        }), styles.stackStyle))
     ]);
 }
 
-function getTestDetail(a: SuiteOrTest): b.IBobrilChildren {
+function getTestDetail(a: s.SuiteOrTest): b.IBobrilChildren {
     let isFailed = a.failures && a.failures.length > 0;
     let hasLogs = a.logs && a.logs.length > 0;
     let isSuccessful = !isFailed && !hasLogs && !a.skipped;
     return [
-        b.styledDiv(a.name, styles.suiteDivStyle, 
-            isFailed && styles.failedStyle, 
-            a.skipped && styles.skippedStyle, 
+        b.styledDiv(a.name, styles.suiteDivStyle,
+            isFailed && styles.failedStyle,
+            a.skipped && styles.skippedStyle,
             isSuccessful && styles.successfulStyle
         ),
         isFailed && b.styledDiv(getMessagesDetails(a.failures), styles.suiteChildrenIndentStyle),
@@ -127,25 +57,25 @@ function getTestDetail(a: SuiteOrTest): b.IBobrilChildren {
     ];
 }
 
-function getSuiteDetail(a: SuiteOrTest): b.IBobrilChildren {
+function getSuiteDetail(a: s.SuiteOrTest): b.IBobrilChildren {
     return [
         b.styledDiv(a.name, styles.suiteDivStyle),
         b.styledDiv(getSuitesDetail(a.nested), styles.suiteChildrenIndentStyle)
     ];
 }
 
-function getSuitesDetail(a: SuiteOrTest[]): b.IBobrilChildren {
+function getSuitesDetail(a: s.SuiteOrTest[]): b.IBobrilChildren {
     return a.map(v => v.isSuite ? getSuiteDetail(v) : getTestDetail(v));
 }
 
-function getSuites(a: SuiteOrTest[], title: string): b.IBobrilChildren {
+function getSuites(a: s.SuiteOrTest[], title: string): b.IBobrilChildren {
     return a.length > 0 && [
         { tag: "h3", children: title },
         getSuitesDetail(a)
     ]
 }
 
-function getAgentDetail(agent: TestResultsHolder): b.IBobrilChildren {
+function getAgentDetail(agent: s.TestResultsHolder): b.IBobrilChildren {
     let results = testReportAnalyzer.analyze(agent.nested);
     let suites = [
         getSuites(results.failed, "Failed"),
@@ -160,23 +90,40 @@ function getAgentDetail(agent: TestResultsHolder): b.IBobrilChildren {
         suites.push(skippedSuites);
         suites.push(passedSuites);
     }
-    return [ { tag: "h2", children: agent.userAgent + " details" }, suites ];
+    return [{ tag: "h2", children: agent.userAgent + " details" }, suites];
 }
 
-reconnect();
+function getBuildStatus() {
+    const l = s.lastBuildResult;
+    return b.styledDiv([
+        s.building && b.styledDiv("Build in progress"),
+        b.styledDiv("Last Build Result Errors: " + l.errors + " Warnings: " + l.warnings + " Duration: " + l.time + "ms"),
+        l.messages.map(m => clickable(b.styledDiv(
+            [
+                b.styledDiv((m.isError ? "Error: " : "Warning: ") + m.text, m.isError ? styles.errorMessage : styles.warningMessage),
+                b.styledDiv(`${m.fileName} (${m.pos[0]}:${m.pos[1]}-${m.pos[2]}:${m.pos[3]})`, styles.filePos)
+            ]
+        ), () => {
+            com.focusPlace(m.fileName, m.pos);
+        }))
+    ]);
+}
+
+com.reconnect();
 
 let selectedAgent = -1;
 b.init(() => {
-    if (selectedAgent >= testSvrState.agents.length) {
+    if (selectedAgent >= s.testSvrState.agents.length) {
         selectedAgent = -1;
     }
-    if (selectedAgent === -1 && testSvrState.agents.length > 0) { 
-        selectedAgent = 0; 
+    if (selectedAgent === -1 && s.testSvrState.agents.length > 0) {
+        selectedAgent = 0;
     }
     return [
-        { tag: "h1", children: "Bobril-build" },
-        b.styledDiv(disconnected ? "Disconnected" : connected ? "Connected" : "Connecting"),
+        { tag: "h2", children: "Bobril-build" },
+        b.styledDiv(s.disconnected ? "Disconnected" : s.connected ? "Connected" : "Connecting"),
+        getBuildStatus(),
         getAgentsShort(selectedAgent, i => { selectedAgent = i; b.invalidate() }),
-        selectedAgent >= 0 && getAgentDetail(testSvrState.agents[selectedAgent])
+        selectedAgent >= 0 && getAgentDetail(s.testSvrState.agents[selectedAgent])
     ];
 });

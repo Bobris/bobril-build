@@ -373,6 +373,7 @@ function compileProject(project) {
             console.log("Writing translations");
             translationDb.saveLangDbs(trDir);
         }
+        return compilationCache.getResult();
     });
 }
 exports.compileProject = compileProject;

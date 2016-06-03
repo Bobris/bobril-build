@@ -2,6 +2,7 @@ import * as ts from "typescript";
 import * as imgCache from "./imgCache";
 import * as BuildHelpers from './buildHelpers';
 import * as sourceMap from './sourceMap';
+import { CompilationResultMessage } from './defs';
 export interface ICacheFile {
     fullName: string;
     text?: string;
@@ -92,12 +93,6 @@ export interface IProject {
     devDependencies?: string[];
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
-}
-export interface CompilationResultMessage {
-    fileName: string;
-    isError: boolean;
-    text: string;
-    pos: [number, number, number, number];
 }
 export declare class CompilationResult {
     errors: number;
