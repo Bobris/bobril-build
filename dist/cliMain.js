@@ -464,7 +464,10 @@ function interactiveCommand(port) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
-        return compileProcess.installDependencies();
+        if (opts.reactNative) {
+            bb.startReactNativeHttpServer(memoryFs);
+        }
+        return compileProcess.installDependencies().then(() => opts);
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {

@@ -62,6 +62,7 @@ export interface IProject {
     options: ts.CompilerOptions;
     logCallback?: (text: string) => void;
     writeFileCallback?: (filename: string, content: Buffer) => void;
+    reactNative?: boolean;
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
@@ -723,6 +724,9 @@ export class CompilationCache {
                 } else if (project.fastBundle) {
                     let allFilesInJsBundle = Object.keys(project.commonJsTemp);
                     let res = new sourceMap.SourceMapBuilder();
+                    if (project.reactNative) {
+                        bobrilDepsHelpers.addBundledLoaderHeader(res, project);
+                    }
                     for (let i = 0; i < assetFiles.length; i++) {
                         let assetFile = assetFiles[i];
                         if (!isJsByExt(assetFile)) continue;
@@ -740,6 +744,9 @@ export class CompilationCache {
                         res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
                         res.addSource(content, sm);
                         res.addLine("});");
+                    }
+                    if (project.reactNative) {
+                        bobrilDepsHelpers.addBundledLoaderFooter(res, project);
                     }
                     res.addLine("//# sourceMappingURL=" + shortenFileName("bundle.js") + ".map");
                     project.writeFileCallback(project.bundleJs + '.map', res.toSourceMapBuffer(project.options.sourceRoot));

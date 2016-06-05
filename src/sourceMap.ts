@@ -39,6 +39,13 @@ export class SourceMapBuilder {
         this.mappings.addByte(59); // ;
     }
 
+    addLines(text: string) {
+        this.outputBuffer.addString(text);
+        this.outputBuffer.addByte(10);
+        for(var i=text.split('\n').length;i-->=0;)
+            this.mappings.addByte(59); // ;
+    }
+    
     addSource(content: Buffer, sourceMap?: SourceMap) {
         if (sourceMap == null) sourceMap = emptySourceMap;
         this.outputBuffer.addBuffer(content);

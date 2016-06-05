@@ -226,6 +226,7 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     project.devDependencies = Object.keys(packageObj.devDependencies || {});
     project.dependencies = Object.keys(packageObj.dependencies || {});
     project.localize = project.dependencies.some(v => v === "bobril-g11n");
+    project.reactNative = project.dependencies.indexOf("react-native") >= 0;
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
         autodetectMainExample(project, allFiles);
@@ -255,9 +256,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
             if (fs.lstatSync(bobrilSection.example).isDirectory()) {
                 let files = fs.readdirSync(bobrilSection.example);
                 for (let i = 0; i < files.length; i++) {
-                    let file = path.join(project.dir,bobrilSection.example, files[i]);
+                    let file = path.join(project.dir, bobrilSection.example, files[i]);
                     if (fs.lstatSync(file).isDirectory()) continue;
-                    project.mainExamples.push(path.relative(project.dir,file));
+                    project.mainExamples.push(path.relative(project.dir, file));
                 }
             }
             else {
