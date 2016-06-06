@@ -249,6 +249,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     if (typeof bobrilSection.constantOverrides === 'object') {
         project.constantOverrides = bobrilSection.constantOverrides;
     }
+    if (typeof bobrilSection.plugins === 'object') {
+        project.pluginsConfig = bobrilSection.plugins;
+    }
     if (typeof bobrilSection.example === 'string') {
         project.mainExamples = [];
         try {

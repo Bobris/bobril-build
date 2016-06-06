@@ -49,6 +49,11 @@ It reads `package.json` and understands:
 				"module_name": {
 					"export_name": "New value, it supports also number and boolean values"
 				}
+			},
+			"plugins": {
+				"pluginName": {
+					"configKey": "configValue"
+				}
 			}
 		}
 	}

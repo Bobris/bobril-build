@@ -111,6 +111,7 @@ export interface IProject {
     devDependencies?: string[];
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
+    pluginsConfig?: { [name: string]: any };
 }
 
 export class CompilationResult {
