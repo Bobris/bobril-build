@@ -306,7 +306,6 @@ class TranslationDb {
                 }
             }
             if (content.length > 0) {
-                console.log("content", content);
                 fs.writeFileSync(filePath, content, 'utf-8');
             }
         }

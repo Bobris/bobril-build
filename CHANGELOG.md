@@ -1,6 +1,13 @@
 CHANGELOG
 ===
 
+0.42.0
+
+New features
+-
+
+Format translation json files.
+
 0.41.0
 --
 
