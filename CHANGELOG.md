@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.41.0
+--
+
+New features
+-
+
+Plugins now can have configuration in package.json.
+
 0.40.2
 --
 

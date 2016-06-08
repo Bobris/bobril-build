@@ -107,8 +107,7 @@ function examplesListIndexHtml(fileNames, project) {
     </html>`;
 }
 exports.examplesListIndexHtml = examplesListIndexHtml;
-function fastBundleBasedIndexHtml(project) {
-    let title = project.htmlTitle || 'Bobril Application';
+function getModuleMap(project) {
     let moduleNames = Object.keys(project.moduleMap);
     let moduleMap = Object.create(null);
     for (let i = 0; i < moduleNames.length; i++) {
@@ -117,6 +116,11 @@ function fastBundleBasedIndexHtml(project) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
     }
+    return `R.map = ${JSON.stringify(moduleMap)};`;
+}
+exports.getModuleMap = getModuleMap;
+function fastBundleBasedIndexHtml(project) {
+    let title = project.htmlTitle || 'Bobril Application';
     return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
@@ -126,7 +130,7 @@ function fastBundleBasedIndexHtml(project) {
         <script type="text/javascript" src="loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${simpleHelpers_1.globalDefines(project.defines)}
-            R.map = ${JSON.stringify(moduleMap)}
+            ${getModuleMap(project)}
         </script>
         <script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
@@ -139,14 +143,6 @@ function fastBundleBasedIndexHtml(project) {
 exports.fastBundleBasedIndexHtml = fastBundleBasedIndexHtml;
 function fastBundleBasedTestHtml(project) {
     let title = 'Jasmine Test';
-    let moduleNames = Object.keys(project.moduleMap);
-    let moduleMap = Object.create(null);
-    for (let i = 0; i < moduleNames.length; i++) {
-        let name = moduleNames[i];
-        if (project.moduleMap[name].internalModule)
-            continue;
-        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
-    }
     let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${project.realRootRel}${v.replace(/\.tsx?$/i, "")}');`).join(' ');
     return `<!DOCTYPE html><html>
     <head>
@@ -159,7 +155,7 @@ function fastBundleBasedTestHtml(project) {
         <script type="text/javascript" src="bb/special/loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${simpleHelpers_1.globalDefines(project.defines)}
-            R.map = ${JSON.stringify(moduleMap)}
+            ${getModuleMap(project)}
         </script>
         <script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
@@ -278,4 +274,20 @@ function updateLoaderJsByCC(cc, write) {
     writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
 }
 exports.updateLoaderJsByCC = updateLoaderJsByCC;
+function addBundledLoaderHeader(source, project) {
+    source.addLines(`if (typeof global === 'undefined') {
+    window.global = window;
+}
+if (typeof window === 'undefined') {
+    global.window = global;
+}`);
+    source.addSource(fs.readFileSync(require.resolve("./loader.js")));
+    source.addLines(simpleHelpers_1.globalDefines(project.defines));
+    source.addLines(getModuleMap(project));
+}
+exports.addBundledLoaderHeader = addBundledLoaderHeader;
+function addBundledLoaderFooter(source, project) {
+    source.addLine(`R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');`);
+}
+exports.addBundledLoaderFooter = addBundledLoaderFooter;
 //# sourceMappingURL=bobrilDepsHelpers.js.map

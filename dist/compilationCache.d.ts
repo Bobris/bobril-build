@@ -31,6 +31,7 @@ export interface IProject {
     options: ts.CompilerOptions;
     logCallback?: (text: string) => void;
     writeFileCallback?: (filename: string, content: Buffer) => void;
+    reactNative?: boolean;
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
@@ -93,6 +94,9 @@ export interface IProject {
     devDependencies?: string[];
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
+    pluginsConfig?: {
+        [name: string]: any;
+    };
 }
 export declare class CompilationResult {
     errors: number;

@@ -26,7 +26,8 @@ There is also command line single build option. Start to learn all options:
 For development of bobril-build check out this project and start:
 
 	npm link
-	gulp
+
+Compile using tasks in VSCode or running `tsc` (in directories `src`, `srcHelpers`, `spec`). Web and Webt dirs are compiled by itself `bb b`.
 
 Use bobril.asset(path) to include asset to compilation. *.css files are automatically linked in index.html head. *.js files are automatically prepended to bundle.js.
 
@@ -48,6 +49,11 @@ It reads `package.json` and understands:
 			"constantOverrides": {
 				"module_name": {
 					"export_name": "New value, it supports also number and boolean values"
+				}
+			},
+			"plugins": {
+				"pluginName": {
+					"configKey": "configValue"
 				}
 			}
 		}

@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as compilationCache from './compilationCache';
 require('bluebird');
 import { globalDefines } from './simpleHelpers';
+import * as sourceMap from './sourceMap';
 
 export function systemJsPath(): string {
     return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
@@ -110,8 +111,7 @@ export function examplesListIndexHtml(fileNames: string[], project: compilationC
     </html>`;
 }
 
-export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
-    let title = project.htmlTitle || 'Bobril Application';
+export function getModuleMap(project: compilationCache.IProject) {
     let moduleNames = Object.keys(project.moduleMap);
     let moduleMap = <{ [name: string]: string }>Object.create(null);
     for (let i = 0; i < moduleNames.length; i++) {
@@ -120,6 +120,11 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
             continue;
         moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
     }
+    return `R.map = ${JSON.stringify(moduleMap)};`;
+}
+
+export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
+    let title = project.htmlTitle || 'Bobril Application';
     return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
@@ -129,7 +134,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
         <script type="text/javascript" src="loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${globalDefines(project.defines)}
-            R.map = ${JSON.stringify(moduleMap)}
+            ${getModuleMap(project)}
         </script>
         <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
@@ -142,14 +147,6 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
 
 export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
     let title = 'Jasmine Test';
-    let moduleNames = Object.keys(project.moduleMap);
-    let moduleMap = <{ [name: string]: string }>Object.create(null);
-    for (let i = 0; i < moduleNames.length; i++) {
-        let name = moduleNames[i];
-        if (project.moduleMap[name].internalModule)
-            continue;
-        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
-    }
     let reqSpec = project.mainSpec.filter(v => !/\.d.ts$/i.test(v)).map(v => `R.r('${project.realRootRel}${v.replace(/\.tsx?$/i, "")}');`).join(' ');
     return `<!DOCTYPE html><html>
     <head>
@@ -162,7 +159,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
         <script type="text/javascript" src="bb/special/loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${globalDefines(project.defines)}
-            R.map = ${JSON.stringify(moduleMap)}
+            ${getModuleMap(project)}
         </script>
         <script type="text/javascript" src="${ project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
@@ -281,4 +278,20 @@ export function updateSystemJsByCC(cc: compilationCache.CompilationCache, write:
 
 export function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
     writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
+}
+
+export function addBundledLoaderHeader(source: sourceMap.SourceMapBuilder, project: compilationCache.IProject) {
+    source.addLines(`if (typeof global === 'undefined') {
+    window.global = window;
+}
+if (typeof window === 'undefined') {
+    global.window = global;
+}`);
+    source.addSource(fs.readFileSync(require.resolve("./loader.js")));
+    source.addLines(globalDefines(project.defines));
+    source.addLines(getModuleMap(project));
+}
+
+export function addBundledLoaderFooter(source: sourceMap.SourceMapBuilder, project: compilationCache.IProject) {
+    source.addLine(`R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');`);
 }

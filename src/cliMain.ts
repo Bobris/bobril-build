@@ -313,7 +313,7 @@ function startWatchProcess(notify: (allFiles: { [dir: string]: string[] }) => vo
 
 interface ICompileProcess {
     refresh(allFiles: { [dir: string]: string[] }): Promise<any>;
-    setOptions(options: any): Promise<any>;
+    setOptions(options: any): Promise<bb.IProject>;
     callPlugins(method: plugins.EntryMethodType): Promise<any>;
     loadTranslations(): Promise<any>;
     installDependencies(): Promise<any>;
@@ -494,7 +494,10 @@ function interactiveCommand(port: number) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
-        return compileProcess.installDependencies();
+        if (opts.reactNative) {
+            bb.startReactNativeHttpServer(memoryFs);
+        }
+        return compileProcess.installDependencies().then(()=>opts);
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {

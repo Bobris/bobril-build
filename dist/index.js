@@ -16,4 +16,5 @@ __export(require('./compileProject'));
 __export(require('./phantomjsRunner'));
 __export(require('./testServer'));
 __export(require('./mainServer'));
+__export(require('./rnServer'));
 //# sourceMappingURL=index.js.map

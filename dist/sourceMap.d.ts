@@ -17,6 +17,7 @@ export declare class SourceMapBuilder {
     lastSourceCol: number;
     constructor();
     addLine(text: string): void;
+    addLines(text: string): void;
     addSource(content: Buffer, sourceMap?: SourceMap): void;
     toContent(): Buffer;
     toSourceMapBuffer(sourceRoot?: string): Buffer;
