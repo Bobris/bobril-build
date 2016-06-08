@@ -125,7 +125,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
                 items.push([tr[0], tr[1], <number>tr[2] & 1]);
             }
         }
-        fs.writeFileSync(filename, JSON.stringify(items));
+        fs.writeFileSync(filename, JSON.stringify(items, null, "\t"));
     }
 
     pruneUnusedMesssages(): void {

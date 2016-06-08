@@ -21,6 +21,7 @@ describe("compilationCache", () => {
         let project:compilationCache.IProject = {
             dir: path.join(specdirname, 'cc'),
             main: 'app.ts',
+            mainExamples: [''],
             options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
             debugStyleDefs: true,
             releaseStyleDefs: false,
