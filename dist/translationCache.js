@@ -112,7 +112,7 @@ class TranslationDb {
                 items.push([tr[0], tr[1], tr[2] & 1]);
             }
         }
-        fs.writeFileSync(filename, JSON.stringify(items));
+        fs.writeFileSync(filename, JSON.stringify(items, null, "\t"));
     }
     pruneUnusedMesssages() {
         let list = Object.keys(this.db);
@@ -306,6 +306,7 @@ class TranslationDb {
                 }
             }
             if (content.length > 0) {
+                console.log("content", content);
                 fs.writeFileSync(filePath, content, 'utf-8');
             }
         }
