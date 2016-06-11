@@ -91,6 +91,7 @@ class TranslationDb {
         }
     }
     saveLangDbs(dir) {
+        this.pruneUnusedMesssages();
         pathUtils.mkpathsync(dir);
         this.langs.forEach(lang => {
             this.saveLangDb(path.join(dir, lang + ".json"), lang);
@@ -289,7 +290,7 @@ class TranslationDb {
         let content = "";
         content += 'S:' + source + '\r\n';
         content += 'I:' + (hint ? hint : '') + '\r\n';
-        content += 'T:\r\n';
+        content += 'T:' + source + '\r\n';
         return content;
     }
     exportUntranslatedLanguages(filePath) {

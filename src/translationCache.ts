@@ -105,6 +105,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     }
 
     saveLangDbs(dir: string) {
+        this.pruneUnusedMesssages();
         pathUtils.mkpathsync(dir);
         this.langs.forEach(lang => {
             this.saveLangDb(path.join(dir, lang + ".json"), lang);
@@ -304,7 +305,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         let content = "";
         content += 'S:' + source + '\r\n';
         content += 'I:' + (hint ? hint : '') + '\r\n';
-        content += 'T:\r\n';
+        content += 'T:' + source + '\r\n';
         return content;
     }
 
