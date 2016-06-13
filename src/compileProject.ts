@@ -226,7 +226,6 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     project.devDependencies = Object.keys(packageObj.devDependencies || {});
     project.dependencies = Object.keys(packageObj.dependencies || {});
     project.localize = project.dependencies.some(v => v === "bobril-g11n");
-    project.reactNative = project.dependencies.indexOf("react-native") >= 0;
     let bobrilSection = packageObj.bobril;
     if (bobrilSection == null) {
         autodetectMainExample(project, allFiles);

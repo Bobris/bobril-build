@@ -279,19 +279,3 @@ export function updateSystemJsByCC(cc: compilationCache.CompilationCache, write:
 export function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
     writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
 }
-
-export function addBundledLoaderHeader(source: sourceMap.SourceMapBuilder, project: compilationCache.IProject) {
-    source.addLines(`if (typeof global === 'undefined') {
-    window.global = window;
-}
-if (typeof window === 'undefined') {
-    global.window = global;
-}`);
-    source.addSource(fs.readFileSync(require.resolve("./loader.js")));
-    source.addLines(globalDefines(project.defines));
-    source.addLines(getModuleMap(project));
-}
-
-export function addBundledLoaderFooter(source: sourceMap.SourceMapBuilder, project: compilationCache.IProject) {
-    source.addLine(`R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');`);
-}

@@ -31,7 +31,6 @@ export interface IProject {
     options: ts.CompilerOptions;
     logCallback?: (text: string) => void;
     writeFileCallback?: (filename: string, content: Buffer) => void;
-    reactNative?: boolean;
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
