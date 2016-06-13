@@ -1,7 +1,18 @@
 CHANGELOG
 ===
 
+0.43.0
+--
+
+New features
+-
+
+New parameter to force localization in interactive mode.
+Exported translation files has prefilled English text in Target.
+
+
 0.42.0
+--
 
 New features
 -
