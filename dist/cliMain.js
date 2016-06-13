@@ -718,8 +718,13 @@ function run() {
         .command("interactive")
         .alias("i")
         .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
+        .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .description("runs web controled build ui")
         .action((c) => {
+        let project = bb.createProjectFromDir(curProjectDir);
+        if (c["localize"]) {
+            project.localize = humanTrue(c["localize"]);
+        }
         commandRunning = true;
         interactiveCommand(c["port"]);
     });
