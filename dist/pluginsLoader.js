@@ -35,6 +35,17 @@ class PluginLoader {
         let pluginPath = this.getPluginPath(pluginName);
         return fs.existsSync(pluginPath);
     }
+    listInstalledPlugins() {
+        console.log('\nList of installed bobril plugins:\n----------------------------------');
+        let dir = this.getPluginsDirectory();
+        fs.readdirSync(dir).filter((file) => {
+            return fs.statSync(path.join(dir, file)).isDirectory();
+        }).forEach((pluginDir) => {
+            let packageFile = path.join(dir, pluginDir, 'package.json');
+            let obj = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
+            console.log(obj._id);
+        });
+    }
     install(pluginName) {
         if (this.isPluginInstalled(pluginName)) {
             if (!this.uninstall(pluginName))
@@ -138,9 +149,10 @@ class PluginLoader {
     registerCommands(c, consumeCommand) {
         c
             .command("plugins")
+            .option("-l, --list", "list installed plugins")
             .option("-i, --install <pluginName>", "install plugin")
             .option("-u, --uninstall <pluginName>", "uninstall plugin")
-            .option("-l, --link", "link plugin")
+            .option("-s, --link", "link plugin")
             .action((c) => {
             consumeCommand(true);
             if (c.hasOwnProperty("install")) {
@@ -161,6 +173,10 @@ class PluginLoader {
             }
             if (c.hasOwnProperty("link")) {
                 this.link();
+                process.exit(0);
+            }
+            if (c.hasOwnProperty("list")) {
+                this.listInstalledPlugins();
                 process.exit(0);
             }
         });
