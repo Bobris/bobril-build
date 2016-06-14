@@ -1,6 +1,18 @@
 CHANGELOG
 ===
 
+Latest
+--
+
+New features
+-
+
+New parameter for listing installed bobril-build plugins
+
+  -l, --list    list installed plugins
+
+Changed parameter for creating plugin link to '-s, --link'
+
 0.43.0
 --
 
