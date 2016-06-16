@@ -9,8 +9,6 @@ function printIntroLine() {
     let pp = pathPlatformDependent.join(__dirname, '../package.json');
     let bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
     console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
-    let asciiLogo = fs.readFileSync(path.join(bbDirRoot, 'assets/ascii-logo.txt'), 'utf-8');
-    console.log(asciiLogo);
 }
 
 function backgroundProcess() {
