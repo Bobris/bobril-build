@@ -50,6 +50,7 @@ export interface IProject {
     mainJsFile?: string;
     noBobrilJsx?: boolean;
     localize?: boolean;
+    updateTranslations?: boolean;
     fastBundle?: boolean;
     totalBundle?: boolean;
     compress?: boolean;

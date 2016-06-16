@@ -544,6 +544,7 @@ export function run() {
         .option("-s, --style <0/1/2>", "override styleDef className preservation level", /^(0|1|2)$/, "")
         .option("-p, --sprite <0/1>", "enable/disable creation of sprites")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
+        .option("-u, --updateTranslations <1/0>", "update translations", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
         .action((c) => {
             commandRunning = true;
@@ -555,6 +556,7 @@ export function run() {
             if (!bb.refreshProjectFromPackageJson(project, null)) {
                 process.exit(1);
             }
+            project.updateTranslations = humanTrue(c["updateTranslations"]);
             if (c["dir"]) project.outputDir = c["dir"];
             if (humanTrue(c["fast"]) || project.mainExamples.length > 1) {
                 presetDebugProject(project);
@@ -688,6 +690,7 @@ export function run() {
             var compilationCache = new bb.CompilationCache();
             bb.fillMainSpec(project).then(() => {
                 presetDebugProject(project);
+                project.updateTranslations = false;
                 project.options.sourceRoot = "/";
                 project.fastBundle = true;
                 project.main = project.mainSpec;

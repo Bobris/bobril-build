@@ -1,7 +1,7 @@
 CHANGELOG
 ===
 
-Latest
+0.44.0
 --
 
 New features
@@ -12,6 +12,10 @@ New parameter for listing installed bobril-build plugins
   -l, --list    list installed plugins
 
 Changed parameter for creating plugin link to '-s, --link'
+
+Translations are not updated automaticaly anymore. Update translations using "bb b -u 1".
+
+Removed ascii logo. If you want one write yourself plugin.
 
 0.43.0
 --

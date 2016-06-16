@@ -358,8 +358,14 @@ export function compileProject(project: bb.IProject): Promise<bb.CompilationResu
             console.log("Writing localizations");
             emitTranslationsJs(project, translationDb);
         }
-        if (translationDb.langs.length > 0 && translationDb.addedMessage) {
+        if ((project.updateTranslations == null &&
+            translationDb.langs.length > 0 && translationDb.addedMessage) ||
+            project.updateTranslations === true
+        ) {
             console.log("Writing translations");
+            if (project.updateTranslations === true) {
+                translationDb.pruneUnusedMesssages();
+            }
             translationDb.saveLangDbs(trDir);
         }
         return compilationCache.getResult();

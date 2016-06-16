@@ -80,6 +80,8 @@ export interface IProject {
     noBobrilJsx?: boolean;
     // default false
     localize?: boolean;
+    // default undefined = autodetect if something added, true = remove unused, false = don't update
+    updateTranslations?: boolean;
     // default false
     fastBundle?: boolean;
     // default false, applied to concatenate all css too
