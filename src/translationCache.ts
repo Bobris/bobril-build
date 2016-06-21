@@ -104,8 +104,10 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         }
     }
 
-    saveLangDbs(dir: string) {
-        this.pruneUnusedMesssages();
+    saveLangDbs(dir: string, disablePrune?: boolean) {
+        if (!disablePrune){
+            this.pruneUnusedMesssages();
+        }
         pathUtils.mkpathsync(dir);
         this.langs.forEach(lang => {
             this.saveLangDb(path.join(dir, lang + ".json"), lang);

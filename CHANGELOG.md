@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+Latest
+--
+
+fixed bug removing all translations after import
+
 0.44.0
 --
 

@@ -648,9 +648,10 @@ export function run() {
             }
             if (c["import"]) {
                 console.log("Import translated languages from file " + c["import"] + ".");
+                console.log("------loaded db", trDb)
                 if (!trDb.importTranslatedLanguages(c["import"]))
                     process.exit(1);
-                trDb.saveLangDbs(trDir);
+                trDb.saveLangDbs(trDir,true);
             }
             if (c["union"]) {
                 let uArgs = c["union"].split(',');
