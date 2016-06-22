@@ -3,6 +3,8 @@ const fs = require('fs');
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const pathUtils = require("./pathUtils");
+const g11n = require("./msgFormatParser");
+const chalk = require('chalk');
 const indexOfLangsMessages = 4;
 class TranslationDb {
     constructor() {
@@ -91,7 +93,6 @@ class TranslationDb {
         }
     }
     saveLangDbs(dir) {
-        this.pruneUnusedMesssages();
         pathUtils.mkpathsync(dir);
         this.langs.forEach(lang => {
             this.saveLangDb(path.join(dir, lang + ".json"), lang);
@@ -250,8 +251,19 @@ class TranslationDb {
             this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
                 let key = this.buildKey(source, hint, true);
                 let trs = this.db[key];
-                if (trs)
-                    trs[4 + languageIndex] = target;
+                if (trs) {
+                    let ast = g11n.parse(target);
+                    if (typeof ast === "object" && ast.type === "error") {
+                        console.log(chalk.red("Skipping wrong translation entry:"));
+                        console.log(chalk.yellow("S:" + source));
+                        console.log(chalk.yellow("H:" + hint));
+                        console.log(chalk.yellow("T:" + target));
+                        console.log(chalk.red("Error in g11n format: " + ast.msg));
+                    }
+                    else {
+                        trs[4 + languageIndex] = target;
+                    }
+                }
                 key = this.buildKey(source, hint, false);
                 trs = this.db[key];
                 if (trs)

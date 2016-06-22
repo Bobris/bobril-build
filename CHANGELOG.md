@@ -4,7 +4,15 @@ CHANGELOG
 Latest
 --
 
-fixed bug removing all translations after import
+New features
+-
+
+Imported translations are checked for errors and wrong entries are skipped.
+
+Fixed
+-
+
+Wrong removing all translations after import
 
 0.44.0
 --

@@ -4,6 +4,8 @@ import * as CompilationCache from './compilationCache';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as pathUtils from "./pathUtils";
+import * as g11n from "./msgFormatParser";
+import * as chalk from 'chalk';
 
 const indexOfLangsMessages = 4;
 
@@ -267,7 +269,18 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
                 let key = this.buildKey(source, hint, true);
                 let trs = this.db[key];
-                if (trs) trs[4 + languageIndex] = target;
+                if (trs) {
+                    let ast = g11n.parse(target);
+                    if (typeof ast === "object" && ast.type === "error") {
+                        console.log(chalk.red("Skipping wrong translation entry:"));
+                        console.log(chalk.yellow("S:" + source));
+                        console.log(chalk.yellow("H:" + hint));
+                        console.log(chalk.yellow("T:" + target));
+                        console.log(chalk.red("Error in g11n format: " + ast.msg));
+                    } else {
+                        trs[4 + languageIndex] = target;
+                    }
+                }
                 key = this.buildKey(source, hint, false);
                 trs = this.db[key];
                 if (trs) trs[4 + languageIndex] = target;
