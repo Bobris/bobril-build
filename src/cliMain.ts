@@ -132,7 +132,7 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         }
         if (name.length === 0) name = 'index.html';
         if (/^base\//.test(name)) {
-            fileResponse(response, curProjectDir + name.substr(4));
+            fileResponse(response, path.join(curProjectDir, path.relative(serverProject.realRootRel,""), name.substr(4)));
             return;
         }
         if (/^special\//.test(name)) {
@@ -494,7 +494,8 @@ function interactiveCommand(port: number) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
-        return compileProcess.installDependencies().then(()=>opts);
+        serverProject = opts;
+        return compileProcess.installDependencies().then(() => opts);
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {
@@ -502,11 +503,14 @@ function interactiveCommand(port: number) {
     }).then((opts) => {
         startWatchProcess((allFiles: { [dir: string]: string[] }) => {
             compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
-                if (v.hasTests) {
-                    if (phantomJsProcess == null)
-                        startTestsInPhantom();
-                    testServer.startTest('/test.html');
-                }
+                compileProcess.setOptions({}).then(opts => {
+                    serverProject = opts;
+                    if (v.hasTests) {
+                        if (phantomJsProcess == null)
+                            startTestsInPhantom();
+                        testServer.startTest('/test.html');
+                    }
+                });
             });
         });
     });

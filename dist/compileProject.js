@@ -253,6 +253,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
     if (typeof bobrilSection.jsx === 'boolean') {
         project.noBobrilJsx = !bobrilSection.jsx;
     }
+    if (project.dependencies.indexOf("bobril") < 0) {
+        project.noBobrilJsx = true;
+    }
     if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
         project.resourcesAreRelativeToProjectDir = bobrilSection.resourcesAreRelativeToProjectDir;
     }

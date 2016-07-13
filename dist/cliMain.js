@@ -117,7 +117,7 @@ function handleRequest(request, response) {
         if (name.length === 0)
             name = 'index.html';
         if (/^base\//.test(name)) {
-            fileResponse(response, curProjectDir + name.substr(4));
+            fileResponse(response, path.join(curProjectDir, path.relative(serverProject.realRootRel, ""), name.substr(4)));
             return;
         }
         if (/^special\//.test(name)) {
@@ -464,6 +464,7 @@ function interactiveCommand(port) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
+        serverProject = opts;
         return compileProcess.installDependencies().then(() => opts);
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
@@ -472,11 +473,14 @@ function interactiveCommand(port) {
     }).then((opts) => {
         startWatchProcess((allFiles) => {
             compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
-                if (v.hasTests) {
-                    if (phantomJsProcess == null)
-                        startTestsInPhantom();
-                    testServer.startTest('/test.html');
-                }
+                compileProcess.setOptions({}).then(opts => {
+                    serverProject = opts;
+                    if (v.hasTests) {
+                        if (phantomJsProcess == null)
+                            startTestsInPhantom();
+                        testServer.startTest('/test.html');
+                    }
+                });
             });
         });
     });
