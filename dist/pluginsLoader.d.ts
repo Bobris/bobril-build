@@ -8,4 +8,4 @@ export interface IPluginLoader {
     registerCommands(c: any, commandRunningCallback: any): any;
 }
 export declare let pluginsLoader: IPluginLoader;
-export declare function init(workingDirector: string): void;
+export declare function init(workingDirectory: string): void;

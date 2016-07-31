@@ -3,6 +3,7 @@ import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader";
+import * as Module from "module";
 
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 function printIntroLine() {
@@ -42,6 +43,11 @@ function backgroundProcess() {
 }
 
 function run() {
+    const originalLoader = Module._load;
+    Module._load = function (request, parent) {
+        if (request === "bobril-build") return require("./index");
+        return originalLoader.apply(this, arguments);
+    };
     plugins.init(__dirname);
     if (process.argv[2] === "background") {
         backgroundProcess();

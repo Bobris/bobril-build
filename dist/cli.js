@@ -3,6 +3,7 @@ const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
+const Module = require("module");
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 function printIntroLine() {
     let pp = pathPlatformDependent.join(__dirname, '../package.json');
@@ -39,6 +40,12 @@ function backgroundProcess() {
     register("installDependencies", "backgroundCompileCommands");
 }
 function run() {
+    const originalLoader = Module._load;
+    Module._load = function (request, parent) {
+        if (request === "bobril-build")
+            return require("./index");
+        return originalLoader.apply(this, arguments);
+    };
     plugins.init(__dirname);
     if (process.argv[2] === "background") {
         backgroundProcess();

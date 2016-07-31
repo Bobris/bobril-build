@@ -27,7 +27,7 @@ class PluginLoader implements IPluginLoader {
     }
 
     getBobrilHomeDirectory() {
-        let homeDirectory = getUserHome();
+        let homeDirectory = pathUtils.normalizePath(getUserHome());
         let bobrilHomeDir = path.join(homeDirectory, '.bb');
         return bobrilHomeDir;
     }
@@ -51,9 +51,9 @@ class PluginLoader implements IPluginLoader {
         console.log('\nList of installed bobril plugins:\n----------------------------------');
         let dir = this.getPluginsDirectory();
 
-        fs.readdirSync(dir).filter((file) =>{
+        fs.readdirSync(dir).filter((file) => {
             return fs.statSync(path.join(dir, file)).isDirectory();
-        }).forEach((pluginDir)=>{
+        }).forEach((pluginDir) => {
             let packageFile = path.join(dir, pluginDir, 'package.json');
             let obj = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
             console.log(obj._id);
@@ -83,23 +83,19 @@ class PluginLoader implements IPluginLoader {
     }
 
     link(): boolean {
-        let workingDirectory = path.resolve(".");
-        workingDirectory = workingDirectory.replace(/\\/g, '/');
+        let workingDirectory = pathUtils.normalizePath(path.resolve("."));
         let pluginName = path.basename(workingDirectory);
+        console.log("Plugin name " + pluginName);
         if (this.isPluginInstalled(pluginName)) {
+            console.log("Already installed uninstalling");
             if (!this.uninstall(pluginName))
                 return false;
         }
-        let link = this.escapeCmdPath(path.join(this.getPluginsDirectory(), pluginName));
-        let target = this.escapeCmdPath(workingDirectory);
-        if (!fs.existsSync(link)) {
-            pathUtils.mkpathsync(path.dirname(pathUtils.normalizePath(link)));
-        }
-        let linkCommand = 'mklink /J ' + link + ' ' + target + '';
-        if (!processUtils.runProcess(linkCommand)) {
-            console.log('Plugin can not be linked.');
-            return false;
-        }
+        let link = path.join(this.getPluginsDirectory(), pluginName);
+        let target = workingDirectory;
+        console.log("Linking " + target + " to " + link);
+        pathUtils.mkpathsync(path.dirname(link));
+        fs.symlinkSync(target, link, "junction");
         return true;
     }
 
@@ -201,7 +197,7 @@ class PluginLoader implements IPluginLoader {
 
 export let pluginsLoader: IPluginLoader;
 
-export function init(workingDirector: string) {
-    pluginsLoader = new PluginLoader(workingDirector);
+export function init(workingDirectory: string) {
+    pluginsLoader = new PluginLoader(workingDirectory);
     pluginsLoader.executeEntryMethod(EntryMethodType.initPluginLoader, pluginsLoader);
 }

@@ -19,7 +19,7 @@ class PluginLoader {
         this.__dirname = __dirname;
     }
     getBobrilHomeDirectory() {
-        let homeDirectory = simpleHelpers_1.getUserHome();
+        let homeDirectory = pathUtils.normalizePath(simpleHelpers_1.getUserHome());
         let bobrilHomeDir = path.join(homeDirectory, '.bb');
         return bobrilHomeDir;
     }
@@ -67,23 +67,19 @@ class PluginLoader {
         return true;
     }
     link() {
-        let workingDirectory = path.resolve(".");
-        workingDirectory = workingDirectory.replace(/\\/g, '/');
+        let workingDirectory = pathUtils.normalizePath(path.resolve("."));
         let pluginName = path.basename(workingDirectory);
+        console.log("Plugin name " + pluginName);
         if (this.isPluginInstalled(pluginName)) {
+            console.log("Already installed uninstalling");
             if (!this.uninstall(pluginName))
                 return false;
         }
-        let link = this.escapeCmdPath(path.join(this.getPluginsDirectory(), pluginName));
-        let target = this.escapeCmdPath(workingDirectory);
-        if (!fs.existsSync(link)) {
-            pathUtils.mkpathsync(path.dirname(pathUtils.normalizePath(link)));
-        }
-        let linkCommand = 'mklink /J ' + link + ' ' + target + '';
-        if (!processUtils.runProcess(linkCommand)) {
-            console.log('Plugin can not be linked.');
-            return false;
-        }
+        let link = path.join(this.getPluginsDirectory(), pluginName);
+        let target = workingDirectory;
+        console.log("Linking " + target + " to " + link);
+        pathUtils.mkpathsync(path.dirname(link));
+        fs.symlinkSync(target, link, "junction");
         return true;
     }
     escapeCmdPath(path) {
@@ -182,8 +178,8 @@ class PluginLoader {
         });
     }
 }
-function init(workingDirector) {
-    exports.pluginsLoader = new PluginLoader(workingDirector);
+function init(workingDirectory) {
+    exports.pluginsLoader = new PluginLoader(workingDirectory);
     exports.pluginsLoader.executeEntryMethod(EntryMethodType.initPluginLoader, exports.pluginsLoader);
 }
 exports.init = init;

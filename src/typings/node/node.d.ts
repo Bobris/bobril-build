@@ -2342,3 +2342,7 @@ declare module "constants" {
     export var X_OK: number;
     export var UV_UDP_REUSEADDR: number;
 }
+
+declare module "module" {
+    export var _load: (request: string, parent: any) => any;
+}

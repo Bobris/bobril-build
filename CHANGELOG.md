@@ -1,18 +1,22 @@
 CHANGELOG
 ===
 
-Latest
+0.45.0
 --
 
 New features
 -
 
-Imported translations are checked for errors and wrong entries are skipped.
+- Imported translations are checked for errors and wrong entries are skipped.
+- Plugins could `require('bobril-build')` and they will get main bobril-build instance.
+
 
 Fixed
 -
 
-Wrong removing all translations after import
+- Wrong removing all translations after import
+- Removed useless --localize parameter in interactive mode - it didn't do anything.
+- Made plugin linking platform independent.
 
 0.44.0
 --
