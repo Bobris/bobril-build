@@ -32,13 +32,17 @@ describe("bundler", () => {
                 pathUtils.mkpathsync(dir);
                 fs.writeFileSync(path.join(dir, fn), b);
             }
+            ;
             let project = {
                 dir: full,
                 main: 'main.ts',
                 options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5 },
                 totalBundle: true,
                 compress: n !== "compressBug2",
-                writeFileCallback: write
+                mangle: n !== "extend",
+                beautify: n === "extend",
+                writeFileCallback: write,
+                mainExamples: [''],
             };
             cc.compile(project).then(() => {
                 let acc = path.join(testpath, '_accept', n);

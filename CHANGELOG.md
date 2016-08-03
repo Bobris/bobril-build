@@ -1,6 +1,19 @@
 CHANGELOG
 ===
 
+0.46.0
+--
+
+New features
+-
+
+Bundler deduplicates __extend TypeScript helper for smaller bundles.
+
+Fixed
+-
+
+Disabled one UglifyJs compression flag, to fix wrong bundle generated.
+
 0.45.0
 --
 

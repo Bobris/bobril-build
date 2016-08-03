@@ -45,6 +45,7 @@ export interface IFileForBundle {
     requires: string[];
     // it is not really TypeScript converted to commonjs
     difficult: boolean;
+    hasExtend: boolean;
     selfexports: { name?: string, node?: uglify.IAstNode, reexport?: string }[];
     exports: { [name: string]: uglify.IAstNode };
     pureFuncs: { [name: string]: boolean };
@@ -135,6 +136,18 @@ function isExports(node: uglify.IAstNode) {
     return false;
 }
 
+function isExtend(node: uglify.IAstNode) {
+    if (node instanceof uglify.AST_Var) {
+        let vardefs = (<uglify.IAstVar>node).definitions;
+        if (vardefs && vardefs.length === 1) {
+            if (vardefs[0].name.name === "__extends") {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 function matchPropKey(propAccess: uglify.IAstPropAccess): string {
     let name = propAccess.property;
     if (name instanceof uglify.AST_String) {
@@ -207,7 +220,7 @@ function check(name: string, order: IFileForBundle[], visited: string[], project
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, hasExtend: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
             pureMatch.forEach(m => {
@@ -235,6 +248,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
                 descend();
                 (<uglify.IAstBlock>node).body = (<uglify.IAstBlock>node).body.map((stm): uglify.IAstNode => {
                     if (stm instanceof uglify.AST_Directive) {
+                        // skip "use strict";
                         return null;
                     } else if (stm instanceof uglify.AST_SimpleStatement) {
                         let stmbody = (<uglify.IAstSimpleStatement>stm).body;
@@ -293,6 +307,9 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             reexportDef = fnc.name.thedef;
                             return null;
                         }
+                    } else if (isExtend(stm)) {
+                        cached.hasExtend = true;
+                        return null;
                     }
                     return stm;
                 }).filter((stm) => {
@@ -414,8 +431,15 @@ export function bundle(project: IBundleProject) {
     let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
     let topLevelNames = Object.create(null);
+    let hasExtend = false;
     let wasSomeDifficult = false;
     order.forEach((f) => {
+        if (f.hasExtend && !hasExtend) {
+            // Simplify and dedup __extends
+            hasExtend = true;
+            topLevelNames["__extends"] = true;
+            bodyAst.push(...(<uglify.IAstToplevel>uglify.parse('var __extends=function(d, b){function __(){this.constructor=d;}for(var p in b)b.hasOwnProperty(p)&&(d[p]=b[p]);d.prototype=null===b?Object.create(b):(__.prototype=b.prototype,new __());}')).body);
+        }
         if (f.difficult) {
             if (!wasSomeDifficult) {
                 let ast = uglify.parse('var __bbe={};');
@@ -434,7 +458,7 @@ export function bundle(project: IBundleProject) {
                 node.variables.each((symb, name) => {
                     if ((<ISymbolDef>symb).bbRequirePath) return;
                     let newname = (<ISymbolDef>symb).bbRename || name;
-                    if ((topLevelNames[name] !== undefined) && (node === f.ast || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
+                    if ((topLevelNames[name] !== undefined) && (name !== "__extends") && (node === f.ast || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
                         let index = 0;
                         do {
                             index++;
@@ -563,6 +587,7 @@ export function bundle(project: IBundleProject) {
     if (project.compress !== false) {
         bundleAst.figure_out_scope();
         let compressor = uglify.Compressor({
+            hoist_funs: false,
             warnings: false, global_defs: project.defines, pure_funcs: (call) => {
                 if (call.expression instanceof uglify.AST_SymbolRef) {
                     let symb = (<uglify.IAstSymbolRef>call.expression);

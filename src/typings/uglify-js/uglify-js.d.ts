@@ -1060,6 +1060,31 @@ declare module "uglify-js" {
     }
 
     interface ICompressorOptions {
+        sequences?: boolean;
+        properties?: boolean;
+        dead_code?: boolean;
+        drop_debugger?: boolean;
+        unsafe?: boolean;
+        unsafe_comps?: boolean;
+        conditionals?: boolean;
+        comparisons?: boolean;
+        evaluate?: boolean;
+        booleans?: boolean;
+        loops?: boolean;
+        unused?: boolean;
+        hoist_funs?: boolean;
+        keep_fargs?: boolean;
+        keep_fnames?: boolean;
+        hoist_vars?: boolean;
+        if_return?: boolean;
+        join_vars?: boolean;
+        collapse_vars?: boolean;
+        cascade?: boolean;
+        side_effects?: boolean;
+        pure_getters?: boolean;
+        negate_iife?: boolean;
+        screw_ie8?: boolean;
+        drop_console?: boolean;
         warnings?: boolean;
         global_defs?: { [name: string]: any };
         pure_funcs: string[] | ((call: IAstCall) => boolean);

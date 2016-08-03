@@ -94,6 +94,17 @@ function isExports(node) {
     }
     return false;
 }
+function isExtend(node) {
+    if (node instanceof uglify.AST_Var) {
+        let vardefs = node.definitions;
+        if (vardefs && vardefs.length === 1) {
+            if (vardefs[0].name.name === "__extends") {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 function matchPropKey(propAccess) {
     let name = propAccess.property;
     if (name instanceof uglify.AST_String) {
@@ -165,7 +176,7 @@ function check(name, order, visited, project, resolveRequire) {
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, hasExtend: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
             pureMatch.forEach(m => {
@@ -194,6 +205,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
                 descend();
                 node.body = node.body.map((stm) => {
                     if (stm instanceof uglify.AST_Directive) {
+                        // skip "use strict";
                         return null;
                     }
                     else if (stm instanceof uglify.AST_SimpleStatement) {
@@ -254,6 +266,10 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             reexportDef = fnc.name.thedef;
                             return null;
                         }
+                    }
+                    else if (isExtend(stm)) {
+                        cached.hasExtend = true;
+                        return null;
                     }
                     return stm;
                 }).filter((stm) => {
@@ -374,8 +390,15 @@ function bundle(project) {
     let bundleAst = uglify.parse('(function(){"use strict";})()');
     let bodyAst = bundleAst.body[0].body.expression.body;
     let topLevelNames = Object.create(null);
+    let hasExtend = false;
     let wasSomeDifficult = false;
     order.forEach((f) => {
+        if (f.hasExtend && !hasExtend) {
+            // Simplify and dedup __extends
+            hasExtend = true;
+            topLevelNames["__extends"] = true;
+            bodyAst.push(...uglify.parse('var __extends=function(d, b){function __(){this.constructor=d;}for(var p in b)b.hasOwnProperty(p)&&(d[p]=b[p]);d.prototype=null===b?Object.create(b):(__.prototype=b.prototype,new __());}').body);
+        }
         if (f.difficult) {
             if (!wasSomeDifficult) {
                 let ast = uglify.parse('var __bbe={};');
@@ -397,7 +420,7 @@ function bundle(project) {
                     if (symb.bbRequirePath)
                         return;
                     let newname = symb.bbRename || name;
-                    if ((topLevelNames[name] !== undefined) && (node === f.ast || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
+                    if ((topLevelNames[name] !== undefined) && (name !== "__extends") && (node === f.ast || node.enclosed.some(enclSymb => topLevelNames[enclSymb.name] !== undefined))) {
                         let index = 0;
                         do {
                             index++;
@@ -537,6 +560,7 @@ function bundle(project) {
     if (project.compress !== false) {
         bundleAst.figure_out_scope();
         let compressor = uglify.Compressor({
+            hoist_funs: false,
             warnings: false, global_defs: project.defines, pure_funcs: (call) => {
                 if (call.expression instanceof uglify.AST_SymbolRef) {
                     let symb = call.expression;
