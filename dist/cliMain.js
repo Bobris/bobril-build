@@ -457,6 +457,9 @@ function startHttpServer(port) {
     });
     server.listen({ port: port, exclusive: true });
 }
+function mergeProjectFromServer(opts) {
+    Object.assign(initServerProject(), opts);
+}
 function interactiveCommand(port) {
     mainServer.setProjectDir(curProjectDir);
     startHttpServer(port);
@@ -464,7 +467,7 @@ function interactiveCommand(port) {
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
-        serverProject = opts;
+        mergeProjectFromServer(opts);
         return compileProcess.installDependencies().then(() => opts);
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
@@ -474,7 +477,7 @@ function interactiveCommand(port) {
         startWatchProcess((allFiles) => {
             compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
                 compileProcess.setOptions({}).then(opts => {
-                    serverProject = opts;
+                    mergeProjectFromServer(opts);
                     if (v.hasTests) {
                         if (phantomJsProcess == null)
                             startTestsInPhantom();

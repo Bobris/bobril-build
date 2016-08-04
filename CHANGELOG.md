@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.46.1
+--
+
+Fixed
+-
+
+Additional resources works again.
+
 0.46.0
 --
 
