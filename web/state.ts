@@ -40,11 +40,30 @@ export interface TestSvrState {
     agents: TestResultsHolder[];
 }
 
+export interface IAction {
+    type: string;
+    id: string;
+}
+
+export interface IActionCommand extends IAction {
+    type: "command";
+    enabled: boolean;
+    name: string;
+}
+
+export interface IActionCombo extends IAction {
+    type: "combo";
+    label: string;
+    selected: string;
+    options: { id: string, name: string }[];
+}
+
 export let connected = false;
 export let disconnected = false;
 export let reconnectDelay = 0;
 export let testSvrState: TestSvrState = { agents: [] };
 export let building = false;
+export let actions:IAction[] = [];
 export let lastBuildResult: {
     errors: number;
     warnings: number;

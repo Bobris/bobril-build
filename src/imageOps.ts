@@ -1,11 +1,56 @@
 import * as fs from "fs";
+import * as stream from 'stream';
 import * as pnglib from "png-async";
 require('bluebird');
 
-export type Image = pnglib.Image;
+// inline png-async def to have bobril-build.d.ts dependency less 
+export interface IImageOptions {
+    width?: number;
+    height?: number;
+    fill?: boolean;
+    checkCRC?: boolean;
+    deflateChunkSize?: number;
+    deflateLevel?: number;
+    deflateStrategy?: EDeflateStrategy;
+    filterType?: EFilterType;
+}
+
+export enum EDeflateStrategy {
+    DEFAULT_STRATEGY = 0,
+    FILTERED = 1,
+    HUFFMAN_ONLY = 2,
+    RLE = 3,
+    FIXED = 4,
+}
+
+export enum EFilterType {
+    Auto = -1,
+    None = 0,
+    Sub = 1,
+    Up = 2,
+    Average = 3,
+    Paeth = 4,
+}
+
+export interface Image extends stream.Duplex {
+    width: number;
+    height: number;
+    gamma: number;
+    data: Buffer;
+    pack(): Image;
+    parse(data: Buffer, callback?: (err: Error, image: Image) => void): Image;
+    write(data: any, cb?: any): boolean;
+    end(data?: any): void;
+    bitblt(dst: Image, sx: number, sy: number, w: number, h: number, dx: number, dy: number): Image;
+
+    on(event: string, listener: Function): this;
+    once(event: string, listener: Function): this;
+    removeListener(event: string, listener: Function): this;
+    removeAllListeners(event: string): this;
+}
 
 export function cloneImage(img: Image): Image {
-    let res = pnglib.createImage({ width: img.width, height: img.height, fill: false });
+    let res = <Image>pnglib.createImage({ width: img.width, height: img.height, fill: false });
     img.bitblt(res, 0, 0, img.width, img.height, 0, 0);
     return res;
 }
@@ -99,7 +144,7 @@ export function savePNG2Buffer(img): Promise<Buffer> {
 }
 
 export function createImage(width: number, height: number): Image {
-    return pnglib.createImage({ width, height, fill: true });
+    return <Image>pnglib.createImage({ width, height, fill: true });
 }
 
 export function drawImage(src: Image, dst: Image, dx: number, dy: number, sx?: number, sy?: number, width?: number, height?: number) {

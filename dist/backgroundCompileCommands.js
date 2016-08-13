@@ -147,6 +147,7 @@ function executePlugins(param) {
         process.send({ command: "Cannot compile nonexisting project", param: param });
         return;
     }
+    bb.setProject(cp.project);
     let res = plugins.pluginsLoader.executeEntryMethod(param.method, cp.project);
     process.send({ command: "finished", param: res });
 }

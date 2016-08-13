@@ -4,6 +4,10 @@ import * as testServer from './testServer';
 import { CompilationResultMessage } from './defs';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+import * as pathUtils from "./pathUtils";
+import * as actions from "./actions";
+import * as cc from './compilationCache';
+import * as cp from './compileProject';
 
 class Client {
     server: MainServer;
@@ -20,6 +24,10 @@ class Client {
             switch (message) {
                 case "focusPlace": {
                     this.server.sendAll(message, { fn: path.join(this.server.dir, data.fn), pos: data.pos });
+                    break;
+                }
+                case "runAction": {
+                    actions.actionList.invokeAction(data.id);
                     break;
                 }
                 default: {
@@ -46,6 +54,9 @@ export class MainServer {
         this.clients = Object.create(null);
         testSvr.onChange = () => { this.notifyTestSvrChange(); };
         this.svr = new longPollingServer.LongPollingServer(c => this.newConnection(c));
+        actions.actionList.refreshCallBack = () => {
+            this.notifyActionsChanged();
+        }
     }
 
     handle(request: http.ServerRequest, response: http.ServerResponse) {
@@ -53,15 +64,16 @@ export class MainServer {
     }
 
     setProjectDir(dir: string) {
-        this.dir = dir;    
+        this.dir = dir;
     }
-    
+
     newConnection(c: longPollingServer.ILongPollingConnection) {
         let id = "" + this.lastId++;
         let cl = new Client(this, id, c);
         this.clients[id] = cl;
         let testState = this.testSvr.getState();
         cl.connection.send("testUpdated", testState);
+        cl.connection.send("actionsRefresh", actions.actionList.getList());
     }
 
     sendAll(message: string, data?: any) {
@@ -71,7 +83,11 @@ export class MainServer {
         }
     }
 
-    nofifyCompilationStarted() {
+    notifyActionsChanged() {
+        this.sendAll("actionsRefresh", actions.actionList.getList());
+    }
+
+    notifyCompilationStarted() {
         this.sendAll("compilationStarted");
     }
 
@@ -87,4 +103,26 @@ export class MainServer {
             this.clients[kids[i]].connection.send("testUpdated", testState);
         }
     }
+}
+
+export let curProjectDir: string;
+
+var serverProject: cc.IProject;
+
+export function getProject(): cc.IProject {
+    if (serverProject) return serverProject;
+    if (curProjectDir == null) curProjectDir = pathUtils.currentDirectory();
+    serverProject = cp.createProjectFromDir(curProjectDir);
+    serverProject.logCallback = (text) => {
+        console.log(text);
+    }
+    if (!cp.refreshProjectFromPackageJson(serverProject, null)) {
+        process.exit(1);
+    }
+    return serverProject;
+}
+
+export function setProject(proj: cc.IProject) {
+    serverProject = proj;
+    curProjectDir = proj.dir;
 }

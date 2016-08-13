@@ -1,10 +1,20 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
 import { debounce } from './debounce';
-import { StackFrame } from 'stackframe';
 import * as stackTrace from './stackTrace';
 import * as sourceMap from './sourceMap';
 import * as xmlWriter from './xmlWriter';
+
+export interface StackFrame {
+    constructor(functionName: string, args: any[], fileName: string, lineNumber: number, columnNumber: number): StackFrame;
+
+    functionName?: string;
+    args?: any[];
+    fileName?: string;
+    lineNumber?: number;
+    columnNumber?: number;
+    toString(): string;
+}
 
 let uaparse: (userAgent: string, jsUserAgent: string) => Object = require('useragent').parse;
 

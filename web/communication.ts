@@ -46,6 +46,10 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
             // ignore because this is not editor
             break;
         }
+        case "actionsRefresh": {
+            s.actions = data;
+            b.invalidate();
+        }
         default: {
             console.log("Unknown message: " + message, data);
             break;
@@ -55,4 +59,8 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
 
 export function focusPlace(fn: string, pos: number[]) {
     c.send("focusPlace", { fn, pos });
+}
+
+export function runAction(id: string) {
+    c.send("runAction", { id });
 }

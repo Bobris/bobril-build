@@ -42,8 +42,9 @@ function backgroundProcess() {
 function run() {
     const originalLoader = Module._load;
     Module._load = function (request, parent) {
-        if (request === "bobril-build")
+        if (request === "bobril-build") {
             return require("./index");
+        }
         return originalLoader.apply(this, arguments);
     };
     plugins.init(__dirname);

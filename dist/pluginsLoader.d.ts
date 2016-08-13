@@ -1,7 +1,10 @@
 export declare enum EntryMethodType {
     registerCommands = 0,
     afterStartCompileProcess = 1,
-    initPluginLoader = 2,
+    afterInteractiveCompile = 2,
+    initPluginLoader = 3,
+    registerActions = 4,
+    invokeAction = 5,
 }
 export interface IPluginLoader {
     executeEntryMethod(methodType: EntryMethodType, ...args: any[]): any;

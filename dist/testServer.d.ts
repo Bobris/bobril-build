@@ -1,7 +1,15 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
-import { StackFrame } from 'stackframe';
 import * as sourceMap from './sourceMap';
+export interface StackFrame {
+    constructor(functionName: string, args: any[], fileName: string, lineNumber: number, columnNumber: number): StackFrame;
+    functionName?: string;
+    args?: any[];
+    fileName?: string;
+    lineNumber?: number;
+    columnNumber?: number;
+    toString(): string;
+}
 export declare type MessageAndStack = {
     message: string;
     stack: StackFrame[];

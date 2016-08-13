@@ -8,7 +8,10 @@ const pathUtils = require("./pathUtils");
 (function (EntryMethodType) {
     EntryMethodType[EntryMethodType["registerCommands"] = 0] = "registerCommands";
     EntryMethodType[EntryMethodType["afterStartCompileProcess"] = 1] = "afterStartCompileProcess";
-    EntryMethodType[EntryMethodType["initPluginLoader"] = 2] = "initPluginLoader";
+    EntryMethodType[EntryMethodType["afterInteractiveCompile"] = 2] = "afterInteractiveCompile";
+    EntryMethodType[EntryMethodType["initPluginLoader"] = 3] = "initPluginLoader";
+    EntryMethodType[EntryMethodType["registerActions"] = 4] = "registerActions";
+    EntryMethodType[EntryMethodType["invokeAction"] = 5] = "invokeAction";
 })(exports.EntryMethodType || (exports.EntryMethodType = {}));
 var EntryMethodType = exports.EntryMethodType;
 class PluginLoader {
@@ -83,7 +86,7 @@ class PluginLoader {
         return true;
     }
     escapeCmdPath(path) {
-        return path.replace(/\//g, '\\');
+        return path.replace(/\//g, pathPlatformDependent.sep);
     }
     loadPluginMethods(pluginPath) {
         try {
@@ -92,7 +95,7 @@ class PluginLoader {
                 let exportedMethod = plugin[key];
                 if (!this.plugins.hasOwnProperty(key))
                     this.plugins[key] = [];
-                this.plugins[key].push({ 'name': path.basename(pluginPath), 'method': exportedMethod });
+                this.plugins[key].push({ name: path.basename(pluginPath), method: exportedMethod });
             }
         }
         catch (er) {
@@ -129,15 +132,16 @@ class PluginLoader {
         if (this.plugins === null || !this.plugins.hasOwnProperty(methodName))
             return [];
         let result = [];
-        for (let i = 0; i < this.plugins[methodName].length; i++) {
+        let plm = this.plugins[methodName];
+        for (let i = 0; i < plm.length; i++) {
             try {
-                let res = this.plugins[methodName][i].method.apply(null, args);
+                let res = plm[i].method.apply(null, args);
                 if (res == undefined)
                     continue;
                 result.push(res);
             }
             catch (ex) {
-                console.log("Execute plugins method " + EntryMethodType[methodType] + " faild." + ex);
+                console.log("Execute plugin method " + plm[i].name + ":" + methodName + " failed. " + ex);
             }
         }
         return result;

@@ -12,6 +12,30 @@ function clickable(content: b.IBobrilChildren, action: () => void): b.IBobrilNod
     };
 }
 
+function createButton(content: b.IBobrilChildren, enabled: boolean, action: () => void) {
+    return {
+        tag: "button",
+        children: content,
+        attrs: { disabled: !enabled },
+        component: {
+            onClick() { action(); return true; }
+        }
+    }
+}
+
+function createCombo(selected: string, options: { id: string, name: string }[], select: (id: string) => void) {
+    return {
+        tag: "select",
+        attrs: { value: selected },
+        component: {
+            onChange(ctx: any, value: string) {
+                select(value);
+            }
+        },
+        children: options.map((i) => ({ tag: "option", attrs: { value: i.id }, children: i.name }))
+    };
+}
+
 function getAgentsShort(selectedAgent: number, setSelectedAgent: (index: number) => void): b.IBobrilChildren {
     return s.testSvrState.agents.map((r, index) => {
         return clickable(b.styledDiv([
@@ -109,6 +133,26 @@ function getBuildStatus() {
     ]);
 }
 
+function createActionUI(action: s.IAction): b.IBobrilChildren {
+    switch (action.type) {
+        case "command": {
+            const command = <s.IActionCommand>action;
+            return createButton(command.name, command.enabled, () => {
+                com.runAction(command.id);
+            })
+        }
+        case "combo": {
+            const combo = <s.IActionCombo>action;
+            return [combo.label, " ", createCombo(combo.selected, combo.options, (id) => {
+                com.runAction(id);
+            })];
+        }
+        default: {
+            return "Unknown action type " + action.type;
+        }
+    }
+}
+
 com.reconnect();
 
 let selectedAgent = -1;
@@ -121,7 +165,9 @@ b.init(() => {
     }
     return [
         { tag: "h2", children: "Bobril-build" },
-        b.styledDiv(s.disconnected ? "Disconnected" : s.connected ? "Connected" : "Connecting"),
+        b.styledDiv(<b.IBobrilChildArray>[
+            s.disconnected ? "Disconnected" : s.connected ? "Connected" : "Connecting",
+            s.actions.map((a) => [" ", createActionUI(a)])]),
         getBuildStatus(),
         getAgentsShort(selectedAgent, i => { selectedAgent = i; b.invalidate() }),
         selectedAgent >= 0 && getAgentDetail(s.testSvrState.agents[selectedAgent])

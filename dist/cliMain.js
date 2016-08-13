@@ -1,6 +1,5 @@
 "use strict";
 const c = require('commander');
-const ts = require('typescript');
 const bb = require('./index');
 const http = require('http');
 const childProcess = require('child_process');
@@ -14,7 +13,6 @@ const chalk = require('chalk');
 const notifier = require('node-notifier');
 var memoryFs = Object.create(null);
 var serverAdditionalResources;
-var serverProject;
 function write(fn, b) {
     memoryFs[fn.toLowerCase()] = b;
 }
@@ -30,7 +28,6 @@ const reUrlTest = /^test(?:$|\/)/;
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 const distWebRoot = bbDirRoot + "/distweb";
 const distWebtRoot = bbDirRoot + "/distwebt";
-let curProjectDir;
 let testServer = new bb.TestServer();
 testServer.getSource = (loc) => {
     if (/\/bundle.js.map$/.test(loc))
@@ -98,7 +95,7 @@ function handleRequest(request, response) {
             return;
         }
         if (name === 'api/projectdirectory') {
-            let project = initServerProject();
+            let project = bb.getProject();
             response.end(project.dir);
             return;
         }
@@ -117,7 +114,8 @@ function handleRequest(request, response) {
         if (name.length === 0)
             name = 'index.html';
         if (/^base\//.test(name)) {
-            fileResponse(response, path.join(curProjectDir, path.relative(serverProject.realRootRel, ""), name.substr(4)));
+            let project = bb.getProject();
+            fileResponse(response, path.join(bb.curProjectDir, path.relative(project.realRootRel, ""), name.substr(4)));
             return;
         }
         if (/^special\//.test(name)) {
@@ -138,7 +136,7 @@ function handleRequest(request, response) {
         return;
     }
     if (serverAdditionalResources == null)
-        serverAdditionalResources = createAdditionalResources(initServerProject());
+        serverAdditionalResources = createAdditionalResources(bb.getProject());
     f = serverAdditionalResources.tryGetFileContent(request.url.substr(1));
     if (f) {
         response.end(f);
@@ -160,56 +158,6 @@ function autodetectMainTs(project) {
     }
     console.log('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
     return null;
-}
-function createProjectFromPackageJson() {
-    let project = {
-        dir: process.cwd().replace(/\\/g, '/'),
-        main: 'src/app.ts',
-        mainJsFile: 'src/app.js',
-        mainExamples: [],
-        options: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5, skipDefaultLibCheck: true }
-    };
-    let packageJson = null;
-    try {
-        packageJson = fs.readFileSync('package.json', 'utf-8');
-    }
-    catch (err) {
-        console.log('Cannot read package.json ' + err + '. Autodetecting main ts file.');
-        return autodetectMainTs(project);
-    }
-    let packageObj = null;
-    try {
-        packageObj = JSON.parse(packageJson);
-    }
-    catch (err) {
-        console.log('Package.json cannot be parsed. ' + err);
-        return null;
-    }
-    if (packageObj.typescript && typeof packageObj.typescript.main === 'string') {
-        let main = packageObj.typescript.main;
-        if (!fs.existsSync(main)) {
-            console.log('Package.json typescript.main is ' + main + ', but this file does not exists. Aborting.');
-            return null;
-        }
-        project.main = main;
-        project.mainJsFile = main.replace(/\.ts$/, '.js');
-    }
-    else {
-        console.log('Package.json missing typescript.main. Autodetecting main ts file.');
-        project = autodetectMainTs(project);
-        if (project == null)
-            return null;
-    }
-    let bobrilSection = packageObj.bobril;
-    if (bobrilSection == null)
-        return project;
-    if (typeof bobrilSection.title === 'string') {
-        project.htmlTitle = bobrilSection.title;
-    }
-    if (typeof bobrilSection.dir === 'string') {
-        project.outputDir = bobrilSection.dir;
-    }
-    return project;
 }
 function presetDebugProject(project) {
     project.debugStyleDefs = true;
@@ -279,13 +227,16 @@ let watchProcess = null;
 function startWatchProcess(notify) {
     watchProcess = startBackgroundProcess("watch", {});
     let startWatchTime = Date.now();
-    watchProcess("watch", { cwd: curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$', updateTsConfig: true }, {
+    let prevPromise = Promise.resolve();
+    watchProcess("watch", { cwd: bb.curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$', updateTsConfig: true }, {
         watchChange(param) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
                 startWatchTime = 0;
             }
-            notify(param);
+            prevPromise.then(() => {
+                prevPromise = notify(param);
+            });
         },
         exit() {
             console.log("watch process exited restarting");
@@ -359,7 +310,7 @@ function startCompileProcess(compilationPath) {
             return new Promise((resolve, reject) => {
                 let startCompilation = Date.now();
                 let writtenFileCount = 0;
-                mainServer.nofifyCompilationStarted();
+                mainServer.notifyCompilationStarted();
                 compileProcess("compile", myId, {
                     log(param) { console.log(param); },
                     write({ name, buffer }) {
@@ -458,12 +409,12 @@ function startHttpServer(port) {
     server.listen({ port: port, exclusive: true });
 }
 function mergeProjectFromServer(opts) {
-    Object.assign(initServerProject(), opts);
+    Object.assign(bb.getProject(), opts);
 }
 function interactiveCommand(port) {
-    mainServer.setProjectDir(curProjectDir);
+    mainServer.setProjectDir(bb.curProjectDir);
     startHttpServer(port);
-    let compileProcess = startCompileProcess(curProjectDir);
+    let compileProcess = startCompileProcess(bb.curProjectDir);
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
@@ -475,9 +426,11 @@ function interactiveCommand(port) {
         return compileProcess.loadTranslations();
     }).then((opts) => {
         startWatchProcess((allFiles) => {
-            compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
+            return compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
                 compileProcess.setOptions({}).then(opts => {
                     mergeProjectFromServer(opts);
+                    return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
+                }).then(() => {
                     if (v.hasTests) {
                         if (phantomJsProcess == null)
                             startTestsInPhantom();
@@ -488,25 +441,13 @@ function interactiveCommand(port) {
         });
     });
 }
-function initServerProject() {
-    if (serverProject)
-        return serverProject;
-    serverProject = bb.createProjectFromDir(curProjectDir);
-    serverProject.logCallback = (text) => {
-        console.log(text);
-    };
-    if (!bb.refreshProjectFromPackageJson(serverProject, null)) {
-        process.exit(1);
-    }
-    return serverProject;
-}
 function createAdditionalResources(project) {
     return new additionalResources_1.AdditionalResources(project);
 }
 function run() {
     let commandRunning = false;
     let range = [];
-    curProjectDir = bb.currentDirectory();
+    bb.curProjectDir = bb.currentDirectory();
     c
         .command("build")
         .alias("b")
@@ -524,7 +465,7 @@ function run() {
         .action((c) => {
         commandRunning = true;
         let start = Date.now();
-        let project = bb.createProjectFromDir(curProjectDir);
+        let project = bb.createProjectFromDir(bb.curProjectDir);
         project.logCallback = (text) => {
             console.log(text);
         };
@@ -657,7 +598,7 @@ function run() {
         commandRunning = true;
         startHttpServer(0);
         console.time("compile");
-        let project = bb.createProjectFromDir(curProjectDir);
+        let project = bb.createProjectFromDir(bb.curProjectDir);
         project.logCallback = (text) => {
             console.log(text);
         };

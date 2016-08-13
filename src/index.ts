@@ -12,3 +12,4 @@ export * from './compileProject';
 export * from './phantomjsRunner';
 export * from './testServer';
 export * from './mainServer';
+export * from './actions';

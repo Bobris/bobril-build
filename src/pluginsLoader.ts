@@ -8,7 +8,10 @@ import * as pathUtils from "./pathUtils"
 export enum EntryMethodType {
     registerCommands,
     afterStartCompileProcess,
+    afterInteractiveCompile,
     initPluginLoader,
+    registerActions,
+    invokeAction,
 }
 
 export interface IPluginLoader {
@@ -17,7 +20,7 @@ export interface IPluginLoader {
 }
 
 class PluginLoader implements IPluginLoader {
-    plugins = null;
+    plugins: { [name: string]: any } = null;
     pluginsLoaded = false;
     __dirname: string;
     cmdToolName = "npm";
@@ -100,7 +103,7 @@ class PluginLoader implements IPluginLoader {
     }
 
     escapeCmdPath(path) {
-        return path.replace(/\//g, '\\');
+        return path.replace(/\//g, pathPlatformDependent.sep);
     }
 
     loadPluginMethods(pluginPath: string) {
@@ -110,7 +113,7 @@ class PluginLoader implements IPluginLoader {
                 let exportedMethod = plugin[key];
                 if (!this.plugins.hasOwnProperty(key))
                     this.plugins[key] = [];
-                this.plugins[key].push({ 'name': path.basename(pluginPath), 'method': exportedMethod });
+                this.plugins[key].push({ name: path.basename(pluginPath), method: exportedMethod });
             }
         }
         catch (er) {
@@ -144,14 +147,15 @@ class PluginLoader implements IPluginLoader {
         let methodName = EntryMethodType[methodType];
         if (this.plugins === null || !this.plugins.hasOwnProperty(methodName)) return [];
         let result = [];
-        for (let i = 0; i < this.plugins[methodName].length; i++) {
+        let plm = this.plugins[methodName];
+        for (let i = 0; i < plm.length; i++) {
             try {
-                let res = this.plugins[methodName][i].method.apply(null, args);
+                let res = plm[i].method.apply(null, args);
                 if (res == undefined) continue;
                 result.push(res);
             }
             catch (ex) {
-                console.log("Execute plugins method " + EntryMethodType[methodType] + " faild." + ex);
+                console.log("Execute plugin method " + plm[i].name + ":" + methodName + " failed. " + ex);
             }
         }
         return result;
