@@ -1,5 +1,5 @@
 import * as processUtils from './processUtils';
-import { getUserHome, isWin } from './simpleHelpers';
+import { getUserHome } from './simpleHelpers';
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 import * as fs from "fs";
@@ -103,7 +103,7 @@ class PluginLoader implements IPluginLoader {
     }
 
     escapeCmdPath(path) {
-        return isWin() ? path.replace(/\//g, '\\') : path;
+        return path.replace(/\//g, pathPlatformDependent.sep);
     }
 
     loadPluginMethods(pluginPath: string) {
