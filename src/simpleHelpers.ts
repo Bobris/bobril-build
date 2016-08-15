@@ -24,3 +24,7 @@ export function removeLinkToSourceMap(content: Buffer): Buffer {
 export function getUserHome() {
     return process.env.HOME || process.env.USERPROFILE;
 }
+
+export function isWin() {
+    return process.platform === 'win32';
+}
