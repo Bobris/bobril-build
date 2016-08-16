@@ -396,6 +396,7 @@ function getDefaultDebugOptions() {
 function startHttpServer(port) {
     server = http.createServer(handleRequest);
     server.on("listening", function () {
+        bb.interactivePort = server.address().port;
         console.log("Server listening on: " + chalk.cyan(" http://localhost:" + server.address().port));
     });
     server.on('error', function (e) {

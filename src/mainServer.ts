@@ -107,6 +107,8 @@ export class MainServer {
 
 export let curProjectDir: string;
 
+export let interactivePort: number;
+
 var serverProject: cc.IProject;
 
 export function getProject(): cc.IProject {

@@ -40,6 +40,9 @@ export interface IProject {
     textForTranslationReporter?: (message: BuildHelpers.TranslationMessage, compilationResult: CompilationResult) => void;
     compileTranslation?: ICompilationTranslation;
     htmlTitle?: string;
+    packageJsonBobril?: {
+        [name: string]: any;
+    };
     htmlHead?: string;
     constantOverrides?: {
         [module: string]: {

@@ -187,6 +187,7 @@ function refreshProjectFromPackageJson(project, allFiles) {
         packageJson = fs.readFileSync(projectJsonFullPath, 'utf-8');
     }
     catch (err) {
+        project.packageJsonBobril = null;
         project.logCallback('Cannot read package.json ' + err + '. Autodetecting main ts file.');
         if (autodetectMainTs(project)) {
             autodetectMainExample(project, allFiles);
@@ -237,6 +238,7 @@ function refreshProjectFromPackageJson(project, allFiles) {
     project.dependencies = Object.keys(packageObj.dependencies || {});
     project.localize = project.dependencies.some(v => v === "bobril-g11n");
     let bobrilSection = packageObj.bobril;
+    project.packageJsonBobril = bobrilSection;
     if (bobrilSection == null) {
         autodetectMainExample(project, allFiles);
         return true;

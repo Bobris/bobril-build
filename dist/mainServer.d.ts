@@ -20,5 +20,6 @@ export declare class MainServer {
     private notifyTestSvrChange();
 }
 export declare let curProjectDir: string;
+export declare let interactivePort: number;
 export declare function getProject(): cc.IProject;
 export declare function setProject(proj: cc.IProject): void;
