@@ -12,6 +12,7 @@ export enum EntryMethodType {
     initPluginLoader,
     registerActions,
     invokeAction,
+    updateWatchPaths,
 }
 
 export interface IPluginLoader {

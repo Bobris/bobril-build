@@ -12,6 +12,7 @@ const pathUtils = require("./pathUtils");
     EntryMethodType[EntryMethodType["initPluginLoader"] = 3] = "initPluginLoader";
     EntryMethodType[EntryMethodType["registerActions"] = 4] = "registerActions";
     EntryMethodType[EntryMethodType["invokeAction"] = 5] = "invokeAction";
+    EntryMethodType[EntryMethodType["updateWatchPaths"] = 6] = "updateWatchPaths";
 })(exports.EntryMethodType || (exports.EntryMethodType = {}));
 var EntryMethodType = exports.EntryMethodType;
 class PluginLoader {

@@ -228,7 +228,9 @@ function startWatchProcess(notify) {
     watchProcess = startBackgroundProcess("watch", {});
     let startWatchTime = Date.now();
     let prevPromise = Promise.resolve();
-    watchProcess("watch", { cwd: bb.curProjectDir, paths: ['**/*.ts?(x)', '**/package.json'], filter: '\\.tsx?$', updateTsConfig: true }, {
+    let paths = ['**/*.ts?(x)', '**/package.json'];
+    plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.updateWatchPaths, paths);
+    watchProcess("watch", { cwd: bb.curProjectDir, paths: paths, filter: '\\.tsx?$', updateTsConfig: true }, {
         watchChange(param) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");

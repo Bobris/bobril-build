@@ -1,12 +1,12 @@
 "use strict";
 const child_process_1 = require('child_process');
 function runProcess(installCommand) {
-    var subProcess = child_process_1.spawnSync('cmd', ['/c', installCommand], {
+    var subProcess = child_process_1.spawnSync(installCommand, {
         cwd: this.__dirname,
         env: process.env,
-        stdio: 'inherit'
+        stdio: 'inherit',
+        shell: true
     });
-    console.log();
     return subProcess.status === 0;
 }
 exports.runProcess = runProcess;
