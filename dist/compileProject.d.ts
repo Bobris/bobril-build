@@ -1,4 +1,7 @@
 import * as bb from './index';
+export declare function presetDebugProject(project: bb.IProject): void;
+export declare function presetLiveReloadProject(project: bb.IProject): void;
+export declare function presetReleaseProject(project: bb.IProject): void;
 export declare function createProjectFromDir(path: string): bb.IProject;
 export declare function refreshProjectFromPackageJson(project: bb.IProject, allFiles: {
     [dir: string]: string[];

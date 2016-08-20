@@ -10,6 +10,41 @@ import { deepEqual } from './deepEqual';
 import * as plugins from "./pluginsLoader";
 import {AdditionalResources}  from './additionalResources'
 
+export function presetDebugProject(project: bb.IProject) {
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.fastBundle = true;
+    project.totalBundle = false;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+}
+
+export function presetLiveReloadProject(project: bb.IProject) {
+    project.liveReloadStyleDefs = true;
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.totalBundle = true;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+}
+
+export function presetReleaseProject(project: bb.IProject) {
+    project.debugStyleDefs = false;
+    project.releaseStyleDefs = true;
+    project.spriteMerge = true;
+    project.totalBundle = true;
+    project.compress = true;
+    project.mangle = true;
+    project.beautify = false;
+    project.defines = { DEBUG: false };
+}
+
 export function createProjectFromDir(path: string): bb.IProject {
     let project: bb.IProject = {
         dir: path.replace(/\\/g, '/'),
@@ -38,8 +73,6 @@ function autodetectMainTs(project: bb.IProject): boolean {
     project.logCallback('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
     return false;
 }
-
-const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 
 function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx: boolean) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
@@ -141,8 +174,8 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
         }
         if (specList.length > 0) {
             if (!containsJasmineDefFile) {
-                allFiles[bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
-                specList.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+                allFiles[bb.bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
+                specList.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
             }
             project.mainSpec = specList;
         } else {
@@ -321,7 +354,7 @@ export function fillMainSpec(project: bb.IProject): Promise<any> {
                 if (fs.existsSync(path.join(project.dir, "typings/jasmine/jasmine.d.ts"))) {
                     matches.push("typings/jasmine/jasmine.d.ts");
                 } else {
-                    matches.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+                    matches.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
                 }
             }
             project.mainSpec = matches;

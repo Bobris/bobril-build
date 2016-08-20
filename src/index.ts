@@ -13,3 +13,5 @@ export * from './phantomjsRunner';
 export * from './testServer';
 export * from './mainServer';
 export * from './actions';
+export * from './backgroundControl';
+export * from './pluginsLoader';

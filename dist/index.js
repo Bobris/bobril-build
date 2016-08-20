@@ -17,4 +17,6 @@ __export(require('./phantomjsRunner'));
 __export(require('./testServer'));
 __export(require('./mainServer'));
 __export(require('./actions'));
+__export(require('./backgroundControl'));
+__export(require('./pluginsLoader'));
 //# sourceMappingURL=index.js.map

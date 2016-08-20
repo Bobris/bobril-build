@@ -9,6 +9,41 @@ const glob = require("glob");
 const minimatch = require("minimatch");
 const deepEqual_1 = require('./deepEqual');
 const plugins = require("./pluginsLoader");
+function presetDebugProject(project) {
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.fastBundle = true;
+    project.totalBundle = false;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+}
+exports.presetDebugProject = presetDebugProject;
+function presetLiveReloadProject(project) {
+    project.liveReloadStyleDefs = true;
+    project.debugStyleDefs = true;
+    project.releaseStyleDefs = false;
+    project.spriteMerge = false;
+    project.totalBundle = true;
+    project.compress = false;
+    project.mangle = false;
+    project.beautify = true;
+    project.defines = { DEBUG: true };
+}
+exports.presetLiveReloadProject = presetLiveReloadProject;
+function presetReleaseProject(project) {
+    project.debugStyleDefs = false;
+    project.releaseStyleDefs = true;
+    project.spriteMerge = true;
+    project.totalBundle = true;
+    project.compress = true;
+    project.mangle = true;
+    project.beautify = false;
+    project.defines = { DEBUG: false };
+}
+exports.presetReleaseProject = presetReleaseProject;
 function createProjectFromDir(path) {
     let project = {
         dir: path.replace(/\\/g, '/'),
@@ -37,7 +72,6 @@ function autodetectMainTs(project) {
     project.logCallback('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
     return false;
 }
-const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 function runUpdateTsConfig(cwd, files, jsx) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
     let tscfg = {};
@@ -143,8 +177,8 @@ function autodetectMainExample(project, allFiles) {
         }
         if (specList.length > 0) {
             if (!containsJasmineDefFile) {
-                allFiles[bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
-                specList.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+                allFiles[bb.bbDirRoot + "/typings/jasmine"] = ["jasmine.d.ts"];
+                specList.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
             }
             project.mainSpec = specList;
         }
@@ -336,7 +370,7 @@ function fillMainSpec(project) {
                     matches.push("typings/jasmine/jasmine.d.ts");
                 }
                 else {
-                    matches.push(bbDirRoot + "/typings/jasmine/jasmine.d.ts");
+                    matches.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
                 }
             }
             project.mainSpec = matches;
