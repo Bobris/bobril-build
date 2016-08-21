@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.47.0
+--
+
+New features
+-
+
+A lot of new features for plugins. See bb-bobriln-plugin for usage.
+
 0.46.1
 --
 
