@@ -282,7 +282,7 @@ export function run() {
                 process.exit(1);
             bb.compileProject(project).then((result: bb.CompilationResult) => {
                 if (result.errors == 0 && createAdditionalResources(project).copyFilesToOuputDir()) {
-                    console.log(chalk.green("Build finished succesfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
+                    console.log(chalk.green("Build finished successfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
                     process.exit(0);
                 }
                 console.error(chalk.red("There was " + result.errors + " errors during build"));

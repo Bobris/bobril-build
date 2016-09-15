@@ -40,7 +40,7 @@ export class AdditionalResources {
 
     public copyFilesToOuputDir() {
         if (this.project.additionalResourcesDirectory == null) return true;
-        this.project.logCallback("Coping additional resources...")
+        this.project.logCallback("Copying additional resources...")
         try {
             let directoryPath = path.join(this.project.dir, this.project.additionalResourcesDirectory);
             this.recursiveCopyFiles(directoryPath, "");
