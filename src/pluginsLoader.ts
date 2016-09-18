@@ -13,6 +13,7 @@ export enum EntryMethodType {
     registerActions,
     invokeAction,
     updateWatchPaths,
+    handleAsset,
 }
 
 export interface IPluginLoader {
@@ -152,7 +153,7 @@ class PluginLoader implements IPluginLoader {
         for (let i = 0; i < plm.length; i++) {
             try {
                 let res = plm[i].method.apply(null, args);
-                if (res == undefined) continue;
+                if (res === undefined) continue;
                 result.push(res);
             }
             catch (ex) {

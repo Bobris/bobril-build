@@ -46,7 +46,7 @@ export declare function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeCheck
 export declare function setMethod(callExpression: ts.CallExpression, name: string): void;
 export declare function setArgumentAst(callExpression: ts.CallExpression, index: number, value: ts.Expression): void;
 export declare function buildLambdaReturningArray(values: ts.Expression[]): ts.Expression;
-export declare function setArgument(callExpression: ts.CallExpression, index: number, value: string | number | boolean): void;
+export declare function setArgument(callExpression: ts.CallExpression, index: number, value: any): void;
 export declare function setArgumentCount(callExpression: ts.CallExpression, count: number): void;
 export declare function rememberCallExpression(callExpression: ts.CallExpression): () => void;
 export declare function applyOverrides(overrides: {

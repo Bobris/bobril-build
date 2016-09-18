@@ -15,6 +15,7 @@ const dynamicBuffer_1 = require('./dynamicBuffer');
 const simpleHelpers = require('./simpleHelpers');
 const cssHelpers = require('./cssHelpers');
 const shortenFileName_1 = require('./shortenFileName');
+const plugins = require('./pluginsLoader');
 function isCssByExt(name) {
     return /\.css$/ig.test(name);
 }
@@ -56,7 +57,18 @@ class CompilationCache {
         this.imageCache = new imgCache.ImgCache();
         this.compilationResult = new CompilationResult();
     }
-    reportDiagnostic(diagnostic, logcb) {
+    addMessageFromBB(isError, code, message, source, pos, end) {
+        var output = '';
+        let text = `BB${code}: ${message}`;
+        var locStart = source.getLineAndCharacterOfPosition(pos);
+        var locEnd = source.getLineAndCharacterOfPosition(end);
+        output += `${source.fileName}(${locStart.line + 1},${locStart.character + 1}): `;
+        this.compilationResult.addMessage(isError, source.fileName, text, [locStart.line + 1, locStart.character + 1, locEnd.line + 1, locEnd.character + 1]);
+        var category = isError ? "error" : "warning";
+        output += `${category} ${text}${ts.sys.newLine}`;
+        this.logCallback(output);
+    }
+    reportDiagnostic(diagnostic) {
         var output = '';
         let text = `TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`;
         if (diagnostic.file) {
@@ -67,11 +79,11 @@ class CompilationCache {
         }
         var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
         output += `${category} ${text}${ts.sys.newLine}`;
-        logcb(output);
+        this.logCallback(output);
     }
-    reportDiagnostics(diagnostics, logcb) {
+    reportDiagnostics(diagnostics) {
         for (var i = 0; i < diagnostics.length; i++) {
-            this.reportDiagnostic(diagnostics[i], logcb);
+            this.reportDiagnostic(diagnostics[i]);
         }
     }
     clearFileTimeModifications() {
@@ -244,13 +256,13 @@ class CompilationCache {
             let src = sourceFiles[i];
             this.compilationResult.clearFileName(src.fileName);
         }
-        this.reportDiagnostics(diagnostics, project.logCallback);
+        this.reportDiagnostics(diagnostics);
         if (diagnostics.length === 0) {
             let diagnostics = program.getGlobalDiagnostics();
-            this.reportDiagnostics(diagnostics, project.logCallback);
+            this.reportDiagnostics(diagnostics);
             if (diagnostics.length === 0) {
                 let diagnostics = program.getSemanticDiagnostics();
-                this.reportDiagnostics(diagnostics, project.logCallback);
+                this.reportDiagnostics(diagnostics);
             }
         }
         let restorationMemory = [];
@@ -269,6 +281,8 @@ class CompilationCache {
             }
             bundleCache.clear(false);
         }
+        let prom = Promise.resolve(null);
+        let assetMap = Object.create(null);
         let tc = program.getTypeChecker();
         for (let i = 0; i < sourceFiles.length; i++) {
             let src = sourceFiles[i];
@@ -283,8 +297,8 @@ class CompilationCache {
                 cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
                 cached.infoTime = cached.sourceTime;
             }
+            let info = cached.info;
             if (project.spriteMerge) {
-                let info = cached.info;
                 for (let j = 0; j < info.sprites.length; j++) {
                     let si = info.sprites[j];
                     if (si.name == null)
@@ -293,15 +307,42 @@ class CompilationCache {
                 }
             }
             if (project.textForTranslationReporter) {
-                let trs = cached.info.trs;
+                let trs = info.trs;
                 for (let j = 0; j < trs.length; j++) {
                     let message = trs[j].message;
                     if (typeof message === 'string')
                         project.textForTranslationReporter(trs[j], this.compilationResult);
                 }
             }
+            for (let j = 0; j < info.assets.length; j++) {
+                let sa = info.assets[j];
+                if (sa.name == null) {
+                    this.addMessageFromBB(false, 2, "Used b.asset without compile time constant - ignoring", info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
+                    continue;
+                }
+                let assetName = sa.name;
+                let result = plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.handleAsset, assetName, shortenFileNameAddPath, project);
+                if (result.length == 0) {
+                    let newName = assetName;
+                    if (!isCssByExt(assetName) && !isJsByExt(assetName)) {
+                        newName = shortenFileNameAddPath(assetName);
+                    }
+                    assetMap[assetName] = newName;
+                    project.depAssetFiles[assetName] = newName;
+                }
+                else if (result.length == 1) {
+                    prom = prom.then(() => {
+                        return Promise.resolve(result[0]).then((val) => {
+                            assetMap[assetName] = val;
+                        });
+                    });
+                }
+                else {
+                    this.addMessageFromBB(true, 1, "Multiple plugins handled asset " + assetName, info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
+                    assetMap[assetName] = assetName;
+                }
+            }
         }
-        let prom = Promise.resolve(null);
         if (project.spriteMerge) {
             if (bundleCache.wasChange()) {
                 prom = prom.then(() => bundleCache.build());
@@ -389,16 +430,11 @@ class CompilationCache {
                 for (let j = 0; j < info.assets.length; j++) {
                     let sa = info.assets[j];
                     if (sa.name == null) {
-                        project.logCallback(info.sourceFile.fileName + ":" + (info.sourceFile.getLineAndCharacterOfPosition(sa.callExpression.pos).line + 1) + " Warning: Used b.asset without compile time constant - ignoring");
                         continue;
                     }
-                    let newname = sa.name;
-                    if (!isCssByExt(newname) && !isJsByExt(newname)) {
-                        newname = shortenFileNameAddPath(newname);
-                    }
-                    project.depAssetFiles[sa.name] = newname;
+                    let assetName = sa.name;
                     restorationMemory.push(BuildHelpers.rememberCallExpression(sa.callExpression));
-                    BuildHelpers.setArgument(sa.callExpression, 0, newname);
+                    BuildHelpers.setArgument(sa.callExpression, 0, assetMap[assetName]);
                 }
                 if (project.compileTranslation) {
                     project.compileTranslation.startCompileFile(src.fileName);

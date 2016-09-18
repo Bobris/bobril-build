@@ -97,7 +97,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
             let fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
             if (id.importClause) {
                 let bindings = id.importClause.namedBindings;
-                if (/bobril\/index\.ts/i.test(fn)) {
+                if (/bobriln?\/index\.ts/i.test(fn)) {
                     result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
                 } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
                     result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
@@ -190,32 +190,54 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
     return result;
 }
 
-function createNodeFromValue(value: string | number | boolean): ts.Node {
+function createNodeFromValue(value: any): ts.Expression {
     if (value === null) {
-        let nullNode = ts.createNode(ts.SyntaxKind.NullKeyword);
-        nullNode.pos = -1;
+        let nullNode = <ts.Expression>ts.createNode(ts.SyntaxKind.NullKeyword);
         return nullNode;
     }
+    if (value === undefined) {
+        let undefinedNode = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
+        undefinedNode.text = "undefined";
+        return undefinedNode;
+    }
     if (value === true) {
-        let result = ts.createNode(ts.SyntaxKind.TrueKeyword);
-        result.pos = -1;
+        let result = <ts.Expression>ts.createNode(ts.SyntaxKind.TrueKeyword);
         return result;
     }
     if (value === false) {
-        let result = ts.createNode(ts.SyntaxKind.FalseKeyword);
-        result.pos = -1;
+        let result = <ts.Expression>ts.createNode(ts.SyntaxKind.FalseKeyword);
         return result;
     }
     if (typeof value === "string") {
         let result = <ts.StringLiteral>ts.createNode(ts.SyntaxKind.StringLiteral);
-        result.pos = -1;
         result.text = value;
+        result.hasExtendedUnicodeEscape = true;
         return result;
     }
     if (typeof value === "number") {
         let result = <ts.LiteralExpression>ts.createNode(ts.SyntaxKind.NumericLiteral);
-        result.pos = -1;
         result.text = "" + value;
+        return result;
+    }
+    if (Array.isArray(value)) {
+        let result = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
+        result.elements = createNodeArray<ts.Expression>(0);
+        for (var i = 0; i < value.length; i++) {
+            result.elements.push(createNodeFromValue(value[i]));
+        }
+        return result;
+    }
+    if (typeof value === "object") {
+        let result = <ts.ObjectLiteralExpression>ts.createNode(ts.SyntaxKind.ObjectLiteralExpression);
+        result.properties = createNodeArray<ts.ObjectLiteralElement>(0);
+        for (var key in value) {
+            let pa = <ts.PropertyAssignment>ts.createNode(ts.SyntaxKind.PropertyAssignment);
+            let name = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
+            name.text = key;
+            pa.name = name;
+            pa.initializer = createNodeFromValue(value[key]);
+            result.properties.push(pa);
+        }
         return result;
     }
     throw new Error('Don\'t know how to create node for ' + value);
@@ -224,7 +246,6 @@ function createNodeFromValue(value: string | number | boolean): ts.Node {
 export function setMethod(callExpression: ts.CallExpression, name: string) {
     var ex = <ts.PropertyAccessExpression>callExpression.expression;
     let result = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
-    result.pos = -1;
     result.flags = ex.name.flags;
     result.text = name;
     ex.name = result;
@@ -246,8 +267,8 @@ function createNodeArray<T extends ts.Node>(len: number): ts.NodeArray<T> {
     let arr = [];
     while (len-- > 0) arr.push(null);
     let res = <ts.NodeArray<T>>arr;
-    res.pos = -1;
-    res.end = -1;
+    res.pos = 0;
+    res.end = 0;
     return res;
 }
 
@@ -268,14 +289,14 @@ export function buildLambdaReturningArray(values: ts.Expression[]): ts.Expressio
     return fn;
 }
 
-export function setArgument(callExpression: ts.CallExpression, index: number, value: string | number | boolean): void {
-    setArgumentAst(callExpression, index, <ts.Expression>createNodeFromValue(value));
+export function setArgument(callExpression: ts.CallExpression, index: number, value: any): void {
+    setArgumentAst(callExpression, index, createNodeFromValue(value));
 }
 
 export function setArgumentCount(callExpression: ts.CallExpression, count: number) {
     var a = callExpression.arguments;
     while (a.length < count) {
-        a.push(<ts.Expression>createNodeFromValue(null));
+        a.push(createNodeFromValue(null));
     }
     while (count < a.length) {
         a.pop();

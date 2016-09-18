@@ -120,8 +120,9 @@ export declare class CompilationCache {
     imageCache: imgCache.ImgCache;
     logCallback: (text: string) => void;
     compilationResult: CompilationResult;
-    reportDiagnostic(diagnostic: ts.Diagnostic, logcb: (text: string) => void): void;
-    reportDiagnostics(diagnostics: ts.Diagnostic[], logcb: (text: string) => void): void;
+    addMessageFromBB(isError: boolean, code: number, message: string, source: ts.SourceFile, pos: number, end: number): void;
+    reportDiagnostic(diagnostic: ts.Diagnostic): void;
+    reportDiagnostics(diagnostics: ts.Diagnostic[]): void;
     clearFileTimeModifications(): void;
     forceRebuildNextCompile(project?: IProject): void;
     overrides: {

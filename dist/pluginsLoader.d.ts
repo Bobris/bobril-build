@@ -6,6 +6,7 @@ export declare enum EntryMethodType {
     registerActions = 4,
     invokeAction = 5,
     updateWatchPaths = 6,
+    handleAsset = 7,
 }
 export interface IPluginLoader {
     executeEntryMethod(methodType: EntryMethodType, ...args: any[]): any;

@@ -13,6 +13,7 @@ const pathUtils = require("./pathUtils");
     EntryMethodType[EntryMethodType["registerActions"] = 4] = "registerActions";
     EntryMethodType[EntryMethodType["invokeAction"] = 5] = "invokeAction";
     EntryMethodType[EntryMethodType["updateWatchPaths"] = 6] = "updateWatchPaths";
+    EntryMethodType[EntryMethodType["handleAsset"] = 7] = "handleAsset";
 })(exports.EntryMethodType || (exports.EntryMethodType = {}));
 var EntryMethodType = exports.EntryMethodType;
 class PluginLoader {
@@ -137,7 +138,7 @@ class PluginLoader {
         for (let i = 0; i < plm.length; i++) {
             try {
                 let res = plm[i].method.apply(null, args);
-                if (res == undefined)
+                if (res === undefined)
                     continue;
                 result.push(res);
             }

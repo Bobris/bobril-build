@@ -47,7 +47,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
             let fn = moduleSymbol.valueDeclaration.getSourceFile().fileName;
             if (id.importClause) {
                 let bindings = id.importClause.namedBindings;
-                if (/bobril\/index\.ts/i.test(fn)) {
+                if (/bobriln?\/index\.ts/i.test(fn)) {
                     result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
                 }
                 else if (/bobril-g11n\/index\.ts/i.test(fn)) {
@@ -158,29 +158,51 @@ exports.gatherSourceInfo = gatherSourceInfo;
 function createNodeFromValue(value) {
     if (value === null) {
         let nullNode = ts.createNode(ts.SyntaxKind.NullKeyword);
-        nullNode.pos = -1;
         return nullNode;
+    }
+    if (value === undefined) {
+        let undefinedNode = ts.createNode(ts.SyntaxKind.Identifier);
+        undefinedNode.text = "undefined";
+        return undefinedNode;
     }
     if (value === true) {
         let result = ts.createNode(ts.SyntaxKind.TrueKeyword);
-        result.pos = -1;
         return result;
     }
     if (value === false) {
         let result = ts.createNode(ts.SyntaxKind.FalseKeyword);
-        result.pos = -1;
         return result;
     }
     if (typeof value === "string") {
         let result = ts.createNode(ts.SyntaxKind.StringLiteral);
-        result.pos = -1;
         result.text = value;
+        result.hasExtendedUnicodeEscape = true;
         return result;
     }
     if (typeof value === "number") {
         let result = ts.createNode(ts.SyntaxKind.NumericLiteral);
-        result.pos = -1;
         result.text = "" + value;
+        return result;
+    }
+    if (Array.isArray(value)) {
+        let result = ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
+        result.elements = createNodeArray(0);
+        for (var i = 0; i < value.length; i++) {
+            result.elements.push(createNodeFromValue(value[i]));
+        }
+        return result;
+    }
+    if (typeof value === "object") {
+        let result = ts.createNode(ts.SyntaxKind.ObjectLiteralExpression);
+        result.properties = createNodeArray(0);
+        for (var key in value) {
+            let pa = ts.createNode(ts.SyntaxKind.PropertyAssignment);
+            let name = ts.createNode(ts.SyntaxKind.Identifier);
+            name.text = key;
+            pa.name = name;
+            pa.initializer = createNodeFromValue(value[key]);
+            result.properties.push(pa);
+        }
         return result;
     }
     throw new Error('Don\'t know how to create node for ' + value);
@@ -188,7 +210,6 @@ function createNodeFromValue(value) {
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;
     let result = ts.createNode(ts.SyntaxKind.Identifier);
-    result.pos = -1;
     result.flags = ex.name.flags;
     result.text = name;
     ex.name = result;
@@ -212,8 +233,8 @@ function createNodeArray(len) {
     while (len-- > 0)
         arr.push(null);
     let res = arr;
-    res.pos = -1;
-    res.end = -1;
+    res.pos = 0;
+    res.end = 0;
     return res;
 }
 function buildLambdaReturningArray(values) {
