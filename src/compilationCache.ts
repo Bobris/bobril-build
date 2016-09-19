@@ -354,7 +354,7 @@ export class CompilationCache {
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
         project.depAssetFiles = project.depAssetFiles || Object.create(null);
-        project.cssToLink = project.cssToLink || [];
+        project.cssToLink = [];
         this.clearMaxTimeForDeps();
         let mainChangedList = [];
         for (let i = 0; i < mainList.length; i++) {

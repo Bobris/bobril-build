@@ -1,6 +1,19 @@
 CHANGELOG
 ===
 
+0.48.0
+--
+
+New features
+-
+
+Again a lot of fetures for plugins.
+
+Fixed
+-
+
+Not anymore duplicating linked css in interactive mode. Provide content-type to css to remove warnings.
+
 0.47.0
 --
 

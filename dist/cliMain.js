@@ -111,6 +111,20 @@ function handleRequest(request, response) {
     }
     let f = bb.memoryFs[request.url.substr(1).toLowerCase()];
     if (f) {
+        switch ((path.extname(request.url) || "").toLowerCase()) {
+            case ".css":
+                response.writeHead(200, { "Content-Type": "text/css" });
+                break;
+            case ".png":
+                response.writeHead(200, { "Content-Type": "image/png" });
+                break;
+            case ".js":
+                response.writeHead(200, { "Content-Type": "text/javascript" });
+                break;
+            case ".html":
+                response.writeHead(200, { "Content-Type": "text/html" });
+                break;
+        }
         response.end(f);
         return;
     }
