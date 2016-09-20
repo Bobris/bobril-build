@@ -127,7 +127,12 @@ function runUpdateTsConfig(cwd, files, jsx) {
             fileList.push(d + f[j]);
     }
     if (jsx) {
-        fileList.push("node_modules/bobril/jsx.d.ts");
+        if (fs.existsSync("node_modules/bobril/jsx.d.ts")) {
+            fileList.push("node_modules/bobril/jsx.d.ts");
+        }
+        else if (fs.existsSync("node_modules/bobriln/jsx.d.ts")) {
+            fileList.push("node_modules/bobriln/jsx.d.ts");
+        }
     }
     fileList.sort();
     tscfg.files = fileList;
@@ -205,8 +210,12 @@ function autodetectMainExample(project, allFiles) {
     }
     if (!project.noBobrilJsx) {
         const bobriljsxdts = "node_modules/bobril/jsx.d.ts";
+        const bobrilnjsxdts = "node_modules/bobriln/jsx.d.ts";
         if (fs.existsSync(path.join(project.dir, bobriljsxdts))) {
             project.main.push(bobriljsxdts);
+        }
+        else if (fs.existsSync(path.join(project.dir, bobrilnjsxdts))) {
+            project.main.push(bobrilnjsxdts);
         }
     }
 }
@@ -289,7 +298,8 @@ function refreshProjectFromPackageJson(project, allFiles) {
     if (typeof bobrilSection.jsx === 'boolean') {
         project.noBobrilJsx = !bobrilSection.jsx;
     }
-    if (project.dependencies.indexOf("bobril") < 0) {
+    if (project.dependencies.indexOf("bobril") < 0 &&
+        project.dependencies.indexOf("bobriln") < 0) {
         project.noBobrilJsx = true;
     }
     if (typeof bobrilSection.resourcesAreRelativeToProjectDir === 'boolean') {
