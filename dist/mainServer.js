@@ -70,7 +70,7 @@ class MainServer {
         this.sendAll("compilationStarted");
     }
     notifyCompilationFinished(errors, warnings, time, messages) {
-        this.sendAll("compilationFinished", { errors: errors, warnings: warnings, time: time, messages: messages });
+        this.sendAll("compilationFinished", { errors, warnings, time, messages });
     }
     notifyTestSvrChange() {
         let kids = Object.keys(this.clients);
@@ -83,13 +83,31 @@ class MainServer {
     }
 }
 exports.MainServer = MainServer;
+let curProjectDir;
+function getCurProjectDir() {
+    return curProjectDir;
+}
+exports.getCurProjectDir = getCurProjectDir;
+function setCurProjectDir(value) {
+    curProjectDir = value;
+}
+exports.setCurProjectDir = setCurProjectDir;
+let interactivePort;
+function getInteractivePort() {
+    return interactivePort;
+}
+exports.getInteractivePort = getInteractivePort;
+function setInteractivePort(value) {
+    interactivePort = value;
+}
+exports.setInteractivePort = setInteractivePort;
 var serverProject;
 function getProject() {
     if (serverProject)
         return serverProject;
-    if (exports.curProjectDir == null)
-        exports.curProjectDir = pathUtils.currentDirectory();
-    serverProject = cp.createProjectFromDir(exports.curProjectDir);
+    if (curProjectDir == null)
+        curProjectDir = pathUtils.currentDirectory();
+    serverProject = cp.createProjectFromDir(curProjectDir);
     serverProject.logCallback = (text) => {
         console.log(text);
     };
@@ -101,7 +119,7 @@ function getProject() {
 exports.getProject = getProject;
 function setProject(proj) {
     serverProject = proj;
-    exports.curProjectDir = proj.dir;
+    curProjectDir = proj.dir;
 }
 exports.setProject = setProject;
 //# sourceMappingURL=mainServer.js.map

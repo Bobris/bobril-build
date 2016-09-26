@@ -46,6 +46,15 @@ It reads `package.json` and understands:
 			"resourcesAreRelativeToProjectDir": false, // this is default
 			"example": "pathToExample.ts", // sample application entry point - if main is index.ts than example.ts is searched for default
 			"title": "index.html Title",
+			"compilerOptions": {
+                "noImplicitAny": true,
+                "noImplicitThis": true,
+                "noUnusedLocals": true,
+                "noUnusedParameters": true,
+                "noImplicitReturns": true,
+                "noFallthroughCasesInSwitch": true,
+                "strictNullChecks": true
+			},
 			"constantOverrides": {
 				"module_name": {
 					"export_name": "New value, it supports also number and boolean values"

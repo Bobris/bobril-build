@@ -44,7 +44,7 @@ function backgroundProcess() {
 
 function run() {
     const originalLoader = Module._load;
-    Module._load = function (request, parent) {
+    (<any>Module)._load = function (request, parent) {
         if (request === "bobril-build") {
             return require("./index");
         }

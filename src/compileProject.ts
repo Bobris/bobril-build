@@ -8,7 +8,7 @@ import * as glob from "glob";
 import * as minimatch from "minimatch";
 import { deepEqual } from './deepEqual';
 import * as plugins from "./pluginsLoader";
-import {AdditionalResources}  from './additionalResources'
+import { AdditionalResources } from './additionalResources'
 
 export function presetDebugProject(project: bb.IProject) {
     project.debugStyleDefs = true;
@@ -74,7 +74,7 @@ function autodetectMainTs(project: bb.IProject): boolean {
     return false;
 }
 
-function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx: boolean) {
+function runUpdateTsConfig(compilerOptions: { [name: string]: any }, cwd: string, addJasmine: boolean, jsx: boolean) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
     let tscfg: any = {};
     let origtscfg = {};
@@ -93,11 +93,21 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:
     if (tscfg.compilerOptions == null) {
         tscfg.compilerOptions = {};
     }
+    if (tscfg.include == null) {
+        tscfg.include = ["**/*"];
+    }
     Object.assign(tscfg.compilerOptions, {
-        target: "es6",
-        module: "commonjs",
-        moduleResolution: "node"
-    });
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "declaration": false,
+        "allowJs": true,
+        "lib": bb.defaultLibs(),
+        "removeComments": false,
+        "noLib": false,
+        "preserveConstEnums": false
+    })
+    if (compilerOptions) Object.assign(tscfg.compilerOptions, compilerOptions);
     if (jsx) {
         Object.assign(tscfg.compilerOptions, {
             jsx: "react",
@@ -111,20 +121,6 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:
     }
     tscfg.compileOnSave = false;
     let fileList = [];
-    let dirs = Object.keys(files);
-    for (let i = 0; i < dirs.length; i++) {
-        let d = dirs[i];
-        if (/^node_modules/ig.test(d))
-            continue;
-        let f = files[d];
-        if (d === ".") {
-            d = "";
-        } else {
-            d = d + '/';
-        }
-        for (let j = 0; j < f.length; j++)
-            fileList.push(d + f[j]);
-    }
     if (jsx) {
         if (fs.existsSync("node_modules/bobril/jsx.d.ts")) {
             fileList.push("node_modules/bobril/jsx.d.ts");
@@ -132,6 +128,9 @@ function runUpdateTsConfig(cwd: string, files: { [dir: string]: string[] }, jsx:
         else if (fs.existsSync("node_modules/bobriln/jsx.d.ts")) {
             fileList.push("node_modules/bobriln/jsx.d.ts");
         }
+    }
+    if (addJasmine) {
+        fileList.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
     }
     fileList.sort();
     tscfg.files = fileList;
@@ -186,7 +185,7 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
         } else {
             project.mainSpec = null;
         }
-        runUpdateTsConfig(project.dir, allFiles, !project.noBobrilJsx);
+        runUpdateTsConfig(project.compilerOptions, project.dir, specList.length > 0 && !containsJasmineDefFile, !project.noBobrilJsx);
     }
     if (project.mainExamples.length > 0) {
         if (project.mainExamples.length == 1) {
@@ -210,7 +209,7 @@ function autodetectMainExample(project: bb.IProject, allFiles: { [dir: string]: 
             (<string[]>project.main).push(bobriljsxdts);
         } else if (fs.existsSync(path.join(project.dir, bobrilnjsxdts))) {
             (<string[]>project.main).push(bobrilnjsxdts);
-        } 
+        }
     }
 }
 
@@ -285,6 +284,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     }
     if (typeof bobrilSection.jsx === 'boolean') {
         project.noBobrilJsx = !bobrilSection.jsx;
+    }
+    if (typeof bobrilSection.compilerOptions === 'object') {
+        project.compilerOptions = bobrilSection.compilerOptions;
     }
     if (project.dependencies.indexOf("bobril") < 0 &&
         project.dependencies.indexOf("bobriln") < 0) {

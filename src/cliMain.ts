@@ -8,7 +8,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader"
 import * as depChecker from "./dependenciesChecker"
-import {AdditionalResources}  from './additionalResources'
+import { AdditionalResources } from './additionalResources'
 import * as chalk from 'chalk';
 
 var serverAdditionalResources: AdditionalResources;
@@ -107,7 +107,7 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         if (name.length === 0) name = 'index.html';
         if (/^base\//.test(name)) {
             let project = bb.getProject();
-            fileResponse(response, path.join(bb.curProjectDir, path.relative(project.realRootRel, ""), name.substr(4)));
+            fileResponse(response, path.join(bb.getCurProjectDir(), path.relative(project.realRootRel, ""), name.substr(4)));
             return;
         }
         if (/^special\//.test(name)) {
@@ -124,18 +124,18 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
     }
     let f = bb.memoryFs[request.url.substr(1).toLowerCase()];
     if (f) {
-        switch ((path.extname(request.url)||"").toLowerCase()) {
-            case ".css":           
-                response.writeHead(200, {"Content-Type": "text/css"});
+        switch ((path.extname(request.url) || "").toLowerCase()) {
+            case ".css":
+                response.writeHead(200, { "Content-Type": "text/css" });
                 break;
             case ".png":
-                response.writeHead(200, {"Content-Type": "image/png"});
+                response.writeHead(200, { "Content-Type": "image/png" });
                 break;
             case ".js":
-                response.writeHead(200, {"Content-Type": "text/javascript"});
+                response.writeHead(200, { "Content-Type": "text/javascript" });
                 break;
             case ".html":
-                response.writeHead(200, {"Content-Type": "text/html"});
+                response.writeHead(200, { "Content-Type": "text/html" });
                 break;
         }
         response.end(f);
@@ -166,7 +166,7 @@ function getDefaultDebugOptions(): bb.IProject {
 function startHttpServer(port: number) {
     server = http.createServer(handleRequest);
     server.on("listening", function () {
-        bb.interactivePort = server.address().port;
+        bb.setInteractivePort(server.address().port);
         console.log("Server listening on: " + chalk.cyan(" http://localhost:" + server.address().port));
     });
     server.on('error', function (e) {
@@ -185,9 +185,9 @@ function mergeProjectFromServer(opts: any) {
 }
 
 function interactiveCommand(port: number) {
-    bb.mainServer.setProjectDir(bb.curProjectDir);
+    bb.mainServer.setProjectDir(bb.getCurProjectDir());
     startHttpServer(port);
-    let compileProcess = bb.startCompileProcess(bb.curProjectDir);
+    let compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
@@ -202,8 +202,8 @@ function interactiveCommand(port: number) {
             return compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
                 compileProcess.setOptions({}).then(opts => {
                     mergeProjectFromServer(opts);
-                    return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile,v));
-                }).then(()=>{
+                    return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
+                }).then(() => {
                     if (v.hasTests) {
                         if (phantomJsProcess == null)
                             startTestsInPhantom();
@@ -222,7 +222,7 @@ function createAdditionalResources(project: bb.IProject) {
 export function run() {
     let commandRunning = false;
     let range = [];
-    bb.curProjectDir = bb.currentDirectory();
+    bb.setCurProjectDir(bb.currentDirectory());
     c
         .command("build")
         .alias("b")
@@ -240,7 +240,7 @@ export function run() {
         .action((c) => {
             commandRunning = true;
             let start = Date.now();
-            let project = bb.createProjectFromDir(bb.curProjectDir);
+            let project = bb.createProjectFromDir(bb.getCurProjectDir());
             project.logCallback = (text) => {
                 console.log(text);
             }
@@ -371,7 +371,7 @@ export function run() {
             commandRunning = true;
             startHttpServer(0);
             console.time("compile");
-            let project = bb.createProjectFromDir(bb.curProjectDir);
+            let project = bb.createProjectFromDir(bb.getCurProjectDir());
             project.logCallback = (text) => {
                 console.log(text);
             }

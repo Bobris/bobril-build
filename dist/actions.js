@@ -14,13 +14,13 @@ class ActionsList {
         this.id2Action[action.id] = action;
     }
     registerCommand(id, name, enabled = true) {
-        this.registerAction({ type: "command", id: id, name: name, enabled: enabled });
+        this.registerAction({ type: "command", id, name, enabled });
     }
     registerCombo(label, selected, options) {
-        this.registerAction({ type: "combo", id: label, label: label, selected: selected, options: options });
+        this.registerAction({ type: "combo", id: label, label, selected, options });
     }
     option(id, name) {
-        return { id: id, name: name };
+        return { id, name };
     }
     getList() {
         return this.list;

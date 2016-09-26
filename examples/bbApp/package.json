@@ -8,7 +8,16 @@
   "bobril": {
     "title": "Bobril Hello World",
     "head": "<link rel=\"icon\" href=\"light.png\">",
-    "additionalResourcesDirectory": "assets-app"
+    "additionalResourcesDirectory": "assets-app",
+    "compilerOptions": {
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "strictNullChecks": true
+    }
   },
   "author": "",
   "license": "",

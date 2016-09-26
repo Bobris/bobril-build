@@ -94,7 +94,7 @@ function handleRequest(request, response) {
             name = 'index.html';
         if (/^base\//.test(name)) {
             let project = bb.getProject();
-            fileResponse(response, path.join(bb.curProjectDir, path.relative(project.realRootRel, ""), name.substr(4)));
+            fileResponse(response, path.join(bb.getCurProjectDir(), path.relative(project.realRootRel, ""), name.substr(4)));
             return;
         }
         if (/^special\//.test(name)) {
@@ -149,7 +149,7 @@ function getDefaultDebugOptions() {
 function startHttpServer(port) {
     server = http.createServer(handleRequest);
     server.on("listening", function () {
-        bb.interactivePort = server.address().port;
+        bb.setInteractivePort(server.address().port);
         console.log("Server listening on: " + chalk.cyan(" http://localhost:" + server.address().port));
     });
     server.on('error', function (e) {
@@ -160,15 +160,15 @@ function startHttpServer(port) {
             }, 10);
         }
     });
-    server.listen({ port: port, exclusive: true });
+    server.listen({ port, exclusive: true });
 }
 function mergeProjectFromServer(opts) {
     Object.assign(bb.getProject(), opts);
 }
 function interactiveCommand(port) {
-    bb.mainServer.setProjectDir(bb.curProjectDir);
+    bb.mainServer.setProjectDir(bb.getCurProjectDir());
     startHttpServer(port);
-    let compileProcess = bb.startCompileProcess(bb.curProjectDir);
+    let compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
@@ -201,7 +201,7 @@ function createAdditionalResources(project) {
 function run() {
     let commandRunning = false;
     let range = [];
-    bb.curProjectDir = bb.currentDirectory();
+    bb.setCurProjectDir(bb.currentDirectory());
     c
         .command("build")
         .alias("b")
@@ -219,7 +219,7 @@ function run() {
         .action((c) => {
         commandRunning = true;
         let start = Date.now();
-        let project = bb.createProjectFromDir(bb.curProjectDir);
+        let project = bb.createProjectFromDir(bb.getCurProjectDir());
         project.logCallback = (text) => {
             console.log(text);
         };
@@ -352,7 +352,7 @@ function run() {
         commandRunning = true;
         startHttpServer(0);
         console.time("compile");
-        let project = bb.createProjectFromDir(bb.curProjectDir);
+        let project = bb.createProjectFromDir(bb.getCurProjectDir());
         project.logCallback = (text) => {
             console.log(text);
         };

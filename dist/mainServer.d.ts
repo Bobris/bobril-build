@@ -19,7 +19,9 @@ export declare class MainServer {
     notifyCompilationFinished(errors: number, warnings: number, time: number, messages: CompilationResultMessage[]): void;
     private notifyTestSvrChange();
 }
-export declare let curProjectDir: string;
-export declare let interactivePort: number;
+export declare function getCurProjectDir(): string;
+export declare function setCurProjectDir(value: string): void;
+export declare function getInteractivePort(): number;
+export declare function setInteractivePort(value: number): void;
 export declare function getProject(): cc.IProject;
 export declare function setProject(proj: cc.IProject): void;

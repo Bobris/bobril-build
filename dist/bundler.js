@@ -125,7 +125,7 @@ function paternAssignExports(node) {
                     let name = matchPropKey(propAccess);
                     if (name !== undefined) {
                         return {
-                            name: name, value: assign.right
+                            name, value: assign.right
                         };
                     }
                 }
@@ -176,7 +176,7 @@ function check(name, order, visited, project, resolveRequire) {
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name: name, astTime: mod, ast: ast, requires: [], difficult: false, hasExtend: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, hasExtend: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
             pureMatch.forEach(m => {
@@ -474,9 +474,9 @@ function bundle(project) {
                     if (!extf.difficult) {
                         let keys = Object.keys(extf.exports);
                         keys.forEach(key => {
-                            properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key: key, value: renameSymbol(extf.exports[key]) }));
+                            properties.push(new uglify.AST_ObjectKeyVal({ quote: "'", key, value: renameSymbol(extf.exports[key]) }));
                         });
-                        return new uglify.AST_Object({ properties: properties });
+                        return new uglify.AST_Object({ properties });
                     }
                 }
             }

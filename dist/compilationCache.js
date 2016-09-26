@@ -16,6 +16,15 @@ const simpleHelpers = require('./simpleHelpers');
 const cssHelpers = require('./cssHelpers');
 const shortenFileName_1 = require('./shortenFileName');
 const plugins = require('./pluginsLoader');
+function defaultLibs() {
+    return [
+        "lib.es5.d.ts",
+        "lib.dom.d.ts",
+        "lib.es2015.core.d.ts",
+        "lib.es2015.promise.d.ts"
+    ];
+}
+exports.defaultLibs = defaultLibs;
 function isCssByExt(name) {
     return /\.css$/ig.test(name);
 }
@@ -46,7 +55,7 @@ class CompilationResult {
             this.errors++;
         else
             this.warnings++;
-        this.messages.push({ fileName: fn, isError: isError, text: text, pos: pos });
+        this.messages.push({ fileName: fn, isError, text, pos });
     }
 }
 exports.CompilationResult = CompilationResult;
@@ -112,7 +121,7 @@ class CompilationCache {
             o = [];
             this.overrides[fn] = o;
         }
-        o.push({ varDecl: varDecl, value: value });
+        o.push({ varDecl, value });
     }
     findVarDecl(project, program, exports, expName) {
         let tc = program.getTypeChecker();
@@ -192,6 +201,10 @@ class CompilationCache {
         if (!project.noBobrilJsx) {
             project.options.jsx = ts.JsxEmit.React;
             project.options.reactNamespace = "b";
+        }
+        project.options.lib = defaultLibs();
+        if (project.compilerOptions) {
+            Object.assign(project.options, project.compilerOptions);
         }
         project.options.allowJs = true;
         // workaround for TypeScript does not want to overwrite JS files.
@@ -811,6 +824,7 @@ class CompilationCache {
             return cc.getCachedFileContent(fileName, currentDirectory);
         }
         function getSourceFile(fileName, languageVersion, onError) {
+            console.log("getSF " + fileName);
             let isDefLib = fileName === cc.defaultLibFilename;
             if (isDefLib) {
                 if (cc.defLibPrecompiled)
@@ -851,12 +865,12 @@ class CompilationCache {
         function resolveModuleExtension(moduleName, nameWithoutExtension, internalModule) {
             let cached = getCachedFileExistence(nameWithoutExtension + '.ts');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
                 return nameWithoutExtension + '.ts';
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.tsx');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
                 return nameWithoutExtension + '.tsx';
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
@@ -864,13 +878,13 @@ class CompilationCache {
                 cached = getCachedFileExistence(nameWithoutExtension + '.js');
                 if (cached.curTime !== null) {
                     cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
-                    project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule: internalModule };
+                    project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
                     return nameWithoutExtension + '.d.ts';
                 }
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
                 return nameWithoutExtension + '.js';
             }
             return null;
@@ -924,13 +938,26 @@ class CompilationCache {
         }
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function (options) { return cc.defaultLibFilename; },
+            getDefaultLibFileName: function (options) { console.log("Strange should not be called"); return cc.defaultLibFilename; },
             writeFile: writeFile,
             getCurrentDirectory: function () { return currentDirectory; },
             useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
             getCanonicalFileName: getCanonicalFileName,
             getNewLine: function () { return '\n'; },
+            getDirectories(name) {
+                let comb = path.join(project.dir, name);
+                return fs.readdirSync(comb).filter((v) => {
+                    var stat = undefined;
+                    try {
+                        stat = fs.statSync(path.join(comb, v));
+                    }
+                    catch (err) {
+                    }
+                    return stat && stat.isDirectory();
+                });
+            },
             fileExists(fileName) {
+                console.log("exist? " + fileName);
                 if (fileName === cc.defaultLibFilename)
                     return true;
                 let cached = getCachedFileExistence(fileName);
@@ -939,6 +966,7 @@ class CompilationCache {
                 return true;
             },
             readFile(fileName) {
+                console.log("read " + fileName);
                 let cached = getCachedFileContent(fileName);
                 if (cached.textTime == null)
                     return null;

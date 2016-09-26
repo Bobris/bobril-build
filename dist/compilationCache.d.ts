@@ -3,6 +3,7 @@ import * as imgCache from "./imgCache";
 import * as BuildHelpers from './buildHelpers';
 import * as sourceMap from './sourceMap';
 import { CompilationResultMessage } from './defs';
+export declare function defaultLibs(): string[];
 export interface ICacheFile {
     fullName: string;
     text?: string;
@@ -52,6 +53,9 @@ export interface IProject {
     specGlob?: string;
     mainJsFile?: string;
     noBobrilJsx?: boolean;
+    compilerOptions?: {
+        [name: string]: any;
+    };
     localize?: boolean;
     updateTranslations?: boolean;
     fastBundle?: boolean;

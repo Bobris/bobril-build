@@ -105,9 +105,25 @@ export class MainServer {
     }
 }
 
-export let curProjectDir: string;
+let curProjectDir: string;
 
-export let interactivePort: number;
+export function getCurProjectDir() {
+    return curProjectDir;
+}
+
+export function setCurProjectDir(value: string) {
+    curProjectDir = value;
+}
+
+let interactivePort: number;
+
+export function getInteractivePort() {
+    return interactivePort;
+}
+
+export function setInteractivePort(value: number) {
+    interactivePort = value;
+}
 
 var serverProject: cc.IProject;
 

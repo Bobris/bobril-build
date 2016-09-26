@@ -16,9 +16,18 @@ import { DynamicBuffer } from './dynamicBuffer';
 import * as simpleHelpers from './simpleHelpers';
 import * as cssHelpers from './cssHelpers';
 import { createFileNameShortener } from './shortenFileName';
-import {AdditionalResources}  from './additionalResources'
+import { AdditionalResources } from './additionalResources'
 import { CompilationResultMessage } from './defs';
 import * as plugins from './pluginsLoader';
+
+export function defaultLibs() {
+    return [
+        "lib.es5.d.ts",
+        "lib.dom.d.ts",
+        "lib.es2015.core.d.ts",
+        "lib.es2015.promise.d.ts"
+    ];
+}
 
 function isCssByExt(name: string): boolean {
     return /\.css$/ig.test(name);
@@ -80,6 +89,8 @@ export interface IProject {
     mainJsFile?: string;
     // forbid support JSX - it will be slightly faster
     noBobrilJsx?: boolean;
+    // allows to customize TypeScript compilation
+    compilerOptions?: { [name:string]: any };
     // default false
     localize?: boolean;
     // default undefined = autodetect if something added, true = remove unused, false = don't update
@@ -163,7 +174,7 @@ export class CompilationCache {
     logCallback: (text: string) => void;
     compilationResult: CompilationResult;
 
-    addMessageFromBB(isError: boolean, code:number, message: string, source: ts.SourceFile, pos: number, end: number) {
+    addMessageFromBB(isError: boolean, code: number, message: string, source: ts.SourceFile, pos: number, end: number) {
         var output = '';
         let text = `BB${code}: ${message}`;
         var locStart = source.getLineAndCharacterOfPosition(pos);
@@ -313,6 +324,10 @@ export class CompilationCache {
             project.options.jsx = ts.JsxEmit.React;
             project.options.reactNamespace = "b";
         }
+        project.options.lib = defaultLibs();
+        if (project.compilerOptions) {
+            Object.assign(project.options, project.compilerOptions);
+        }
         project.options.allowJs = true;
         // workaround for TypeScript does not want to overwrite JS files.
         project.options.outDir = "virtual/";
@@ -404,7 +419,7 @@ export class CompilationCache {
         }
 
         let prom = Promise.resolve(null);
-        let assetMap = Object.create(null) as { [name:string]: any };
+        let assetMap = Object.create(null) as { [name: string]: any };
 
         let tc = program.getTypeChecker();
         for (let i = 0; i < sourceFiles.length; i++) {
@@ -452,13 +467,13 @@ export class CompilationCache {
                     assetMap[assetName] = newName;
                     project.depAssetFiles[assetName] = newName;
                 } else if (result.length == 1) {
-                    prom = prom.then(()=>{
-                        return Promise.resolve(result[0]).then((val)=>{
+                    prom = prom.then(() => {
+                        return Promise.resolve(result[0]).then((val) => {
                             assetMap[assetName] = val;
                         });
                     });
                 } else {
-                    this.addMessageFromBB(true, 1, "Multiple plugins handled asset "+assetName, info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
+                    this.addMessageFromBB(true, 1, "Multiple plugins handled asset " + assetName, info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
                     assetMap[assetName] = assetName;
                 }
             }
@@ -937,6 +952,7 @@ export class CompilationCache {
         }
 
         function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
+            console.log("getSF "+fileName);
             let isDefLib = fileName === cc.defaultLibFilename;
             if (isDefLib) {
                 if (cc.defLibPrecompiled) return cc.defLibPrecompiled;
@@ -1049,19 +1065,32 @@ export class CompilationCache {
 
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function (options) { return cc.defaultLibFilename; },
+            getDefaultLibFileName: function (options) { console.log("Strange should not be called"); return cc.defaultLibFilename; },
             writeFile: writeFile,
             getCurrentDirectory: function () { return currentDirectory; },
             useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
             getCanonicalFileName: getCanonicalFileName,
             getNewLine: function () { return '\n'; },
+            getDirectories(name: string): string[] {
+                let comb = path.join(project.dir, name);
+                return fs.readdirSync(comb).filter((v) => {
+                    var stat: fs.Stats | undefined = undefined;
+                    try {
+                        stat = fs.statSync(path.join(comb, v))
+                    } catch (err) {
+                    }
+                    return stat && stat.isDirectory();
+                });
+            },
             fileExists(fileName: string): boolean {
+                console.log("exist? "+fileName);                
                 if (fileName === cc.defaultLibFilename) return true;
                 let cached = getCachedFileExistence(fileName);
                 if (cached.curTime === null) return false;
                 return true;
             },
             readFile(fileName: string): string {
+                console.log("read "+fileName);                
                 let cached = getCachedFileContent(fileName);
                 if (cached.textTime == null) return null;
                 return cached.text;

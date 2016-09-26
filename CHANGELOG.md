@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.49.0
+--
+
+New features
+--
+
+Using TypeScript 2.0. Allow to override compileOptions by package.json.
+
 0.48.0
 --
 

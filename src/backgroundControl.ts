@@ -64,7 +64,7 @@ export function startWatchProcess(notify: (allFiles: { [dir: string]: string[] }
     let prevPromise = Promise.resolve();
     let paths = ['**/*.ts?(x)', '**/package.json'];
     plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.updateWatchPaths, paths);
-    watchProcess("watch", { cwd: bb.curProjectDir, paths, filter: '\\.tsx?$', updateTsConfig: true }, {
+    watchProcess("watch", { cwd: bb.getCurProjectDir(), paths, filter: '\\.tsx?$', updateTsConfig: true }, {
         watchChange(param: { [dir: string]: string[] }) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");

@@ -72,7 +72,7 @@ function autodetectMainTs(project) {
     project.logCallback('Error: Main not found. Searched: ' + searchMainTsList.join(', '));
     return false;
 }
-function runUpdateTsConfig(cwd, files, jsx) {
+function runUpdateTsConfig(compilerOptions, cwd, addJasmine, jsx) {
     let tscfgPath = path.join(cwd, 'tsconfig.json');
     let tscfg = {};
     let origtscfg = {};
@@ -92,11 +92,22 @@ function runUpdateTsConfig(cwd, files, jsx) {
     if (tscfg.compilerOptions == null) {
         tscfg.compilerOptions = {};
     }
+    if (tscfg.include == null) {
+        tscfg.include = ["**/*"];
+    }
     Object.assign(tscfg.compilerOptions, {
-        target: "es6",
-        module: "commonjs",
-        moduleResolution: "node"
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "declaration": false,
+        "allowJs": true,
+        "lib": bb.defaultLibs(),
+        "removeComments": false,
+        "noLib": false,
+        "preserveConstEnums": false
     });
+    if (compilerOptions)
+        Object.assign(tscfg.compilerOptions, compilerOptions);
     if (jsx) {
         Object.assign(tscfg.compilerOptions, {
             jsx: "react",
@@ -111,21 +122,6 @@ function runUpdateTsConfig(cwd, files, jsx) {
     }
     tscfg.compileOnSave = false;
     let fileList = [];
-    let dirs = Object.keys(files);
-    for (let i = 0; i < dirs.length; i++) {
-        let d = dirs[i];
-        if (/^node_modules/ig.test(d))
-            continue;
-        let f = files[d];
-        if (d === ".") {
-            d = "";
-        }
-        else {
-            d = d + '/';
-        }
-        for (let j = 0; j < f.length; j++)
-            fileList.push(d + f[j]);
-    }
     if (jsx) {
         if (fs.existsSync("node_modules/bobril/jsx.d.ts")) {
             fileList.push("node_modules/bobril/jsx.d.ts");
@@ -133,6 +129,9 @@ function runUpdateTsConfig(cwd, files, jsx) {
         else if (fs.existsSync("node_modules/bobriln/jsx.d.ts")) {
             fileList.push("node_modules/bobriln/jsx.d.ts");
         }
+    }
+    if (addJasmine) {
+        fileList.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
     }
     fileList.sort();
     tscfg.files = fileList;
@@ -190,7 +189,7 @@ function autodetectMainExample(project, allFiles) {
         else {
             project.mainSpec = null;
         }
-        runUpdateTsConfig(project.dir, allFiles, !project.noBobrilJsx);
+        runUpdateTsConfig(project.compilerOptions, project.dir, specList.length > 0 && !containsJasmineDefFile, !project.noBobrilJsx);
     }
     if (project.mainExamples.length > 0) {
         if (project.mainExamples.length == 1) {
@@ -297,6 +296,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
     }
     if (typeof bobrilSection.jsx === 'boolean') {
         project.noBobrilJsx = !bobrilSection.jsx;
+    }
+    if (typeof bobrilSection.compilerOptions === 'object') {
+        project.compilerOptions = bobrilSection.compilerOptions;
     }
     if (project.dependencies.indexOf("bobril") < 0 &&
         project.dependencies.indexOf("bobriln") < 0) {
