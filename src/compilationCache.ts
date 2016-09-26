@@ -952,7 +952,6 @@ export class CompilationCache {
         }
 
         function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
-            console.log("getSF "+fileName);
             let isDefLib = fileName === cc.defaultLibFilename;
             if (isDefLib) {
                 if (cc.defLibPrecompiled) return cc.defLibPrecompiled;
@@ -1065,7 +1064,7 @@ export class CompilationCache {
 
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function (options) { console.log("Strange should not be called"); return cc.defaultLibFilename; },
+            getDefaultLibFileName: function (options) { return cc.defaultLibFilename; },
             writeFile: writeFile,
             getCurrentDirectory: function () { return currentDirectory; },
             useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
@@ -1083,14 +1082,12 @@ export class CompilationCache {
                 });
             },
             fileExists(fileName: string): boolean {
-                console.log("exist? "+fileName);                
                 if (fileName === cc.defaultLibFilename) return true;
                 let cached = getCachedFileExistence(fileName);
                 if (cached.curTime === null) return false;
                 return true;
             },
             readFile(fileName: string): string {
-                console.log("read "+fileName);                
                 let cached = getCachedFileContent(fileName);
                 if (cached.textTime == null) return null;
                 return cached.text;

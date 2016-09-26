@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.49.1
+--
+
+Bug fix
+-
+
+Removed left over console.logs
+
 0.49.0
 --
 
