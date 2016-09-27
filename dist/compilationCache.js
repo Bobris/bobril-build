@@ -18,13 +18,20 @@ const shortenFileName_1 = require('./shortenFileName');
 const plugins = require('./pluginsLoader');
 function defaultLibs() {
     return [
-        "lib.es5.d.ts",
-        "lib.dom.d.ts",
-        "lib.es2015.core.d.ts",
-        "lib.es2015.promise.d.ts"
+        "es5",
+        "dom",
+        "es2015.core",
+        "es2015.promise"
     ];
 }
 exports.defaultLibs = defaultLibs;
+function addLibPrefixPostfix(names) {
+    for (var i = 0; i < names.length; i++) {
+        if (names[i].startsWith("lib."))
+            continue;
+        names[i] = "lib." + names[i] + ".d.ts";
+    }
+}
 function isCssByExt(name) {
     return /\.css$/ig.test(name);
 }
@@ -206,7 +213,7 @@ class CompilationCache {
         if (project.compilerOptions) {
             Object.assign(project.options, project.compilerOptions);
         }
-        project.options.allowJs = true;
+        addLibPrefixPostfix(project.options.lib);
         // workaround for TypeScript does not want to overwrite JS files.
         project.options.outDir = "virtual/";
         project.options.rootDir = project.dir;

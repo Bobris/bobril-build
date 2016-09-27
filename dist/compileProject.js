@@ -100,7 +100,6 @@ function runUpdateTsConfig(compilerOptions, cwd, addJasmine, jsx) {
         "module": "commonjs",
         "moduleResolution": "node",
         "declaration": false,
-        "allowJs": true,
         "lib": bb.defaultLibs(),
         "removeComments": false,
         "noLib": false,

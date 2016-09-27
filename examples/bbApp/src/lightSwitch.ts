@@ -5,7 +5,7 @@ const iconOff = b.sprite("light.png", "#e03030");
 
 export interface IData {
     value: boolean;
-    onChange(value: boolean);
+    onChange(value: boolean): void;
 }
 
 interface ICtx extends b.IBobrilCtx {

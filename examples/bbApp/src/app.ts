@@ -8,14 +8,14 @@ interface IPageCtx extends b.IBobrilCtx {
 
 b.asset("bootstrap/css/bootstrap.css");
 
-let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 }, null, "header");
+let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 }, undefined, "header");
 
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
         ctx.counter = 0;
         setInterval(() => { ctx.counter++; b.invalidate(); }, 1000);
     },
-    render(ctx: IPageCtx, me: b.IBobrilNode, oldMe?: b.IBobrilCacheNode): void {
+    render(ctx: IPageCtx, me: b.IBobrilNode, _oldMe?: b.IBobrilCacheNode): void {
         let m = g.getMoment();
 
         me.children = [

@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.49.2
+--
+
+Bug fix
+-
+
+tsconfig.json now contains correctly named default libs. Also allowJs is not enabled by default and needs to be enabled from compilerOptions
+
 0.49.1
 --
 
@@ -15,7 +23,7 @@ Removed left over console.logs
 New features
 --
 
-Using TypeScript 2.0. Allow to override compileOptions by package.json.
+Using TypeScript 2.0. Allow to override compilerOptions by package.json.
 
 0.48.0
 --

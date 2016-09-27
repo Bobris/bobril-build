@@ -101,7 +101,6 @@ function runUpdateTsConfig(compilerOptions: { [name: string]: any }, cwd: string
         "module": "commonjs",
         "moduleResolution": "node",
         "declaration": false,
-        "allowJs": true,
         "lib": bb.defaultLibs(),
         "removeComments": false,
         "noLib": false,
