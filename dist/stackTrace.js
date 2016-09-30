@@ -2,7 +2,7 @@
 const error_stack_parser_1 = require('error-stack-parser');
 const sourceMap = require('./sourceMap');
 function parseStack(stack) {
-    return error_stack_parser_1.parse({ stack });
+    return error_stack_parser_1.parse({ stack: stack });
 }
 exports.parseStack = parseStack;
 function enhanceStack(stack, get, sourceMapCache) {

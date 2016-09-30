@@ -7,7 +7,7 @@ function processCss(source, from, callback) {
                 if (oldUrl.startsWith("data:"))
                     return oldUrl;
                 return callback(oldUrl, from);
-            } })]).process(source, { from });
+            } })]).process(source, { from: from });
 }
 exports.processCss = processCss;
 function concatenateCssAndMinify(inputs, callback) {

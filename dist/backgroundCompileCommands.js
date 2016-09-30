@@ -8,7 +8,7 @@ let cps = Object.create(null);
 function createProject(param) {
     let cp = cps[param.id];
     if (cp) {
-        process.send({ command: "Cannot create project, already exists", param });
+        process.send({ command: "Cannot create project, already exists", param: param });
     }
     else {
         cp = {
@@ -39,7 +39,7 @@ function refreshProject(param) {
         });
     }
     else {
-        process.send({ command: "Cannot refresh nonexisting project", param });
+        process.send({ command: "Cannot refresh nonexisting project", param: param });
     }
 }
 exports.refreshProject = refreshProject;
@@ -48,12 +48,12 @@ function disposeProject(param) {
     if (cp) {
         function dispose() {
             delete cps[param];
-            process.send({ command: "disposed", param });
+            process.send({ command: "disposed", param: param });
         }
         cp.promise.then(dispose, dispose);
     }
     else {
-        process.send({ command: "Cannot dispose nonexisting project", param });
+        process.send({ command: "Cannot dispose nonexisting project", param: param });
     }
 }
 exports.disposeProject = disposeProject;
@@ -89,7 +89,7 @@ function loadTranslations(param) {
         });
     }
     else {
-        process.send({ command: "Cannot loadTranslations to nonexisting project", param });
+        process.send({ command: "Cannot loadTranslations to nonexisting project", param: param });
     }
 }
 exports.loadTranslations = loadTranslations;
@@ -137,14 +137,14 @@ function compile(param) {
         });
     }
     else {
-        process.send({ command: "Cannot compile nonexisting project", param });
+        process.send({ command: "Cannot compile nonexisting project", param: param });
     }
 }
 exports.compile = compile;
 function executePlugins(param) {
     let cp = cps[param.id];
     if (!cp) {
-        process.send({ command: "Cannot compile nonexisting project", param });
+        process.send({ command: "Cannot compile nonexisting project", param: param });
         return;
     }
     bb.setProject(cp.project);
@@ -155,7 +155,7 @@ exports.executePlugins = executePlugins;
 function installDependencies(param) {
     let cp = cps[param.id];
     if (!cp) {
-        process.send({ command: "Cannot compile nonexisting project", param });
+        process.send({ command: "Cannot compile nonexisting project", param: param });
         return;
     }
     let res = dep.installMissingDependencies(cp.project);

@@ -735,6 +735,12 @@ export class CompilationCache {
 
                 if (project.totalBundle) {
                     let mainJsList = (<string[]>mainList).filter((nn) => !/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
+                    let allJsFiles = Object.keys(project.commonJsTemp);
+                    if (allJsFiles.some((n)=>/\/bobriln\/index/.test(n)))
+                        mainJsList.splice(0,0,"node_modules/bobriln/index.js");
+                    else if (allJsFiles.some((n)=>/\/bobril\/index/.test(n))) {
+                        mainJsList.splice(0,0,"node_modules/bobril/index.js");
+                    }
                     let that = this;
                     let bp: bundler.IBundleProject = {
                         compress: project.compress,

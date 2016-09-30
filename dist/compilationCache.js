@@ -62,7 +62,7 @@ class CompilationResult {
             this.errors++;
         else
             this.warnings++;
-        this.messages.push({ fileName: fn, isError, text, pos });
+        this.messages.push({ fileName: fn, isError: isError, text: text, pos: pos });
     }
 }
 exports.CompilationResult = CompilationResult;
@@ -128,7 +128,7 @@ class CompilationCache {
             o = [];
             this.overrides[fn] = o;
         }
-        o.push({ varDecl, value });
+        o.push({ varDecl: varDecl, value: value });
     }
     findVarDecl(project, program, exports, expName) {
         let tc = program.getTypeChecker();
@@ -617,6 +617,12 @@ class CompilationCache {
                 }
                 if (project.totalBundle) {
                     let mainJsList = mainList.filter((nn) => !/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
+                    let allJsFiles = Object.keys(project.commonJsTemp);
+                    if (allJsFiles.some((n) => /\/bobriln\/index/.test(n)))
+                        mainJsList.splice(0, 0, "node_modules/bobriln/index.js");
+                    else if (allJsFiles.some((n) => /\/bobril\/index/.test(n))) {
+                        mainJsList.splice(0, 0, "node_modules/bobril/index.js");
+                    }
                     let that = this;
                     let bp = {
                         compress: project.compress,
@@ -871,12 +877,12 @@ class CompilationCache {
         function resolveModuleExtension(moduleName, nameWithoutExtension, internalModule) {
             let cached = getCachedFileExistence(nameWithoutExtension + '.ts');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
                 return nameWithoutExtension + '.ts';
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.tsx');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
                 return nameWithoutExtension + '.tsx';
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
@@ -884,13 +890,13 @@ class CompilationCache {
                 cached = getCachedFileExistence(nameWithoutExtension + '.js');
                 if (cached.curTime !== null) {
                     cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
-                    project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
+                    project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule: internalModule };
                     return nameWithoutExtension + '.d.ts';
                 }
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule: internalModule };
                 return nameWithoutExtension + '.js';
             }
             return null;

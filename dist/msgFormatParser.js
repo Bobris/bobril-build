@@ -79,7 +79,7 @@ function isError(val) {
 function buildError(msg) {
     if (msg === undefined)
         msg = errorMsg;
-    return { type: 'error', msg, pos: pos - 1, line: curLine, col: curCol };
+    return { type: 'error', msg: msg, pos: pos - 1, line: curLine, col: curCol };
 }
 function skipWs() {
     while (curToken === 9 || curToken === 10 || curToken === 13 || curToken === 32) {
@@ -138,7 +138,7 @@ function parseFormat() {
     let res = {
         type: 'format',
         id: identificator,
-        format
+        format: format
     };
     let name = parseIdentificator();
     if (isError(name))
@@ -254,7 +254,7 @@ function parseFormat() {
             let value = parseMsg(false);
             if (isError(value))
                 return value;
-            options.push({ selector, value });
+            options.push({ selector: selector, value: value });
             skipWs();
         }
         advanceNextToken();
@@ -289,7 +289,7 @@ function parseFormat() {
             let value = parseMsg(false);
             if (isError(value))
                 return value;
-            options.push({ selector, value });
+            options.push({ selector: selector, value: value });
             skipWs();
         }
         advanceNextToken();

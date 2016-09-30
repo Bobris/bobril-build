@@ -131,10 +131,10 @@ class SourceMapBuilder {
         return this.outputBuffer.toBuffer();
     }
     toSourceMapBuffer(sourceRoot) {
-        return new Buffer(JSON.stringify({ version: 3, sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer().toString() }));
+        return new Buffer(JSON.stringify({ version: 3, sourceRoot: sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer().toString() }));
     }
     toSourceMap(sourceRoot) {
-        return { version: 3, sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer() };
+        return { version: 3, sourceRoot: sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer() };
     }
 }
 exports.SourceMapBuilder = SourceMapBuilder;

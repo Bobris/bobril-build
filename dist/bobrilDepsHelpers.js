@@ -119,6 +119,17 @@ function getModuleMap(project) {
     return `R.map = ${JSON.stringify(moduleMap)};`;
 }
 exports.getModuleMap = getModuleMap;
+function requireBobril(project) {
+    if (project.commonJsTemp[project.realRootRel + "node_modules/bobril/index.js"]) {
+        return `R.r('${project.realRootRel}node_modules/bobril/index')
+        `;
+    }
+    if (project.commonJsTemp[project.realRootRel + "node_modules/bobriln/index.js"]) {
+        return `R.r('${project.realRootRel}node_modules/bobriln/index')
+        `;
+    }
+    return "";
+}
 function fastBundleBasedIndexHtml(project) {
     let title = project.htmlTitle || 'Bobril Application';
     return `<!DOCTYPE html><html>
@@ -134,7 +145,7 @@ function fastBundleBasedIndexHtml(project) {
         </script>
         <script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
-            R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');
+            ${requireBobril(project)}R.r('${project.realRootRel}${project.mainJsFile.replace(/\.js$/i, "")}');
         </script>
     </body>
 </html>
@@ -159,7 +170,7 @@ function fastBundleBasedTestHtml(project) {
         </script>
         <script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script>
         <script type="text/javascript">
-            ${reqSpec}
+            ${requireBobril(project)}${reqSpec}
         </script>
     </body>
 </html>

@@ -122,7 +122,7 @@ function savePNG2Buffer(img) {
 }
 exports.savePNG2Buffer = savePNG2Buffer;
 function createImage(width, height) {
-    return pnglib.createImage({ width, height, fill: true });
+    return pnglib.createImage({ width: width, height: height, fill: true });
 }
 exports.createImage = createImage;
 function drawImage(src, dst, dx, dy, sx, sy, width, height) {

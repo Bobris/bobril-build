@@ -50,7 +50,7 @@ class ImgCache {
             return norm;
         }
         ii = {
-            fullName,
+            fullName: fullName,
             normalizedFullName: norm,
             oldModified: null,
             modified: null,
@@ -113,7 +113,7 @@ class ImgBundleCache {
         if (key in this.keys)
             return true;
         let v = {
-            key, normalizedFullName: norm, color, width, height, x, y, bwidth: undefined, bheight: undefined, bx: undefined, by: undefined
+            key: key, normalizedFullName: norm, color: color, width: width, height: height, x: x, y: y, bwidth: undefined, bheight: undefined, bx: undefined, by: undefined
         };
         this.cur.push(v);
         this.keys[key] = v;
@@ -150,7 +150,7 @@ class ImgBundleCache {
                     else
                         c.bheight = inf.height;
                     bundle.push({
-                        inf, ibi: c, width: c.bwidth, height: c.bheight, x: 0, y: 0
+                        inf: inf, ibi: c, width: c.bwidth, height: c.bheight, x: 0, y: 0
                     });
                 }
             }

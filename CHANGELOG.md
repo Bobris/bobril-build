@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.49.3
+--
+
+Bug fix
+-
+
+Hardcoded bundling order for bobril, bobriln to be always before bobril-g11n
+
 0.49.2
 --
 
