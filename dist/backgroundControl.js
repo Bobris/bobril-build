@@ -48,7 +48,7 @@ function startBackgroundProcess(name, callbacks) {
     });
     return (command, param, callbacks) => {
         Object.assign(currentCallbacks, callbacks);
-        child.send({ command: command, param: param });
+        child.send({ command, param });
     };
 }
 exports.startBackgroundProcess = startBackgroundProcess;
@@ -59,7 +59,7 @@ function startWatchProcess(notify) {
     let prevPromise = Promise.resolve();
     let paths = ['**/*.ts?(x)', '**/package.json'];
     plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.updateWatchPaths, paths);
-    watchProcess("watch", { cwd: bb.getCurProjectDir(), paths: paths, filter: '\\.tsx?$', updateTsConfig: true }, {
+    watchProcess("watch", { cwd: bb.getCurProjectDir(), paths, filter: '\\.tsx?$', updateTsConfig: true }, {
         watchChange(param) {
             if (startWatchTime != 0) {
                 console.log("Watching ready in " + (Date.now() - startWatchTime).toFixed(0) + "ms");
@@ -87,7 +87,7 @@ function startCompileProcess(compilationPath) {
         },
         refresh(allFiles) {
             return new Promise((resolve, reject) => {
-                compileProcess("refreshProject", { id: myId, allFiles: allFiles }, {
+                compileProcess("refreshProject", { id: myId, allFiles }, {
                     log(param) { console.log(param); },
                     refreshed(param) {
                         if (param)
@@ -100,7 +100,7 @@ function startCompileProcess(compilationPath) {
         },
         setOptions(options) {
             return new Promise((resolve, reject) => {
-                compileProcess("setProjectOptions", { id: myId, options: options }, {
+                compileProcess("setProjectOptions", { id: myId, options }, {
                     log(param) { console.log(param); },
                     options(param) {
                         resolve(param);

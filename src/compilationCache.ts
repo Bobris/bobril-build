@@ -476,7 +476,11 @@ export class CompilationCache {
                 } else if (result.length == 1) {
                     prom = prom.then(() => {
                         return Promise.resolve(result[0]).then((val) => {
-                            assetMap[assetName] = val;
+                            if (val && val["_BBError"]) {
+                               this.addMessageFromBB(true, 3, val["_BBError"], info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
+                            } else {
+                                assetMap[assetName] = val;
+                            }
                         });
                     });
                 } else {

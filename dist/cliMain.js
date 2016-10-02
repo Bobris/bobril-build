@@ -160,7 +160,7 @@ function startHttpServer(port) {
             }, 10);
         }
     });
-    server.listen({ port: port, exclusive: true });
+    server.listen({ port, exclusive: true });
 }
 function mergeProjectFromServer(opts) {
     Object.assign(bb.getProject(), opts);
