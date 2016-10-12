@@ -81,6 +81,9 @@ export function registerCommands(c: commander.IExportedCommand, consumeCommand: 
             consumeCommand();
             let curProjectDir = bb.currentDirectory();
             let project = bb.createProjectFromDir(curProjectDir);
+            project.logCallback = (text) => {
+                console.log(text);
+            };
             if (!bb.refreshProjectFromPackageJson(project, null)) {
                 process.exit(1);
             }
