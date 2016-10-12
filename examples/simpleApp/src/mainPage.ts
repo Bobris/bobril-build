@@ -1,7 +1,7 @@
 import * as b from 'bobril';
 
 export const mainPage = b.createComponent({
-    render(ctx: b.IBobrilCtx, me: b.IBobrilNode): void {
+    render(_ctx: b.IBobrilCtx, me: b.IBobrilNode): void {
         me.children = [
             { tag: 'h1', children: 'Hello World!' },
             {
@@ -18,5 +18,3 @@ export const mainPage = b.createComponent({
         ];
     }
 });
-
-export default mainPage;
