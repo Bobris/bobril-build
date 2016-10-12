@@ -1,6 +1,6 @@
 {
   "name": "simple-app",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "",
   "typescript": {
     "main": "src/app.ts"
@@ -11,6 +11,6 @@
   "author": "keeema",
   "license": "ISC",
   "dependencies": {
-    "bobril": "^4.41.0"
+    "bobril": "4.*"
   }
 }
