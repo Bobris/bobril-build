@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.49.4
+--
+
+Bug fix
+--
+
+Removed invalid examples.
+
 0.49.3
 --
 
