@@ -56,6 +56,9 @@ specialFiles["loader.js"] = require.resolve("./loader.js");
 specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), 'jasmine-core/jasmine.js');
 specialFiles["jasmine-boot.js"] = require.resolve("./jasmine-boot.js");
 
+let livereloadResolver: () => void;
+let livereloadPromise: Promise<void>;
+
 function respondSpecial(response: http.ServerResponse, name: string) {
     let c = specialFiles[name];
     if (c == null) {
@@ -91,6 +94,22 @@ function handleRequest(request: http.ServerRequest, response: http.ServerRespons
         if (name === 'api/projectdirectory') {
             let project = bb.getProject();
             response.end(project.dir);
+            return;
+        }
+        if (name.substr(0, 15) === 'api/livereload/') {
+            let idx = parseInt(name.substr(15), 10);
+            let waitForReload = () => {
+                if (idx != bb.getProject().liveReloadIdx) response.end("reload");
+                else {
+                    if (!livereloadResolver) {
+                        livereloadPromise = new Promise<void>((resolve, reject) => {
+                            livereloadResolver = resolve;
+                        });
+                    }
+                    livereloadPromise.then(waitForReload);
+                }
+            };
+            waitForReload();
             return;
         }
         if (reUrlTest.test(name)) {
@@ -184,10 +203,37 @@ function mergeProjectFromServer(opts: any) {
     Object.assign(bb.getProject(), opts);
 }
 
+let compileProcess: bb.ICompileProcess;
+
+export function updateProjectOptions(): Promise<any> {
+    return compileProcess.setOptions(bb.getProject());
+}
+
+export function forceInteractiveRecompile(): Promise<any> {
+    return compileProcess.compile().then(v => {
+        compileProcess.setOptions({}).then(opts => {
+            mergeProjectFromServer(opts);
+            return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
+        }).then(() => {
+            if (v.errors == 0) {
+                if (livereloadResolver) {
+                    livereloadResolver();
+                    livereloadResolver = null;
+                }
+            }
+            if (v.hasTests) {
+                if (phantomJsProcess == null)
+                    startTestsInPhantom();
+                bb.testServer.startTest('/test.html');
+            }
+        });
+    });
+}
+
 function interactiveCommand(port: number) {
     bb.mainServer.setProjectDir(bb.getCurProjectDir());
     startHttpServer(port);
-    let compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
+    compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
@@ -199,18 +245,7 @@ function interactiveCommand(port: number) {
         return compileProcess.loadTranslations();
     }).then((opts) => {
         bb.startWatchProcess((allFiles: { [dir: string]: string[] }) => {
-            return compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
-                compileProcess.setOptions({}).then(opts => {
-                    mergeProjectFromServer(opts);
-                    return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
-                }).then(() => {
-                    if (v.hasTests) {
-                        if (phantomJsProcess == null)
-                            startTestsInPhantom();
-                        bb.testServer.startTest('/test.html');
-                    }
-                });
-            });
+            return compileProcess.refresh(allFiles).then(forceInteractiveRecompile);
         });
     });
 }

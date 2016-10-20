@@ -1,6 +1,15 @@
 CHANGELOG
 ===
 
+0.50.0
+--
+
+New features
+-
+
+Livereload. By default it is disabled. First you need to enable it in http://localhost:8080/bb.
+Works both in Bobril and Bobril Native.
+
 0.49.4
 --
 

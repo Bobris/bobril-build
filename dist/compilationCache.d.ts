@@ -68,6 +68,7 @@ export interface IProject {
     };
     outputDir?: string;
     outputSubDir?: string;
+    liveReloadEnabled?: boolean;
     projectJsonTime?: number;
     mainAutoDetected?: boolean;
     lastwrittenIndexHtml?: string;
@@ -104,6 +105,7 @@ export interface IProject {
     pluginsConfig?: {
         [name: string]: any;
     };
+    liveReloadIdx?: number;
 }
 export declare class CompilationResult {
     errors: number;

@@ -19,4 +19,5 @@ __export(require('./mainServer'));
 __export(require('./actions'));
 __export(require('./backgroundControl'));
 __export(require('./pluginsLoader'));
+__export(require('./cliMain'));
 //# sourceMappingURL=index.js.map

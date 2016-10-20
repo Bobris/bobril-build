@@ -124,15 +124,24 @@ export function getModuleMap(project: compilationCache.IProject) {
 }
 
 function requireBobril(project: compilationCache.IProject) {
-    if (project.commonJsTemp[project.realRootRel+"node_modules/bobril/index.js"]) {
+    if (project.commonJsTemp[project.realRootRel + "node_modules/bobril/index.js"]) {
         return `R.r('${project.realRootRel}node_modules/bobril/index')
         `;
     }
-    if (project.commonJsTemp[project.realRootRel+"node_modules/bobriln/index.js"]) {
+    if (project.commonJsTemp[project.realRootRel + "node_modules/bobriln/index.js"]) {
         return `R.r('${project.realRootRel}node_modules/bobriln/index')
         `;
     }
     return "";
+}
+
+let liveReloadCode = "";
+function setupLivereload(project: compilationCache.IProject) {
+    if (!project.liveReloadEnabled) return "";
+    if (liveReloadCode == "") {
+        liveReloadCode = fs.readFileSync(path.join(__dirname, "liveReload.js"), "utf-8");
+    }
+    return `<script type="text/javascript">${liveReloadCode.replace(/##Idx##/, project.liveReloadIdx.toString())}</script>`;
 }
 
 export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
@@ -142,7 +151,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
-    <body>${g11nInit(project)}
+    <body>${g11nInit(project)}${setupLivereload(project)}
         <script type="text/javascript" src="loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${globalDefines(project.defines)}

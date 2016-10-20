@@ -15,3 +15,4 @@ export * from './mainServer';
 export * from './actions';
 export * from './backgroundControl';
 export * from './pluginsLoader';
+export * from './cliMain';

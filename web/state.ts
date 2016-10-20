@@ -63,7 +63,8 @@ export let disconnected = false;
 export let reconnectDelay = 0;
 export let testSvrState: TestSvrState = { agents: [] };
 export let building = false;
-export let actions:IAction[] = [];
+export let actions: IAction[] = [];
+export let liveReload = false;
 export let lastBuildResult: {
     errors: number;
     warnings: number;

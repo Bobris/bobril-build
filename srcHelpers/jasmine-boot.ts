@@ -1,6 +1,6 @@
 declare var jasmineRequire: any;
 
-(function() {
+(function () {
     var jasmine = jasmineRequire.core(jasmineRequire);
     window['jasmine'] = jasmine;
 
@@ -11,7 +11,7 @@ declare var jasmineRequire: any;
 
     env.throwOnExpectationFailure(true);
 
-    env.specFilter = function(spec) {
+    env.specFilter = function (spec) {
         //console.log("Filter "+spec.getFullName());
         return true;
     };
@@ -35,7 +35,7 @@ declare var jasmineRequire: any;
                 perfnow = (() => +(new Date()));
             }
         }
-        
+
         let stack = [];
         let specStart = 0;
         let totalStart = 0;
@@ -69,23 +69,21 @@ declare var jasmineRequire: any;
             let stack: string;
             let err = <any>new Error();
             stack = err.stack || err.stacktrace;
-            if (!stack)
-            {
+            if (!stack) {
                 try {
                     (<any>i).crash.fast++;
                 }
-                catch(err)
-                {
-                stack = err.stack || err.stacktrace;
+                catch (err) {
+                    stack = err.stack || err.stacktrace;
                 }
             }
             bbTest("consoleLog", { message, stack });
         }
-        
+
         // Heavily inspired by https://github.com/NV/console.js
         if (typeof console === 'undefined') {
-            window.console = <any>{
-                toString: function() {
+            (<any>window).console = <any>{
+                toString: function () {
                     return 'Inspired by Console.js version 0.9';
                 }
             };
@@ -297,7 +295,7 @@ declare var jasmineRequire: any;
                 var args = Array.prototype.slice.call(arguments, 0);
                 if (typeof first_arg === 'string' && _interpolate.test(first_arg)) {
                     args.shift();
-                    result.push(first_arg.replace(_interpolate, function() {
+                    result.push(first_arg.replace(_interpolate, function () {
                         return _inspect(args.shift());
                     }));
                 }
@@ -387,7 +385,7 @@ declare var jasmineRequire: any;
     window.clearTimeout = window.clearTimeout;
     window.clearInterval = window.clearInterval;
 
-    window.onload = function() {
+    window.onload = function () {
         env.execute();
     };
 } ());

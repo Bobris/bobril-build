@@ -115,6 +115,7 @@ export interface IProject {
     defines?: { [name: string]: any };
     outputDir?: string;
     outputSubDir?: string;
+    liveReloadEnabled?: boolean;
 
     projectJsonTime?: number;
     mainAutoDetected?: boolean;
@@ -135,6 +136,7 @@ export interface IProject {
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
     pluginsConfig?: { [name: string]: any };
+    liveReloadIdx?: number;
 }
 
 export class CompilationResult {
@@ -302,6 +304,7 @@ export class CompilationCache {
     }
 
     compile(project: IProject): Promise<any> {
+        project.liveReloadIdx = (project.liveReloadIdx | 1);
         let mainList = <string[]>(Array.isArray(project.main) ? project.main : [<string>project.main]);
         mainList = mainList.map(p => path.normalize(p));
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
@@ -477,7 +480,7 @@ export class CompilationCache {
                     prom = prom.then(() => {
                         return Promise.resolve(result[0]).then((val) => {
                             if (val && val["_BBError"]) {
-                               this.addMessageFromBB(true, 3, val["_BBError"], info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
+                                this.addMessageFromBB(true, 3, val["_BBError"], info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
                             } else {
                                 assetMap[assetName] = val;
                             }
@@ -740,10 +743,10 @@ export class CompilationCache {
                 if (project.totalBundle) {
                     let mainJsList = (<string[]>mainList).filter((nn) => !/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
                     let allJsFiles = Object.keys(project.commonJsTemp);
-                    if (allJsFiles.some((n)=>/\/bobriln\/index/.test(n)))
-                        mainJsList.splice(0,0,"node_modules/bobriln/index.js");
-                    else if (allJsFiles.some((n)=>/\/bobril\/index/.test(n))) {
-                        mainJsList.splice(0,0,"node_modules/bobril/index.js");
+                    if (allJsFiles.some((n) => /\/bobriln\/index/.test(n)))
+                        mainJsList.splice(0, 0, "node_modules/bobriln/index.js");
+                    else if (allJsFiles.some((n) => /\/bobril\/index/.test(n))) {
+                        mainJsList.splice(0, 0, "node_modules/bobril/index.js");
                     }
                     let that = this;
                     let bp: bundler.IBundleProject = {
@@ -822,6 +825,9 @@ export class CompilationCache {
 
                 if (project.spriteMerge) {
                     bundleCache.clear(true);
+                }
+                if (this.compilationResult.errors == 0) {
+                    project.liveReloadIdx++;
                 }
                 return null;
             })

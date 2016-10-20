@@ -181,6 +181,7 @@ class CompilationCache {
         return this.compilationResult;
     }
     compile(project) {
+        project.liveReloadIdx = (project.liveReloadIdx | 1);
         let mainList = (Array.isArray(project.main) ? project.main : [project.main]);
         mainList = mainList.map(p => path.normalize(p));
         project.logCallback = project.logCallback || ((text) => console.log(text));
@@ -707,6 +708,9 @@ class CompilationCache {
                 }
                 if (project.spriteMerge) {
                     bundleCache.clear(true);
+                }
+                if (this.compilationResult.errors == 0) {
+                    project.liveReloadIdx++;
                 }
                 return null;
             });

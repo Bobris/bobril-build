@@ -130,6 +130,15 @@ function requireBobril(project) {
     }
     return "";
 }
+let liveReloadCode = "";
+function setupLivereload(project) {
+    if (!project.liveReloadEnabled)
+        return "";
+    if (liveReloadCode == "") {
+        liveReloadCode = fs.readFileSync(path.join(__dirname, "liveReload.js"), "utf-8");
+    }
+    return `<script type="text/javascript">${liveReloadCode.replace(/##Idx##/, project.liveReloadIdx.toString())}</script>`;
+}
 function fastBundleBasedIndexHtml(project) {
     let title = project.htmlTitle || 'Bobril Application';
     return `<!DOCTYPE html><html>
@@ -137,7 +146,7 @@ function fastBundleBasedIndexHtml(project) {
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
-    <body>${g11nInit(project)}
+    <body>${g11nInit(project)}${setupLivereload(project)}
         <script type="text/javascript" src="loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${simpleHelpers_1.globalDefines(project.defines)}

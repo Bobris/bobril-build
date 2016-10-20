@@ -5,6 +5,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 const pathUtils = require("./pathUtils");
 const actions = require("./actions");
 const cp = require('./compileProject');
+const bb = require('./index');
 class Client {
     constructor(owner, id, connection) {
         this.server = owner;
@@ -21,6 +22,13 @@ class Client {
                 }
                 case "runAction": {
                     actions.actionList.invokeAction(data.id);
+                    break;
+                }
+                case "setLiveReload": {
+                    let project = getProject();
+                    project.liveReloadEnabled = data.value;
+                    bb.updateProjectOptions().then(bb.forceInteractiveRecompile);
+                    this.server.sendAll("setLiveReload", data);
                     break;
                 }
                 default: {
@@ -56,6 +64,7 @@ class MainServer {
         let testState = this.testSvr.getState();
         cl.connection.send("testUpdated", testState);
         cl.connection.send("actionsRefresh", actions.actionList.getList());
+        cl.connection.send("setLiveReload", { value: getProject().liveReloadEnabled });
     }
     sendAll(message, data) {
         let kids = Object.keys(this.clients);
