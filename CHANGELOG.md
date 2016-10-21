@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.50.1
+--
+
+Rebuild. Repackage.
+
 0.50.0
 --
 
