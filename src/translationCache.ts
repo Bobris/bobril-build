@@ -315,11 +315,13 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
     private exportLanguageItem(source: string | number, hint: string | number): string {
         let content = "";
+        let stringifyHint = JSON.stringify(hint);
+        stringifyHint = stringifyHint.substring(1, stringifyHint.length -1);
         let stringifySource = JSON.stringify(source);
         stringifySource = stringifySource.substring(1, stringifySource.length -1);
         //content += 'S:' + source + '\r\n';
         content += 'S:' + stringifySource + '\r\n';
-        content += 'I:' + (hint ? hint : '') + '\r\n';
+        content += 'I:' + (stringifyHint ? stringifyHint : '') + '\r\n';
         content += 'T:' + stringifySource + '\r\n';
         // content += 'T:' + source + '\r\n';
         return content;
