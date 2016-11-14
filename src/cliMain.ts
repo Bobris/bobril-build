@@ -348,8 +348,9 @@ export function run() {
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
-        .option("-l, --exportlang <path, lang>", "export specific language")
         .option("-i, --import <path>", "import translated languages")
+        // moznost lang ma pouze rozsirit prikaz export import a v pripade jejiho zavolani exp/imp pouze dany jazyk
+        .option("-l, --lang <lang>", "specify language for import/export")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
         .action((c) => {
@@ -373,6 +374,8 @@ export function run() {
                 if (!trDb.exportUntranslatedLanguages(c["export"]))
                     process.exit(1);
             }
+
+            // nejspis pryc
              if (c["exportlang"]) {
                  let uArgs = c["exportlang"].split(',');
                   if (uArgs.length != 2) {
@@ -380,10 +383,12 @@ export function run() {
                     process.exit(1);
                 }
                 console.log("Export untranslated languages into file " + c["export"] + ".");
-                if (!trDb.exportUntranslatedSpecificLanguage(c["exportlang"])){
+                if (!trDb.exportUntranslatedSpecificLanguage(uArgs[0], uArgs[1])){
                     process.exit(1);
                 }
              }
+
+
             if (c["import"]) {
                 console.log("Import translated languages from file " + c["import"] + ".");
                 if (!trDb.importTranslatedLanguages(c["import"]))

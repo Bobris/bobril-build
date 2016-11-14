@@ -305,7 +305,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             if (lines[i][0] != 'S' || lines[i][1] != ':') throw "Invalid file format. (" + lines[i] + ")";
             if (lines[i + 1][0] != 'I' || lines[i + 1][1] != ':') throw "Invalid file format. (" + lines[i + 1] + ")";
             if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':') throw "Invalid file format. (" + lines[i + 2] + ")";
-            let source = lines[i].substr(2);
+            let source ='"' +  lines[i].substr(2) + '"';
             let hint = lines[i + 1].substr(2);
             let target = lines[i + 2].substr(2);
             callback(source, hint, target);
@@ -350,9 +350,24 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
 
 
-    public exportUntranslatedSpecificLanguage(filePath: string, language?: string): boolean{
-        let pos = this.langs.indexOf(language);
-
+    public exportUntranslatedSpecificLanguage(filePath: string, language: string): boolean{
+         try {
+            let pos = this.langs.indexOf(language);
+            let content = "";
+            let db = this.db;
+             for (let key in db) {
+                let trs = db[key];
+                    if (trs[pos + 4]) continue;
+                    content += this.exportLanguageItem(trs[0], trs[1]);
+            }
+            if (content.length > 0) {
+                fs.writeFileSync(filePath, content, 'utf-8')
+            }
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
         return true;
     }
 
