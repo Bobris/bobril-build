@@ -315,6 +315,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
     private exportLanguageItem(source: string | number, hint: string | number): string {
         let content = "";
+        //content += 'S:' + source + '\r\n';
         content += 'S:' + source + '\r\n';
         content += 'I:' + (hint ? hint : '') + '\r\n';
         content += 'T:' + source + '\r\n';
