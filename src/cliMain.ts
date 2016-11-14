@@ -348,6 +348,7 @@ export function run() {
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
+        .option("-l, --export <path>", "export specific language")
         .option("-i, --import <path>", "import translated languages")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
