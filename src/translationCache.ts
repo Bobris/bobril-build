@@ -315,14 +315,17 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
     private exportLanguageItem(source: string | number, hint: string | number): string {
         let content = "";
+        let stringifySource = JSON.stringify(source);
+        stringifySource = stringifySource.substring(1, stringifySource.length -1);
         //content += 'S:' + source + '\r\n';
-        content += 'S:' + source + '\r\n';
+        content += 'S:' + stringifySource + '\r\n';
         content += 'I:' + (hint ? hint : '') + '\r\n';
-        content += 'T:' + source + '\r\n';
+        content += 'T:' + stringifySource + '\r\n';
+        // content += 'T:' + source + '\r\n';
         return content;
     }
 
-    public exportUntranslatedLanguages(filePath: string): boolean {
+    public exportUntranslatedLanguages(filePath: string, language?: string): boolean {
         try {
             let content = "";
             let db = this.db;
@@ -344,6 +347,16 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         }
         return true;
     }
+
+
+
+    public exportUntranslatedSpecificLanguage(filePath: string, language?: string): boolean{
+        let pos = this.langs.indexOf(language);
+
+        return true;
+    }
+
+
 
     public makeUnionOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean {
         try {

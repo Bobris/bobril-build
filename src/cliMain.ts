@@ -348,7 +348,7 @@ export function run() {
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
-        .option("-l, --export <path>", "export specific language")
+        .option("-l, --exportlang <path, lang>", "export specific language")
         .option("-i, --import <path>", "import translated languages")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
@@ -373,6 +373,17 @@ export function run() {
                 if (!trDb.exportUntranslatedLanguages(c["export"]))
                     process.exit(1);
             }
+             if (c["exportlang"]) {
+                 let uArgs = c["exportlang"].split(',');
+                  if (uArgs.length != 2) {
+                    console.log("Invalid count of parameters.")
+                    process.exit(1);
+                }
+                console.log("Export untranslated languages into file " + c["export"] + ".");
+                if (!trDb.exportUntranslatedSpecificLanguage(c["exportlang"])){
+                    process.exit(1);
+                }
+             }
             if (c["import"]) {
                 console.log("Import translated languages from file " + c["import"] + ".");
                 if (!trDb.importTranslatedLanguages(c["import"]))
