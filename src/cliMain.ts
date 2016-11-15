@@ -370,7 +370,7 @@ export function run() {
             }
             if (c["export"]) {
                 console.log("Export untranslated languages into file " + c["export"] + ".");
-                if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"]))
+                if (!trDb.exportUntranslatedLanguages(c["export"]))
                     process.exit(1);
             }
 

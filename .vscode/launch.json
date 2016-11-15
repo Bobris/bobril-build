@@ -8,8 +8,9 @@
 			"request": "launch",
 			"program": "${workspaceRoot}\\src\\cli.ts",
 			"stopOnEntry": false,
-			"args": ["b"],
-			"cwd": "${workspaceRoot}",
+			"args": ["t -e cz"],
+			"cwd": "${workspaceRoot}\\examples\\simpleApp\\",
+			//"cwd": "d:\\bobril-build\\examples\\simpleApp\\",
 			"preLaunchTask": null,
 			"runtimeExecutable": null,
 			"runtimeArgs": [
