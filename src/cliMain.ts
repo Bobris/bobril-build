@@ -379,7 +379,7 @@ export function run() {
              if (c["exportlang"]) {
                  let uArgs = c["exportlang"].split(',');
                   if (uArgs.length != 2) {
-                    console.log("Invalid count of parameters.")
+                    console.log("Invalid count of parameters.");
                     process.exit(1);
                 }
                 console.log("Export untranslated languages into file " + c["export"] + ".");

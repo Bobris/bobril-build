@@ -305,9 +305,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             if (lines[i][0] != 'S' || lines[i][1] != ':') throw "Invalid file format. (" + lines[i] + ")";
             if (lines[i + 1][0] != 'I' || lines[i + 1][1] != ':') throw "Invalid file format. (" + lines[i + 1] + ")";
             if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':') throw "Invalid file format. (" + lines[i + 2] + ")";
-            let source ='"' +  lines[i].substr(2) + '"';
+            let source =lines[i].substr(2);
+            source = '"' + JSON.parse(source) + '"';
             let hint = lines[i + 1].substr(2);
+            hint = '"' + JSON.parse(hint) + '"';
             let target = lines[i + 2].substr(2);
+            target = '"' + JSON.parse(target) + '"';
             callback(source, hint, target);
             i += 3;
         }
