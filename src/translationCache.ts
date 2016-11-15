@@ -36,7 +36,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         this.changeInMessageIds = false;
     }
 
+    private printAddMess(name: string):void{
+        console.log("ukladam vami vlozeny jazyk");
+        console.log(name);
+    }
     addLang(name: string): number {
+        this.printAddMess(name);
         let pos = this.langs.indexOf(name);
         if (pos >= 0) return pos;
         this.langs.push(name);
@@ -97,6 +102,8 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     }
 
     removeLang(lang: string) {
+        console.log("i am here, in remove method");
+        console.log(lang);
         let pos = this.langs.indexOf(lang);
         if (pos < 0) return;
         pos += indexOfLangsMessages;

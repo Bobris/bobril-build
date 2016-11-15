@@ -359,6 +359,7 @@ export function run() {
             let trDb = new bb.TranslationDb();
             trDb.loadLangDbs(trDir);
             if (c["addlang"]) {
+                console.log("my text");
                 console.log("Adding locale " + c["addlang"]);
                 trDb.addLang(c["addlang"]);
                 trDb.saveLangDbs(trDir);
@@ -371,7 +372,7 @@ export function run() {
             if (c["export"]) {
                 console.log("Export untranslated languages into file " + c["export"] + ".");
                 if (!trDb.exportUntranslatedLanguages(c["export"]))
-                    process.exit(1);
+                process.exit(1);
             }
 
 
