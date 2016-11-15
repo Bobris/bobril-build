@@ -36,7 +36,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         this.changeInMessageIds = false;
     }
 
+    private printAddMess(name: string):void{
+        console.log("ukladam vami vlozeny jazyk");
+        console.log(name);
+    }
     addLang(name: string): number {
+        this.printAddMess(name);
         let pos = this.langs.indexOf(name);
         if (pos >= 0) return pos;
         this.langs.push(name);
@@ -97,6 +102,8 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     }
 
     removeLang(lang: string) {
+        console.log("i am here, in remove method");
+        console.log(lang);
         let pos = this.langs.indexOf(lang);
         if (pos < 0) return;
         pos += indexOfLangsMessages;
@@ -305,9 +312,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             if (lines[i][0] != 'S' || lines[i][1] != ':') throw "Invalid file format. (" + lines[i] + ")";
             if (lines[i + 1][0] != 'I' || lines[i + 1][1] != ':') throw "Invalid file format. (" + lines[i + 1] + ")";
             if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':') throw "Invalid file format. (" + lines[i + 2] + ")";
-            let source = lines[i].substr(2);
+            let source =lines[i].substr(2);
+            source = '"' + JSON.parse(source) + '"';
             let hint = lines[i + 1].substr(2);
+            hint = '"' + JSON.parse(hint) + '"';
             let target = lines[i + 2].substr(2);
+            target = '"' + JSON.parse(target) + '"';
             callback(source, hint, target);
             i += 3;
         }
@@ -315,20 +325,31 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
     private exportLanguageItem(source: string | number, hint: string | number): string {
         let content = "";
-        content += 'S:' + source + '\r\n';
-        content += 'I:' + (hint ? hint : '') + '\r\n';
-        content += 'T:' + source + '\r\n';
+        let stringifyHint = JSON.stringify(hint);
+        stringifyHint = stringifyHint.substring(1, stringifyHint.length -1);
+        let stringifySource = JSON.stringify(source);
+        stringifySource = stringifySource.substring(1, stringifySource.length -1);
+        content += 'S:' + stringifySource + '\r\n';
+        content += 'I:' + (stringifyHint ? stringifyHint : '') + '\r\n';
+        content += 'T:' + stringifySource + '\r\n';
         return content;
     }
 
-    public exportUntranslatedLanguages(filePath: string): boolean {
+    public exportUntranslatedLanguages(filePath: string, language?: string): boolean {
         try {
+            let pos = this.langs.indexOf(language);
             let content = "";
             let db = this.db;
             for (let key in db) {
                 let trs = db[key];
-                for (let i = 0; i < this.langs.length; i++) {
+                if(language === undefined){
+                    for (let i = 0; i < this.langs.length; i++) {
                     if (trs[i + 4]) continue;
+                    content += this.exportLanguageItem(trs[0], trs[1]);
+                    break;
+                    }
+                }else{
+                    if (trs[pos + 4]) continue;
                     content += this.exportLanguageItem(trs[0], trs[1]);
                     break;
                 }
@@ -343,6 +364,31 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         }
         return true;
     }
+
+
+
+    public exportUntranslatedSpecificLanguage(filePath: string, language: string): boolean{
+         try {
+            let pos = this.langs.indexOf(language);
+            let content = "";
+            let db = this.db;
+             for (let key in db) {
+                let trs = db[key];
+                    if (trs[pos + 4]) continue;
+                    content += this.exportLanguageItem(trs[0], trs[1]);
+            }
+            if (content.length > 0) {
+                fs.writeFileSync(filePath, content, 'utf-8')
+            }
+        }
+        catch (ex) {
+            console.error(ex);
+            return false;
+        }
+        return true;
+    }
+
+
 
     public makeUnionOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean {
         try {

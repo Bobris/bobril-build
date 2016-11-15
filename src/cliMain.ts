@@ -349,6 +349,7 @@ export function run() {
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
         .option("-i, --import <path>", "import translated languages")
+        .option("-l, --lang <lang>", "specify language for import/export")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
         .action((c) => {
@@ -358,6 +359,7 @@ export function run() {
             let trDb = new bb.TranslationDb();
             trDb.loadLangDbs(trDir);
             if (c["addlang"]) {
+                console.log("my text");
                 console.log("Adding locale " + c["addlang"]);
                 trDb.addLang(c["addlang"]);
                 trDb.saveLangDbs(trDir);
@@ -370,8 +372,10 @@ export function run() {
             if (c["export"]) {
                 console.log("Export untranslated languages into file " + c["export"] + ".");
                 if (!trDb.exportUntranslatedLanguages(c["export"]))
-                    process.exit(1);
+                process.exit(1);
             }
+
+
             if (c["import"]) {
                 console.log("Import translated languages from file " + c["import"] + ".");
                 if (!trDb.importTranslatedLanguages(c["import"]))
