@@ -91,7 +91,7 @@ function defaultResolveRequire(name: string, from: string, fileExists: (name: st
             let content: any;
             try {
                 content = JSON.parse(packageJson);
-                tryName = path.join(curDir, 'node_modules', name, (<any>content).main || "index.js");
+                tryName = path.join(curDir, 'node_modules', name, (<any>content)["jsnext:main"] || (<any>content).main || "index.js");
             } catch (err) {
                 return null;
             }

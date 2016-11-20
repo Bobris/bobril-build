@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.51.0
+--
+
+In bundling prefer "jsnext:main" in package.json which fixes importing typescript-collections, but it more like workaround due to umd.js does not work in "use strict" context. As positive sideeffect due to not needing UMD loader resulting bundle is 5kb shorter.
+
 0.50.1
 --
 
