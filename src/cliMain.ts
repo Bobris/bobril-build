@@ -349,6 +349,7 @@ export function run() {
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
         .option("-i, --import <path>", "import translated languages")
+        .option("-l, --lang <lang>", "specify language for import/export")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
         .action((c) => {
@@ -368,8 +369,9 @@ export function run() {
                 trDb.saveLangDbs(trDir);
             }
             if (c["export"]) {
-                console.log("Export untranslated languages into file " + c["export"] + ".");
-                if (!trDb.exportUntranslatedLanguages(c["export"]))
+               c["lang"] ? console.log("Export " +c["lang"] + " language into file " + c["export"] + ".")
+                          : console.log("Export untranslated languages into file " + c["export"] + ".");
+                if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"]))
                     process.exit(1);
             }
             if (c["import"]) {
