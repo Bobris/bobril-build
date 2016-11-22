@@ -292,7 +292,11 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             return false;
         }
     }
-
+    private parseText(text:string){
+        text = '"' + text + '"';
+        text = JSON.parse(text);
+        return text;
+    }
     private importTranslatedLanguagesInternal(filePath: string, callback: (source: string, hint: string, target: string) => void) {
         let content = fs.readFileSync(filePath, "utf-8");
         content = content.replace(/\r\n|\n|\r/g, "\n");
@@ -306,8 +310,11 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             if (lines[i + 1][0] != 'I' || lines[i + 1][1] != ':') throw "Invalid file format. (" + lines[i + 1] + ")";
             if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':') throw "Invalid file format. (" + lines[i + 2] + ")";
             let source = lines[i].substr(2);
+            source = this.parseText(source);
             let hint = lines[i + 1].substr(2);
+            hint = this.parseText(hint);
             let target = lines[i + 2].substr(2);
+            target = this.parseText(target);
             callback(source, hint, target);
             i += 3;
         }
