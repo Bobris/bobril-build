@@ -369,8 +369,8 @@ export function run() {
                 trDb.saveLangDbs(trDir);
             }
             if (c["export"]) {
-               c["lang"] ? console.log("Export " +c["lang"] + " language into file " + c["export"] + ".")
-                          : console.log("Export untranslated languages into file " + c["export"] + ".");
+                c["lang"] ? console.log("Export " + c["lang"] + " language into file " + c["export"] + ".")
+                    : console.log("Export untranslated languages into file " + c["export"] + ".");
                 if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"]))
                     process.exit(1);
             }

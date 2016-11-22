@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.52.0
+--
+
+Strings for translation are now escaped so new lines inside strings will work ok. Allow to export just specific language.
+
 0.51.0
 --
 

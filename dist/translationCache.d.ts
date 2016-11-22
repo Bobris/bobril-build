@@ -40,6 +40,7 @@ export declare class TranslationDb implements CompilationCache.ICompilationTrans
     getForTranslationLang(lang: string): [string, string, string, number, string][];
     setForTranslationLang(lang: string, trs: [string, string, string, number, string][]): void;
     importTranslatedLanguages(filePath: string): boolean;
+    private parseText(text);
     private importTranslatedLanguagesInternal(filePath, callback);
     private exportLanguageItem(source, hint);
     exportUntranslatedLanguages(filePath: string, language?: string): boolean;

@@ -292,7 +292,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             return false;
         }
     }
-    private parseText(text:string){
+    private parseText(text: string) {
         text = '"' + text + '"';
         text = JSON.parse(text);
         return text;
@@ -323,12 +323,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     private exportLanguageItem(source: string | number, hint: string | number): string {
         let content = "";
         let stringifyHint = hint;
-        if(stringifyHint != null){
+        if (stringifyHint != null) {
             stringifyHint = JSON.stringify(hint);
-            stringifyHint = stringifyHint.substring(1, stringifyHint.length -1);
+            stringifyHint = stringifyHint.substring(1, stringifyHint.length - 1);
         }
         let stringifySource = JSON.stringify(source);
-        stringifySource = stringifySource.substring(1, stringifySource.length -1);
+        stringifySource = stringifySource.substring(1, stringifySource.length - 1);
         content += 'S:' + stringifySource + '\r\n';
         content += 'I:' + (stringifyHint ? stringifyHint : '') + '\r\n';
         content += 'T:' + stringifySource + '\r\n';
@@ -338,22 +338,21 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     public exportUntranslatedLanguages(filePath: string, language?: string): boolean {
         try {
             let pos = this.langs.indexOf(language);
-             if(language != undefined && pos == -1){
-                        console.log();
-                        console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
-                        return false;
-                    }
+            if (language != undefined && pos == -1) {
+                console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
+                return false;
+            }
             let content = "";
             let db = this.db;
             for (let key in db) {
                 let trs = db[key];
-                if(language === undefined){
+                if (language === undefined) {
                     for (let i = 0; i < this.langs.length; i++) {
-                    if (trs[i + 4]) continue;
-                    content += this.exportLanguageItem(trs[0], trs[1]);
-                    break;
+                        if (trs[i + 4]) continue;
+                        content += this.exportLanguageItem(trs[0], trs[1]);
+                        break;
                     }
-                }else{
+                } else {
                     if (trs[pos + 4]) continue;
                     content += this.exportLanguageItem(trs[0], trs[1]);
                 }

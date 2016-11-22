@@ -276,6 +276,11 @@ class TranslationDb {
             return false;
         }
     }
+    parseText(text) {
+        text = '"' + text + '"';
+        text = JSON.parse(text);
+        return text;
+    }
     importTranslatedLanguagesInternal(filePath, callback) {
         let content = fs.readFileSync(filePath, "utf-8");
         content = content.replace(/\r\n|\n|\r/g, "\n");
@@ -292,8 +297,11 @@ class TranslationDb {
             if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':')
                 throw "Invalid file format. (" + lines[i + 2] + ")";
             let source = lines[i].substr(2);
+            source = this.parseText(source);
             let hint = lines[i + 1].substr(2);
+            hint = this.parseText(hint);
             let target = lines[i + 2].substr(2);
+            target = this.parseText(target);
             callback(source, hint, target);
             i += 3;
         }
@@ -316,7 +324,6 @@ class TranslationDb {
         try {
             let pos = this.langs.indexOf(language);
             if (language != undefined && pos == -1) {
-                console.log();
                 console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
                 return false;
             }
