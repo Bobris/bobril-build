@@ -315,22 +315,40 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
 
     private exportLanguageItem(source: string | number, hint: string | number): string {
         let content = "";
-        content += 'S:' + source + '\r\n';
-        content += 'I:' + (hint ? hint : '') + '\r\n';
-        content += 'T:' + source + '\r\n';
+        let stringifyHint = hint;
+        if(stringifyHint != null){
+            stringifyHint = JSON.stringify(hint);
+            stringifyHint = stringifyHint.substring(1, stringifyHint.length -1);
+        }
+        let stringifySource = JSON.stringify(source);
+        stringifySource = stringifySource.substring(1, stringifySource.length -1);
+        content += 'S:' + stringifySource + '\r\n';
+        content += 'I:' + (stringifyHint ? stringifyHint : '') + '\r\n';
+        content += 'T:' + stringifySource + '\r\n';
         return content;
     }
 
-    public exportUntranslatedLanguages(filePath: string): boolean {
+    public exportUntranslatedLanguages(filePath: string, language?: string): boolean {
         try {
+            let pos = this.langs.indexOf(language);
+             if(language != undefined && pos == -1){
+                        console.log();
+                        console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
+                        return false;
+                    }
             let content = "";
             let db = this.db;
             for (let key in db) {
                 let trs = db[key];
-                for (let i = 0; i < this.langs.length; i++) {
+                if(language === undefined){
+                    for (let i = 0; i < this.langs.length; i++) {
                     if (trs[i + 4]) continue;
                     content += this.exportLanguageItem(trs[0], trs[1]);
                     break;
+                    }
+                }else{
+                    if (trs[pos + 4]) continue;
+                    content += this.exportLanguageItem(trs[0], trs[1]);
                 }
             }
             if (content.length > 0) {

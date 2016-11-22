@@ -42,7 +42,7 @@ export declare class TranslationDb implements CompilationCache.ICompilationTrans
     importTranslatedLanguages(filePath: string): boolean;
     private importTranslatedLanguagesInternal(filePath, callback);
     private exportLanguageItem(source, hint);
-    exportUntranslatedLanguages(filePath: string): boolean;
+    exportUntranslatedLanguages(filePath: string, language?: string): boolean;
     makeUnionOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean;
     makeSubtractOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean;
     private saveExportedLanguages(outputPath, data);
