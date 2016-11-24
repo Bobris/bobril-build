@@ -242,13 +242,18 @@ class TranslationDb {
             item[pos] = row[0];
         }
     }
-    importTranslatedLanguages(filePath) {
+    importTranslatedLanguage(filePathFrom, filePathTo) {
         try {
-            let language = path.basename(filePath, ".txt");
+            let normalizedPath = pathUtils.normalizePath(filePathFrom);
+            let language = path.basename(normalizedPath, ".txt");
+            if (filePathTo != undefined) {
+                normalizedPath = pathUtils.normalizePath(filePathTo);
+                language = path.basename(normalizedPath, ".json");
+            }
             let languageIndex = this.langs.indexOf(language);
             if (languageIndex == -1)
                 throw "Language '" + language + "' does not exist. Probably file name is not valid.";
-            this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
+            this.importTranslatedLanguageInternal(filePathFrom, (source, hint, target) => {
                 let key = this.buildKey(source, hint, true);
                 let trs = this.db[key];
                 if (trs) {
@@ -276,7 +281,12 @@ class TranslationDb {
             return false;
         }
     }
-    importTranslatedLanguagesInternal(filePath, callback) {
+    parseText(text) {
+        text = '"' + text + '"';
+        text = JSON.parse(text);
+        return text;
+    }
+    importTranslatedLanguageInternal(filePath, callback) {
         let content = fs.readFileSync(filePath, "utf-8");
         content = content.replace(/\r\n|\n|\r/g, "\n");
         let lines = content.split("\n");
@@ -292,8 +302,11 @@ class TranslationDb {
             if (lines[i + 2][0] != 'T' || lines[i + 2][1] != ':')
                 throw "Invalid file format. (" + lines[i + 2] + ")";
             let source = lines[i].substr(2);
+            source = this.parseText(source);
             let hint = lines[i + 1].substr(2);
+            hint = this.parseText(hint);
             let target = lines[i + 2].substr(2);
+            target = this.parseText(target);
             callback(source, hint, target);
             i += 3;
         }
@@ -312,9 +325,18 @@ class TranslationDb {
         content += 'T:' + stringifySource + '\r\n';
         return content;
     }
-    exportUntranslatedLanguages(filePath, language) {
+    getLanguageFromSpecificFile(path) {
+        let sourceContent = fs.readFileSync(path, "utf-8");
+        let parseContent = JSON.parse(sourceContent);
+        return parseContent[0];
+    }
+    exportUntranslatedLanguages(filePath, language, specificPath) {
         try {
-            let pos = this.langs.indexOf(language);
+            let lang = language;
+            if (specificPath != undefined) {
+                lang = this.getLanguageFromSpecificFile(specificPath);
+            }
+            let pos = this.langs.indexOf(lang);
             if (language != undefined && pos == -1) {
                 console.log();
                 console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
@@ -324,7 +346,7 @@ class TranslationDb {
             let db = this.db;
             for (let key in db) {
                 let trs = db[key];
-                if (language === undefined) {
+                if (language === undefined && specificPath === undefined) {
                     for (let i = 0; i < this.langs.length; i++) {
                         if (trs[i + 4])
                             continue;
@@ -356,8 +378,8 @@ class TranslationDb {
             let fn = function (source, hint, target) {
                 data[THIS.buildKey(source, hint, false)] = { 'source': source, 'hint': hint };
             };
-            this.importTranslatedLanguagesInternal(filePath1, fn);
-            this.importTranslatedLanguagesInternal(filePath2, fn);
+            this.importTranslatedLanguageInternal(filePath1, fn);
+            this.importTranslatedLanguageInternal(filePath2, fn);
             this.saveExportedLanguages(outputPath, data);
             return true;
         }
@@ -370,10 +392,10 @@ class TranslationDb {
         try {
             let data;
             data = Object.create(null);
-            this.importTranslatedLanguagesInternal(filePath1, (source, hint, target) => {
+            this.importTranslatedLanguageInternal(filePath1, (source, hint, target) => {
                 data[this.buildKey(source, hint, false)] = { 'source': source, 'hint': hint };
             });
-            this.importTranslatedLanguagesInternal(filePath2, (source, hint, target) => {
+            this.importTranslatedLanguageInternal(filePath2, (source, hint, target) => {
                 let key = this.buildKey(source, hint, false);
                 if (data[key]) {
                     delete data[key];
