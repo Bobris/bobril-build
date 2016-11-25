@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.53.0
+--
+
+Allow to use conversion JSON to TXT file for translation independently to bobril-build project.
+
 0.52.0
 --
 
