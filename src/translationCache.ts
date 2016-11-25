@@ -261,12 +261,17 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         }
     }
 
-    public importTranslatedLanguages(filePath: string): boolean {
+    public importTranslatedLanguage(filePathFrom: string, filePathTo?: string): boolean {
         try {
-            let language = path.basename(filePath, ".txt");
+            let normalizedPath = pathUtils.normalizePath(filePathFrom);
+            let language = path.basename(normalizedPath, ".txt");
+            if (filePathTo != undefined) {
+                normalizedPath = pathUtils.normalizePath(filePathTo);
+                language = path.basename(normalizedPath, ".json");
+            }
             let languageIndex = this.langs.indexOf(language);
             if (languageIndex == -1) throw "Language '" + language + "' does not exist. Probably file name is not valid.";
-            this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
+            this.importTranslatedLanguageInternal(filePathFrom, (source, hint, target) => {
                 let key = this.buildKey(source, hint, true);
                 let trs = this.db[key];
                 if (trs) {
@@ -297,7 +302,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         text = JSON.parse(text);
         return text;
     }
-    private importTranslatedLanguagesInternal(filePath: string, callback: (source: string, hint: string, target: string) => void) {
+    private importTranslatedLanguageInternal(filePath: string, callback: (source: string, hint: string, target: string) => void) {
         let content = fs.readFileSync(filePath, "utf-8");
         content = content.replace(/\r\n|\n|\r/g, "\n");
         let lines = content.split("\n");
@@ -335,10 +340,21 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         return content;
     }
 
-    public exportUntranslatedLanguages(filePath: string, language?: string): boolean {
+    public getLanguageFromSpecificFile(path: string) {
+        let sourceContent = fs.readFileSync(path, "utf-8");
+        let parseContent = JSON.parse(sourceContent);
+        return parseContent[0];
+    }
+
+    public exportUntranslatedLanguages(filePath: string, language?: string, specificPath?: string): boolean {
         try {
-            let pos = this.langs.indexOf(language);
+            let lang = language;
+            if (specificPath != undefined) {
+                lang = this.getLanguageFromSpecificFile(specificPath);
+            }
+            let pos = this.langs.indexOf(lang);
             if (language != undefined && pos == -1) {
+                console.log();
                 console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
                 return false;
             }
@@ -346,7 +362,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             let db = this.db;
             for (let key in db) {
                 let trs = db[key];
-                if (language === undefined) {
+                if (language === undefined && specificPath === undefined) {
                     for (let i = 0; i < this.langs.length; i++) {
                         if (trs[i + 4]) continue;
                         content += this.exportLanguageItem(trs[0], trs[1]);
@@ -376,8 +392,8 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             let fn = function (source: string, hint: string, target: string) {
                 data[THIS.buildKey(source, hint, false)] = { 'source': source, 'hint': hint }
             }
-            this.importTranslatedLanguagesInternal(filePath1, fn);
-            this.importTranslatedLanguagesInternal(filePath2, fn);
+            this.importTranslatedLanguageInternal(filePath1, fn);
+            this.importTranslatedLanguageInternal(filePath2, fn);
             this.saveExportedLanguages(outputPath, data);
             return true;
         }
@@ -391,10 +407,10 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         try {
             let data: { messsageAndHint: string, data: { source: string, hint: string } };
             data = Object.create(null);
-            this.importTranslatedLanguagesInternal(filePath1, (source: string, hint: string, target: string) => {
+            this.importTranslatedLanguageInternal(filePath1, (source: string, hint: string, target: string) => {
                 data[this.buildKey(source, hint, false)] = { 'source': source, 'hint': hint }
             });
-            this.importTranslatedLanguagesInternal(filePath2, (source: string, hint: string, target: string) => {
+            this.importTranslatedLanguageInternal(filePath2, (source: string, hint: string, target: string) => {
                 let key = this.buildKey(source, hint, false);
                 if (data[key]) {
                     delete data[key];
