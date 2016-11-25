@@ -348,9 +348,8 @@ export function run() {
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
-        .option("-i, --import <path>", "import translated language")
-        .option("-p, --specificPath <path>", "specify path for export from / import to ")
-        .option("-l, --lang <lang>", "specify language for export")
+        .option("-i, --import <path>", "import translated languages")
+        .option("-l, --lang <lang>", "specify language for import/export")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
         .action((c) => {
@@ -358,11 +357,7 @@ export function run() {
             let project = bb.createProjectFromDir(bb.currentDirectory());
             let trDir = path.join(project.dir, "translations");
             let trDb = new bb.TranslationDb();
-            let trDbSingle = new bb.TranslationDb();
             trDb.loadLangDbs(trDir);
-            if (c["specificPath"] != undefined) {
-                trDbSingle.loadLangDb(c["specificPath"]);
-            }
             if (c["addlang"]) {
                 console.log("Adding locale " + c["addlang"]);
                 trDb.addLang(c["addlang"]);
@@ -374,34 +369,16 @@ export function run() {
                 trDb.saveLangDbs(trDir);
             }
             if (c["export"]) {
-                if (c["specificPath"] === undefined) {
-                    if (c["lang"] != undefined) {
-                        console.log("Export untranslated language " + c["lang"] + " into file " + c["export"])
-                    } else {
-                        console.log("Export untranslated languages into file " + c["export"]);
-                    }
-                    if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
-                        process.exit(1);
-                } else {
-                    console.log("Export file from " + c["specificPath"] + " into file " + c["export"]);
-                }
-                if (!trDbSingle.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
+                c["lang"] ? console.log("Export " + c["lang"] + " language into file " + c["export"] + ".")
+                    : console.log("Export untranslated languages into file " + c["export"] + ".");
+                if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"]))
                     process.exit(1);
             }
             if (c["import"]) {
-                let langPath = c["specificPath"];
-                if (langPath === undefined) {
-                    console.log("Import translated language from file " + c["import"] + ".");
-                    if (!trDb.importTranslatedLanguage(c["import"], langPath))
-                        process.exit(1);
-                    trDb.saveLangDbs(trDir);
-                } else {
-                    console.log("Import translated language from file " + c["import"] + " to file " + langPath);
-                    if (!trDbSingle.importTranslatedLanguage(c["import"], langPath))
-                        process.exit(1);
-                    let lang = trDbSingle.getLanguageFromSpecificFile(langPath);
-                    trDbSingle.saveLangDb(langPath, lang);
-                }
+                console.log("Import translated languages from file " + c["import"] + ".");
+                if (!trDb.importTranslatedLanguages(c["import"]))
+                    process.exit(1);
+                trDb.saveLangDbs(trDir);
             }
             if (c["union"]) {
                 let uArgs = c["union"].split(',');

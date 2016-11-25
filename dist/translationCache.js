@@ -242,18 +242,13 @@ class TranslationDb {
             item[pos] = row[0];
         }
     }
-    importTranslatedLanguage(filePathFrom, filePathTo) {
+    importTranslatedLanguages(filePath) {
         try {
-            let normalizedPath = pathUtils.normalizePath(filePathFrom);
-            let language = path.basename(normalizedPath, ".txt");
-            if (filePathTo != undefined) {
-                normalizedPath = pathUtils.normalizePath(filePathTo);
-                language = path.basename(normalizedPath, ".json");
-            }
+            let language = path.basename(filePath, ".txt");
             let languageIndex = this.langs.indexOf(language);
             if (languageIndex == -1)
                 throw "Language '" + language + "' does not exist. Probably file name is not valid.";
-            this.importTranslatedLanguageInternal(filePathFrom, (source, hint, target) => {
+            this.importTranslatedLanguagesInternal(filePath, (source, hint, target) => {
                 let key = this.buildKey(source, hint, true);
                 let trs = this.db[key];
                 if (trs) {
@@ -286,7 +281,7 @@ class TranslationDb {
         text = JSON.parse(text);
         return text;
     }
-    importTranslatedLanguageInternal(filePath, callback) {
+    importTranslatedLanguagesInternal(filePath, callback) {
         let content = fs.readFileSync(filePath, "utf-8");
         content = content.replace(/\r\n|\n|\r/g, "\n");
         let lines = content.split("\n");
@@ -325,20 +320,10 @@ class TranslationDb {
         content += 'T:' + stringifySource + '\r\n';
         return content;
     }
-    getLanguageFromSpecificFile(path) {
-        let sourceContent = fs.readFileSync(path, "utf-8");
-        let parseContent = JSON.parse(sourceContent);
-        return parseContent[0];
-    }
-    exportUntranslatedLanguages(filePath, language, specificPath) {
+    exportUntranslatedLanguages(filePath, language) {
         try {
-            let lang = language;
-            if (specificPath != undefined) {
-                lang = this.getLanguageFromSpecificFile(specificPath);
-            }
-            let pos = this.langs.indexOf(lang);
+            let pos = this.langs.indexOf(language);
             if (language != undefined && pos == -1) {
-                console.log();
                 console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
                 return false;
             }
@@ -346,7 +331,7 @@ class TranslationDb {
             let db = this.db;
             for (let key in db) {
                 let trs = db[key];
-                if (language === undefined && specificPath === undefined) {
+                if (language === undefined) {
                     for (let i = 0; i < this.langs.length; i++) {
                         if (trs[i + 4])
                             continue;
@@ -378,8 +363,8 @@ class TranslationDb {
             let fn = function (source, hint, target) {
                 data[THIS.buildKey(source, hint, false)] = { 'source': source, 'hint': hint };
             };
-            this.importTranslatedLanguageInternal(filePath1, fn);
-            this.importTranslatedLanguageInternal(filePath2, fn);
+            this.importTranslatedLanguagesInternal(filePath1, fn);
+            this.importTranslatedLanguagesInternal(filePath2, fn);
             this.saveExportedLanguages(outputPath, data);
             return true;
         }
@@ -392,10 +377,10 @@ class TranslationDb {
         try {
             let data;
             data = Object.create(null);
-            this.importTranslatedLanguageInternal(filePath1, (source, hint, target) => {
+            this.importTranslatedLanguagesInternal(filePath1, (source, hint, target) => {
                 data[this.buildKey(source, hint, false)] = { 'source': source, 'hint': hint };
             });
-            this.importTranslatedLanguageInternal(filePath2, (source, hint, target) => {
+            this.importTranslatedLanguagesInternal(filePath2, (source, hint, target) => {
                 let key = this.buildKey(source, hint, false);
                 if (data[key]) {
                     delete data[key];
