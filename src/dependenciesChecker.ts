@@ -32,20 +32,36 @@ class DependenciesChecker {
     };
 
     private installDependenciesCmd() {
-        console.log("Installing missing dependencies...")
-        let installCommand = "npm i";
-        if (this.project.npmRegistry) {
-            installCommand += " --registry " + this.project.npmRegistry;
+        console.log("Installing missing dependencies...");
+        let installCommand;
+        let yarnSuccess = false;
+        if (this.checkIfYarnIsInstalled()) {
+            yarnSuccess = true;
+            installCommand = "yarn install";
+            this.removeYarnLockFile();
+            if (this.project.npmRegistry) {
+                this.createYarnrcFile();
+            }
+            if (!processUtils.runProcess(installCommand)) {
+                yarnSuccess = false;
+                console.log("yarn installation failed, the installation will be finished with npm");
+            }
+        } if (!yarnSuccess) {
+            installCommand = "npm i";
+            if (this.project.npmRegistry) {
+                installCommand += " --registry " + this.project.npmRegistry;
+            }
+            if (!processUtils.runProcess(installCommand)) {
+                throw "";
+            }
         }
-        if (!processUtils.runProcess(installCommand)) {
-            throw "";
-        }
+        this.removeYarnrcFile();
     };
 
     public reinstallDependencies() {
         let moduleDirPath = this.getModulePath();
         if (fs.existsSync(moduleDirPath)) {
-            console.log("Removing dependencies...")
+            console.log("Removing dependencies...");
             if (!pathUtils.recursiveRemoveDirSync(moduleDirPath)) {
                 throw "Directory " + moduleDirPath + " can not be removed.";
             }
@@ -59,7 +75,36 @@ class DependenciesChecker {
         this.installDependenciesCmd();
     }
 
+    private checkIfYarnIsInstalled(): boolean {
+        let yarnExists: boolean;
+        if (processUtils.runProcess("npm list -g yarn")) {
+            yarnExists = true;
+        } else {
+            console.log("yarn is not installed, the installation will be finished with npm");
+            yarnExists = false;
+        }
+        return yarnExists;
+    }
+    private createYarnrcFile() {
+        let filePath = path.join(this.project.dir, ".yarnrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
+        }
+    }
+    private removeYarnrcFile() {
+        let filePath = path.join(this.project.dir, ".yarnrc");
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
+    private removeYarnLockFile() {
+        let filePath = path.join(this.project.dir, "yarn.lock");
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
 }
+
 
 export function installMissingDependencies(project: bb.IProject): boolean {
     try {
@@ -67,7 +112,7 @@ export function installMissingDependencies(project: bb.IProject): boolean {
         depChecker.installMissingDependencies();
     }
     catch (ex) {
-        console.error("Failed to install dependencies.")
+        console.error("Failed to install dependencies.");
         return false;
     }
     return true;
