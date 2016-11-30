@@ -28,13 +28,30 @@ class DependenciesChecker {
     ;
     installDependenciesCmd() {
         console.log("Installing missing dependencies...");
-        let installCommand = "npm i";
-        if (this.project.npmRegistry) {
-            installCommand += " --registry " + this.project.npmRegistry;
+        let installCommand;
+        let yarnSuccess = false;
+        if (this.checkIfYarnIsInstalled()) {
+            yarnSuccess = true;
+            installCommand = "yarn install";
+            this.removeYarnLockFile();
+            if (this.project.npmRegistry) {
+                this.createYarnrcFile();
+            }
+            if (!processUtils.runProcess(installCommand)) {
+                yarnSuccess = false;
+                console.log("yarn installation failed, the installation will be finished with npm");
+            }
         }
-        if (!processUtils.runProcess(installCommand)) {
-            throw "";
+        if (!yarnSuccess) {
+            installCommand = "npm i";
+            if (this.project.npmRegistry) {
+                installCommand += " --registry " + this.project.npmRegistry;
+            }
+            if (!processUtils.runProcess(installCommand)) {
+                throw "";
+            }
         }
+        this.removeYarnrcFile();
     }
     ;
     reinstallDependencies() {
@@ -52,6 +69,35 @@ class DependenciesChecker {
         if (this.missingModules.length == 0)
             return;
         this.installDependenciesCmd();
+    }
+    checkIfYarnIsInstalled() {
+        let yarnExists;
+        if (processUtils.runProcess("npm list -g yarn")) {
+            yarnExists = true;
+        }
+        else {
+            console.log("yarn is not installed, the installation will be finished with npm");
+            yarnExists = false;
+        }
+        return yarnExists;
+    }
+    createYarnrcFile() {
+        let filePath = path.join(this.project.dir, ".yarnrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
+        }
+    }
+    removeYarnrcFile() {
+        let filePath = path.join(this.project.dir, ".yarnrc");
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
+    removeYarnLockFile() {
+        let filePath = path.join(this.project.dir, "yarn.lock");
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
     }
 }
 function installMissingDependencies(project) {
