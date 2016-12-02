@@ -51,7 +51,6 @@ class DependenciesChecker {
                 throw "";
             }
         }
-        this.removeYarnrcFile();
     }
     ;
     reinstallDependencies() {
@@ -85,12 +84,6 @@ class DependenciesChecker {
         let filePath = path.join(this.project.dir, ".yarnrc");
         if (!fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
-        }
-    }
-    removeYarnrcFile() {
-        let filePath = path.join(this.project.dir, ".yarnrc");
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
         }
     }
     removeYarnLockFile() {
