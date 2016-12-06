@@ -5,10 +5,11 @@ const deepEqual_1 = require('./deepEqual');
 function watch(param) {
     let filterRe = new RegExp(param.filter);
     let lastFiles = null;
-    let w = chokidar.watch(param.paths, { cwd: param.cwd, ignored: /[\/\\]\./, ignoreInitial: true });
+    let w = chokidar.watch(param.paths, { cwd: param.cwd, ignored: /[\/\\]\./, ignoreInitial: true, usePolling: true, followSymlinks: true });
     let action = debounce.debounce((v1, v2) => {
         let wa = w.getWatched();
         let k = Object.keys(wa);
+        console.log(k);
         let res = Object.create(null);
         k.forEach((v) => {
             if (v === "..")

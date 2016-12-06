@@ -33,9 +33,7 @@ class DependenciesChecker {
         if (this.checkIfYarnIsInstalled()) {
             yarnSuccess = true;
             installCommand = "yarn install --force";
-            this.removeYarnLockFile();
             if (this.project.npmRegistry) {
-                //this.createYarnrcFile();
                 this.createNpmrcFile();
             }
             if (!processUtils.runProcess(installCommand)) {

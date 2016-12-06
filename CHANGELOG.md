@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.54.0
+--
+
+Prefer to use Yarn for updating dependencies. Create `.npmrc` if needed.
+
 0.53.0
 --
 
