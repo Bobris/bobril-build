@@ -32,10 +32,11 @@ class DependenciesChecker {
         let yarnSuccess = false;
         if (this.checkIfYarnIsInstalled()) {
             yarnSuccess = true;
-            installCommand = "yarn install";
+            installCommand = "yarn install --force";
             this.removeYarnLockFile();
             if (this.project.npmRegistry) {
-                this.createYarnrcFile();
+                //this.createYarnrcFile();
+                this.createNpmrcFile();
             }
             if (!processUtils.runProcess(installCommand)) {
                 yarnSuccess = false;
@@ -51,7 +52,6 @@ class DependenciesChecker {
                 throw "";
             }
         }
-        this.removeYarnrcFile();
     }
     ;
     reinstallDependencies() {
@@ -87,10 +87,10 @@ class DependenciesChecker {
             fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
         }
     }
-    removeYarnrcFile() {
-        let filePath = path.join(this.project.dir, ".yarnrc");
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+    createNpmrcFile() {
+        let filePath = path.join(this.project.dir, ".npmrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry =" + this.project.npmRegistry, "utf-8");
         }
     }
     removeYarnLockFile() {
