@@ -1,10 +1,10 @@
 "use strict";
-const pathUtils = require('./pathUtils');
+const pathUtils = require("./pathUtils");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-const fs = require('fs');
+const fs = require("fs");
 require('bluebird');
-const simpleHelpers_1 = require('./simpleHelpers');
+const simpleHelpers_1 = require("./simpleHelpers");
 function systemJsPath() {
     return path.join(pathUtils.dirOfNodeModule('systemjs'), 'dist');
 }

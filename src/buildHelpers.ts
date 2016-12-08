@@ -229,7 +229,7 @@ function createNodeFromValue(value: any): ts.Expression {
     }
     if (typeof value === "object") {
         let result = <ts.ObjectLiteralExpression>ts.createNode(ts.SyntaxKind.ObjectLiteralExpression);
-        result.properties = createNodeArray<ts.ObjectLiteralElement>(0);
+        result.properties = createNodeArray<ts.ObjectLiteralElementLike>(0);
         for (var key in value) {
             let pa = <ts.PropertyAssignment>ts.createNode(ts.SyntaxKind.PropertyAssignment);
             let name = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
@@ -277,7 +277,7 @@ export function buildLambdaReturningArray(values: ts.Expression[]): ts.Expressio
     let end = values[values.length - 1].end;
     let fn = <ts.ArrowFunction>ts.createNode(ts.SyntaxKind.ArrowFunction);
     fn.parameters = createNodeArray<ts.ParameterDeclaration>(0);
-    fn.equalsGreaterThanToken = ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
+    fn.equalsGreaterThanToken = <ts.Token<ts.SyntaxKind.EqualsGreaterThanToken>>ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
     let body = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
     body.elements = createNodeArray<ts.Expression>(0);
     body.elements.push(...values);

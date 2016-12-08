@@ -1,5 +1,5 @@
 "use strict";
-const child_process = require('child_process');
+const child_process = require("child_process");
 function startPhantomJs(args) {
     let resolveFinish;
     let rejectFinish;

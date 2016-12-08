@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.54.1
+--
+
+Fix
+-
+
+Rebuild to remove console.log. Fix some TS 2.1 compilation errors. 
+
 0.54.0
 --
 
