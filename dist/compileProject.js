@@ -1,5 +1,5 @@
 "use strict";
-const bb = require("./index");
+const bb = require('./index');
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
@@ -7,7 +7,7 @@ const ts = require("typescript");
 const g11n = require("./msgFormatParser");
 const glob = require("glob");
 const minimatch = require("minimatch");
-const deepEqual_1 = require("./deepEqual");
+const deepEqual_1 = require('./deepEqual');
 const plugins = require("./pluginsLoader");
 function presetDebugProject(project) {
     project.debugStyleDefs = true;

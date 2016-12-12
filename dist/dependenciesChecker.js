@@ -1,7 +1,7 @@
 "use strict";
-const fs = require("fs");
+const fs = require('fs');
 const path = require("path");
-const bb = require("./index");
+const bb = require('./index');
 const pathUtils = require("./pathUtils");
 const processUtils = require("./processUtils");
 class DependenciesChecker {
@@ -27,31 +27,49 @@ class DependenciesChecker {
     }
     ;
     installDependenciesCmd() {
-        console.log("Installing missing dependencies...");
         let installCommand;
         let yarnSuccess = false;
-        if (this.checkIfYarnIsInstalled()) {
-            yarnSuccess = true;
-            installCommand = "yarn install --force";
-            if (this.project.npmRegistry) {
-                this.createNpmrcFile();
-            }
-            if (!processUtils.runProcess(installCommand)) {
-                yarnSuccess = false;
-                console.log("yarn installation failed, the installation will be finished with npm");
-            }
+        console.log("Installing missing dependencies...");
+        let yarninstalled = this.checkIfYarnIsInstalled();
+        if (yarninstalled) {
+            installCommand = "yarn install";
+            yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
         }
         if (!yarnSuccess) {
-            installCommand = "npm i";
-            if (this.project.npmRegistry) {
-                installCommand += " --registry " + this.project.npmRegistry;
+            this.npmInstalation();
+        }
+        this.findMissingModules();
+        if (this.missingModules.length !== 0) {
+            installCommand = "yarn install --force";
+            if (yarninstalled) {
+                yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
             }
-            if (!processUtils.runProcess(installCommand)) {
-                throw "";
+            if (!yarnSuccess) {
+                this.npmInstalation();
             }
         }
     }
     ;
+    npmInstalation() {
+        let installCommand = "npm i";
+        if (this.project.npmRegistry) {
+            installCommand += " --registry " + this.project.npmRegistry;
+        }
+        if (!processUtils.runProcess(installCommand)) {
+            throw "";
+        }
+    }
+    yarnInstalation(yarnSuccess, installCommand) {
+        yarnSuccess = true;
+        if (this.project.npmRegistry) {
+            this.createNpmrcFile();
+        }
+        if (!processUtils.runProcess(installCommand)) {
+            yarnSuccess = false;
+            console.log("yarn installation failed, the installation will be finished with npm");
+        }
+        return yarnSuccess;
+    }
     reinstallDependencies() {
         let moduleDirPath = this.getModulePath();
         if (fs.existsSync(moduleDirPath)) {
@@ -63,9 +81,6 @@ class DependenciesChecker {
         this.installDependenciesCmd();
     }
     installMissingDependencies() {
-        this.findMissingModules();
-        if (this.missingModules.length == 0)
-            return;
         this.installDependenciesCmd();
     }
     checkIfYarnIsInstalled() {

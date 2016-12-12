@@ -1,14 +1,14 @@
 "use strict";
-const c = require("commander");
-const bb = require("./index");
-const http = require("http");
+const c = require('commander');
+const bb = require('./index');
+const http = require('http');
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
 const depChecker = require("./dependenciesChecker");
-const additionalResources_1 = require("./additionalResources");
-const chalk = require("chalk");
+const additionalResources_1 = require('./additionalResources');
+const chalk = require('chalk');
 var serverAdditionalResources;
 const reUrlBB = /^\/bb(?:$|\/)/;
 const reUrlTest = /^test(?:$|\/)/;
@@ -38,7 +38,7 @@ function fileResponse(response, name) {
     });
 }
 let specialFiles = Object.create(null);
-const pathUtils = require("./pathUtils");
+const pathUtils = require('./pathUtils');
 specialFiles["loader.js"] = require.resolve("./loader.js");
 specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), 'jasmine-core/jasmine.js');
 specialFiles["jasmine-boot.js"] = require.resolve("./jasmine-boot.js");

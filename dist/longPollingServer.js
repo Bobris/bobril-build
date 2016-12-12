@@ -1,5 +1,5 @@
 "use strict";
-const crypto = require("crypto");
+const crypto = require('crypto');
 function newRandomId() {
     return crypto.randomBytes(20).toString("base64");
 }
