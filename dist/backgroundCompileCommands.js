@@ -1,5 +1,5 @@
 "use strict";
-const bb = require("./index");
+const bb = require('./index');
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const plugins = require("./pluginsLoader");

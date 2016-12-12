@@ -1,8 +1,8 @@
 "use strict";
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-const uglify = require("uglify-js");
-const simpleHelpers_1 = require("./simpleHelpers");
+const uglify = require('uglify-js');
+const simpleHelpers_1 = require('./simpleHelpers');
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
         enumerable: false,

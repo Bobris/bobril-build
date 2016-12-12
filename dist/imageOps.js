@@ -2,15 +2,14 @@
 const fs = require("fs");
 const pnglib = require("png-async");
 require('bluebird');
-var EDeflateStrategy;
 (function (EDeflateStrategy) {
     EDeflateStrategy[EDeflateStrategy["DEFAULT_STRATEGY"] = 0] = "DEFAULT_STRATEGY";
     EDeflateStrategy[EDeflateStrategy["FILTERED"] = 1] = "FILTERED";
     EDeflateStrategy[EDeflateStrategy["HUFFMAN_ONLY"] = 2] = "HUFFMAN_ONLY";
     EDeflateStrategy[EDeflateStrategy["RLE"] = 3] = "RLE";
     EDeflateStrategy[EDeflateStrategy["FIXED"] = 4] = "FIXED";
-})(EDeflateStrategy = exports.EDeflateStrategy || (exports.EDeflateStrategy = {}));
-var EFilterType;
+})(exports.EDeflateStrategy || (exports.EDeflateStrategy = {}));
+var EDeflateStrategy = exports.EDeflateStrategy;
 (function (EFilterType) {
     EFilterType[EFilterType["Auto"] = -1] = "Auto";
     EFilterType[EFilterType["None"] = 0] = "None";
@@ -18,7 +17,8 @@ var EFilterType;
     EFilterType[EFilterType["Up"] = 2] = "Up";
     EFilterType[EFilterType["Average"] = 3] = "Average";
     EFilterType[EFilterType["Paeth"] = 4] = "Paeth";
-})(EFilterType = exports.EFilterType || (exports.EFilterType = {}));
+})(exports.EFilterType || (exports.EFilterType = {}));
+var EFilterType = exports.EFilterType;
 function cloneImage(img) {
     let res = pnglib.createImage({ width: img.width, height: img.height, fill: false });
     img.bitblt(res, 0, 0, img.width, img.height, 0, 0);

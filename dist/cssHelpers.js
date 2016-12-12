@@ -1,7 +1,7 @@
 "use strict";
-const postcss = require("postcss");
-const postcssUrl = require("postcss-url");
-const cssnano = require("cssnano");
+const postcss = require('postcss');
+const postcssUrl = require('postcss-url');
+const cssnano = require('cssnano');
 function processCss(source, from, callback) {
     return postcss([postcssUrl({ url: (oldUrl, decl, from, dirname, to, options, result) => {
                 if (oldUrl.startsWith("data:"))

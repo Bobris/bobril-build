@@ -6,16 +6,16 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 const imageOps = require("./imageOps");
 const imgCache = require("./imgCache");
 require('bluebird');
-const BuildHelpers = require("./buildHelpers");
-const bobrilDepsHelpers = require("./bobrilDepsHelpers");
-const pathUtils = require("./pathUtils");
-const bundler = require("./bundler");
-const sourceMap = require("./sourceMap");
-const dynamicBuffer_1 = require("./dynamicBuffer");
-const simpleHelpers = require("./simpleHelpers");
-const cssHelpers = require("./cssHelpers");
-const shortenFileName_1 = require("./shortenFileName");
-const plugins = require("./pluginsLoader");
+const BuildHelpers = require('./buildHelpers');
+const bobrilDepsHelpers = require('./bobrilDepsHelpers');
+const pathUtils = require('./pathUtils');
+const bundler = require('./bundler');
+const sourceMap = require('./sourceMap');
+const dynamicBuffer_1 = require('./dynamicBuffer');
+const simpleHelpers = require('./simpleHelpers');
+const cssHelpers = require('./cssHelpers');
+const shortenFileName_1 = require('./shortenFileName');
+const plugins = require('./pluginsLoader');
 function defaultLibs() {
     return [
         "es5",
@@ -197,7 +197,7 @@ class CompilationCache {
             return p;
         }
         let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ?
-            (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t));
+                (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t));
         this.resolvePathStringLiteral = ((nn) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             project.options.sourceMap = false;
