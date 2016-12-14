@@ -1,8 +1,8 @@
 "use strict";
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-const uglify = require('uglify-js');
-const simpleHelpers_1 = require('./simpleHelpers');
+const uglify = require("uglify-js");
+const simpleHelpers_1 = require("./simpleHelpers");
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
         enumerable: false,
@@ -413,7 +413,7 @@ function bundle(project) {
             suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0)
             suffix = suffix.substr(0, suffix.indexOf('.'));
-        suffix = suffix.replace(/-/, "_");
+        suffix = suffix.replace(/-/g, "_");
         let walker = new uglify.TreeWalker((node, descend) => {
             if (node instanceof uglify.AST_Scope) {
                 node.variables.each((symb, name) => {
