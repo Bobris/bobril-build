@@ -452,7 +452,7 @@ export function bundle(project: IBundleProject) {
         let suffix = f.name;
         if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
-        suffix = suffix.replace(/-/, "_");
+        suffix = suffix.replace(/-/g, "_");
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Scope) {
                 node.variables.each((symb, name) => {
