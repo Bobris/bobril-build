@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.55.0
+--
+
+Fix
+-
+
+Temporary freeze TS to version 2.0.
+
 0.54.1
 --
 

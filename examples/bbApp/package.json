@@ -9,6 +9,7 @@
     "title": "Bobril Hello World",
     "head": "<link rel=\"icon\" href=\"light.png\">",
     "additionalResourcesDirectory": "assets-app",
+    "prefixStyleDefs": "pref1x",
     "compilerOptions": {
       "noImplicitAny": true,
       "noImplicitThis": true,

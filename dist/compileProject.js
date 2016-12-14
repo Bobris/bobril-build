@@ -293,6 +293,9 @@ function refreshProjectFromPackageJson(project, allFiles) {
     if (typeof bobrilSection.dir === 'string') {
         project.outputDir = bobrilSection.dir;
     }
+    if (typeof bobrilSection.prefixStyleDefs === 'string') {
+        project.prefixStyleDefs = bobrilSection.prefixStyleDefs;
+    }
     if (typeof bobrilSection.jsx === 'boolean') {
         project.noBobrilJsx = !bobrilSection.jsx;
     }

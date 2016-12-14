@@ -83,6 +83,7 @@ export interface IProject {
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
+    prefixStyleDefs?: string;
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
     resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
@@ -614,10 +615,18 @@ export class CompilationCache {
                         BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
                     }
                     if (project.debugStyleDefs) {
-                        let name = sd.name;
-                        if (sd.userNamed) continue;
-                        if (!name)
-                            continue;
+                        let name: string;
+                        if (project.prefixStyleDefs) {
+                            name = sd.name;
+                            if (!name)
+                                continue;
+                            name = project.prefixStyleDefs + name;
+                        } else {
+                            name = sd.name;
+                            if (sd.userNamed) continue;
+                            if (!name)
+                                continue;
+                        }
                         if (!remembered) {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
@@ -630,6 +639,13 @@ export class CompilationCache {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
                         BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
+                    } else if (project.prefixStyleDefs) {
+                        if (!sd.name)
+                            continue;
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, project.prefixStyleDefs + sd.name);
                     }
                 }
                 program.emit(src);

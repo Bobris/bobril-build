@@ -27,7 +27,7 @@
     "postcss": "^5.0.14",
     "postcss-url": "^5.0.2",
     "systemjs": "^0.18.9",
-    "typescript": "^2.0.0",
+    "typescript": "2.0.*",
     "uglify-js": "2.*",
     "useragent": "^2.1.8"
   },

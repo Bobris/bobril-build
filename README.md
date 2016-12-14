@@ -53,7 +53,8 @@ It reads `package.json` and understands:
                 "noUnusedParameters": true,
                 "noImplicitReturns": true,
                 "noFallthroughCasesInSwitch": true,
-                "strictNullChecks": true
+                "strictNullChecks": true,
+		"prefixStyleDefs": undefined,
 			},
 			"constantOverrides": {
 				"module_name": {

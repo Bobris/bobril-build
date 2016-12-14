@@ -35,6 +35,7 @@ export interface IProject {
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
+    prefixStyleDefs?: string;
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
     resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
