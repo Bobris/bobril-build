@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.55.1
+--
+
+Fix
+-
+
+Fix bundling error with filenames with multiple dashes.
+
 0.55.0
 --
 
