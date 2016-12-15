@@ -32,22 +32,18 @@ class DependenciesChecker {
     };
 
     private installDependenciesCmd() {
-        let installCommand;
+        let installCommand = "yarn install";
         let yarnSuccess = false;
         console.log("Installing missing dependencies...");
-        let yarninstalled = this.checkIfYarnIsInstalled();
-        if (yarninstalled) {
-            installCommand = "yarn install";
-            yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
-        } if (!yarnSuccess) {
+        yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
+        if (!yarnSuccess) {
             this.npmInstalation();
         }
         this.findMissingModules();
         if (this.missingModules.length !== 0) {
             installCommand = "yarn install --force";
-            if (yarninstalled) {
-                yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
-            } if (!yarnSuccess) {
+            yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
+            if (!yarnSuccess) {
                 this.npmInstalation();
             }
         }
