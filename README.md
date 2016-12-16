@@ -54,8 +54,8 @@ It reads `package.json` and understands:
                 "noImplicitReturns": true,
                 "noFallthroughCasesInSwitch": true,
                 "strictNullChecks": true,
-		"prefixStyleDefs": undefined,
 			},
+			"prefixStyleDefs": undefined,
 			"constantOverrides": {
 				"module_name": {
 					"export_name": "New value, it supports also number and boolean values"
