@@ -1,6 +1,14 @@
 CHANGELOG
 ===
 
+0.55.2
+--
+
+Fix
+-
+
+Fixed yarn detection.
+
 0.55.1
 --
 
