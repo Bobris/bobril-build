@@ -20,8 +20,8 @@
       "strictNullChecks": true
     }
   },
-  "author": "",
-  "license": "",
+  "author": "Bobris",
+  "license": "MIT",
   "dependencies": {
     "bobril": "*",
     "bobril-g11n": "*",

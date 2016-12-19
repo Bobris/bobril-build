@@ -411,6 +411,10 @@ export class CompilationCache {
             }
         }
 
+        if (this.compilationResult.errors > 0) {
+            return Promise.resolve(null);
+        }
+
         let restorationMemory = <(() => void)[]>[];
 
         this.overrides = Object.create(null);

@@ -118,7 +118,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                     }
                     else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         let be = ce.parent;
-                        if (be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                        if (be.operatorToken != null && be.left != null && be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
                             item.name = be.left.text;
                         }
                     }

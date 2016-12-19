@@ -155,7 +155,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                         item.name = (<ts.Identifier>vd.name).text;
                     } else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         let be = <ts.BinaryExpression>ce.parent;
-                        if (be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                        if (be.operatorToken != null && be.left != null && be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
                             item.name = (<ts.Identifier>be.left).text;
                         }
                     }

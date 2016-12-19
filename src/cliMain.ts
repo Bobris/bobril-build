@@ -220,11 +220,11 @@ export function forceInteractiveRecompile(): Promise<any> {
                     livereloadResolver();
                     livereloadResolver = null;
                 }
-            }
-            if (v.hasTests) {
-                if (phantomJsProcess == null)
-                    startTestsInPhantom();
-                bb.testServer.startTest('/test.html');
+                if (v.hasTests) {
+                    if (phantomJsProcess == null)
+                        startTestsInPhantom();
+                    bb.testServer.startTest('/test.html');
+                }
             }
         });
     });

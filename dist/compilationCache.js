@@ -286,6 +286,9 @@ class CompilationCache {
                 this.reportDiagnostics(diagnostics);
             }
         }
+        if (this.compilationResult.errors > 0) {
+            return Promise.resolve(null);
+        }
         let restorationMemory = [];
         this.overrides = Object.create(null);
         if (project.constantOverrides) {

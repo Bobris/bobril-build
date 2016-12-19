@@ -4,7 +4,7 @@ CHANGELOG
 0.55.3
 --
 
-Added stripping BOM mark when importing translated files
+Added stripping BOM mark when importing translated files. Compilation is quickly finished when any compilation errors, also tests will not run in interactive mode in such case.
 
 0.55.2
 --
