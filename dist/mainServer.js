@@ -1,11 +1,11 @@
 "use strict";
-const longPollingServer = require('./longPollingServer');
+const longPollingServer = require("./longPollingServer");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const pathUtils = require("./pathUtils");
 const actions = require("./actions");
-const cp = require('./compileProject');
-const bb = require('./index');
+const cp = require("./compileProject");
+const bb = require("./index");
 class Client {
     constructor(owner, id, connection) {
         this.server = owner;

@@ -1,7 +1,7 @@
 "use strict";
-const chokidar = require('chokidar');
-const debounce = require('./debounce');
-const deepEqual_1 = require('./deepEqual');
+const chokidar = require("chokidar");
+const debounce = require("./debounce");
+const deepEqual_1 = require("./deepEqual");
 function watch(param) {
     let filterRe = new RegExp(param.filter);
     let lastFiles = null;

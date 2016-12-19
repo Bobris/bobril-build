@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.55.3
+--
+
+Added stripping BOM mark when importing translated files
+
 0.55.2
 --
 

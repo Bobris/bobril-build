@@ -1,8 +1,8 @@
 "use strict";
-const longPollingServer = require('./longPollingServer');
-const debounce_1 = require('./debounce');
-const stackTrace = require('./stackTrace');
-const xmlWriter = require('./xmlWriter');
+const longPollingServer = require("./longPollingServer");
+const debounce_1 = require("./debounce");
+const stackTrace = require("./stackTrace");
+const xmlWriter = require("./xmlWriter");
 let uaparse = require('useragent').parse;
 function writeJUnitSystemOut(w, test) {
     if (!test.logs || test.logs.length == 0)

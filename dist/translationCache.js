@@ -1,10 +1,10 @@
 "use strict";
-const fs = require('fs');
+const fs = require("fs");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const pathUtils = require("./pathUtils");
 const g11n = require("./msgFormatParser");
-const chalk = require('chalk');
+const chalk = require("chalk");
 const indexOfLangsMessages = 4;
 class TranslationDb {
     constructor() {
@@ -283,11 +283,12 @@ class TranslationDb {
     }
     parseText(text) {
         text = '"' + text + '"';
+        console.log(text);
         text = JSON.parse(text);
         return text;
     }
     importTranslatedLanguageInternal(filePath, callback) {
-        let content = fs.readFileSync(filePath, "utf-8");
+        let content = this.loadFileWithoutBOM(filePath);
         content = content.replace(/\r\n|\n|\r/g, "\n");
         let lines = content.split("\n");
         for (let i = 0; i < lines.length;) {
@@ -326,9 +327,13 @@ class TranslationDb {
         return content;
     }
     getLanguageFromSpecificFile(path) {
-        let sourceContent = fs.readFileSync(path, "utf-8");
+        let sourceContent = this.loadFileWithoutBOM(path);
         let parseContent = JSON.parse(sourceContent);
         return parseContent[0];
+    }
+    loadFileWithoutBOM(fileName) {
+        let fileContent = fs.readFileSync(fileName, 'utf-8');
+        return fileContent.replace(/^\uFEFF/, '');
     }
     exportUntranslatedLanguages(filePath, language, specificPath) {
         try {

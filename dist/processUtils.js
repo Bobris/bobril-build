@@ -1,5 +1,5 @@
 "use strict";
-const child_process_1 = require('child_process');
+const child_process_1 = require("child_process");
 function runProcess(installCommand) {
     var subProcess = child_process_1.spawnSync(installCommand, {
         cwd: this.__dirname,
