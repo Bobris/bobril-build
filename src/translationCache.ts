@@ -59,7 +59,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             this.loadLangDb(path.join(dir, v));
         });
     }
-
+    
     loadLangDb(fileName: string) {
         let json = JSON.parse(fs.readFileSync(fileName, 'utf-8'));
         if (!Array.isArray(json)) throw new Error('root object is not array');
@@ -299,11 +299,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     }
     private parseText(text: string) {
         text = '"' + text + '"';
+        console.log(text);
         text = JSON.parse(text);
         return text;
     }
     private importTranslatedLanguageInternal(filePath: string, callback: (source: string, hint: string, target: string) => void) {
-        let content = fs.readFileSync(filePath, "utf-8");
+        let content = this.loadFileWithoutBOM(filePath);
         content = content.replace(/\r\n|\n|\r/g, "\n");
         let lines = content.split("\n");
         for (let i = 0; i < lines.length;) {
@@ -341,9 +342,14 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
     }
 
     public getLanguageFromSpecificFile(path: string) {
-        let sourceContent = fs.readFileSync(path, "utf-8");
+        let sourceContent = this.loadFileWithoutBOM(path);
         let parseContent = JSON.parse(sourceContent);
         return parseContent[0];
+    }
+
+    private loadFileWithoutBOM(fileName: string):string{
+        let fileContent = fs.readFileSync(fileName, 'utf-8');
+        return fileContent.replace(/^\uFEFF/, '');
     }
 
     public exportUntranslatedLanguages(filePath: string, language?: string, specificPath?: string): boolean {
