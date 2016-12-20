@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.55.4
+--
+
+Added `--flat` parameter to `yarn install`.
+
 0.55.3
 --
 

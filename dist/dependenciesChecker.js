@@ -27,7 +27,7 @@ class DependenciesChecker {
     }
     ;
     installDependenciesCmd() {
-        let installCommand = "yarn install";
+        let installCommand = "yarn install --flat";
         let yarnSuccess = false;
         console.log("Installing missing dependencies...");
         yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
@@ -36,7 +36,7 @@ class DependenciesChecker {
         }
         this.findMissingModules();
         if (this.missingModules.length !== 0) {
-            installCommand = "yarn install --force";
+            installCommand = "yarn install --flat --force";
             yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
             if (!yarnSuccess) {
                 this.npmInstalation();
