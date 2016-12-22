@@ -207,6 +207,7 @@ function createNodeFromValue(value) {
     }
     throw new Error('Don\'t know how to create node for ' + value);
 }
+exports.createNodeFromValue = createNodeFromValue;
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;
     let result = ts.createNode(ts.SyntaxKind.Identifier);
@@ -319,4 +320,16 @@ function applyOverridesHarder(overrides) {
     }
 }
 exports.applyOverridesHarder = applyOverridesHarder;
+function concat(left, right) {
+    let res = ts.createNode(ts.SyntaxKind.BinaryExpression);
+    res.operatorToken = ts.createNode(ts.SyntaxKind.PlusToken);
+    res.left = left;
+    res.right = right;
+    if (left.parent != null)
+        left.parent = res;
+    if (right.parent != null)
+        right.parent = res;
+    return res;
+}
+exports.concat = concat;
 //# sourceMappingURL=buildHelpers.js.map

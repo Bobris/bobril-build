@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.55.5
+--
+
+styleDef prefix works for dynamic hint names
+
 0.55.4
 --
 

@@ -10,6 +10,12 @@ b.asset("bootstrap/css/bootstrap.css");
 
 let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 }, undefined, "header");
 
+function dontDoThis(cn: string) {
+    b.styleDef({}, undefined, cn);
+}
+
+dontDoThis("try");
+
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
         ctx.counter = 0;

@@ -190,7 +190,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
     return result;
 }
 
-function createNodeFromValue(value: any): ts.Expression {
+export function createNodeFromValue(value: any): ts.Expression {
     if (value === null) {
         let nullNode = <ts.Expression>ts.createNode(ts.SyntaxKind.NullKeyword);
         return nullNode;
@@ -352,4 +352,14 @@ export function applyOverridesHarder(overrides: { varDecl: ts.VariableDeclaratio
         let o = overrides[i];
         o.varDecl.initializer = <ts.Expression>createNodeFromValue(o.value);
     }
+}
+
+export function concat(left: ts.Expression, right: ts.Expression): ts.Expression {
+    let res = <ts.BinaryExpression>ts.createNode(ts.SyntaxKind.BinaryExpression);
+    res.operatorToken = ts.createNode(ts.SyntaxKind.PlusToken);
+    res.left = left;
+    res.right = right;
+    if (left.parent != null) left.parent = res;
+    if (right.parent != null) right.parent = res;
+    return res;
 }

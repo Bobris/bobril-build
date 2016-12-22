@@ -496,8 +496,15 @@ class CompilationCache {
                         let name;
                         if (project.prefixStyleDefs) {
                             name = sd.name;
-                            if (!name)
+                            if (!name) {
+                                if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                    if (!remembered) {
+                                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                    }
+                                    BuildHelpers.setArgumentAst(sd.callExpression, 2 + skipEx, BuildHelpers.concat(BuildHelpers.createNodeFromValue(project.prefixStyleDefs), sd.callExpression.arguments[2 + skipEx]));
+                                }
                                 continue;
+                            }
                             name = project.prefixStyleDefs + name;
                         }
                         else {
@@ -522,8 +529,15 @@ class CompilationCache {
                         BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
                     }
                     else if (project.prefixStyleDefs) {
-                        if (!sd.name)
+                        if (!sd.name) {
+                            if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                if (!remembered) {
+                                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                }
+                                BuildHelpers.setArgumentAst(sd.callExpression, 2 + skipEx, BuildHelpers.concat(BuildHelpers.createNodeFromValue(project.prefixStyleDefs), sd.callExpression.arguments[2 + skipEx]));
+                            }
                             continue;
+                        }
                         if (!remembered) {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
