@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.56.0
+--
+
+TypeScript upgraded to 2.1.4. And fixed regression of running tests in bobril-g11n (module without d.ts was not included to compilation anymore).
+
 0.55.5
 --
 

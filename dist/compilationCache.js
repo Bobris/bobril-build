@@ -939,7 +939,8 @@ class CompilationCache {
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
                 return nameWithoutExtension + '.js';
             }
             return null;
