@@ -59,7 +59,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             this.loadLangDb(path.join(dir, v));
         });
     }
-    
+
     loadLangDb(fileName: string) {
         let json = JSON.parse(fs.readFileSync(fileName, 'utf-8'));
         if (!Array.isArray(json)) throw new Error('root object is not array');
@@ -347,7 +347,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         return parseContent[0];
     }
 
-    private loadFileWithoutBOM(fileName: string):string{
+    private loadFileWithoutBOM(fileName: string): string {
         let fileContent = fs.readFileSync(fileName, 'utf-8');
         return fileContent.replace(/^\uFEFF/, '');
     }
@@ -361,7 +361,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             let pos = this.langs.indexOf(lang);
             if (language != undefined && pos == -1) {
                 console.log();
-                console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
+                console.error("You have entered unsupported language '" + language + "'. Please enter one of " + this.langs.join(", "));
                 return false;
             }
             let content = "";

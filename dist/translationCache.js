@@ -344,7 +344,7 @@ class TranslationDb {
             let pos = this.langs.indexOf(lang);
             if (language != undefined && pos == -1) {
                 console.log();
-                console.error("You have entered unsupported language '" + language + "'. Please enter the correct one.");
+                console.error("You have entered unsupported language '" + language + "'. Please enter one of " + this.langs.join(", "));
                 return false;
             }
             let content = "";

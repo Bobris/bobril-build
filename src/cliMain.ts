@@ -382,11 +382,13 @@ export function run() {
                     }
                     if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
                         process.exit(1);
+                    process.exit(0);
                 } else {
                     console.log("Export file from " + c["specificPath"] + " into file " + c["export"]);
                 }
                 if (!trDbSingle.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
                     process.exit(1);
+                process.exit(0);
             }
             if (c["import"]) {
                 let langPath = c["specificPath"];

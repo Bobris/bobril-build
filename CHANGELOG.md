@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.56.1
+--
+
+Fixed invalid error message when exporting translation for language.
+
 0.56.0
 --
 
