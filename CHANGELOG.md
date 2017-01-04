@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.56.2
+--
+
+Fixed another bug with TS 2.1.4. When using b.sprite with color function and builing with merge sprites.
+
 0.56.1
 --
 

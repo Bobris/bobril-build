@@ -248,6 +248,7 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
     let result = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
     result.flags = ex.name.flags;
     result.text = name;
+    result.parent = ex;
     ex.name = result;
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
