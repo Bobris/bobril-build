@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.56.3
+--
+
+Added different workaround for typescript-collection package, while fixing bundling of moment.
+
 0.56.2
 --
 

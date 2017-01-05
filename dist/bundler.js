@@ -51,7 +51,12 @@ function defaultResolveRequire(name, from, fileExists, readFile) {
             let content;
             try {
                 content = JSON.parse(packageJson);
-                tryName = path.join(curDir, 'node_modules', name, content["jsnext:main"] || content.main || "index.js");
+                let mainjs = "main";
+                // Nasty workaround
+                if (content.name === "typescript-collections") {
+                    mainjs = "jsnext:main";
+                }
+                tryName = path.join(curDir, 'node_modules', name, content[mainjs] || "index.js");
             }
             catch (err) {
                 return null;
