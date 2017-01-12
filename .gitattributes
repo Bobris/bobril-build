@@ -1,0 +1,5 @@
+# all sources files with unix line endings
+text eol=lf
+
+# declare bobril-build bb as binary
+bin/bb binary
