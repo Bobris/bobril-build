@@ -250,17 +250,19 @@ function getLanguageFromLocale(locale) {
         return locale.substr(0, idx);
     return locale;
 }
-function writeTranslationFile(locale, translationMessages, filename, write) {
+function writeTranslationFile(g11nVersion, locale, translationMessages, filename, write) {
     let resbufs = [];
     if (locale === 'en' || /^en-us/i.test(locale)) {
     }
     else {
-        let fn = findLocaleFile(path.join(numeralJsPath(), 'min', 'languages'), locale, '.min.js');
-        if (fn) {
-            resbufs.push(fs.readFileSync(fn));
-            resbufs.push(new Buffer('\n', 'utf-8'));
+        if (g11nVersion < 3) {
+            let fn = findLocaleFile(path.join(numeralJsPath(), 'min', 'languages'), locale, '.min.js');
+            if (fn) {
+                resbufs.push(fs.readFileSync(fn));
+                resbufs.push(new Buffer('\n', 'utf-8'));
+            }
         }
-        fn = findLocaleFile(path.join(momentJsPath(), 'locale'), locale, '.js');
+        let fn = findLocaleFile(path.join(momentJsPath(), 'locale'), locale, '.js');
         if (fn) {
             resbufs.push(fs.readFileSync(fn));
             resbufs.push(new Buffer('\n', 'utf-8'));
@@ -273,6 +275,20 @@ function writeTranslationFile(locale, translationMessages, filename, write) {
     }
     else {
         resbufs.push(new Buffer('function(){return\'other\';}', 'utf-8'));
+    }
+    if (g11nVersion >= 3) {
+        let fn = findLocaleFile(path.join(numeralJsPath(), 'min', 'languages'), locale, '.min.js');
+        let td = ",";
+        let dd = ".";
+        if (fn) {
+            let c = fs.readFileSync(fn, "utf-8");
+            let m = /thousands:"(.)",decimal:"(.)"/.exec(c);
+            if (m != null) {
+                td = m[1];
+                dd = m[2];
+            }
+        }
+        resbufs.push(new Buffer(`,"${td}","${dd}"`, 'utf-8'));
     }
     resbufs.push(new Buffer('],', 'utf-8'));
     resbufs.push(new Buffer(JSON.stringify(translationMessages), 'utf-8'));

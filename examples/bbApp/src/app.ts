@@ -51,6 +51,9 @@ let page = b.createVirtualComponent({
                 tag: 'p', children: "Moment long date format L: " + (<any>m.localeData()).longDateFormat("L")
             },
             {
+                tag: 'p', children: "Number 123456.789 in format 0,0.00: " + g.f("{arg, number, custom, format:{0,0.00}}", { arg: 123456.789 })
+            },
+            {
                 tag: 'p',
                 children: "cs-CZ",
                 component: { onClick: () => { g.setLocale("cs-CZ"); return true; } }

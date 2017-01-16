@@ -1,9 +1,3 @@
-/*! @preserve
- * numeral.js language configuration
- * language : czech (cs)
- * author : Anatoli Papirovski : https://github.com/apapirovski
- */
-!function(){var a={delimiters:{thousands:" ",decimal:","},abbreviations:{thousand:"tis.",million:"mil.",billion:"b",trillion:"t"},ordinal:function(){return"."},currency:{symbol:"Kč"}};"undefined"!=typeof module&&module.exports&&(module.exports=a),"undefined"!=typeof window&&this.numeral&&this.numeral.language&&this.numeral.language("cs",a)}();
 //! moment.js locale configuration
 //! locale : Czech [cs]
 //! author : petrbela : https://github.com/petrbela
@@ -184,4 +178,4 @@ bobrilRegisterTranslations('cs-CZ',[function (n, ord) {
       : ((i >= 2 && i <= 4) && v0) ? 'few'
       : (!v0) ? 'many'
       : 'other';
-}],["Hello World! {c, number}","Bobril GitHub pages"])
+}," ",","],["Hello World! {c, number}","Bobril GitHub pages"])

@@ -2,12 +2,11 @@
 # yarn lockfile v1
 
 
-bobril-g11n@*:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-2.2.0.tgz#ae1713879ea95ab417ebf820f17881a7179c8bf9"
+bobril-g11n@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-3.0.0.tgz#548df718ca7c5449d513f5a95db1ebb98d122e5f"
   dependencies:
     moment "^2.10.6"
-    numeral "^1.5.3"
 
 bobril@*:
   version "5.0.2"
@@ -20,7 +19,3 @@ moment@^2.10.6:
 normalize.css@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/normalize.css/-/normalize.css-3.0.3.tgz#acc00262e235a2caa91363a2e5e3bfa4f8ad05c6"
-
-numeral@^1.5.3:
-  version "1.5.6"
-  resolved "https://registry.yarnpkg.com/numeral/-/numeral-1.5.6.tgz#3831db968451b9cf6aff9bf95925f1ef8e37b33f"

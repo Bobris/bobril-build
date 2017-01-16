@@ -366,9 +366,18 @@ function defineTranslationReporter(project) {
 exports.defineTranslationReporter = defineTranslationReporter;
 function emitTranslationsJs(project, translationDb) {
     let prefix = project.outputSubDir ? (project.outputSubDir + "/") : "";
-    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
+    let g11np = path.join(project.dir, "node_modules", "bobril-g11n", "package.json");
+    let version = 3;
+    try {
+        version = parseInt(JSON.parse(fs.readFileSync(g11np, "utf-8")).version.split("."), 10);
+    }
+    catch (err) { }
+    ;
+    if (+version !== version)
+        version = 3;
+    bb.writeTranslationFile(version, 'en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
     translationDb.langs.forEach(lang => {
-        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
+        bb.writeTranslationFile(version, lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
     });
 }
 exports.emitTranslationsJs = emitTranslationsJs;

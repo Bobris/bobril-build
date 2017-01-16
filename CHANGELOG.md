@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.57.0
+--
+
+Added support for bobril-g11n 3.0.0.
+
 0.56.3
 --
 
