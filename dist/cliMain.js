@@ -210,7 +210,7 @@ function forceInteractiveRecompile() {
     });
 }
 exports.forceInteractiveRecompile = forceInteractiveRecompile;
-function interactiveCommand(port) {
+function interactiveCommand(port, installDependencies) {
     bb.mainServer.setProjectDir(bb.getCurProjectDir());
     startHttpServer(port);
     compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
@@ -218,7 +218,9 @@ function interactiveCommand(port) {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
         mergeProjectFromServer(opts);
-        return compileProcess.installDependencies().then(() => opts);
+        if (installDependencies)
+            return compileProcess.installDependencies().then(() => opts);
+        return opts;
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {
@@ -487,7 +489,16 @@ function run() {
         .description("runs web controled build ui")
         .action((c) => {
         commandRunning = true;
-        interactiveCommand(c["port"]);
+        interactiveCommand(c["port"], true);
+    });
+    c
+        .command("interactiveNoUpdate")
+        .alias("y")
+        .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
+        .description("runs web controled build ui without updating depndencies")
+        .action((c) => {
+        commandRunning = true;
+        interactiveCommand(c["port"], false);
     });
     c.command('*', null, { noHelp: true }).action((com) => {
         console.log("Invalid command " + com);
@@ -499,7 +510,7 @@ function run() {
     depChecker.registerCommands(c, function () { commandRunning = true; });
     let res = c.parse(process.argv);
     if (!commandRunning) {
-        interactiveCommand(8080);
+        interactiveCommand(8080, true);
     }
 }
 exports.run = run;

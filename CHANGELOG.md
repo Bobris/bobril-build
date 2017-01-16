@@ -5,6 +5,12 @@ CHANGELOG
 --
 
 Added support for bobril-g11n 3.0.0.
+Added support for "bb y" to start interactive mode without updating dependencies.
+
+0.56.4
+--
+
+Fixed version of bobril-g11n and numeraljs due to inconsistencies in references
 
 0.56.3
 --
