@@ -106,6 +106,7 @@ export interface IProject {
     pluginsConfig?: {
         [name: string]: any;
     };
+    dependenciesUpdate?: string;
     liveReloadIdx?: number;
 }
 export declare class CompilationResult {

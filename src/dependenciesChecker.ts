@@ -8,8 +8,10 @@ import * as commander from 'commander';
 class DependenciesChecker {
     missingModules: string[] = [];
     project: bb.IProject;
+    isUpdate: boolean;
     constructor(project: bb.IProject) {
         this.project = project;
+        this.isUpdate = project.dependenciesUpdate === "upgrade";
     }
 
     private getModulePath(): string {
@@ -32,9 +34,13 @@ class DependenciesChecker {
     };
 
     private installDependenciesCmd() {
-        let installCommand = "yarn install --flat";
+        let installCommand = `yarn ${this.isUpdate ? "upgrade" : "install"} --flat`;
         let yarnSuccess = false;
-        console.log("Installing missing dependencies...");
+        if (this.isUpdate) {
+            console.log("Upgrading dependencies...");
+        } else {
+            console.log("Installing missing dependencies...");
+        }
         yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
         if (!yarnSuccess) {
             this.npmInstalation();
@@ -49,7 +55,7 @@ class DependenciesChecker {
         }
     };
     private npmInstalation() {
-        let installCommand = "npm i";
+        let installCommand = "npm " + (this.isUpdate ? "up" : "i");
         if (this.project.npmRegistry) {
             installCommand += " --registry " + this.project.npmRegistry;
         }
@@ -118,6 +124,7 @@ class DependenciesChecker {
 }
 
 export function installMissingDependencies(project: bb.IProject): boolean {
+    if (project.dependenciesUpdate === "disable") return;
     try {
         let depChecker = new DependenciesChecker(project);
         depChecker.installMissingDependencies();

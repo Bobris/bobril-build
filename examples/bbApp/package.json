@@ -10,6 +10,7 @@
     "head": "<link rel=\"icon\" href=\"light.png\">",
     "additionalResourcesDirectory": "assets-app",
     "prefixStyleDefs": "pref1x",
+    "dependencies": "upgrade",
     "compilerOptions": {
       "noImplicitAny": true,
       "noImplicitThis": true,

@@ -137,6 +137,7 @@ export interface IProject {
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
     pluginsConfig?: { [name: string]: any };
+    dependenciesUpdate?: string;
     liveReloadIdx?: number;
 }
 

@@ -284,6 +284,12 @@ function refreshProjectFromPackageJson(project, allFiles) {
         autodetectMainExample(project, allFiles);
         return true;
     }
+    if (typeof bobrilSection.dependencies === 'string') {
+        project.dependenciesUpdate = bobrilSection.dependencies;
+    }
+    else {
+        project.dependenciesUpdate = "install";
+    }
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }

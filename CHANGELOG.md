@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.58.0
+--
+
+Allow customize behaviour of updating dependencies at start.
+
 0.57.0
 --
 
