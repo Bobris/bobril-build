@@ -1,7 +1,7 @@
 CHANGELOG
 ===
 
-0.59.0
+0.59.1
 --
 
 Optimization of tslib, generated only once so bundle is shorter, TS now internally always compile with noEmitHelpers.

@@ -556,7 +556,6 @@ function bundle(project) {
         let compressor = uglify.Compressor({
             hoist_funs: false,
             warnings: false, global_defs: project.defines, pure_funcs: (call) => {
-                console.log(call.expression.print_to_string());
                 if (call.expression instanceof uglify.AST_SymbolRef) {
                     let symb = call.expression;
                     if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {
