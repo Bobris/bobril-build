@@ -1,4 +1,5 @@
 import * as compilationCache from './compilationCache';
+export declare function tslibSource(): string;
 export declare function systemJsPath(): string;
 export declare function systemJsFiles(): string[];
 export declare function loaderJsPath(): string;

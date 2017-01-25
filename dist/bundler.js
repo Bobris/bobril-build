@@ -3,6 +3,7 @@ const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const uglify = require("uglify-js");
 const simpleHelpers_1 = require("./simpleHelpers");
+const bobrilDepsHelpers = require("./bobrilDepsHelpers");
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
         enumerable: false,
@@ -99,17 +100,6 @@ function isExports(node) {
     }
     return false;
 }
-function isExtend(node) {
-    if (node instanceof uglify.AST_Var) {
-        let vardefs = node.definitions;
-        if (vardefs && vardefs.length === 1) {
-            if (vardefs[0].name.name === "__extends") {
-                return true;
-            }
-        }
-    }
-    return false;
-}
 function matchPropKey(propAccess) {
     let name = propAccess.property;
     if (name instanceof uglify.AST_String) {
@@ -181,7 +171,7 @@ function check(name, order, visited, project, resolveRequire) {
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult: false, hasExtend: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
             pureMatch.forEach(m => {
@@ -271,10 +261,6 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             reexportDef = fnc.name.thedef;
                             return null;
                         }
-                    }
-                    else if (isExtend(stm)) {
-                        cached.hasExtend = true;
-                        return null;
                     }
                     return stm;
                 }).filter((stm) => {
@@ -392,18 +378,21 @@ function bundle(project) {
         visited.push(val);
         check(val, order, visited, project, resolveRequire);
     });
-    let bundleAst = uglify.parse('(function(){"use strict";})()');
+    let bundleAst = uglify.parse('(function(){"use strict";\n' + bobrilDepsHelpers.tslibSource() + '})()');
     let bodyAst = bundleAst.body[0].body.expression.body;
     let topLevelNames = Object.create(null);
-    let hasExtend = false;
+    // top level vars from tslibSource
+    topLevelNames["__extendStatics"] = true;
+    topLevelNames["__extends"] = true;
+    topLevelNames["__assign"] = true;
+    topLevelNames["__rest"] = true;
+    topLevelNames["__decorate"] = true;
+    topLevelNames["__param"] = true;
+    topLevelNames["__metadata"] = true;
+    topLevelNames["__awaiter"] = true;
+    topLevelNames["__generator"] = true;
     let wasSomeDifficult = false;
     order.forEach((f) => {
-        if (f.hasExtend && !hasExtend) {
-            // Simplify and dedup __extends
-            hasExtend = true;
-            topLevelNames["__extends"] = true;
-            bodyAst.push(...uglify.parse('var __extends=function(d, b){function __(){this.constructor=d;}for(var p in b)b.hasOwnProperty(p)&&(d[p]=b[p]);d.prototype=null===b?Object.create(b):(__.prototype=b.prototype,new __());}').body);
-        }
         if (f.difficult) {
             if (!wasSomeDifficult) {
                 let ast = uglify.parse('var __bbe={};');
@@ -567,6 +556,7 @@ function bundle(project) {
         let compressor = uglify.Compressor({
             hoist_funs: false,
             warnings: false, global_defs: project.defines, pure_funcs: (call) => {
+                console.log(call.expression.print_to_string());
                 if (call.expression instanceof uglify.AST_SymbolRef) {
                     let symb = call.expression;
                     if (symb.thedef.scope.parent_scope != null && symb.thedef.scope.parent_scope.parent_scope == null) {

@@ -219,6 +219,7 @@ class CompilationCache {
         project.options.outDir = "virtual/";
         project.options.rootDir = project.dir;
         if (project.totalBundle || project.fastBundle) {
+            project.options.noEmitHelpers = true;
             project.options.module = ts.ModuleKind.CommonJS;
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
@@ -717,6 +718,7 @@ class CompilationCache {
                 else if (project.fastBundle) {
                     let allFilesInJsBundle = Object.keys(project.commonJsTemp);
                     let res = new sourceMap.SourceMapBuilder();
+                    res.addLines(bobrilDepsHelpers.tslibSource());
                     for (let i = 0; i < assetFiles.length; i++) {
                         let assetFile = assetFiles[i];
                         if (!isJsByExt(assetFile))
