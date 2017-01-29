@@ -11,6 +11,6 @@
   "author": "keeema",
   "license": "ISC",
   "dependencies": {
-    "bobril": "4.*"
+    "bobril": "^5.2.0"
   }
 }
