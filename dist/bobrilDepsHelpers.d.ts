@@ -1,4 +1,5 @@
 import * as compilationCache from './compilationCache';
+export declare function tslibSource(): string;
 export declare function systemJsPath(): string;
 export declare function systemJsFiles(): string[];
 export declare function loaderJsPath(): string;
@@ -15,6 +16,6 @@ export declare function fastBundleBasedIndexHtml(project: compilationCache.IProj
 export declare function fastBundleBasedTestHtml(project: compilationCache.IProject): string;
 export declare function updateIndexHtml(project: compilationCache.IProject): void;
 export declare function updateTestHtml(project: compilationCache.IProject): void;
-export declare function writeTranslationFile(locale: string, translationMessages: string[], filename: string, write: (fn: string, b: Buffer) => void): void;
+export declare function writeTranslationFile(g11nVersion: number, locale: string, translationMessages: string[], filename: string, write: (fn: string, b: Buffer) => void): void;
 export declare function updateSystemJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void): void;
 export declare function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void): void;

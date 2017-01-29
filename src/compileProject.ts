@@ -272,6 +272,11 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
         autodetectMainExample(project, allFiles);
         return true;
     }
+    if (typeof bobrilSection.dependencies === 'string') {
+        project.dependenciesUpdate = bobrilSection.dependencies;
+    } else {
+        project.dependenciesUpdate = "install";
+    }
     if (typeof bobrilSection.title === 'string') {
         project.htmlTitle = bobrilSection.title;
     }
@@ -280,6 +285,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
     }
     if (typeof bobrilSection.dir === 'string') {
         project.outputDir = bobrilSection.dir;
+    }
+    if (typeof bobrilSection.prefixStyleDefs === 'string') {
+        project.prefixStyleDefs = bobrilSection.prefixStyleDefs;
     }
     if (typeof bobrilSection.jsx === 'boolean') {
         project.noBobrilJsx = !bobrilSection.jsx;
@@ -347,9 +355,15 @@ export function defineTranslationReporter(project: bb.IProject) {
 
 export function emitTranslationsJs(project: bb.IProject, translationDb: bb.TranslationDb) {
     let prefix = project.outputSubDir ? (project.outputSubDir + "/") : "";
-    bb.writeTranslationFile('en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
+    let g11np = path.join(project.dir, "node_modules", "bobril-g11n", "package.json");
+    let version = 3;
+    try {
+        version = parseInt(JSON.parse(fs.readFileSync(g11np, "utf-8")).version.split("."), 10);
+    } catch (err) { };
+    if (+version !== version) version = 3;
+    bb.writeTranslationFile(version, 'en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
     translationDb.langs.forEach(lang => {
-        bb.writeTranslationFile(lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
+        bb.writeTranslationFile(version, lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
     });
 }
 

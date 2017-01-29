@@ -10,6 +10,12 @@ b.asset("bootstrap/css/bootstrap.css");
 
 let headerStyle = b.styleDef({ backgroundColor: "green", padding: 10 }, undefined, "header");
 
+function dontDoThis(cn: string) {
+    b.styleDef({}, undefined, cn);
+}
+
+dontDoThis("try");
+
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
         ctx.counter = 0;
@@ -43,6 +49,9 @@ let page = b.createVirtualComponent({
             },
             {
                 tag: 'p', children: "Moment long date format L: " + (<any>m.localeData()).longDateFormat("L")
+            },
+            {
+                tag: 'p', children: "Number 123456.789 in format 0,0.00: " + g.f("{arg, number, custom, format:{0,0.00}}", { arg: 123456.789 })
             },
             {
                 tag: 'p',

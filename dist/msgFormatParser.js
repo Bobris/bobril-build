@@ -115,6 +115,16 @@ function parseNumber() {
     } while (curToken >= 48 && curToken <= 57);
     return parseInt(number, 10);
 }
+function isComma() {
+    return curToken === 44;
+}
+function isOpenBracketToken() {
+    return curToken === OpenBracketToken;
+}
+function isCloseBracketToken() {
+    return curToken === CloseBracketToken;
+}
+const numClasses = { zero: 1, one: 1, two: 1, few: 1, many: 1, other: 1 };
 function parseFormat() {
     skipWs();
     if (curToken === ErrorToken)
@@ -125,11 +135,11 @@ function parseFormat() {
     skipWs();
     if (curToken === ErrorToken)
         return buildError();
-    if (curToken === CloseBracketToken) {
+    if (isCloseBracketToken()) {
         advanceNextToken();
         return { type: 'arg', id: identificator };
     }
-    if (curToken !== 44) {
+    if (!isComma()) {
         return buildError('Expecting "}" or ","');
     }
     advanceNextToken();
@@ -150,11 +160,11 @@ function parseFormat() {
         format.type = name;
         format.style = null;
         format.options = null;
-        if (curToken === CloseBracketToken) {
+        if (isCloseBracketToken()) {
             advanceNextToken();
             return res;
         }
-        if (curToken === 44) {
+        if (isComma()) {
             advanceNextToken();
             skipWs();
             let style = parseIdentificator();
@@ -166,11 +176,11 @@ function parseFormat() {
                 skipWs();
                 if (curToken === ErrorToken)
                     return buildError();
-                if (curToken === CloseBracketToken) {
+                if (isCloseBracketToken()) {
                     advanceNextToken();
                     return res;
                 }
-                if (curToken === 44) {
+                if (isComma()) {
                     advanceNextToken();
                     skipWs();
                     let optionName = parseIdentificator();
@@ -183,7 +193,7 @@ function parseFormat() {
                         if (curToken >= 48 && curToken <= 57) {
                             val = parseNumber();
                         }
-                        else if (curToken === OpenBracketToken) {
+                        else if (isOpenBracketToken()) {
                             advanceNextToken();
                             val = parseMsg(false);
                         }
@@ -210,13 +220,13 @@ function parseFormat() {
         format.ordinal = name !== 'plural';
         format.offset = 0;
         format.options = options;
-        if (curToken !== 44) {
+        if (!isComma()) {
             return buildError('Expecting ","');
         }
         advanceNextToken();
         skipWs();
         let offsetAllowed = true;
-        while (curToken !== CloseBracketToken) {
+        while (!isCloseBracketToken()) {
             if (curToken < 0) {
                 return buildError('Expecting characters except "{", "#"');
             }
@@ -232,7 +242,7 @@ function parseFormat() {
                     if (curToken < 48 || curToken > 57) {
                         return buildError('Expecting number');
                     }
-                    format.offset = parseInt(parseNumber(), 10);
+                    format.offset = parseNumber();
                 }
                 else
                     return buildError('After "offset:" there must be number');
@@ -246,8 +256,10 @@ function parseFormat() {
             }
             else {
                 selector = chars;
+                if (!numClasses[selector])
+                    return buildError("Selector " + selector + " is not one of " + Object.keys(numClasses).join(", "));
             }
-            if (curToken !== OpenBracketToken) {
+            if (!isOpenBracketToken()) {
                 return buildError('Expecting "{"');
             }
             advanceNextToken();
@@ -264,12 +276,12 @@ function parseFormat() {
         let options = [];
         format.type = 'select';
         format.options = options;
-        if (curToken !== 44) {
+        if (!isComma()) {
             return buildError('Expecting ","');
         }
         advanceNextToken();
         skipWs();
-        while (curToken !== CloseBracketToken) {
+        while (!isCloseBracketToken()) {
             if (curToken < 0) {
                 return buildError('Expecting characters except "{", "#"');
             }
@@ -282,7 +294,7 @@ function parseFormat() {
             else {
                 selector = chars;
             }
-            if (curToken !== OpenBracketToken) {
+            if (!isOpenBracketToken()) {
                 return buildError('Expecting "{"');
             }
             advanceNextToken();

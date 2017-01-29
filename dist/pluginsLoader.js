@@ -1,10 +1,11 @@
 "use strict";
-const processUtils = require('./processUtils');
-const simpleHelpers_1 = require('./simpleHelpers');
+const processUtils = require("./processUtils");
+const simpleHelpers_1 = require("./simpleHelpers");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
 const pathUtils = require("./pathUtils");
+var EntryMethodType;
 (function (EntryMethodType) {
     EntryMethodType[EntryMethodType["registerCommands"] = 0] = "registerCommands";
     EntryMethodType[EntryMethodType["afterStartCompileProcess"] = 1] = "afterStartCompileProcess";
@@ -14,8 +15,7 @@ const pathUtils = require("./pathUtils");
     EntryMethodType[EntryMethodType["invokeAction"] = 5] = "invokeAction";
     EntryMethodType[EntryMethodType["updateWatchPaths"] = 6] = "updateWatchPaths";
     EntryMethodType[EntryMethodType["handleAsset"] = 7] = "handleAsset";
-})(exports.EntryMethodType || (exports.EntryMethodType = {}));
-var EntryMethodType = exports.EntryMethodType;
+})(EntryMethodType = exports.EntryMethodType || (exports.EntryMethodType = {}));
 class PluginLoader {
     constructor(__dirname) {
         this.plugins = null;

@@ -1,5 +1,5 @@
 import * as b from 'bobril';
-import * as s from './state';
+import s = require('./state');
 import * as longPollingClient from './longPollingClient';
 
 let c = new longPollingClient.Connection('/bb/api/main');
@@ -49,6 +49,12 @@ c.onMessage = (c: longPollingClient.Connection, message: string, data: any) => {
         case "actionsRefresh": {
             s.actions = data;
             b.invalidate();
+            break;
+        }
+        case "setLiveReload": {
+            s.liveReload = data.value;
+            b.invalidate();
+            break;
         }
         default: {
             console.log("Unknown message: " + message, data);
@@ -63,4 +69,8 @@ export function focusPlace(fn: string, pos: number[]) {
 
 export function runAction(id: string) {
     c.send("runAction", { id });
+}
+
+export function setLiveReload(value: boolean) {
+    c.send("setLiveReload", { value });
 }

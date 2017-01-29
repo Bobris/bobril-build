@@ -1,6 +1,136 @@
 CHANGELOG
 ===
 
+0.59.1
+--
+
+Optimization of tslib, generated only once so bundle is shorter, TS now internally always compile with noEmitHelpers.
+
+0.58.0
+--
+
+Allow customize behaviour of updating dependencies at start.
+
+0.57.0
+--
+
+Added support for bobril-g11n 3.0.0.
+Added support for "bb y" to start interactive mode without updating dependencies.
+
+0.56.4
+--
+
+Fixed version of bobril-g11n and numeraljs due to inconsistencies in references
+
+0.56.3
+--
+
+Added different workaround for typescript-collection package, while fixing bundling of moment.
+
+0.56.2
+--
+
+Fixed another bug with TS 2.1.4. When using b.sprite with color function and builing with merge sprites.
+
+0.56.1
+--
+
+Fixed invalid error message when exporting translation for language.
+
+0.56.0
+--
+
+TypeScript upgraded to 2.1.4. And fixed regression of running tests in bobril-g11n (module without d.ts was not included to compilation anymore).
+
+0.55.5
+--
+
+styleDef prefix works for dynamic hint names
+
+0.55.4
+--
+
+Added `--flat` parameter to `yarn install`.
+
+0.55.3
+--
+
+Added stripping BOM mark when importing translated files. Compilation is quickly finished when any compilation errors, also tests will not run in interactive mode in such case.
+
+0.55.2
+--
+
+Fix
+-
+
+Fixed yarn detection.
+
+0.55.1
+--
+
+Fix
+-
+
+Fix bundling error with filenames with multiple dashes.
+
+0.55.0
+--
+
+Fix
+-
+
+Temporary freeze TS to version 2.0.
+
+0.54.1
+--
+
+Fix
+-
+
+Rebuild to remove console.log. Fix some TS 2.1 compilation errors. 
+
+0.54.0
+--
+
+Prefer to use Yarn for updating dependencies. Create `.npmrc` if needed.
+
+0.53.0
+--
+
+Allow to use conversion JSON to TXT file for translation independently to bobril-build project.
+
+0.52.0
+--
+
+Strings for translation are now escaped so new lines inside strings will work ok. Allow to export just specific language.
+
+0.51.0
+--
+
+In bundling prefer "jsnext:main" in package.json which fixes importing typescript-collections, but it more like workaround due to umd.js does not work in "use strict" context. As positive sideeffect due to not needing UMD loader resulting bundle is 5kb shorter.
+
+0.50.1
+--
+
+Rebuild. Repackage.
+
+0.50.0
+--
+
+New features
+-
+
+Livereload. By default it is disabled. First you need to enable it in http://localhost:8080/bb.
+Works both in Bobril and Bobril Native.
+
+0.49.4
+--
+
+Bug fix
+--
+
+Removed invalid examples.
+
 0.49.3
 --
 

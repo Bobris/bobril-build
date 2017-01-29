@@ -9,6 +9,8 @@
     "title": "Bobril Hello World",
     "head": "<link rel=\"icon\" href=\"light.png\">",
     "additionalResourcesDirectory": "assets-app",
+    "prefixStyleDefs": "pref1x",
+    "dependencies": "upgrade",
     "compilerOptions": {
       "noImplicitAny": true,
       "noImplicitThis": true,
@@ -19,11 +21,11 @@
       "strictNullChecks": true
     }
   },
-  "author": "",
-  "license": "",
+  "author": "Bobris",
+  "license": "MIT",
   "dependencies": {
     "bobril": "*",
-    "bobril-g11n": "*",
+    "bobril-g11n": "^3.0.0",
     "normalize.css": "^3.0.3"
   }
 }

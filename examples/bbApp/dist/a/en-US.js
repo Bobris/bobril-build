@@ -6,4 +6,4 @@ bobrilRegisterTranslations('en-US',[function (n, ord) {
       : (n10 == 3 && n100 != 13) ? 'few'
       : 'other';
   return (n == 1 && v0) ? 'one' : 'other';
-}],["Hello World! {c, number}","Bobril GitHub pages"])
+},",","."],["Hello World! {c, number}","Bobril GitHub pages"])
