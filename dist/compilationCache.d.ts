@@ -35,6 +35,7 @@ export interface IProject {
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
+    prefixStyleDefs?: string;
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
     resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
@@ -68,6 +69,7 @@ export interface IProject {
     };
     outputDir?: string;
     outputSubDir?: string;
+    liveReloadEnabled?: boolean;
     projectJsonTime?: number;
     mainAutoDetected?: boolean;
     lastwrittenIndexHtml?: string;
@@ -104,6 +106,8 @@ export interface IProject {
     pluginsConfig?: {
         [name: string]: any;
     };
+    dependenciesUpdate?: string;
+    liveReloadIdx?: number;
 }
 export declare class CompilationResult {
     errors: number;

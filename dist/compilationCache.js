@@ -6,16 +6,16 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 const imageOps = require("./imageOps");
 const imgCache = require("./imgCache");
 require('bluebird');
-const BuildHelpers = require('./buildHelpers');
-const bobrilDepsHelpers = require('./bobrilDepsHelpers');
-const pathUtils = require('./pathUtils');
-const bundler = require('./bundler');
-const sourceMap = require('./sourceMap');
-const dynamicBuffer_1 = require('./dynamicBuffer');
-const simpleHelpers = require('./simpleHelpers');
-const cssHelpers = require('./cssHelpers');
-const shortenFileName_1 = require('./shortenFileName');
-const plugins = require('./pluginsLoader');
+const BuildHelpers = require("./buildHelpers");
+const bobrilDepsHelpers = require("./bobrilDepsHelpers");
+const pathUtils = require("./pathUtils");
+const bundler = require("./bundler");
+const sourceMap = require("./sourceMap");
+const dynamicBuffer_1 = require("./dynamicBuffer");
+const simpleHelpers = require("./simpleHelpers");
+const cssHelpers = require("./cssHelpers");
+const shortenFileName_1 = require("./shortenFileName");
+const plugins = require("./pluginsLoader");
 function defaultLibs() {
     return [
         "es5",
@@ -181,6 +181,7 @@ class CompilationCache {
         return this.compilationResult;
     }
     compile(project) {
+        project.liveReloadIdx = (project.liveReloadIdx | 1);
         let mainList = (Array.isArray(project.main) ? project.main : [project.main]);
         mainList = mainList.map(p => path.normalize(p));
         project.logCallback = project.logCallback || ((text) => console.log(text));
@@ -196,7 +197,7 @@ class CompilationCache {
             return p;
         }
         let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir ?
-                (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t));
+            (p, s, t) => relativizeToProject(pathUtils.join(p, t)) : (p, s, t) => relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t));
         this.resolvePathStringLiteral = ((nn) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text));
         if (project.totalBundle) {
             project.options.sourceMap = false;
@@ -218,6 +219,7 @@ class CompilationCache {
         project.options.outDir = "virtual/";
         project.options.rootDir = project.dir;
         if (project.totalBundle || project.fastBundle) {
+            project.options.noEmitHelpers = true;
             project.options.module = ts.ModuleKind.CommonJS;
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
@@ -284,6 +286,9 @@ class CompilationCache {
                 let diagnostics = program.getSemanticDiagnostics();
                 this.reportDiagnostics(diagnostics);
             }
+        }
+        if (this.compilationResult.errors > 0) {
+            return Promise.resolve(null);
         }
         let restorationMemory = [];
         this.overrides = Object.create(null);
@@ -489,11 +494,27 @@ class CompilationCache {
                         BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
                     }
                     if (project.debugStyleDefs) {
-                        let name = sd.name;
-                        if (sd.userNamed)
-                            continue;
-                        if (!name)
-                            continue;
+                        let name;
+                        if (project.prefixStyleDefs) {
+                            name = sd.name;
+                            if (!name) {
+                                if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                    if (!remembered) {
+                                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                    }
+                                    BuildHelpers.setArgumentAst(sd.callExpression, 2 + skipEx, BuildHelpers.concat(BuildHelpers.createNodeFromValue(project.prefixStyleDefs), sd.callExpression.arguments[2 + skipEx]));
+                                }
+                                continue;
+                            }
+                            name = project.prefixStyleDefs + name;
+                        }
+                        else {
+                            name = sd.name;
+                            if (sd.userNamed)
+                                continue;
+                            if (!name)
+                                continue;
+                        }
                         if (!remembered) {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
@@ -507,6 +528,21 @@ class CompilationCache {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
                         BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
+                    }
+                    else if (project.prefixStyleDefs) {
+                        if (!sd.name) {
+                            if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                if (!remembered) {
+                                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                }
+                                BuildHelpers.setArgumentAst(sd.callExpression, 2 + skipEx, BuildHelpers.concat(BuildHelpers.createNodeFromValue(project.prefixStyleDefs), sd.callExpression.arguments[2 + skipEx]));
+                            }
+                            continue;
+                        }
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, project.prefixStyleDefs + sd.name);
                     }
                 }
                 program.emit(src);
@@ -682,6 +718,7 @@ class CompilationCache {
                 else if (project.fastBundle) {
                     let allFilesInJsBundle = Object.keys(project.commonJsTemp);
                     let res = new sourceMap.SourceMapBuilder();
+                    res.addLines(bobrilDepsHelpers.tslibSource());
                     for (let i = 0; i < assetFiles.length; i++) {
                         let assetFile = assetFiles[i];
                         if (!isJsByExt(assetFile))
@@ -707,6 +744,9 @@ class CompilationCache {
                 }
                 if (project.spriteMerge) {
                     bundleCache.clear(true);
+                }
+                if (this.compilationResult.errors == 0) {
+                    project.liveReloadIdx++;
                 }
                 return null;
             });
@@ -901,7 +941,8 @@ class CompilationCache {
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
                 return nameWithoutExtension + '.js';
             }
             return null;

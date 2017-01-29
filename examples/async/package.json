@@ -1,0 +1,23 @@
+{
+  "name": "sample",
+  "version": "1.0.0",
+  "description": "",
+  "typescript": {
+    "main": "app.ts"
+  },
+  "bobril": {
+    "title": "Bobril-build test for Async",
+    "compilerOptions": {
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "strictNullChecks": true
+    }
+  },
+  "author": "Bobris",
+  "license": "MIT",
+  "dependencies": {}
+}

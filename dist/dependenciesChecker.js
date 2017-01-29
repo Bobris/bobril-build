@@ -1,13 +1,14 @@
 "use strict";
-const fs = require('fs');
+const fs = require("fs");
 const path = require("path");
-const bb = require('./index');
+const bb = require("./index");
 const pathUtils = require("./pathUtils");
 const processUtils = require("./processUtils");
 class DependenciesChecker {
     constructor(project) {
         this.missingModules = [];
         this.project = project;
+        this.isUpdate = project.dependenciesUpdate === "upgrade";
     }
     getModulePath() {
         return path.join(this.project.dir, "node_modules");
@@ -27,8 +28,30 @@ class DependenciesChecker {
     }
     ;
     installDependenciesCmd() {
-        console.log("Installing missing dependencies...");
-        let installCommand = "npm i";
+        let installCommand = `yarn ${this.isUpdate ? "upgrade" : "install"} --flat`;
+        let yarnSuccess = false;
+        if (this.isUpdate) {
+            console.log("Upgrading dependencies...");
+        }
+        else {
+            console.log("Installing missing dependencies...");
+        }
+        yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
+        if (!yarnSuccess) {
+            this.npmInstalation();
+        }
+        this.findMissingModules();
+        if (this.missingModules.length !== 0) {
+            installCommand = "yarn install --flat --force";
+            yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
+            if (!yarnSuccess) {
+                this.npmInstalation();
+            }
+        }
+    }
+    ;
+    npmInstalation() {
+        let installCommand = "npm " + (this.isUpdate ? "up" : "i");
         if (this.project.npmRegistry) {
             installCommand += " --registry " + this.project.npmRegistry;
         }
@@ -36,7 +59,17 @@ class DependenciesChecker {
             throw "";
         }
     }
-    ;
+    yarnInstalation(yarnSuccess, installCommand) {
+        yarnSuccess = true;
+        if (this.project.npmRegistry) {
+            this.createNpmrcFile();
+        }
+        if (!processUtils.runProcess(installCommand)) {
+            yarnSuccess = false;
+            console.log("yarn installation failed, the installation will be finished with npm");
+        }
+        return yarnSuccess;
+    }
     reinstallDependencies() {
         let moduleDirPath = this.getModulePath();
         if (fs.existsSync(moduleDirPath)) {
@@ -48,13 +81,41 @@ class DependenciesChecker {
         this.installDependenciesCmd();
     }
     installMissingDependencies() {
-        this.findMissingModules();
-        if (this.missingModules.length == 0)
-            return;
         this.installDependenciesCmd();
+    }
+    checkIfYarnIsInstalled() {
+        let yarnExists;
+        if (processUtils.runProcess("npm list -g yarn")) {
+            yarnExists = true;
+        }
+        else {
+            console.log("yarn is not installed, the installation will be finished with npm");
+            yarnExists = false;
+        }
+        return yarnExists;
+    }
+    createYarnrcFile() {
+        let filePath = path.join(this.project.dir, ".yarnrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
+        }
+    }
+    createNpmrcFile() {
+        let filePath = path.join(this.project.dir, ".npmrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry =" + this.project.npmRegistry, "utf-8");
+        }
+    }
+    removeYarnLockFile() {
+        let filePath = path.join(this.project.dir, "yarn.lock");
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
     }
 }
 function installMissingDependencies(project) {
+    if (project.dependenciesUpdate === "disable")
+        return;
     try {
         let depChecker = new DependenciesChecker(project);
         depChecker.installMissingDependencies();
@@ -74,6 +135,9 @@ function registerCommands(c, consumeCommand) {
         consumeCommand();
         let curProjectDir = bb.currentDirectory();
         let project = bb.createProjectFromDir(curProjectDir);
+        project.logCallback = (text) => {
+            console.log(text);
+        };
         if (!bb.refreshProjectFromPackageJson(project, null)) {
             process.exit(1);
         }

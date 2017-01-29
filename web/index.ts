@@ -23,6 +23,15 @@ function createButton(content: b.IBobrilChildren, enabled: boolean, action: () =
     }
 }
 
+function createCheckbox(content: b.IBobrilChildren, checked: boolean, action: (value: boolean) => void) {
+    return {
+        tag: "label", children: [{
+            tag: "input",
+            attrs: { type: "checkbox", value: b.prop(checked, action) }
+        }, content]
+    };
+}
+
 function createCombo(selected: string, options: { id: string, name: string }[], select: (id: string) => void) {
     return {
         tag: "select",
@@ -167,6 +176,7 @@ b.init(() => {
         { tag: "h2", children: "Bobril-build" },
         b.styledDiv(<b.IBobrilChildArray>[
             s.disconnected ? "Disconnected" : s.connected ? "Connected" : "Connecting",
+            createCheckbox("Live reload", s.liveReload, com.setLiveReload),
             s.actions.map((a) => [" ", createActionUI(a)])]),
         getBuildStatus(),
         getAgentsShort(selectedAgent, i => { selectedAgent = i; b.invalidate() }),

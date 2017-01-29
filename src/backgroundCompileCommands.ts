@@ -81,6 +81,7 @@ export function setProjectOptions(param: { id: string, options: any }) {
             resp.depJsFiles = undefined;
             resp.moduleMap = undefined;
             resp.commonJsTemp = undefined;
+            resp.liveReloadEnabled = undefined;
             process.send({ command: "options", param: resp });
         });
     } else {

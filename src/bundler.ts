@@ -4,6 +4,7 @@ const path = pathPlatformDependent.posix; // This works everythere, just use for
 import * as pathUtils from './pathUtils';
 import * as uglify from 'uglify-js';
 import { globalDefines } from './simpleHelpers';
+import * as bobrilDepsHelpers from './bobrilDepsHelpers';
 
 if (!Object.assign) {
     Object.defineProperty(Object, 'assign', {
@@ -45,7 +46,6 @@ export interface IFileForBundle {
     requires: string[];
     // it is not really TypeScript converted to commonjs
     difficult: boolean;
-    hasExtend: boolean;
     selfexports: { name?: string, node?: uglify.IAstNode, reexport?: string }[];
     exports: { [name: string]: uglify.IAstNode };
     pureFuncs: { [name: string]: boolean };
@@ -91,7 +91,12 @@ function defaultResolveRequire(name: string, from: string, fileExists: (name: st
             let content: any;
             try {
                 content = JSON.parse(packageJson);
-                tryName = path.join(curDir, 'node_modules', name, (<any>content).main || "index.js");
+                let mainjs = "main";
+                // Nasty workaround
+                if (content.name === "typescript-collections") {
+                    mainjs = "jsnext:main";
+                }
+                tryName = path.join(curDir, 'node_modules', name, content[mainjs] || "index.js");
             } catch (err) {
                 return null;
             }
@@ -132,18 +137,6 @@ function isExports(node: uglify.IAstNode) {
         // thedef could be null because it could be already renamed/cloned ref
         if (thedef && thedef.global && thedef.undeclared && thedef.name === 'exports')
             return true;
-    }
-    return false;
-}
-
-function isExtend(node: uglify.IAstNode) {
-    if (node instanceof uglify.AST_Var) {
-        let vardefs = (<uglify.IAstVar>node).definitions;
-        if (vardefs && vardefs.length === 1) {
-            if (vardefs[0].name.name === "__extends") {
-                return true;
-            }
-        }
     }
     return false;
 }
@@ -220,7 +213,7 @@ function check(name: string, order: IFileForBundle[], visited: string[], project
         let ast = uglify.parse(fileContent);
         //console.log(ast.print_to_string({ beautify: true }));
         ast.figure_out_scope();
-        cached = { name, astTime: mod, ast, requires: [], difficult: false, hasExtend: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
+        cached = { name, astTime: mod, ast, requires: [], difficult: false, selfexports: [], exports: null, pureFuncs: Object.create(null) };
         let pureMatch = fileContent.match(/^\/\/ PureFuncs:.+/gm);
         if (pureMatch) {
             pureMatch.forEach(m => {
@@ -307,9 +300,6 @@ __bbe['${name}']=module.exports; }).call(window);`);
                             reexportDef = fnc.name.thedef;
                             return null;
                         }
-                    } else if (isExtend(stm)) {
-                        cached.hasExtend = true;
-                        return null;
                     }
                     return stm;
                 }).filter((stm) => {
@@ -428,18 +418,21 @@ export function bundle(project: IBundleProject) {
         visited.push(val);
         check(val, order, visited, project, resolveRequire);
     });
-    let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";})()');
+    let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";\n' + bobrilDepsHelpers.tslibSource() + '})()');
     let bodyAst = (<uglify.IAstFunction>(<uglify.IAstCall>(<uglify.IAstSimpleStatement>bundleAst.body[0]).body).expression).body;
     let topLevelNames = Object.create(null);
-    let hasExtend = false;
+    // top level vars from tslibSource
+    topLevelNames["__extendStatics"] = true;
+    topLevelNames["__extends"] = true;
+    topLevelNames["__assign"] = true;
+    topLevelNames["__rest"] = true;
+    topLevelNames["__decorate"] = true;
+    topLevelNames["__param"] = true;
+    topLevelNames["__metadata"] = true;
+    topLevelNames["__awaiter"] = true;
+    topLevelNames["__generator"] = true;
     let wasSomeDifficult = false;
     order.forEach((f) => {
-        if (f.hasExtend && !hasExtend) {
-            // Simplify and dedup __extends
-            hasExtend = true;
-            topLevelNames["__extends"] = true;
-            bodyAst.push(...(<uglify.IAstToplevel>uglify.parse('var __extends=function(d, b){function __(){this.constructor=d;}for(var p in b)b.hasOwnProperty(p)&&(d[p]=b[p]);d.prototype=null===b?Object.create(b):(__.prototype=b.prototype,new __());}')).body);
-        }
         if (f.difficult) {
             if (!wasSomeDifficult) {
                 let ast = uglify.parse('var __bbe={};');
@@ -452,7 +445,7 @@ export function bundle(project: IBundleProject) {
         let suffix = f.name;
         if (suffix.lastIndexOf('/') >= 0) suffix = suffix.substr(suffix.lastIndexOf('/') + 1);
         if (suffix.indexOf('.') >= 0) suffix = suffix.substr(0, suffix.indexOf('.'));
-        suffix = suffix.replace(/-/, "_");
+        suffix = suffix.replace(/-/g, "_");
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Scope) {
                 node.variables.each((symb, name) => {

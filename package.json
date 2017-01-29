@@ -1,6 +1,6 @@
 {
   "name": "bobril-build",
-  "version": "0.49.3",
+  "version": "0.59.1",
   "description": "Builds Bobril Applications or Libraries",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -21,13 +21,13 @@
     "make-plural": "^3.0.0",
     "moment": "^2.10.6",
     "node-notifier": "^4.6.0",
-    "numeral": "^1.5.3",
+    "numeral": "1.5.3",
     "phantomjs-prebuilt": "*",
     "png-async": "^0.9.0",
     "postcss": "^5.0.14",
     "postcss-url": "^5.0.2",
     "systemjs": "^0.18.9",
-    "typescript": "^2.0.0",
+    "typescript": "2.1.*",
     "uglify-js": "2.*",
     "useragent": "^2.1.8"
   },

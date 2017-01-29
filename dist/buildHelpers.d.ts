@@ -43,6 +43,7 @@ export interface TranslationMessage {
     justFormat?: boolean;
 }
 export declare function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, resolvePathStringLiteral: (sl: ts.StringLiteral) => string): SourceInfo;
+export declare function createNodeFromValue(value: any): ts.Expression;
 export declare function setMethod(callExpression: ts.CallExpression, name: string): void;
 export declare function setArgumentAst(callExpression: ts.CallExpression, index: number, value: ts.Expression): void;
 export declare function buildLambdaReturningArray(values: ts.Expression[]): ts.Expression;
@@ -57,3 +58,4 @@ export declare function applyOverridesHarder(overrides: {
     varDecl: ts.VariableDeclaration;
     value: string | number | boolean;
 }[]): void;
+export declare function concat(left: ts.Expression, right: ts.Expression): ts.Expression;

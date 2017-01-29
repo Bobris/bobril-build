@@ -118,7 +118,7 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                     }
                     else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         let be = ce.parent;
-                        if (be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                        if (be.operatorToken != null && be.left != null && be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
                             item.name = be.left.text;
                         }
                     }
@@ -207,11 +207,13 @@ function createNodeFromValue(value) {
     }
     throw new Error('Don\'t know how to create node for ' + value);
 }
+exports.createNodeFromValue = createNodeFromValue;
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;
     let result = ts.createNode(ts.SyntaxKind.Identifier);
     result.flags = ex.name.flags;
     result.text = name;
+    result.parent = ex;
     ex.name = result;
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
@@ -319,4 +321,16 @@ function applyOverridesHarder(overrides) {
     }
 }
 exports.applyOverridesHarder = applyOverridesHarder;
+function concat(left, right) {
+    let res = ts.createNode(ts.SyntaxKind.BinaryExpression);
+    res.operatorToken = ts.createNode(ts.SyntaxKind.PlusToken);
+    res.left = left;
+    res.right = right;
+    if (left.parent != null)
+        left.parent = res;
+    if (right.parent != null)
+        right.parent = res;
+    return res;
+}
+exports.concat = concat;
 //# sourceMappingURL=buildHelpers.js.map

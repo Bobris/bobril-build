@@ -5,7 +5,6 @@ export interface IFileForBundle {
     ast: uglify.IAstToplevel;
     requires: string[];
     difficult: boolean;
-    hasExtend: boolean;
     selfexports: {
         name?: string;
         node?: uglify.IAstNode;

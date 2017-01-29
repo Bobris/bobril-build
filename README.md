@@ -53,13 +53,15 @@ It reads `package.json` and understands:
                 "noUnusedParameters": true,
                 "noImplicitReturns": true,
                 "noFallthroughCasesInSwitch": true,
-                "strictNullChecks": true
+                "strictNullChecks": true,
 			},
+			"prefixStyleDefs": undefined,
 			"constantOverrides": {
 				"module_name": {
 					"export_name": "New value, it supports also number and boolean values"
 				}
 			},
+			"dependencies": "install", // "disable" = no yarn at start, "install" = yarn install, "upgrade" = yarn upgrade
 			"plugins": {
 				"pluginName": {
 					"configKey": "configValue"

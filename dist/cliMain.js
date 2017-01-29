@@ -1,14 +1,14 @@
 "use strict";
-const c = require('commander');
-const bb = require('./index');
-const http = require('http');
+const c = require("commander");
+const bb = require("./index");
+const http = require("http");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
 const depChecker = require("./dependenciesChecker");
-const additionalResources_1 = require('./additionalResources');
-const chalk = require('chalk');
+const additionalResources_1 = require("./additionalResources");
+const chalk = require("chalk");
 var serverAdditionalResources;
 const reUrlBB = /^\/bb(?:$|\/)/;
 const reUrlTest = /^test(?:$|\/)/;
@@ -38,10 +38,12 @@ function fileResponse(response, name) {
     });
 }
 let specialFiles = Object.create(null);
-const pathUtils = require('./pathUtils');
+const pathUtils = require("./pathUtils");
 specialFiles["loader.js"] = require.resolve("./loader.js");
 specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), 'jasmine-core/jasmine.js');
 specialFiles["jasmine-boot.js"] = require.resolve("./jasmine-boot.js");
+let livereloadResolver;
+let livereloadPromise;
 function respondSpecial(response, name) {
     let c = specialFiles[name];
     if (c == null) {
@@ -76,6 +78,23 @@ function handleRequest(request, response) {
         if (name === 'api/projectdirectory') {
             let project = bb.getProject();
             response.end(project.dir);
+            return;
+        }
+        if (name.substr(0, 15) === 'api/livereload/') {
+            let idx = parseInt(name.substr(15), 10);
+            let waitForReload = () => {
+                if (idx != bb.getProject().liveReloadIdx)
+                    response.end("reload");
+                else {
+                    if (!livereloadResolver) {
+                        livereloadPromise = new Promise((resolve, reject) => {
+                            livereloadResolver = resolve;
+                        });
+                    }
+                    livereloadPromise.then(waitForReload);
+                }
+            };
+            waitForReload();
             return;
         }
         if (reUrlTest.test(name)) {
@@ -165,33 +184,50 @@ function startHttpServer(port) {
 function mergeProjectFromServer(opts) {
     Object.assign(bb.getProject(), opts);
 }
-function interactiveCommand(port) {
+let compileProcess;
+function updateProjectOptions() {
+    return compileProcess.setOptions(bb.getProject());
+}
+exports.updateProjectOptions = updateProjectOptions;
+function forceInteractiveRecompile() {
+    return compileProcess.compile().then(v => {
+        compileProcess.setOptions({}).then(opts => {
+            mergeProjectFromServer(opts);
+            return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
+        }).then(() => {
+            if (v.errors == 0) {
+                if (livereloadResolver) {
+                    livereloadResolver();
+                    livereloadResolver = null;
+                }
+                if (v.hasTests) {
+                    if (phantomJsProcess == null)
+                        startTestsInPhantom();
+                    bb.testServer.startTest('/test.html');
+                }
+            }
+        });
+    });
+}
+exports.forceInteractiveRecompile = forceInteractiveRecompile;
+function interactiveCommand(port, installDependencies) {
     bb.mainServer.setProjectDir(bb.getCurProjectDir());
     startHttpServer(port);
-    let compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
+    compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
     compileProcess.refresh(null).then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
     }).then((opts) => {
         mergeProjectFromServer(opts);
-        return compileProcess.installDependencies().then(() => opts);
+        if (installDependencies)
+            return compileProcess.installDependencies().then(() => opts);
+        return opts;
     }).then((opts) => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
     }).then((opts) => {
         return compileProcess.loadTranslations();
     }).then((opts) => {
         bb.startWatchProcess((allFiles) => {
-            return compileProcess.refresh(allFiles).then(() => compileProcess.compile()).then(v => {
-                compileProcess.setOptions({}).then(opts => {
-                    mergeProjectFromServer(opts);
-                    return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
-                }).then(() => {
-                    if (v.hasTests) {
-                        if (phantomJsProcess == null)
-                            startTestsInPhantom();
-                        bb.testServer.startTest('/test.html');
-                    }
-                });
-            });
+            return compileProcess.refresh(allFiles).then(forceInteractiveRecompile);
         });
     });
 }
@@ -294,7 +330,9 @@ function run() {
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
-        .option("-i, --import <path>", "import translated languages")
+        .option("-i, --import <path>", "import translated language")
+        .option("-p, --specificPath <path>", "specify path for export from / import to ")
+        .option("-l, --lang <lang>", "specify language for export")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
         .action((c) => {
@@ -302,7 +340,11 @@ function run() {
         let project = bb.createProjectFromDir(bb.currentDirectory());
         let trDir = path.join(project.dir, "translations");
         let trDb = new bb.TranslationDb();
+        let trDbSingle = new bb.TranslationDb();
         trDb.loadLangDbs(trDir);
+        if (c["specificPath"] != undefined) {
+            trDbSingle.loadLangDb(c["specificPath"]);
+        }
         if (c["addlang"]) {
             console.log("Adding locale " + c["addlang"]);
             trDb.addLang(c["addlang"]);
@@ -314,15 +356,39 @@ function run() {
             trDb.saveLangDbs(trDir);
         }
         if (c["export"]) {
-            console.log("Export untranslated languages into file " + c["export"] + ".");
-            if (!trDb.exportUntranslatedLanguages(c["export"]))
+            if (c["specificPath"] === undefined) {
+                if (c["lang"] != undefined) {
+                    console.log("Export untranslated language " + c["lang"] + " into file " + c["export"]);
+                }
+                else {
+                    console.log("Export untranslated languages into file " + c["export"]);
+                }
+                if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
+                    process.exit(1);
+                process.exit(0);
+            }
+            else {
+                console.log("Export file from " + c["specificPath"] + " into file " + c["export"]);
+            }
+            if (!trDbSingle.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
                 process.exit(1);
+            process.exit(0);
         }
         if (c["import"]) {
-            console.log("Import translated languages from file " + c["import"] + ".");
-            if (!trDb.importTranslatedLanguages(c["import"]))
-                process.exit(1);
-            trDb.saveLangDbs(trDir);
+            let langPath = c["specificPath"];
+            if (langPath === undefined) {
+                console.log("Import translated language from file " + c["import"] + ".");
+                if (!trDb.importTranslatedLanguage(c["import"], langPath))
+                    process.exit(1);
+                trDb.saveLangDbs(trDir);
+            }
+            else {
+                console.log("Import translated language from file " + c["import"] + " to file " + langPath);
+                if (!trDbSingle.importTranslatedLanguage(c["import"], langPath))
+                    process.exit(1);
+                let lang = trDbSingle.getLanguageFromSpecificFile(langPath);
+                trDbSingle.saveLangDb(langPath, lang);
+            }
         }
         if (c["union"]) {
             let uArgs = c["union"].split(',');
@@ -423,7 +489,16 @@ function run() {
         .description("runs web controled build ui")
         .action((c) => {
         commandRunning = true;
-        interactiveCommand(c["port"]);
+        interactiveCommand(c["port"], true);
+    });
+    c
+        .command("interactiveNoUpdate")
+        .alias("y")
+        .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
+        .description("runs web controled build ui without updating depndencies")
+        .action((c) => {
+        commandRunning = true;
+        interactiveCommand(c["port"], false);
     });
     c.command('*', null, { noHelp: true }).action((com) => {
         console.log("Invalid command " + com);
@@ -435,7 +510,7 @@ function run() {
     depChecker.registerCommands(c, function () { commandRunning = true; });
     let res = c.parse(process.argv);
     if (!commandRunning) {
-        interactiveCommand(8080);
+        interactiveCommand(8080, true);
     }
 }
 exports.run = run;

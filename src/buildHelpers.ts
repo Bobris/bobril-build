@@ -155,7 +155,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                         item.name = (<ts.Identifier>vd.name).text;
                     } else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         let be = <ts.BinaryExpression>ce.parent;
-                        if (be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                        if (be.operatorToken != null && be.left != null && be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
                             item.name = (<ts.Identifier>be.left).text;
                         }
                     }
@@ -190,7 +190,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
     return result;
 }
 
-function createNodeFromValue(value: any): ts.Expression {
+export function createNodeFromValue(value: any): ts.Expression {
     if (value === null) {
         let nullNode = <ts.Expression>ts.createNode(ts.SyntaxKind.NullKeyword);
         return nullNode;
@@ -229,7 +229,7 @@ function createNodeFromValue(value: any): ts.Expression {
     }
     if (typeof value === "object") {
         let result = <ts.ObjectLiteralExpression>ts.createNode(ts.SyntaxKind.ObjectLiteralExpression);
-        result.properties = createNodeArray<ts.ObjectLiteralElement>(0);
+        result.properties = createNodeArray<ts.ObjectLiteralElementLike>(0);
         for (var key in value) {
             let pa = <ts.PropertyAssignment>ts.createNode(ts.SyntaxKind.PropertyAssignment);
             let name = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
@@ -248,6 +248,7 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
     let result = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
     result.flags = ex.name.flags;
     result.text = name;
+    result.parent = ex;
     ex.name = result;
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
@@ -277,7 +278,7 @@ export function buildLambdaReturningArray(values: ts.Expression[]): ts.Expressio
     let end = values[values.length - 1].end;
     let fn = <ts.ArrowFunction>ts.createNode(ts.SyntaxKind.ArrowFunction);
     fn.parameters = createNodeArray<ts.ParameterDeclaration>(0);
-    fn.equalsGreaterThanToken = ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
+    fn.equalsGreaterThanToken = <ts.Token<ts.SyntaxKind.EqualsGreaterThanToken>>ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
     let body = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
     body.elements = createNodeArray<ts.Expression>(0);
     body.elements.push(...values);
@@ -352,4 +353,14 @@ export function applyOverridesHarder(overrides: { varDecl: ts.VariableDeclaratio
         let o = overrides[i];
         o.varDecl.initializer = <ts.Expression>createNodeFromValue(o.value);
     }
+}
+
+export function concat(left: ts.Expression, right: ts.Expression): ts.Expression {
+    let res = <ts.BinaryExpression>ts.createNode(ts.SyntaxKind.BinaryExpression);
+    res.operatorToken = <ts.BinaryOperatorToken>ts.createNode(ts.SyntaxKind.PlusToken);
+    res.left = left;
+    res.right = right;
+    if (left.parent != null) left.parent = res;
+    if (right.parent != null) right.parent = res;
+    return res;
 }

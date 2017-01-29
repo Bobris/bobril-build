@@ -8,8 +8,10 @@ import * as commander from 'commander';
 class DependenciesChecker {
     missingModules: string[] = [];
     project: bb.IProject;
+    isUpdate: boolean;
     constructor(project: bb.IProject) {
         this.project = project;
+        this.isUpdate = project.dependenciesUpdate === "upgrade";
     }
 
     private getModulePath(): string {
@@ -32,20 +34,51 @@ class DependenciesChecker {
     };
 
     private installDependenciesCmd() {
-        console.log("Installing missing dependencies...")
-        let installCommand = "npm i";
+        let installCommand = `yarn ${this.isUpdate ? "upgrade" : "install"} --flat`;
+        let yarnSuccess = false;
+        if (this.isUpdate) {
+            console.log("Upgrading dependencies...");
+        } else {
+            console.log("Installing missing dependencies...");
+        }
+        yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
+        if (!yarnSuccess) {
+            this.npmInstalation();
+        }
+        this.findMissingModules();
+        if (this.missingModules.length !== 0) {
+            installCommand = "yarn install --flat --force";
+            yarnSuccess = this.yarnInstalation(yarnSuccess, installCommand);
+            if (!yarnSuccess) {
+                this.npmInstalation();
+            }
+        }
+    };
+    private npmInstalation() {
+        let installCommand = "npm " + (this.isUpdate ? "up" : "i");
         if (this.project.npmRegistry) {
             installCommand += " --registry " + this.project.npmRegistry;
         }
         if (!processUtils.runProcess(installCommand)) {
             throw "";
         }
-    };
+    }
+    private yarnInstalation(yarnSuccess, installCommand) {
+        yarnSuccess = true;
+        if (this.project.npmRegistry) {
+            this.createNpmrcFile();
+        }
+        if (!processUtils.runProcess(installCommand)) {
+            yarnSuccess = false;
+            console.log("yarn installation failed, the installation will be finished with npm");
+        }
+        return yarnSuccess;
+    }
 
     public reinstallDependencies() {
         let moduleDirPath = this.getModulePath();
         if (fs.existsSync(moduleDirPath)) {
-            console.log("Removing dependencies...")
+            console.log("Removing dependencies...");
             if (!pathUtils.recursiveRemoveDirSync(moduleDirPath)) {
                 throw "Directory " + moduleDirPath + " can not be removed.";
             }
@@ -54,20 +87,50 @@ class DependenciesChecker {
     }
 
     public installMissingDependencies() {
-        this.findMissingModules();
-        if (this.missingModules.length == 0) return;
         this.installDependenciesCmd();
     }
 
+    private checkIfYarnIsInstalled(): boolean {
+        let yarnExists: boolean;
+        if (processUtils.runProcess("npm list -g yarn")) {
+            yarnExists = true;
+        } else {
+            console.log("yarn is not installed, the installation will be finished with npm");
+            yarnExists = false;
+        }
+        return yarnExists;
+    }
+
+    private createYarnrcFile() {
+        let filePath = path.join(this.project.dir, ".yarnrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
+        }
+    }
+
+    private createNpmrcFile() {
+        let filePath = path.join(this.project.dir, ".npmrc");
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, "registry =" + this.project.npmRegistry, "utf-8");
+        }
+    }
+
+    private removeYarnLockFile() {
+        let filePath = path.join(this.project.dir, "yarn.lock");
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
 }
 
 export function installMissingDependencies(project: bb.IProject): boolean {
+    if (project.dependenciesUpdate === "disable") return;
     try {
         let depChecker = new DependenciesChecker(project);
         depChecker.installMissingDependencies();
     }
     catch (ex) {
-        console.error("Failed to install dependencies.")
+        console.error("Failed to install dependencies.");
         return false;
     }
     return true;
@@ -81,6 +144,9 @@ export function registerCommands(c: commander.IExportedCommand, consumeCommand: 
             consumeCommand();
             let curProjectDir = bb.currentDirectory();
             let project = bb.createProjectFromDir(curProjectDir);
+            project.logCallback = (text) => {
+                console.log(text);
+            };
             if (!bb.refreshProjectFromPackageJson(project, null)) {
                 process.exit(1);
             }
@@ -101,4 +167,3 @@ export function registerCommands(c: commander.IExportedCommand, consumeCommand: 
             }
         });
 }
-

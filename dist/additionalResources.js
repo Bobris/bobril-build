@@ -1,8 +1,8 @@
 "use strict";
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-const pathUtils = require('./pathUtils');
-const fs = require('fs');
+const pathUtils = require("./pathUtils");
+const fs = require("fs");
 class AdditionalResources {
     constructor(project) {
         this.project = null;

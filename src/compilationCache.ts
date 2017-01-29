@@ -83,6 +83,7 @@ export interface IProject {
     debugStyleDefs?: boolean;
     releaseStyleDefs?: boolean;
     liveReloadStyleDefs?: boolean;
+    prefixStyleDefs?: string;
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
     resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
@@ -115,6 +116,7 @@ export interface IProject {
     defines?: { [name: string]: any };
     outputDir?: string;
     outputSubDir?: string;
+    liveReloadEnabled?: boolean;
 
     projectJsonTime?: number;
     mainAutoDetected?: boolean;
@@ -135,6 +137,8 @@ export interface IProject {
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
     pluginsConfig?: { [name: string]: any };
+    dependenciesUpdate?: string;
+    liveReloadIdx?: number;
 }
 
 export class CompilationResult {
@@ -302,6 +306,7 @@ export class CompilationCache {
     }
 
     compile(project: IProject): Promise<any> {
+        project.liveReloadIdx = (project.liveReloadIdx | 1);
         let mainList = <string[]>(Array.isArray(project.main) ? project.main : [<string>project.main]);
         mainList = mainList.map(p => path.normalize(p));
         project.logCallback = project.logCallback || ((text: string) => console.log(text));
@@ -340,6 +345,7 @@ export class CompilationCache {
         project.options.outDir = "virtual/";
         project.options.rootDir = project.dir;
         if (project.totalBundle || project.fastBundle) {
+            project.options.noEmitHelpers = true;
             project.options.module = ts.ModuleKind.CommonJS;
             project.commonJsTemp = project.commonJsTemp || Object.create(null);
             project.sourceMapMap = project.sourceMapMap || Object.create(null);
@@ -405,6 +411,10 @@ export class CompilationCache {
                 let diagnostics = program.getSemanticDiagnostics();
                 this.reportDiagnostics(diagnostics);
             }
+        }
+
+        if (this.compilationResult.errors > 0) {
+            return Promise.resolve(null);
         }
 
         let restorationMemory = <(() => void)[]>[];
@@ -477,7 +487,7 @@ export class CompilationCache {
                     prom = prom.then(() => {
                         return Promise.resolve(result[0]).then((val) => {
                             if (val && val["_BBError"]) {
-                               this.addMessageFromBB(true, 3, val["_BBError"], info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
+                                this.addMessageFromBB(true, 3, val["_BBError"], info.sourceFile, sa.callExpression.getStart(), sa.callExpression.getEnd());
                             } else {
                                 assetMap[assetName] = val;
                             }
@@ -611,10 +621,27 @@ export class CompilationCache {
                         BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
                     }
                     if (project.debugStyleDefs) {
-                        let name = sd.name;
-                        if (sd.userNamed) continue;
-                        if (!name)
-                            continue;
+                        let name: string;
+                        if (project.prefixStyleDefs) {
+                            name = sd.name;
+                            if (!name) {
+                                if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                    if (!remembered) {
+                                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                    }
+                                    BuildHelpers.setArgumentAst(sd.callExpression, 2 + skipEx, BuildHelpers.concat(
+                                        BuildHelpers.createNodeFromValue(project.prefixStyleDefs),
+                                        sd.callExpression.arguments[2 + skipEx]));
+                                }
+                                continue;
+                            }
+                            name = project.prefixStyleDefs + name;
+                        } else {
+                            name = sd.name;
+                            if (sd.userNamed) continue;
+                            if (!name)
+                                continue;
+                        }
                         if (!remembered) {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
@@ -627,6 +654,22 @@ export class CompilationCache {
                             restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                         }
                         BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
+                    } else if (project.prefixStyleDefs) {
+                        if (!sd.name) {
+                            if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                if (!remembered) {
+                                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                }
+                                BuildHelpers.setArgumentAst(sd.callExpression, 2 + skipEx, BuildHelpers.concat(
+                                    BuildHelpers.createNodeFromValue(project.prefixStyleDefs),
+                                    sd.callExpression.arguments[2 + skipEx]));
+                            }
+                            continue;
+                        }
+                        if (!remembered) {
+                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        }
+                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, project.prefixStyleDefs + sd.name);
                     }
                 }
                 program.emit(src);
@@ -740,10 +783,10 @@ export class CompilationCache {
                 if (project.totalBundle) {
                     let mainJsList = (<string[]>mainList).filter((nn) => !/\.d\.ts$/.test(nn)).map((nn) => nn.replace(/\.tsx?$/, '.js'));
                     let allJsFiles = Object.keys(project.commonJsTemp);
-                    if (allJsFiles.some((n)=>/\/bobriln\/index/.test(n)))
-                        mainJsList.splice(0,0,"node_modules/bobriln/index.js");
-                    else if (allJsFiles.some((n)=>/\/bobril\/index/.test(n))) {
-                        mainJsList.splice(0,0,"node_modules/bobril/index.js");
+                    if (allJsFiles.some((n) => /\/bobriln\/index/.test(n)))
+                        mainJsList.splice(0, 0, "node_modules/bobriln/index.js");
+                    else if (allJsFiles.some((n) => /\/bobril\/index/.test(n))) {
+                        mainJsList.splice(0, 0, "node_modules/bobril/index.js");
                     }
                     let that = this;
                     let bp: bundler.IBundleProject = {
@@ -797,6 +840,7 @@ export class CompilationCache {
                 } else if (project.fastBundle) {
                     let allFilesInJsBundle = Object.keys(project.commonJsTemp);
                     let res = new sourceMap.SourceMapBuilder();
+                    res.addLines(bobrilDepsHelpers.tslibSource());
                     for (let i = 0; i < assetFiles.length; i++) {
                         let assetFile = assetFiles[i];
                         if (!isJsByExt(assetFile)) continue;
@@ -822,6 +866,9 @@ export class CompilationCache {
 
                 if (project.spriteMerge) {
                     bundleCache.clear(true);
+                }
+                if (this.compilationResult.errors == 0) {
+                    project.liveReloadIdx++;
                 }
                 return null;
             })
@@ -1026,7 +1073,8 @@ export class CompilationCache {
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
-                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
+                cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
+                project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
                 return nameWithoutExtension + '.js';
             }
             return null;

@@ -8,6 +8,7 @@ import * as pathUtils from "./pathUtils";
 import * as actions from "./actions";
 import * as cc from './compilationCache';
 import * as cp from './compileProject';
+import * as bb from './index';
 
 class Client {
     server: MainServer;
@@ -28,6 +29,13 @@ class Client {
                 }
                 case "runAction": {
                     actions.actionList.invokeAction(data.id);
+                    break;
+                }
+                case "setLiveReload": {
+                    let project = getProject();
+                    project.liveReloadEnabled = data.value;
+                    bb.updateProjectOptions().then(bb.forceInteractiveRecompile);
+                    this.server.sendAll("setLiveReload", data);
                     break;
                 }
                 default: {
@@ -74,6 +82,7 @@ export class MainServer {
         let testState = this.testSvr.getState();
         cl.connection.send("testUpdated", testState);
         cl.connection.send("actionsRefresh", actions.actionList.getList());
+        cl.connection.send("setLiveReload", { value: getProject().liveReloadEnabled });
     }
 
     sendAll(message: string, data?: any) {

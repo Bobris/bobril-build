@@ -1,9 +1,9 @@
 "use strict";
-const childProcess = require('child_process');
+const childProcess = require("child_process");
 const plugins = require("./pluginsLoader");
-const bb = require('./index');
-const chalk = require('chalk');
-const notifier = require('node-notifier');
+const bb = require("./index");
+const chalk = require("chalk");
+const notifier = require("node-notifier");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
 exports.bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
