@@ -24,10 +24,10 @@ class SourceMapBuilder {
         this.mappings.addByte(59); // ;
     }
     addLines(text) {
-        this.outputBuffer.addString(text);
-        this.outputBuffer.addByte(10);
-        for (var i = text.split('\n').length; i-- >= 0;)
-            this.mappings.addByte(59); // ;
+        let lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            this.addLine(lines[i]);
+        }
     }
     addSource(content, sourceMap) {
         if (sourceMap == null)

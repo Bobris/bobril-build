@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.59.2
+--
+
+Fixed regression with off by one line source maps.
+
 0.59.1
 --
 
