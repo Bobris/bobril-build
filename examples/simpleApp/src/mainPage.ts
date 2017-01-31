@@ -1,6 +1,6 @@
 import * as b from 'bobril';
 
-export const mainPage = b.createComponent({
+export const mainPage = b.createVirtualComponent({
     render(_ctx: b.IBobrilCtx, me: b.IBobrilNode): void {
         me.children = [
             { tag: 'h1', children: 'Hello World!' },
