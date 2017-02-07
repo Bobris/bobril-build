@@ -13,54 +13,54 @@
     var bbTest = window.parent.bbTest;
     if (bbTest) {
         env.catchExceptions(true);
-        var perfnow_1 = null;
+        let perfnow = null;
         if (window.performance) {
-            var p_1 = window.performance;
-            perfnow_1 = p_1.now || p_1.webkitNow || p_1.msNow || p_1.mozNow;
-            if (perfnow_1) {
-                var realnow_1 = perfnow_1;
-                perfnow_1 = function () { return realnow_1.call(p_1); };
+            let p = window.performance;
+            perfnow = p.now || p.webkitNow || p.msNow || p.mozNow;
+            if (perfnow) {
+                let realnow = perfnow;
+                perfnow = () => realnow.call(p);
             }
         }
-        if (!perfnow_1) {
+        if (!perfnow) {
             if (Date.now) {
-                perfnow_1 = Date.now;
+                perfnow = Date.now;
             }
             else {
-                perfnow_1 = (function () { return +(new Date()); });
+                perfnow = (() => +(new Date()));
             }
         }
-        var stack_1 = [];
-        var specStart_1 = 0;
-        var totalStart_1 = 0;
+        let stack = [];
+        let specStart = 0;
+        let totalStart = 0;
         env.addReporter({
-            jasmineStarted: function (suiteInfo) {
+            jasmineStarted: (suiteInfo) => {
                 bbTest("wholeStart", suiteInfo.totalSpecsDefined);
-                totalStart_1 = perfnow_1();
+                totalStart = perfnow();
             },
-            jasmineDone: function () {
-                bbTest("wholeDone", perfnow_1() - totalStart_1);
+            jasmineDone: () => {
+                bbTest("wholeDone", perfnow() - totalStart);
             },
-            suiteStarted: function (result) {
+            suiteStarted: (result) => {
                 bbTest("suiteStart", result.description);
-                stack_1.push(perfnow_1());
+                stack.push(perfnow());
             },
-            specStarted: function (result) {
+            specStarted: (result) => {
                 bbTest("testStart", result.description);
-                specStart_1 = perfnow_1();
+                specStart = perfnow();
             },
-            specDone: function (result) {
-                var duration = perfnow_1() - specStart_1;
-                bbTest("testDone", { name: result.description, duration: duration, status: result.status, failures: result.failedExpectations });
+            specDone: (result) => {
+                let duration = perfnow() - specStart;
+                bbTest("testDone", { name: result.description, duration, status: result.status, failures: result.failedExpectations });
             },
-            suiteDone: function (result) {
-                var duration = perfnow_1() - stack_1.pop();
-                bbTest("suiteDone", { name: result.description, duration: duration, status: result.status, failures: result.failedExpectations });
+            suiteDone: (result) => {
+                let duration = perfnow() - stack.pop();
+                bbTest("suiteDone", { name: result.description, duration, status: result.status, failures: result.failedExpectations });
             }
         });
         function realLog(message) {
-            var stack;
-            var err = new Error();
+            let stack;
+            let err = new Error();
             stack = err.stack || err.stacktrace;
             if (!stack) {
                 try {
@@ -70,7 +70,7 @@
                     stack = err.stack || err.stacktrace;
                 }
             }
-            bbTest("consoleLog", { message: message, stack: stack });
+            bbTest("consoleLog", { message, stack });
         }
         // Heavily inspired by https://github.com/NV/console.js
         if (typeof console === 'undefined') {
@@ -80,7 +80,7 @@
                 }
             };
         }
-        var dimensions_limit_1 = 3;
+        let dimensions_limit = 3;
         function repeatString(text, times) {
             if (times < 1) {
                 return '';
@@ -91,7 +91,7 @@
             }
             return result;
         }
-        var _indent_1 = '  ';
+        const _indent = '  ';
         function primitiveOf(object) {
             var value = object.valueOf();
             switch (typeof value) {
@@ -141,7 +141,7 @@
                 }
             }
             stack[stack_length++] = arg;
-            var indent = repeatString(_indent_1, stack_length);
+            var indent = repeatString(_indent, stack_length);
             if (Object.getOwnPropertyNames) {
                 var keys = Object.getOwnPropertyNames(arg);
             }
@@ -165,15 +165,15 @@
                 }
                 catch (e) { }
             }
-            return result + arr_obj.join(', ') + '\n' + repeatString(_indent_1, stack_length - 1) + '}';
+            return result + arr_obj.join(', ') + '\n' + repeatString(_indent, stack_length - 1) + '}';
         }
         ;
         console.dir = function dir() {
             var result = [];
             for (var i = 0; i < arguments.length; i++) {
-                result.push(source_of(arguments[i], dimensions_limit_1, []));
+                result.push(source_of(arguments[i], dimensions_limit, []));
             }
-            return realLog(result.join(_args_separator_1));
+            return realLog(result.join(_args_separator));
         };
         function _inspect(arg, within) {
             var result = '';
@@ -264,22 +264,22 @@
         }
         ;
         var log_methods = ['log', 'info', 'warn', 'error', 'debug', 'dirxml'];
-        var _args_separator_1 = '\n';
-        var _interpolate_1 = /%[sdifo]/gi;
+        const _args_separator = '\n';
+        const _interpolate = /%[sdifo]/gi;
         for (var i = 0; i < log_methods.length; i++) {
             console[log_methods[i]] = function logger(first_arg) {
                 var result = [];
                 var args = Array.prototype.slice.call(arguments, 0);
-                if (typeof first_arg === 'string' && _interpolate_1.test(first_arg)) {
+                if (typeof first_arg === 'string' && _interpolate.test(first_arg)) {
                     args.shift();
-                    result.push(first_arg.replace(_interpolate_1, function () {
+                    result.push(first_arg.replace(_interpolate, function () {
                         return _inspect(args.shift());
                     }));
                 }
                 for (var i = 0; i < args.length; i++) {
                     result.push(_inspect(args[i]));
                 }
-                return realLog(result.join(_args_separator_1));
+                return realLog(result.join(_args_separator));
             };
         }
         console.trace = function trace() {
@@ -296,49 +296,49 @@
         console.groupEnd = function groupEnd() {
             realLog('\n\n\n');
         };
-        var _counters_1 = {};
+        let _counters = {};
         console.count = function count(title) {
             title = title || '';
-            if (_counters_1[title]) {
-                _counters_1[title]++;
+            if (_counters[title]) {
+                _counters[title]++;
             }
             else {
-                _counters_1[title] = 1;
+                _counters[title] = 1;
             }
-            realLog(title + ' ' + _counters_1[title]);
+            realLog(title + ' ' + _counters[title]);
         };
-        var _timers_1 = {};
+        let _timers = {};
         console.time = function time(name) {
             var start = (new Date).getTime();
-            _timers_1[name] = {
+            _timers[name] = {
                 'start': start
             };
         };
         console.timeEnd = function timeEnd(name) {
             var end = (new Date).getTime();
-            console.info(name + ': ' + (end - _timers_1[name].start) + 'ms');
-            _timers_1[name].end = end;
+            console.info(name + ': ' + (end - _timers[name].start) + 'ms');
+            _timers[name].end = end;
         };
     }
     else {
         env.catchExceptions(false);
         env.addReporter({
-            jasmineStarted: function (suiteInfo) {
+            jasmineStarted: (suiteInfo) => {
                 console.log("Started " + suiteInfo.totalSpecsDefined);
             },
-            jasmineDone: function () {
+            jasmineDone: () => {
                 console.log("Done");
             },
-            suiteStarted: function (result) {
+            suiteStarted: (result) => {
                 console.log("Suite " + result.fullName);
             },
-            specStarted: function (result) {
+            specStarted: (result) => {
                 console.log("Spec " + result.fullName);
             },
-            specDone: function (result) {
+            specDone: (result) => {
                 console.log("Spec finished " + result.status);
             },
-            suiteDone: function (result) {
+            suiteDone: (result) => {
                 console.log("Suite finished " + result.status);
             }
         });

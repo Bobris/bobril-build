@@ -3,11 +3,13 @@ const postcss = require("postcss");
 const postcssUrl = require("postcss-url");
 const cssnano = require("cssnano");
 function processCss(source, from, callback) {
-    return postcss([postcssUrl({ url: (oldUrl, decl, from, dirname, to, options, result) => {
+    return postcss([postcssUrl({
+            url: (oldUrl, decl, from, dirname, to, options, result) => {
                 if (oldUrl.startsWith("data:"))
                     return oldUrl;
                 return callback(oldUrl, from);
-            } })]).process(source, { from });
+            }
+        })]).process(source, { from });
 }
 exports.processCss = processCss;
 function concatenateCssAndMinify(inputs, callback) {

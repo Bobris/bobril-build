@@ -297,7 +297,7 @@ class Client {
     convertMessageAndStack(rawMessage: { message: string, stack: string }): MessageAndStack {
         if (!rawMessage.stack) {
             return { message: rawMessage.message, stack: [] };
-        }        
+        }
         let st = stackTrace.parseStack(rawMessage.stack);
         st = stackTrace.enhanceStack(st, this.server.getSource, this.server.sourceMapCache);
         st = st.filter((fr) => !/^http\:\/\//g.test(fr.fileName));
@@ -338,7 +338,7 @@ export class TestServer {
     deleteClientById(id: string) {
         delete this.clients[id];
     }
-    
+
     handle(request: http.ServerRequest, response: http.ServerResponse) {
         this.svr.handle(request, response);
     }
@@ -384,7 +384,7 @@ export class TestServer {
             this.waitOneTimeOut = null;
             this.waitOneResolver(null);
             this.waitOneResolver = null;
-        }, 10000);
+        }, 30000);
         return new Promise<TestResultsHolder>((resolve, reject) => {
             this.waitOneResolver = resolve;
         });

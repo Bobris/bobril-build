@@ -184,7 +184,7 @@ function check(name, order, visited, project, resolveRequire) {
         }
         if (ast.globals.has('module')) {
             cached.difficult = true;
-            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; ${project.readContent(name)}
+            ast = uglify.parse(`(function(){ var exports = {}; var module = { exports: exports }; var global = this; ${project.readContent(name)}
 __bbe['${name}']=module.exports; }).call(window);`);
             cached.ast = ast;
             project.cache[name.toLowerCase()] = cached;

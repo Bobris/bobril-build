@@ -32,6 +32,6 @@ R.r = (name: string, parent?: string) => {
     if (m.exports !== undefined)
         return m.exports;
     m.exports = {};
-    m.fn.call(window, (name) => R.r(name, p), m, m.exports);
+    m.fn.call(window, (name) => R.r(name, p), m, m.exports, window);
     return m.exports;
 }

@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.60.0
+--
+
+Increase timeout for starting PhantomJs from 10s to 30s. For JS libs `global` is declared and is equal to `window`.
+
 0.59.2
 --
 
