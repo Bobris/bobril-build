@@ -209,8 +209,22 @@ export function updateProjectOptions(): Promise<any> {
     return compileProcess.setOptions(bb.getProject());
 }
 
+function buildWriter(): ((name: string, content: Buffer) => void) | undefined {
+    let project = bb.getProject();
+    if (project.packageJsonBobril["interactiveToDisk"]) {
+        return (name: string, content: Buffer) => {
+            bb.writeToMemoryFs(name, content);
+            let fullname = path.join(project.outputDir, name);
+            console.log("Writing " + fullname);
+            bb.mkpathsync(path.dirname(fullname));
+            fs.writeFileSync(fullname, content);
+        }
+    }
+    return undefined;
+}
+
 export function forceInteractiveRecompile(): Promise<any> {
-    return compileProcess.compile().then(v => {
+    return compileProcess.compile(buildWriter()).then(v => {
         compileProcess.setOptions({}).then(opts => {
             mergeProjectFromServer(opts);
             return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));

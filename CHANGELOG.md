@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.61.0
+--
+
+Allow to write output of interactive session to disk.
+
 0.60.0
 --
 
