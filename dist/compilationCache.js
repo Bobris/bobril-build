@@ -734,7 +734,7 @@ class CompilationCache {
                         let nameWOExt = name.replace(/\.js$/i, '');
                         let sm = project.sourceMapMap[nameWOExt];
                         let content = project.commonJsTemp[name];
-                        res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports){");
+                        res.addLine("R(\'" + nameWOExt + "\',function(require, module, exports, global){");
                         res.addSource(content, sm);
                         res.addLine("});");
                     }

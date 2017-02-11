@@ -323,7 +323,7 @@ class TestServer {
             this.waitOneTimeOut = null;
             this.waitOneResolver(null);
             this.waitOneResolver = null;
-        }, 10000);
+        }, 30000);
         return new Promise((resolve, reject) => {
             this.waitOneResolver = resolve;
         });
