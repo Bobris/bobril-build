@@ -214,7 +214,7 @@ function buildWriter(): ((name: string, content: Buffer) => void) | undefined {
     if (project.packageJsonBobril["interactiveToDisk"]) {
         return (name: string, content: Buffer) => {
             bb.writeToMemoryFs(name, content);
-            let fullname = path.join(project.outputDir, name);
+            let fullname = path.join(project.outputDir || "./dist", name);
             console.log("Writing " + fullname);
             bb.mkpathsync(path.dirname(fullname));
             fs.writeFileSync(fullname, content);
