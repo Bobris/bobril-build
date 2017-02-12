@@ -1,0 +1,30 @@
+{
+  "name": "start-cordova",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": {},
+  "license": "",
+  "typescript": {
+    "main": "src/index.ts"
+  },
+  "bobril": {
+    "dir": "../www",
+    "interactiveToDisk": true,
+    "title": "Bobril in Cordova",
+    "head": "<script type=\"text/javascript\" src=\"cordova.js\"></script><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">",
+    "compilerOptions": {
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "strictNullChecks": true
+    }
+  },
+  "dependencies": {
+    "@types/cordova": "^0.0.34",
+    "@types/cordova-plugin-device": "0.0.3",
+    "bobril": "^5.2.1"
+  }
+}
