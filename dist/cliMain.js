@@ -189,8 +189,21 @@ function updateProjectOptions() {
     return compileProcess.setOptions(bb.getProject());
 }
 exports.updateProjectOptions = updateProjectOptions;
+function buildWriter() {
+    let project = bb.getProject();
+    if (project.packageJsonBobril["interactiveToDisk"]) {
+        return (name, content) => {
+            bb.writeToMemoryFs(name, content);
+            let fullname = path.join(project.outputDir || "./dist", name);
+            console.log("Writing " + fullname);
+            bb.mkpathsync(path.dirname(fullname));
+            fs.writeFileSync(fullname, content);
+        };
+    }
+    return undefined;
+}
 function forceInteractiveRecompile() {
-    return compileProcess.compile().then(v => {
+    return compileProcess.compile(buildWriter()).then(v => {
         compileProcess.setOptions({}).then(opts => {
             mergeProjectFromServer(opts);
             return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));

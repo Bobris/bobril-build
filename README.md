@@ -46,6 +46,7 @@ It reads `package.json` and understands:
 			"resourcesAreRelativeToProjectDir": false, // this is default
 			"example": "pathToExample.ts", // sample application entry point - if main is index.ts than example.ts is searched for default
 			"title": "index.html Title",
+			"interactiveToDisk": false, // write output of interactive mode do "dir" directory
 			"compilerOptions": {
                 "noImplicitAny": true,
                 "noImplicitThis": true,
