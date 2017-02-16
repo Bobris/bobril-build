@@ -1,6 +1,5 @@
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
-import * as sourceMap from './sourceMap';
 export interface StackFrame {
     constructor(functionName: string, args: any[], fileName: string, lineNumber: number, columnNumber: number): StackFrame;
     functionName?: string;
@@ -45,7 +44,7 @@ export declare class TestServer {
     private clients;
     private svr;
     sourceMapCache: {
-        [loc: string]: sourceMap.SourceMap;
+        [loc: string]: any;
     };
     getSource: (loc: string) => Buffer;
     onChange: () => void;

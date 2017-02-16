@@ -152,7 +152,9 @@ export function parseSourceMap(content: Buffer): SourceMap {
     return sm;
 }
 
-export function findPosition(sourceMap: SourceMap, line: number, col?: number): { sourceName?: string, line?: number, col?: number } {
+export type Position = { sourceName?: string, line?: number, col?: number };
+
+export function findPosition(sourceMap: SourceMap, line: number, col?: number): Position {
     let inputMappings = (typeof sourceMap.mappings === "string") ? new Buffer(<string>sourceMap.mappings) : <Buffer>sourceMap.mappings;
     let outputLine = 1;
     let ip = 0;

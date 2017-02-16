@@ -109,7 +109,7 @@ export class Connection {
                     this.startHeartBeat();
                 }
                 if (this.toSend.length > 0)
-                this.doSend();
+                    this.doSend();
             }
         }
         this.processingBatch = true;
@@ -151,6 +151,6 @@ export class Connection {
         this.heartBeatTimer = setTimeout(() => {
             this.heartBeatTimer = -1;
             this.doSend();
-        }, 30000);
+        }, 10000);
     }
 }

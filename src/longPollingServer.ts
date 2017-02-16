@@ -38,7 +38,7 @@ export class Connection implements ILongPollingConnection {
     reTimeout() {
         if (this.timeOut !== null)
             clearTimeout(this.timeOut);
-        this.timeOut = setTimeout(this.handleTimeOut, 5000, this);
+        this.timeOut = setTimeout(this.handleTimeOut, 15000, this);
     }
 
     handleTimeOut(that: Connection) {
@@ -59,6 +59,10 @@ export class Connection implements ILongPollingConnection {
     }
 
     close(): void {
+        if (this.timeOut !== null) {
+            clearTimeout(this.timeOut);
+            this.timeOut = null;
+        }
         if (this.closed == false) {
             if (this.onClose != null)
                 this.onClose(this);
@@ -97,7 +101,7 @@ export class Connection implements ILongPollingConnection {
             this.reTimeout();
         }
     }
-    
+
     closeResponse(response: http.ServerResponse) {
         if (this.response === response) {
             this.response = null;
@@ -122,7 +126,7 @@ export class LongPollingServer {
             return;
         }
         var jsonString = '';
-        request.on('data', function(data) {
+        request.on('data', function (data) {
             if (jsonString.length + data.length > 1e6)
                 request.connection.destroy();
             jsonString += data;
@@ -156,18 +160,18 @@ export class LongPollingServer {
             if (Array.isArray(data.m)) {
                 waitAllowed = false;
                 let ms = data.m as any[];
-                for (let i = 0; i < ms.length; i++) {
-                    c.receivedMessage(ms[i].m, ms[i].d);
-                }
+                setTimeout(() => {
+                    for (let i = 0; i < ms.length; i++) {
+                        if (c.closed) break;
+                        c.receivedMessage(ms[i].m, ms[i].d);
+                    }
+                }, 0);
             }
             c.pollResponse(response, waitAllowed);
             request.on('close', () => {
-                c.closeResponse(response);            
+                c.closeResponse(response);
             });
 
         });
     }
 }
-
-
-

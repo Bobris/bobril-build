@@ -388,4 +388,4 @@ declare var jasmineRequire: any;
     window.onload = function () {
         env.execute();
     };
-} ());
+}());

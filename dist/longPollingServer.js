@@ -16,7 +16,7 @@ class Connection {
     reTimeout() {
         if (this.timeOut !== null)
             clearTimeout(this.timeOut);
-        this.timeOut = setTimeout(this.handleTimeOut, 5000, this);
+        this.timeOut = setTimeout(this.handleTimeOut, 15000, this);
     }
     handleTimeOut(that) {
         that.timeOut = null;
@@ -34,6 +34,10 @@ class Connection {
             this.onMessage(this, message, data);
     }
     close() {
+        if (this.timeOut !== null) {
+            clearTimeout(this.timeOut);
+            this.timeOut = null;
+        }
         if (this.closed == false) {
             if (this.onClose != null)
                 this.onClose(this);
@@ -129,9 +133,13 @@ class LongPollingServer {
             if (Array.isArray(data.m)) {
                 waitAllowed = false;
                 let ms = data.m;
-                for (let i = 0; i < ms.length; i++) {
-                    c.receivedMessage(ms[i].m, ms[i].d);
-                }
+                setTimeout(() => {
+                    for (let i = 0; i < ms.length; i++) {
+                        if (c.closed)
+                            break;
+                        c.receivedMessage(ms[i].m, ms[i].d);
+                    }
+                }, 0);
             }
             c.pollResponse(response, waitAllowed);
             request.on('close', () => {

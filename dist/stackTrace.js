@@ -13,6 +13,7 @@ function enhanceStack(stack, get, sourceMapCache) {
             return res;
         let content = get(loc);
         if (content) {
+            console.log("Parsing " + loc);
             res = sourceMap.parseSourceMap(content);
         }
         else {
@@ -25,11 +26,16 @@ function enhanceStack(stack, get, sourceMapCache) {
         let smLoc = frame.fileName + ".map";
         let sm = getSourceMap(smLoc);
         if (sm) {
-            let betterPos = sourceMap.findPosition(sm, frame.lineNumber, frame.columnNumber);
-            if (betterPos.sourceName) {
-                frame.fileName = betterPos.sourceName;
-                frame.lineNumber = betterPos.line;
-                frame.columnNumber = betterPos.col;
+            let key = smLoc + ":" + frame.lineNumber + ":" + frame.columnNumber;
+            let cached = smCache[key];
+            if (cached === undefined) {
+                cached = sourceMap.findPosition(sm, frame.lineNumber, frame.columnNumber);
+                smCache[key] = cached;
+            }
+            if (cached.sourceName) {
+                frame.fileName = cached.sourceName;
+                frame.lineNumber = cached.line;
+                frame.columnNumber = cached.col;
             }
         }
         return frame;

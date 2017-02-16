@@ -88,7 +88,7 @@ class Client {
             this.server.notifySomeChange();
         };
         connection.onMessage = (connection, message, data) => {
-            // console.log("Test Message " + message);
+            //console.log("Test Message " + message);
             switch (message) {
                 case 'newClient': {
                     this.userAgent = uaparse(connection.userAgent, data.userAgent).toString();
@@ -323,7 +323,7 @@ class TestServer {
             this.waitOneTimeOut = null;
             this.waitOneResolver(null);
             this.waitOneResolver = null;
-        }, 30000);
+        }, 60000);
         return new Promise((resolve, reject) => {
             this.waitOneResolver = resolve;
         });

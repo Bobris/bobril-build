@@ -24,8 +24,9 @@ export declare class SourceMapBuilder {
     toSourceMap(sourceRoot?: string): SourceMap;
 }
 export declare function parseSourceMap(content: Buffer): SourceMap;
-export declare function findPosition(sourceMap: SourceMap, line: number, col?: number): {
+export declare type Position = {
     sourceName?: string;
     line?: number;
     col?: number;
 };
+export declare function findPosition(sourceMap: SourceMap, line: number, col?: number): Position;

@@ -139,7 +139,7 @@ class Client {
             this.server.notifySomeChange();
         };
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
-            // console.log("Test Message " + message);
+            //console.log("Test Message " + message);
             switch (message) {
                 case 'newClient': {
                     this.userAgent = uaparse(connection.userAgent, data.userAgent).toString()
@@ -315,7 +315,7 @@ export class TestServer {
     private runid: number;
     private clients: { [id: string]: Client };
     private svr: longPollingServer.LongPollingServer;
-    sourceMapCache: { [loc: string]: sourceMap.SourceMap };
+    sourceMapCache: { [loc: string]: any };
 
     getSource: (loc: string) => Buffer;
     onChange: () => void;
@@ -384,7 +384,7 @@ export class TestServer {
             this.waitOneTimeOut = null;
             this.waitOneResolver(null);
             this.waitOneResolver = null;
-        }, 30000);
+        }, 60000);
         return new Promise<TestResultsHolder>((resolve, reject) => {
             this.waitOneResolver = resolve;
         });
