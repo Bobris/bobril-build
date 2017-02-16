@@ -13,7 +13,6 @@ function enhanceStack(stack, get, sourceMapCache) {
             return res;
         let content = get(loc);
         if (content) {
-            console.log("Parsing " + loc);
             res = sourceMap.parseSourceMap(content);
         }
         else {

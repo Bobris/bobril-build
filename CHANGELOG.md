@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.62.0
+--
+
+Improve speed of source map resolving in console.log in tests. It hangs less often, JS is really not good for CPU tasks...
+
 0.61.0
 --
 

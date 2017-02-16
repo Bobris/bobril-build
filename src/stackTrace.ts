@@ -15,7 +15,6 @@ export function enhanceStack(stack: StackFrame[], get: (loc: string) => Buffer, 
             return res;
         let content = get(loc);
         if (content) {
-            console.log("Parsing " + loc);
             res = sourceMap.parseSourceMap(content);
         } else {
             res = null;
