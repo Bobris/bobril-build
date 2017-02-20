@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.63.0
+--
+
+Temporary fixate TS on 2.1.*, to be on safe side. Fix package.json without bobril section crash from 0.61.0. Enable experimentalDecorators by default.
+
 0.62.0
 --
 

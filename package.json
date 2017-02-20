@@ -1,6 +1,6 @@
 {
   "name": "bobril-build",
-  "version": "0.62.0",
+  "version": "0.63.0",
   "description": "Builds Bobril Applications or Libraries",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -27,7 +27,7 @@
     "postcss": "^5.0.14",
     "postcss-url": "^5.0.2",
     "systemjs": "^0.18.9",
-    "typescript": "^2.1.6",
+    "typescript": "2.1.*",
     "uglify-js": "2.*",
     "useragent": "^2.1.8"
   },

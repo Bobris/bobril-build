@@ -210,6 +210,7 @@ class CompilationCache {
             project.options.jsx = ts.JsxEmit.React;
             project.options.reactNamespace = "b";
         }
+        project.options.experimentalDecorators = true;
         project.options.lib = defaultLibs();
         if (project.compilerOptions) {
             Object.assign(project.options, project.compilerOptions);
