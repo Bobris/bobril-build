@@ -104,8 +104,9 @@ function runUpdateTsConfig(compilerOptions: { [name: string]: any }, cwd: string
         "lib": bb.defaultLibs(),
         "removeComments": false,
         "noLib": false,
-        "preserveConstEnums": false
-    })
+        "preserveConstEnums": false,
+        "experimentalDecorators": true
+    });
     if (compilerOptions) Object.assign(tscfg.compilerOptions, compilerOptions);
     if (jsx) {
         Object.assign(tscfg.compilerOptions, {

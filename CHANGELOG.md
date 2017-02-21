@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.63.1
+--
+
+Enable experimentalDecorators also in tsconfig.json.
+
 0.63.0
 --
 
