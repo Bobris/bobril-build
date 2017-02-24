@@ -124,7 +124,7 @@ class DependenciesChecker {
 }
 
 export function installMissingDependencies(project: bb.IProject): boolean {
-    if (project.dependenciesUpdate === "disable") return;
+    if (project.dependenciesUpdate === "disable") return true;
     try {
         let depChecker = new DependenciesChecker(project);
         depChecker.installMissingDependencies();

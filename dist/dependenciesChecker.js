@@ -115,7 +115,7 @@ class DependenciesChecker {
 }
 function installMissingDependencies(project) {
     if (project.dependenciesUpdate === "disable")
-        return;
+        return true;
     try {
         let depChecker = new DependenciesChecker(project);
         depChecker.installMissingDependencies();
