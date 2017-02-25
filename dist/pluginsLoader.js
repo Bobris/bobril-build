@@ -2,7 +2,7 @@
 const processUtils = require("./processUtils");
 const simpleHelpers_1 = require("./simpleHelpers");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const fs = require("fs");
 const pathUtils = require("./pathUtils");
 var EntryMethodType;

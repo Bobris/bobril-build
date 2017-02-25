@@ -1,6 +1,6 @@
 "use strict";
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const image = require("../dist/imageOps");
 require('bluebird');
 describe("replaceColor", () => {

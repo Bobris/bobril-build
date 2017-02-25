@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as BuildHelpers from './buildHelpers';
 import * as CompilationCache from './compilationCache';
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as pathUtils from "./pathUtils";
 import * as g11n from "./msgFormatParser";
 import * as chalk from 'chalk';

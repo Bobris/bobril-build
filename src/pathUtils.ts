@@ -1,5 +1,5 @@
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as fs from "fs";
 
 export function dirOfNodeModule(name: string) {

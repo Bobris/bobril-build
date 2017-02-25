@@ -1,6 +1,6 @@
 "use strict";
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const pathUtils = require("./pathUtils");
 const fs = require("fs");
 class AdditionalResources {
@@ -31,7 +31,7 @@ class AdditionalResources {
         }
         return null;
     }
-    copyFilesToOuputDir() {
+    copyFilesToOutputDir() {
         if (this.project.additionalResourcesDirectory == null)
             return true;
         this.project.logCallback("Copying additional resources...");

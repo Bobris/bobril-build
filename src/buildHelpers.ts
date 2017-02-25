@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import * as fs from "fs";
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as evalNode from "./evalNode";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";

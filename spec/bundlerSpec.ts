@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as compilationCache from '../dist/compilationCache';
 import * as translationCache from '../dist/translationCache';
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as pathUtils from '../dist/pathUtils';
 
 const specdirname = path.join(__dirname.replace(/\\/g, "/"), "../spec");

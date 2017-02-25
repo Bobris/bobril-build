@@ -4,7 +4,7 @@ import * as bb from './index';
 import * as chalk from 'chalk';
 import * as notifier from 'node-notifier';
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as fs from "fs";
 
 export const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));

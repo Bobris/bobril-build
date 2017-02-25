@@ -2,7 +2,7 @@
 const ts = require("typescript");
 const fs = require("fs");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const imageOps = require("./imageOps");
 const imgCache = require("./imgCache");
 require('bluebird');

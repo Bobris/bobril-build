@@ -1,7 +1,7 @@
 "use strict";
 const fs = require("fs");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const pathUtils = require("./pathUtils");
 const g11n = require("./msgFormatParser");
 const chalk = require("chalk");

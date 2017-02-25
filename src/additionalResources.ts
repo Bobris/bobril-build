@@ -1,6 +1,6 @@
 import * as bb from './index';
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as pathUtils from './pathUtils';
 import * as fs from 'fs';
 
@@ -38,7 +38,7 @@ export class AdditionalResources {
         return null;
     }
 
-    public copyFilesToOuputDir() {
+    public copyFilesToOutputDir() {
         if (this.project.additionalResourcesDirectory == null) return true;
         this.project.logCallback("Copying additional resources...")
         try {

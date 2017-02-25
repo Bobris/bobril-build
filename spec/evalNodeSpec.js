@@ -2,7 +2,7 @@
 const ts = require("typescript");
 const fs = require("fs");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const evalNode_1 = require("../dist/evalNode");
 var defaultLibFilename = path.join(path.dirname(require.resolve("typescript").replace(/\\/g, "/")), "lib.es6.d.ts");
 var lastLibPrecompiled;

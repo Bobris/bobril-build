@@ -3,7 +3,7 @@ const c = require("commander");
 const bb = require("./index");
 const http = require("http");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
 const depChecker = require("./dependenciesChecker");
@@ -209,12 +209,16 @@ function forceInteractiveRecompile() {
             return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
         }).then(() => {
             if (v.errors != 0) {
-                console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
+                if (v.hasTests) {
+                    console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
+                }
+                else {
+                    console.log(chalk.red("Build failed with " + v.errors + " errors."));
+                }
             }
             else {
                 console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
             }
-            console.log("Compilation finished ");
             if (v.errors == 0) {
                 if (livereloadResolver) {
                     livereloadResolver();
@@ -224,6 +228,9 @@ function forceInteractiveRecompile() {
                     if (phantomJsProcess == null)
                         startTestsInPhantom();
                     bb.testServer.startTest('/test.html');
+                    bb.testServer.waitForOneResult().then(v => {
+                        console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"));
+                    });
                 }
             }
         });
@@ -272,7 +279,7 @@ function run() {
         .option("-p, --sprite <0/1>", "enable/disable creation of sprites")
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .option("-u, --updateTranslations <1/0>", "update translations", /^(true|false|1|0|t|f|y|n)$/i, "0")
-        .option("-v, --versiondir <name>", "store all resouces except index.html in this directory")
+        .option("-v, --versiondir <name>", "store all resources except index.html in this directory")
         .action((c) => {
         commandRunning = true;
         let start = Date.now();
@@ -333,7 +340,7 @@ function run() {
         if (!depChecker.installMissingDependencies(project))
             process.exit(1);
         bb.compileProject(project).then((result) => {
-            if (result.errors == 0 && createAdditionalResources(project).copyFilesToOuputDir()) {
+            if (result.errors == 0 && createAdditionalResources(project).copyFilesToOutputDir()) {
                 console.log(chalk.green("Build finished successfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
                 process.exit(0);
             }

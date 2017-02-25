@@ -1,6 +1,6 @@
 import * as pathUtils from './pathUtils';
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as fs from 'fs';
 import * as compilationCache from './compilationCache';
 require('bluebird');

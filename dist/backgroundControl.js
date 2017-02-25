@@ -5,7 +5,7 @@ const bb = require("./index");
 const chalk = require("chalk");
 const notifier = require("node-notifier");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 exports.bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 exports.testServer = new bb.TestServer();
 exports.testServer.getSource = (loc) => {

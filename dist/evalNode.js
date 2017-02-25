@@ -1,7 +1,7 @@
 "use strict";
 const ts = require("typescript");
 const pathPlatformDependent = require("path");
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 function evalNode(n, tc, resolveStringLiteral) {
     switch (n.kind) {
         case ts.SyntaxKind.StringLiteral: {

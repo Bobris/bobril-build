@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import * as fs from "fs";
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import { evalNode } from "../dist/evalNode";
 
 var defaultLibFilename = path.join(path.dirname(require.resolve("typescript").replace(/\\/g, "/")), "lib.es6.d.ts");

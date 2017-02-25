@@ -3,7 +3,7 @@ import * as longPollingServer from './longPollingServer';
 import * as testServer from './testServer';
 import { CompilationResultMessage } from './defs';
 import * as pathPlatformDependent from "path";
-const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
+const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as pathUtils from "./pathUtils";
 import * as actions from "./actions";
 import * as cc from './compilationCache';
