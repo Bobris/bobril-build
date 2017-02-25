@@ -238,7 +238,6 @@ __bbe['${name}']=module.exports; }).call(window);`);
         let varDecls: uglify.IAstVarDef[] = null;
         let walker = new uglify.TreeWalker((node: uglify.IAstNode, descend: () => void) => {
             if (node instanceof uglify.AST_Block) {
-                descend();
                 (<uglify.IAstBlock>node).body = (<uglify.IAstBlock>node).body.map((stm): uglify.IAstNode => {
                     if (stm instanceof uglify.AST_Directive) {
                         // skip "use strict";
@@ -305,6 +304,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
                 }).filter((stm) => {
                     return stm != null;
                 });
+                descend();
                 return true;
             }
             if (node instanceof uglify.AST_PropAccess) {
@@ -355,6 +355,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
         });
         ast.walk(walker);
         ast.body.unshift(...unshiftToBody);
+        //console.log(ast.print_to_string({ beautify: true }));
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {

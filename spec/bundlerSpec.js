@@ -1,10 +1,10 @@
 "use strict";
 const ts = require("typescript");
 const fs = require("fs");
-const compilationCache = require('../dist/compilationCache');
+const compilationCache = require("../dist/compilationCache");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everythere, just use forward slashes
-const pathUtils = require('../dist/pathUtils');
+const pathUtils = require("../dist/pathUtils");
 const specdirname = path.join(__dirname.replace(/\\/g, "/"), "../spec");
 describe("bundler", () => {
     let testpath = path.join(specdirname, "bundle");
@@ -24,6 +24,7 @@ describe("bundler", () => {
             return;
         if (n[0] === "_")
             return;
+        //if ((() => n !== "bundleBug")()) return;
         it(n, (done) => {
             var full = path.join(testpath, n);
             var cc = new compilationCache.CompilationCache();

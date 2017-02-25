@@ -197,7 +197,6 @@ __bbe['${name}']=module.exports; }).call(window);`);
         let varDecls = null;
         let walker = new uglify.TreeWalker((node, descend) => {
             if (node instanceof uglify.AST_Block) {
-                descend();
                 node.body = node.body.map((stm) => {
                     if (stm instanceof uglify.AST_Directive) {
                         // skip "use strict";
@@ -266,6 +265,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
                 }).filter((stm) => {
                     return stm != null;
                 });
+                descend();
                 return true;
             }
             if (node instanceof uglify.AST_PropAccess) {
@@ -314,6 +314,7 @@ __bbe['${name}']=module.exports; }).call(window);`);
         });
         ast.walk(walker);
         ast.body.unshift(...unshiftToBody);
+        //console.log(ast.print_to_string({ beautify: true }));
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {

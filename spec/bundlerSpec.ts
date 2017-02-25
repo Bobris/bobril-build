@@ -16,6 +16,7 @@ describe("bundler", () => {
     di.forEach(n => {
         if (n[0] === ".") return;
         if (n[0] === "_") return;
+        //if ((() => n !== "bundleBug")()) return;
         it(n, (done) => {
             var full = path.join(testpath, n);
             var cc = new compilationCache.CompilationCache();

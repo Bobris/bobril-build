@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.64.0
+--
+
+Fixed bundling bug. Added console logs to interactive mode. Fixed disabling yarn for `bb b`.
+
 0.63.1
 --
 

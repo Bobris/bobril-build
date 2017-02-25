@@ -208,6 +208,13 @@ function forceInteractiveRecompile() {
             mergeProjectFromServer(opts);
             return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
         }).then(() => {
+            if (v.errors != 0) {
+                console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
+            }
+            else {
+                console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
+            }
+            console.log("Compilation finished ");
             if (v.errors == 0) {
                 if (livereloadResolver) {
                     livereloadResolver();
@@ -240,6 +247,7 @@ function interactiveCommand(port, installDependencies) {
         return compileProcess.loadTranslations();
     }).then((opts) => {
         bb.startWatchProcess((allFiles) => {
+            console.log(chalk.green("Starting compilation."));
             return compileProcess.refresh(allFiles).then(forceInteractiveRecompile);
         });
     });

@@ -62,6 +62,7 @@ function createCompilerHost(currentDirectory) {
         useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
         getCanonicalFileName: getCanonicalFileName,
         getNewLine: function () { return '\n'; },
+        getDirectories: () => [],
         fileExists(fileName) {
             try {
                 return fs.statSync(path.join(currentDirectory, fileName)).isFile();

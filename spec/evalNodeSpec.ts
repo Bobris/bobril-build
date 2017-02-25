@@ -48,28 +48,29 @@ function createCompilerHost(currentDirectory): ts.CompilerHost {
     }
     function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModule {
         if (moduleName.substr(0, 1) === '.') {
-            let res = moduleName+".ts";
+            let res = moduleName + ".ts";
             return { resolvedFileName: res };
         }
         return null;
-    }    
+    }
     return {
         getSourceFile: getSourceFile,
-        getDefaultLibFileName: function(options) { return defaultLibFilename; },
+        getDefaultLibFileName: function (options) { return defaultLibFilename; },
         writeFile: writeFile,
-        getCurrentDirectory: function() { return currentDirectory; },
-        useCaseSensitiveFileNames: function() { return ts.sys.useCaseSensitiveFileNames; },
+        getCurrentDirectory: function () { return currentDirectory; },
+        useCaseSensitiveFileNames: function () { return ts.sys.useCaseSensitiveFileNames; },
         getCanonicalFileName: getCanonicalFileName,
-        getNewLine: function() { return '\n'; },
+        getNewLine: function () { return '\n'; },
+        getDirectories: () => [],
         fileExists(fileName: string): boolean {
             try {
-                return fs.statSync(path.join(currentDirectory,fileName)).isFile();
+                return fs.statSync(path.join(currentDirectory, fileName)).isFile();
             } catch (e) {
                 return false;
             }
         },
         readFile(fileName: string): string {
-            return fs.readFileSync(path.join(currentDirectory,fileName)).toString();
+            return fs.readFileSync(path.join(currentDirectory, fileName)).toString();
         },
         resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
             return moduleNames.map((n) => {
@@ -98,14 +99,14 @@ function reportDiagnostics(diagnostics) {
     }
 }
 
-const specdirname = path.join(__dirname.replace(/\\/g, "/"),"../spec");
+const specdirname = path.join(__dirname.replace(/\\/g, "/"), "../spec");
 
 describe("evalNode", () => {
     let testpath = path.join(specdirname, "evalNode");
     let di = fs.readdirSync(testpath).sort();
     try { fs.mkdirSync(path.join(testpath, "_accept")); } catch (err) { };
     try { fs.mkdirSync(path.join(testpath, "_expected")); } catch (err) { };
-    di.forEach(n=> {
+    di.forEach(n => {
         if (n[0] === ".") return;
         if (n[0] === "_") return;
         it(n, () => {
@@ -147,8 +148,8 @@ describe("evalNode", () => {
             } catch (err) {
                 expc = "New Test";
             }
-            expc=expc.replace(/\r\n/g,'\n');
-            accc=accc.replace(/\r\n/g,'\n');
+            expc = expc.replace(/\r\n/g, '\n');
+            accc = accc.replace(/\r\n/g, '\n');
             expect(accc).toEqual(expc);
         });
     });

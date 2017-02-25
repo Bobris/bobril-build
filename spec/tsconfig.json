@@ -9,12 +9,10 @@
         "moduleResolution": "node",
         "noLib": false
     },
-    "compileOnSave": true,
     "exclude": [
-        "cc",
-        "ccout",
         "bundle",
         "complexGatherInfo",
-        "evalNode"
+        "evalNode",
+        "support"
     ]
 }

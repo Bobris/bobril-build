@@ -5,7 +5,7 @@ describe("spriter", () => {
         var a = [];
         function add(width, height, count) {
             for (let i = 0; i < count; i++)
-                a.push({ width: width, height: height, x: 0, y: 0 });
+                a.push({ width, height, x: 0, y: 0 });
         }
         add(60, 60, 9);
         add(63, 50, 1);
