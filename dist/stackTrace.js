@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const error_stack_parser_1 = require("error-stack-parser");
 const sourceMap = require("./sourceMap");
 function parseStack(stack) {

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 function deepEqual(a, b) {
     if (a === b) {
         return true;

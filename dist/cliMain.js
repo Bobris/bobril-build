@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const c = require("commander");
 const bb = require("./index");
 const http = require("http");
@@ -31,6 +32,9 @@ function fileResponse(response, name) {
             response.writeHead(500, "Server Error");
         }
         catch (headerError) {
+            // We can't set a header once the headers have already
+            // been sent - catch failed attempt to overwrite the
+            // response code.
         }
         finally {
             response.end("500 Server Error");

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const ts = require("typescript");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const dynamicBuffer_1 = require("./dynamicBuffer");
 const emptySourceMap = { version: 3, sources: [], mappings: new Buffer(0) };
 function countNL(b) {

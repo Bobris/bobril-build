@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const spriter = require("../dist/spriter");
 describe("spriter", () => {
     it("zero", () => {

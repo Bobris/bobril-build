@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const longPollingServer = require("./longPollingServer");
 const debounce_1 = require("./debounce");
 const stackTrace = require("./stackTrace");

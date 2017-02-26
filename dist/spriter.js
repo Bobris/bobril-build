@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 function spritePlace(sprites) {
     var a = new D2Array();
     sprites.sort((l, r) => r.height - l.height);

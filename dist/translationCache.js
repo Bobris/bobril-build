@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes

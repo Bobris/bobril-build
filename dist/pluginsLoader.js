@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const processUtils = require("./processUtils");
 const simpleHelpers_1 = require("./simpleHelpers");
 const pathPlatformDependent = require("path");

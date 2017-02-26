@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const postcss = require("postcss");
 const postcssUrl = require("postcss-url");
 const cssnano = require("cssnano");

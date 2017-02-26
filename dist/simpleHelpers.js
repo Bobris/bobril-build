@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 function globalDefines(defines) {
     let res = "";
     if (defines == null)

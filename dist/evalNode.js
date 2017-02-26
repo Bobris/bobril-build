@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const ts = require("typescript");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
@@ -114,8 +115,8 @@ function evalNode(n, tc, resolveStringLiteral) {
                 if (decl.parent && decl.parent.parent && decl.parent.parent.parent && decl.parent.parent.parent.kind === ts.SyntaxKind.ImportDeclaration) {
                     let impdecl = decl.parent.parent.parent;
                     let s2 = tc.getSymbolAtLocation(impdecl.moduleSpecifier);
-                    if (s2 && s2.exports[decl.propertyName.text]) {
-                        let s3 = s2.exports[decl.propertyName.text];
+                    if (s2 && s2.exports.get(decl.propertyName.text)) {
+                        let s3 = s2.exports.get(decl.propertyName.text);
                         let exportAssign = s3.declarations[0];
                         return evalNode(exportAssign, tc, resolveStringLiteral);
                     }

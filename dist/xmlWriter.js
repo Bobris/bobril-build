@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const dynamicBuffer_1 = require("./dynamicBuffer");
 class XmlWritter {
     constructor(humanReadable = false) {

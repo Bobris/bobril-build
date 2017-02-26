@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.charToInteger = new Buffer(256);
 exports.integerToChar = new Buffer(64);
 exports.charToInteger.fill(255);

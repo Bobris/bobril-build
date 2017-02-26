@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const chokidar = require("chokidar");
 const debounce = require("./debounce");
 const deepEqual_1 = require("./deepEqual");

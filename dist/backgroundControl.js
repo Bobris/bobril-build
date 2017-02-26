@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const childProcess = require("child_process");
 const plugins = require("./pluginsLoader");
 const bb = require("./index");

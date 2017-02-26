@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const uglify = require("uglify-js");
@@ -68,6 +69,7 @@ function defaultResolveRequire(name, from, fileExists, readFile) {
             if (fileExists(tryName))
                 return tryName;
             console.log("Ignoring invalid module " + path.join(curDir, 'node_modules', name));
+            // Invalid module, continue search up in tree
         }
         oldDir = curDir;
         curDir = path.dirname(curDir);
@@ -569,6 +571,7 @@ function bundle(project) {
             }
         });
         bundleAst = bundleAst.transform(compressor);
+        // in future to make another pass with removing function calls with empty body
     }
     if (project.mangle !== false) {
         bundleAst.figure_out_scope();

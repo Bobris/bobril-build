@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const pathUtils = require("./pathUtils");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
@@ -336,6 +337,7 @@ function getLanguageFromLocale(locale) {
 function writeTranslationFile(g11nVersion, locale, translationMessages, filename, write) {
     let resbufs = [];
     if (locale === 'en' || /^en-us/i.test(locale)) {
+        // English is always included
     }
     else {
         if (g11nVersion < 3) {

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const ts = require("typescript");
 const fs = require("fs");
 const pathPlatformDependent = require("path");
@@ -963,6 +964,7 @@ class CompilationCache {
                 let res = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
                 if (res != null) {
                     if (!/^node_modules\//i.test(moduleName)) {
+                        //logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
                     }
                     return { resolvedFileName: res };
                 }

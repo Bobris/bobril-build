@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 function debounce(func, wait = 100, immediate) {
     var timeout, args, context, timestamp, result;
     function later() {

@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.65.0
+--
+
+Upgrade to TS 2.2.*
+
 0.64.0
 --
 
