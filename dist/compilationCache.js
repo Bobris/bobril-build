@@ -894,7 +894,7 @@ class CompilationCache {
                 }
                 catch (er) {
                     if (onError)
-                        onError('Openning ' + cc.defaultLibFilename + " failed with " + er);
+                        onError('Opening ' + cc.defaultLibFilename + " failed with " + er);
                     return null;
                 }
                 cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
@@ -925,12 +925,12 @@ class CompilationCache {
             let cached = getCachedFileExistence(nameWithoutExtension + '.ts');
             if (cached.curTime !== null) {
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
-                return nameWithoutExtension + '.ts';
+                return { resolvedFileName: nameWithoutExtension + '.ts', extension: ts.Extension.Ts };
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.tsx');
             if (cached.curTime !== null) {
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
-                return nameWithoutExtension + '.tsx';
+                return { resolvedFileName: nameWithoutExtension + '.tsx', extension: ts.Extension.Tsx };
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
             if (cached.curTime !== null) {
@@ -938,14 +938,14 @@ class CompilationCache {
                 if (cached.curTime !== null) {
                     cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
                     project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
-                    return nameWithoutExtension + '.d.ts';
+                    return { resolvedFileName: nameWithoutExtension + '.d.ts', extension: ts.Extension.Dts };
                 }
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
                 cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
-                return nameWithoutExtension + '.js';
+                return { resolvedFileName: nameWithoutExtension + '.js', extension: ts.Extension.Js };
             }
             return null;
         }
@@ -956,7 +956,7 @@ class CompilationCache {
                     project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
                     return null;
                 }
-                return { resolvedFileName: res };
+                return res;
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
             let curDir = path.dirname(containingFile);
@@ -966,7 +966,7 @@ class CompilationCache {
                     if (!/^node_modules\//i.test(moduleName)) {
                         //logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
                     }
-                    return { resolvedFileName: res };
+                    return res;
                 }
                 let previousDir = curDir;
                 curDir = path.dirname(curDir);
@@ -974,8 +974,8 @@ class CompilationCache {
                     break;
             } while (true);
             // only flat node_modules currently supported (means only npm 3+)
-            let pkgname = "node_modules/" + moduleName + "/package.json";
-            let cached = getCachedFileContent(pkgname);
+            let pkgName = "node_modules/" + moduleName + "/package.json";
+            let cached = getCachedFileContent(pkgName);
             if (cached.textTime == null) {
                 return null;
             }
@@ -984,7 +984,7 @@ class CompilationCache {
                 main = JSON.parse(cached.text).main;
             }
             catch (e) {
-                project.logCallback('Cannot parse ' + pkgname + ' ' + e);
+                project.logCallback('Cannot parse ' + pkgName + ' ' + e);
                 return null;
             }
             if (main == null)
@@ -995,7 +995,7 @@ class CompilationCache {
                 project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
                 return null;
             }
-            return { resolvedFileName: res };
+            return res;
         }
         return {
             getSourceFile: getSourceFile,
@@ -1006,16 +1006,27 @@ class CompilationCache {
             getCanonicalFileName: getCanonicalFileName,
             getNewLine: function () { return '\n'; },
             getDirectories(name) {
-                let comb = path.join(project.dir, name);
-                return fs.readdirSync(comb).filter((v) => {
+                let res = fs.readdirSync(name).filter((v) => {
                     var stat = undefined;
                     try {
-                        stat = fs.statSync(path.join(comb, v));
+                        stat = fs.statSync(path.join(name, v));
                     }
                     catch (err) {
                     }
                     return stat && stat.isDirectory();
                 });
+                //console.log("getDir " + name + " ", res);
+                return res;
+            },
+            directoryExists(name) {
+                var stat = undefined;
+                try {
+                    stat = fs.statSync(name);
+                }
+                catch (err) {
+                }
+                //console.log("dirExists " + name + " " + (stat && stat.isDirectory()));
+                return stat && stat.isDirectory();
             },
             fileExists(fileName) {
                 if (fileName === cc.defaultLibFilename)

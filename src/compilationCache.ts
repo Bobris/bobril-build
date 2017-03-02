@@ -1024,7 +1024,7 @@ export class CompilationCache {
                 try {
                     text = fs.readFileSync(cc.defaultLibFilename).toString();
                 } catch (er) {
-                    if (onError) onError('Openning ' + cc.defaultLibFilename + " failed with " + er);
+                    if (onError) onError('Opening ' + cc.defaultLibFilename + " failed with " + er);
                     return null;
                 }
                 cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
@@ -1052,16 +1052,16 @@ export class CompilationCache {
             }
         }
 
-        function resolveModuleExtension(moduleName: string, nameWithoutExtension: string, internalModule: boolean): string {
+        function resolveModuleExtension(moduleName: string, nameWithoutExtension: string, internalModule: boolean): ts.ResolvedModuleFull {
             let cached = getCachedFileExistence(nameWithoutExtension + '.ts');
             if (cached.curTime !== null) {
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
-                return nameWithoutExtension + '.ts';
+                return { resolvedFileName: nameWithoutExtension + '.ts', extension: ts.Extension.Ts };
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.tsx');
             if (cached.curTime !== null) {
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.tsx', jsFile: nameWithoutExtension + '.js', isDefOnly: false, internalModule };
-                return nameWithoutExtension + '.tsx';
+                return { resolvedFileName: nameWithoutExtension + '.tsx', extension: ts.Extension.Tsx };
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.d.ts');
             if (cached.curTime !== null) {
@@ -1069,26 +1069,26 @@ export class CompilationCache {
                 if (cached.curTime !== null) {
                     cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
                     project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.d.ts', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
-                    return nameWithoutExtension + '.d.ts';
+                    return { resolvedFileName: nameWithoutExtension + '.d.ts', extension: ts.Extension.Dts };
                 }
             }
             cached = getCachedFileExistence(nameWithoutExtension + '.js');
             if (cached.curTime !== null) {
                 cc.addDepJsToOutput(project, '.', nameWithoutExtension + '.js');
                 project.moduleMap[moduleName] = { defFile: nameWithoutExtension + '.js', jsFile: nameWithoutExtension + '.js', isDefOnly: true, internalModule };
-                return nameWithoutExtension + '.js';
+                return { resolvedFileName: nameWithoutExtension + '.js', extension: ts.Extension.Js };
             }
             return null;
         }
 
-        function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModule {
+        function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModuleFull {
             if (moduleName.substr(0, 1) === '.') {
                 let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
                 if (res == null) {
                     project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
                     return null;
                 }
-                return { resolvedFileName: res };
+                return res;
             }
             // support for deprecated import * as b from 'node_modules/bobril/index';
             let curDir = path.dirname(containingFile);
@@ -1098,7 +1098,7 @@ export class CompilationCache {
                     if (!/^node_modules\//i.test(moduleName)) {
                         //logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
                     }
-                    return { resolvedFileName: res };
+                    return res;
                 }
                 let previousDir = curDir;
                 curDir = path.dirname(curDir);
@@ -1106,8 +1106,8 @@ export class CompilationCache {
                     break;
             } while (true);
             // only flat node_modules currently supported (means only npm 3+)
-            let pkgname = "node_modules/" + moduleName + "/package.json";
-            let cached = getCachedFileContent(pkgname);
+            let pkgName = "node_modules/" + moduleName + "/package.json";
+            let cached = getCachedFileContent(pkgName);
             if (cached.textTime == null) {
                 return null;
             }
@@ -1115,7 +1115,7 @@ export class CompilationCache {
             try {
                 main = JSON.parse(cached.text).main;
             } catch (e) {
-                project.logCallback('Cannot parse ' + pkgname + ' ' + e);
+                project.logCallback('Cannot parse ' + pkgName + ' ' + e);
                 return null;
             }
             if (main == null) main = 'index.js';
@@ -1125,7 +1125,7 @@ export class CompilationCache {
                 project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
                 return null;
             }
-            return { resolvedFileName: res };
+            return res;
         }
 
         return {
@@ -1137,15 +1137,25 @@ export class CompilationCache {
             getCanonicalFileName: getCanonicalFileName,
             getNewLine: function () { return '\n'; },
             getDirectories(name: string): string[] {
-                let comb = path.join(project.dir, name);
-                return fs.readdirSync(comb).filter((v) => {
+                let res = fs.readdirSync(name).filter((v) => {
                     var stat: fs.Stats | undefined = undefined;
                     try {
-                        stat = fs.statSync(path.join(comb, v))
+                        stat = fs.statSync(path.join(name, v))
                     } catch (err) {
                     }
                     return stat && stat.isDirectory();
                 });
+                //console.log("getDir " + name + " ", res);
+                return res;
+            },
+            directoryExists(name: string): boolean {
+                var stat: fs.Stats | undefined = undefined;
+                try {
+                    stat = fs.statSync(name);
+                } catch (err) {
+                }
+                //console.log("dirExists " + name + " " + (stat && stat.isDirectory()));
+                return stat && stat.isDirectory();
             },
             fileExists(fileName: string): boolean {
                 if (fileName === cc.defaultLibFilename) return true;
@@ -1158,7 +1168,7 @@ export class CompilationCache {
                 if (cached.textTime == null) return null;
                 return cached.text;
             },
-            resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
+            resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModuleFull[] {
                 return moduleNames.map((n) => {
                     let r = resolveModuleName(n, containingFile);
                     //console.log(n, containingFile, r);
