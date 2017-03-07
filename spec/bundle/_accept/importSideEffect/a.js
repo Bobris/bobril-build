@@ -1,1 +1,1 @@
-!function(){"use strict";Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(a,b){a.__proto__=b}||function(a,b){for(var c in b)b.hasOwnProperty(c)&&(a[c]=b[c])},Object.assign||function(a){for(var b,c=1,d=arguments.length;c<d;c++){b=arguments[c];for(var e in b)Object.prototype.hasOwnProperty.call(b,e)&&(a[e]=b[e])}return a};console.log("lib"),console.log("main")}();
+!function(){"use strict";Object.setPrototypeOf||Array,Object.assign;console.log("lib"),console.log("main")}();
