@@ -1,51 +1,54 @@
-// Type definitions for Jasmine 2.2
+// Type definitions for Jasmine 2.5
 // Project: http://jasmine.github.io/
 // Definitions by: Boris Yankov <https://github.com/borisyankov/>, Theodore Brown <https://github.com/theodorejb>, David Pärsson <https://github.com/davidparsson/>
-// Definitions: https://github.com/borisyankov/DefinitelyTyped
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.1
 
 
-// For ddescribe / iit use : https://github.com/borisyankov/DefinitelyTyped/blob/master/karma-jasmine/karma-jasmine.d.ts
+// For ddescribe / iit use : https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/karma-jasmine/karma-jasmine.d.ts
 
 declare function describe(description: string, specDefinitions: () => void): void;
 declare function fdescribe(description: string, specDefinitions: () => void): void;
 declare function xdescribe(description: string, specDefinitions: () => void): void;
 
-declare function it(expectation: string, assertion?: () => void, timeout?: number): void;
-declare function it(expectation: string, assertion?: (done: () => void) => void, timeout?: number): void;
-declare function fit(expectation: string, assertion?: () => void, timeout?: number): void;
-declare function fit(expectation: string, assertion?: (done: () => void) => void, timeout?: number): void;
-declare function xit(expectation: string, assertion?: () => void, timeout?: number): void;
-declare function xit(expectation: string, assertion?: (done: () => void) => void, timeout?: number): void;
+declare function it(expectation: string, assertion?: (done: DoneFn) => void, timeout?: number): void;
+declare function fit(expectation: string, assertion?: (done: DoneFn) => void, timeout?: number): void;
+declare function xit(expectation: string, assertion?: (done: DoneFn) => void, timeout?: number): void;
 
 /** If you call the function pending anywhere in the spec body, no matter the expectations, the spec will be marked pending. */
 declare function pending(reason?: string): void;
 
-declare function beforeEach(action: () => void, timeout?: number): void;
-declare function beforeEach(action: (done: () => void) => void, timeout?: number): void;
-declare function afterEach(action: () => void, timeout?: number): void;
-declare function afterEach(action: (done: () => void) => void, timeout?: number): void;
+declare function beforeEach(action: (done: DoneFn) => void, timeout?: number): void;
+declare function afterEach(action: (done: DoneFn) => void, timeout?: number): void;
 
-declare function beforeAll(action: () => void, timeout?: number): void;
-declare function beforeAll(action: (done: () => void) => void, timeout?: number): void;
-declare function afterAll(action: () => void, timeout?: number): void;
-declare function afterAll(action: (done: () => void) => void, timeout?: number): void;
+declare function beforeAll(action: (done: DoneFn) => void, timeout?: number): void;
+declare function afterAll(action: (done: DoneFn) => void, timeout?: number): void;
 
 declare function expect(spy: Function): jasmine.Matchers;
 declare function expect(actual: any): jasmine.Matchers;
 
 declare function fail(e?: any): void;
+/** Action method that should be called when the async work is complete */
+interface DoneFn extends Function {
+    (): void;
 
-declare function spyOn(object: any, method: string): jasmine.Spy;
+    /** fails the spec and indicates that it has completed. If the message is an Error, Error.message is used */
+    fail: (message?: Error | string) => void;
+}
+
+declare function spyOn<T>(object: T, method: keyof T): jasmine.Spy;
 
 declare function runs(asyncMethod: Function): void;
 declare function waitsFor(latchMethod: () => boolean, failureMessage?: string, timeout?: number): void;
 declare function waits(timeout?: number): void;
 
-declare module jasmine {
+declare namespace jasmine {
 
     var clock: () => Clock;
 
     function any(aclass: any): Any;
+    function anything(): Any;
+    function arrayContaining(sample: any[]): ArrayContaining;
     function objectContaining(sample: any): ObjectContaining;
     function createSpy(name: string, originalFn?: Function): Spy;
     function createSpyObj(baseName: string, methodNames: any[]): any;
@@ -54,6 +57,9 @@ declare module jasmine {
     function getEnv(): Env;
     function addCustomEqualityTester(equalityTester: CustomEqualityTester): void;
     function addMatchers(matchers: CustomMatcherFactories): void;
+    function stringMatching(str: string): Any;
+    function stringMatching(str: RegExp): Any;
+    function formatErrorMsg(domain: string, usage: string): (msg: string) => string
 
     interface Any {
 
@@ -67,6 +73,13 @@ declare module jasmine {
     interface ArrayLike<T> {
         length: number;
         [n: number]: T;
+    }
+
+    interface ArrayContaining {
+        new (sample: any[]): any;
+
+        asymmetricMatch(other: any): boolean;
+        jasmineToString(): string;
     }
 
     interface ObjectContaining {
@@ -96,6 +109,8 @@ declare module jasmine {
         uninstall(): void;
         /** Calls to any registered callback are triggered when the clock is ticked forward via the jasmine.clock().tick function, which takes a number of milliseconds. */
         tick(ms: number): void;
+        mockDate(date?: Date): void;
+        withMock(func: () => void): void;
     }
 
     interface CustomEqualityTester {
@@ -117,7 +132,7 @@ declare module jasmine {
 
     interface CustomMatcherResult {
         pass: boolean;
-        message: string;
+        message?: string;
     }
 
     interface MatchersUtil {
@@ -141,6 +156,7 @@ declare module jasmine {
         versionString(): string;
         nextSpecId(): number;
         addReporter(reporter: Reporter): void;
+        addReporter(reporter: CustomReporter): void;
         execute(): void;
         describe(description: string, specDefinitions: () => void): Suite;
         // ddescribe(description: string, specDefinitions: () => void): Suite; Not a part of jasmine. Angular team adds these
@@ -160,6 +176,14 @@ declare module jasmine {
         addCustomEqualityTester(equalityTester: CustomEqualityTester): void;
         addMatchers(matchers: CustomMatcherFactories): void;
         specFilter(spec: Spec): boolean;
+        throwOnExpectationFailure(value: boolean): void;
+        seed(seed: string | number): string | number;
+        provideFallbackReporter(reporter: Reporter): void;
+        throwingExpectationFailures(): boolean;
+        allowRespy(allow: boolean): void;
+        randomTests(): boolean;
+        randomizeTests(b: boolean): void;
+        clearReporters(): void;
     }
 
     interface FakeTimer {
@@ -200,18 +224,38 @@ declare module jasmine {
         passed(): boolean;
     }
 
-    interface MessageResult extends Result  {
+    interface MessageResult extends Result {
         values: any;
         trace: Trace;
     }
 
-    interface ExpectationResult extends Result  {
+    interface ExpectationResult extends Result {
         matcherName: string;
         passed(): boolean;
         expected: any;
         actual: any;
         message: string;
         trace: Trace;
+    }
+
+    interface Order {
+        new (options: { random: boolean, seed: string }): any;
+        random: boolean;
+        seed: string;
+        sort<T>(items: T[]): T[];
+    }
+
+    namespace errors {
+        class ExpectationFailed extends Error {
+            constructor();
+            stack: any;
+        }
+    }
+
+    interface TreeProcessor {
+        new (attrs: any): any;
+        execute: (done: Function) => void;
+        processTree(): any;
     }
 
     interface Trace {
@@ -267,25 +311,27 @@ declare module jasmine {
         isNot?: boolean;
         message(): any;
 
-        toBe(expected: any): boolean;
-        toEqual(expected: any): boolean;
-        toMatch(expected: any): boolean;
-        toBeDefined(): boolean;
-        toBeUndefined(): boolean;
-        toBeNull(): boolean;
+        toBe(expected: any, expectationFailOutput?: any): boolean;
+        toEqual(expected: any, expectationFailOutput?: any): boolean;
+        toMatch(expected: string | RegExp, expectationFailOutput?: any): boolean;
+        toBeDefined(expectationFailOutput?: any): boolean;
+        toBeUndefined(expectationFailOutput?: any): boolean;
+        toBeNull(expectationFailOutput?: any): boolean;
         toBeNaN(): boolean;
-        toBeTruthy(): boolean;
-        toBeFalsy(): boolean;
+        toBeTruthy(expectationFailOutput?: any): boolean;
+        toBeFalsy(expectationFailOutput?: any): boolean;
         toHaveBeenCalled(): boolean;
         toHaveBeenCalledWith(...params: any[]): boolean;
-        toContain(expected: any): boolean;
-        toBeLessThan(expected: any): boolean;
-        toBeGreaterThan(expected: any): boolean;
-        toBeCloseTo(expected: any, precision: any): boolean;
-        toContainHtml(expected: string): boolean;
-        toContainText(expected: string): boolean;
+        toHaveBeenCalledTimes(expected: number): boolean;
+        toContain(expected: any, expectationFailOutput?: any): boolean;
+        toBeLessThan(expected: number, expectationFailOutput?: any): boolean;
+        toBeLessThanOrEqual(expected: number, expectationFailOutput?: any): boolean;
+        toBeGreaterThan(expected: number, expectationFailOutput?: any): boolean;
+        toBeGreaterThanOrEqual(expected: number, expectationFailOutput?: any): boolean;
+        toBeCloseTo(expected: number, precision?: any, expectationFailOutput?: any): boolean;
         toThrow(expected?: any): boolean;
-        toThrowError(expected?: any): boolean;
+        toThrowError(message?: string | RegExp): boolean;
+        toThrowError(expected?: new (...args: any[]) => Error, message?: string | RegExp): boolean;
         not: Matchers;
 
         Any: Any;
@@ -302,6 +348,50 @@ declare module jasmine {
 
     interface MultiReporter extends Reporter {
         addReporter(reporter: Reporter): void;
+    }
+
+    interface SuiteInfo {
+        totalSpecsDefined: number;
+    }
+
+    interface CustomReportExpectation {
+        matcherName: string;
+        message: string;
+        passed: boolean;
+        stack: string;
+    }
+
+    interface FailedExpectation extends CustomReportExpectation {
+        actual: string;
+        expected: string;
+    }
+
+    interface PassedExpectation extends CustomReportExpectation {
+
+    }
+
+    interface CustomReporterResult {
+        description: string,
+        failedExpectations?: FailedExpectation[],
+        fullName: string,
+        id: string;
+        passedExpectations?: PassedExpectation[],
+        pendingReason?: string;
+        status?: string;
+    }
+
+    interface RunDetails {
+        failedExpectations: ExpectationResult[];
+        order: jasmine.Order
+    }
+
+    interface CustomReporter {
+        jasmineStarted?(suiteInfo: SuiteInfo): void;
+        suiteStarted?(result: CustomReporterResult): void;
+        specStarted?(result: CustomReporterResult): void;
+        specDone?(result: CustomReporterResult): void;
+        suiteDone?(result: CustomReporterResult): void;
+        jasmineDone?(runDetails: RunDetails): void;
     }
 
     interface Runner {
@@ -351,6 +441,7 @@ declare module jasmine {
         runs(func: SpecFunction): Spec;
         addToQueue(block: Block): void;
         addMatcherResult(result: Result): void;
+        getResult(): any;
         expect(actual: any): any;
         waits(timeout: number): Spec;
         waitsFor(latchFunction: SpecFunction, timeoutMessage?: string, timeout?: number): Spec;
@@ -360,11 +451,12 @@ declare module jasmine {
         finishCallback(): void;
         finish(onComplete?: () => void): void;
         after(doAfter: SpecFunction): void;
-        execute(onComplete?: () => void): any;
+        execute(onComplete?: () => void, enabled?: boolean): any;
         addBeforesAndAftersToQueue(): void;
         explodes(): void;
         spyOn(obj: any, methodName: string, ignoreMethodDoesntExist: boolean): Spy;
         removeAllSpies(): void;
+        throwOnExpectationFailure: boolean;
     }
 
     interface XSpec {
@@ -404,18 +496,19 @@ declare module jasmine {
         calls: Calls;
         mostRecentCall: { args: any[]; };
         argsForCall: any[];
-        wasCalled: boolean;
     }
 
     interface SpyAnd {
         /** By chaining the spy with and.callThrough, the spy will still track all calls to it but in addition it will delegate to the actual implementation. */
         callThrough(): Spy;
         /** By chaining the spy with and.returnValue, all calls to the function will return a specific value. */
-        returnValue(val: any): void;
+        returnValue(val: any): Spy;
+        /** By chaining the spy with and.returnValues, all calls to the function will return specific values in order until it reaches the end of the return values list. */
+        returnValues(...values: any[]): Spy;
         /** By chaining the spy with and.callFake, all calls to the spy will delegate to the supplied function. */
         callFake(fn: Function): Spy;
         /** By chaining the spy with and.throwError, all calls to the spy will throw the specified value. */
-        throwError(msg: string): void;
+        throwError(msg: string): Spy;
         /** When a calling strategy is used for a spy, the original stubbing behavior can be returned at any time with and.stub. */
         stub(): Spy;
     }
@@ -430,13 +523,22 @@ declare module jasmine {
         /** By chaining the spy with calls.allArgs(), will return the arguments to all calls **/
         allArgs(): any[];
         /** By chaining the spy with calls.all(), will return the context (the this) and arguments passed all calls **/
-        all(): any;
+        all(): CallInfo[];
         /** By chaining the spy with calls.mostRecent(), will return the context (the this) and arguments for the most recent call **/
-        mostRecent(): any;
+        mostRecent(): CallInfo;
         /** By chaining the spy with calls.first(), will return the context (the this) and arguments for the first call **/
-        first(): any;
+        first(): CallInfo;
         /** By chaining the spy with calls.reset(), will clears all tracking for a spy **/
         reset(): void;
+    }
+
+    interface CallInfo {
+        /** The context (the this) for the call */
+        object: any;
+        /** All arguments passed to the call */
+        args: any[];
+        /** The return value of the call */
+        returnValue: any;
     }
 
     interface Util {
@@ -453,6 +555,7 @@ declare module jasmine {
         finished: boolean;
         result: any;
         messages: any;
+        runDetails: RunDetails
 
         new (): any;
 
