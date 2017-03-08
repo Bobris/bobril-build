@@ -167,7 +167,7 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
                     let params = evalNode.evalNode(ce.arguments[1], tc, null);
-                    item.knownParams = params !== undefined && typeof params === "object" ? Object.keys(params) : [];
+                    item.knownParams = params != undefined && typeof params === "object" ? Object.keys(params) : [];
                 }
                 if (ce.arguments.length >= 3) {
                     item.hint = evalNode.evalNode(ce.arguments[2], tc, null);
