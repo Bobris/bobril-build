@@ -476,6 +476,9 @@ function run() {
             compilationCache.clearFileTimeModifications();
             return compilationCache.compile(project);
         }).then(() => {
+            if (project.localize) {
+                bb.emitTranslationsJs(project, project.compileTranslation);
+            }
             bb.updateTestHtml(project);
             console.timeEnd("compile");
             let result = compilationCache.getResult();
@@ -518,7 +521,7 @@ function run() {
         .command("interactive")
         .alias("i")
         .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
-        .description("runs web controled build ui")
+        .description("runs web controlled build ui")
         .action((c) => {
         commandRunning = true;
         interactiveCommand(c["port"], true);
@@ -527,7 +530,7 @@ function run() {
         .command("interactiveNoUpdate")
         .alias("y")
         .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
-        .description("runs web controled build ui without updating depndencies")
+        .description("runs web controlled build ui without updating dependencies")
         .action((c) => {
         commandRunning = true;
         interactiveCommand(c["port"], false);
