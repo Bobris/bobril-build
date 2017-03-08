@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.67.0
+--
+
+Updated jasmine.d.ts. Fixed translation failing in bb test. Ignore null in second parameter of g11n.t. 
+
 0.66.0
 --
 
