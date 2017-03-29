@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.68.0
+--
+
+Bundler wrongly compared included files in case sensitive way, which created duplicated source in bundle.
+
 0.67.0
 --
 

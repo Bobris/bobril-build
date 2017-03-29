@@ -359,9 +359,10 @@ __bbe['${name}']=module.exports; }).call(window);`);
         project.cache[name.toLowerCase()] = cached;
     }
     cached.requires.forEach((r) => {
-        if (visited.indexOf(r) >= 0)
+        const lowerR = r.toLowerCase();
+        if (visited.indexOf(lowerR) >= 0)
             return;
-        visited.push(r);
+        visited.push(lowerR);
         check(r, order, visited, project, resolveRequire);
     });
     cached.exports = Object.create(null);
@@ -414,9 +415,10 @@ export function bundle(project: IBundleProject) {
     let visited = [];
     let pureFuncs: { [name: string]: boolean } = Object.create(null);
     project.getMainFiles().forEach((val) => {
-        if (visited.indexOf(val) >= 0)
+        const lowerVal = val.toLowerCase();
+        if (visited.indexOf(lowerVal) >= 0)
             return;
-        visited.push(val);
+        visited.push(lowerVal);
         check(val, order, visited, project, resolveRequire);
     });
     let bundleAst = <uglify.IAstToplevel>uglify.parse('(function(){"use strict";\n' + bobrilDepsHelpers.tslibSource() + '})()');
