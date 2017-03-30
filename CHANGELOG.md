@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.69.0
+--
+
+Fix Bobflux compilation by correctly skip generated .d.ts files.
+
 0.68.0
 --
 

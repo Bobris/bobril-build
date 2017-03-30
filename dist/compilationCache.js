@@ -234,6 +234,9 @@ class CompilationCache {
                     content = simpleHelpers.removeLinkToSourceMap(content);
                     project.commonJsTemp[filename.toLowerCase()] = content;
                 }
+                else if (/\.d\.ts$/i.test(filename)) {
+                    // Skip .d.ts files
+                }
                 else {
                     project.commonJsTemp[filename.toLowerCase()] = content;
                 }
