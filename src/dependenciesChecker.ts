@@ -34,9 +34,13 @@ class DependenciesChecker {
     };
 
     private installDependenciesCmd() {
-        let installCommand = `yarn ${this.isUpdate ? "upgrade" : "install"} --flat`;
+        let doUpdate = this.isUpdate;
+        if (this.isUpdate && !this.existsYarnLockFile()) {
+            doUpdate = false;
+        }
+        let installCommand = `yarn ${doUpdate ? "upgrade" : "install"} --flat`;
         let yarnSuccess = false;
-        if (this.isUpdate) {
+        if (doUpdate) {
             console.log("Upgrading dependencies...");
         } else {
             console.log("Installing missing dependencies...");
@@ -90,17 +94,6 @@ class DependenciesChecker {
         this.installDependenciesCmd();
     }
 
-    private checkIfYarnIsInstalled(): boolean {
-        let yarnExists: boolean;
-        if (processUtils.runProcess("npm list -g yarn")) {
-            yarnExists = true;
-        } else {
-            console.log("yarn is not installed, the installation will be finished with npm");
-            yarnExists = false;
-        }
-        return yarnExists;
-    }
-
     private createYarnrcFile() {
         let filePath = path.join(this.project.dir, ".yarnrc");
         if (!fs.existsSync(filePath)) {
@@ -113,6 +106,11 @@ class DependenciesChecker {
         if (!fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, "registry =" + this.project.npmRegistry, "utf-8");
         }
+    }
+
+    private existsYarnLockFile() {
+        let filePath = path.join(this.project.dir, "yarn.lock");
+        return fs.existsSync(filePath);
     }
 
     private removeYarnLockFile() {

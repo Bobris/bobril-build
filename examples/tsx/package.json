@@ -6,7 +6,8 @@
     "main": "app.tsx"
   },
   "bobril": {
-    "title": "Bobril Tsx sample"
+    "title": "Bobril Tsx sample",
+    "dependencies": "upgrade"
   },
   "author": "",
   "license": "",

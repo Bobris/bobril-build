@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.69.1
+--
+
+Fallback from yarn upgrade to yarn install when yarn.lock does not exist. 
+
 0.69.0
 --
 

@@ -132,8 +132,10 @@ function runUpdateTsConfig(compilerOptions: { [name: string]: any }, cwd: string
     if (addJasmine) {
         fileList.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
     }
-    fileList.sort();
-    tscfg.files = fileList;
+    if (fileList.length > 0) {
+        fileList.sort();
+        tscfg.files = fileList;
+    }
     if (deepEqual(tscfg, origtscfg))
         return;
     try {

@@ -134,8 +134,10 @@ function runUpdateTsConfig(compilerOptions, cwd, addJasmine, jsx) {
     if (addJasmine) {
         fileList.push(bb.bbDirRoot + "/typings/jasmine/jasmine.d.ts");
     }
-    fileList.sort();
-    tscfg.files = fileList;
+    if (fileList.length > 0) {
+        fileList.sort();
+        tscfg.files = fileList;
+    }
     if (deepEqual_1.deepEqual(tscfg, origtscfg))
         return;
     try {
