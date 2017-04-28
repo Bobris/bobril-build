@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.70.0
+--
+
+Upgrade to TypeScript 2.3
+
 0.69.1
 --
 
