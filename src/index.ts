@@ -9,7 +9,7 @@ export * from './translationCache';
 export * from './pathUtils';
 export * from './debounce';
 export * from './compileProject';
-export * from './phantomjsRunner';
+export * from './chromeRunner';
 export * from './testServer';
 export * from './mainServer';
 export * from './actions';

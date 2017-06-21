@@ -15,7 +15,7 @@ Then create package.json with typescript.main or name your main ts file as index
 This will start bobril build in interactive mode. It will watch changes of your application, recompile and host in on http://localhost:8080.
 It uses latest Typescript to compile and prefer Node moduleResolution. Compilation for maximum speed enables skipDefaultLibCheck.
 
-In interactive mode it also starts phantomjs and runs tests. Results could be seen on http://localhost:8080/bb.
+In interactive mode it also starts chrome headless and runs tests. Results could be seen on http://localhost:8080/bb.
 To start another testing agent point any browser to http://localhost:8080/bb/test.
 If you want to debug tests open http://localhost:8080/test.html, any failed asserts throws expections so it is easy to stop on them.
 
@@ -31,7 +31,7 @@ Compile using tasks in VSCode or running `tsc` (in directories `src`, `srcHelper
 
 Use bobril.asset(path) to include asset to compilation. *.css files are automatically linked in index.html head. *.js files are automatically prepended to bundle.js.
 
-Jenkins integration (in memory compile, run tests in PhantomJs, write result in JUnit xml format):
+Jenkins integration (in memory compile, run tests in Chrome Headless, write result in JUnit xml format):
 
 	bb test -o junitTestResult.xml
 
