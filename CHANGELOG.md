@@ -1,6 +1,16 @@
 CHANGELOG
 ===
 
+0.70.1
+--
+
+Added option -x to export all texts from translations, not just untranslated ones.
+
+Usage:
+```
+bb t -x exported.txt
+```
+
 0.70.0
 --
 
