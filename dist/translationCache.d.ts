@@ -45,7 +45,7 @@ export declare class TranslationDb implements CompilationCache.ICompilationTrans
     private exportLanguageItem(source, hint);
     getLanguageFromSpecificFile(path: string): any;
     private loadFileWithoutBOM(fileName);
-    exportUntranslatedLanguages(filePath: string, language?: string, specificPath?: string): boolean;
+    exportLanguages(filePath: string, language?: string, specificPath?: string, exportOnlyUntranslated?: boolean): boolean;
     makeUnionOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean;
     makeSubtractOfExportedLanguages(filePath1: string, filePath2: string, outputPath: string): boolean;
     private saveExportedLanguages(outputPath, data);

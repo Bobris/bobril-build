@@ -336,7 +336,7 @@ class TranslationDb {
         let fileContent = fs.readFileSync(fileName, 'utf-8');
         return fileContent.replace(/^\uFEFF/, '');
     }
-    exportUntranslatedLanguages(filePath, language, specificPath) {
+    exportLanguages(filePath, language, specificPath, exportOnlyUntranslated = true) {
         try {
             let lang = language;
             if (specificPath != undefined) {
@@ -344,7 +344,6 @@ class TranslationDb {
             }
             let pos = this.langs.indexOf(lang);
             if (language != undefined && pos == -1) {
-                console.log();
                 console.error("You have entered unsupported language '" + language + "'. Please enter one of " + this.langs.join(", "));
                 return false;
             }
@@ -354,14 +353,14 @@ class TranslationDb {
                 let trs = db[key];
                 if (language === undefined && specificPath === undefined) {
                     for (let i = 0; i < this.langs.length; i++) {
-                        if (trs[i + 4])
+                        if (exportOnlyUntranslated && trs[i + 4])
                             continue;
                         content += this.exportLanguageItem(trs[0], trs[1]);
                         break;
                     }
                 }
                 else {
-                    if (trs[pos + 4])
+                    if (exportOnlyUntranslated && trs[pos + 4])
                         continue;
                     content += this.exportLanguageItem(trs[0], trs[1]);
                 }

@@ -352,7 +352,7 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
         return fileContent.replace(/^\uFEFF/, '');
     }
 
-    public exportUntranslatedLanguages(filePath: string, language?: string, specificPath?: string): boolean {
+    public exportLanguages(filePath: string, language?: string, specificPath?: string, exportOnlyUntranslated = true): boolean {
         try {
             let lang = language;
             if (specificPath != undefined) {
@@ -360,7 +360,6 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
             }
             let pos = this.langs.indexOf(lang);
             if (language != undefined && pos == -1) {
-                console.log();
                 console.error("You have entered unsupported language '" + language + "'. Please enter one of " + this.langs.join(", "));
                 return false;
             }
@@ -370,12 +369,12 @@ export class TranslationDb implements CompilationCache.ICompilationTranslation {
                 let trs = db[key];
                 if (language === undefined && specificPath === undefined) {
                     for (let i = 0; i < this.langs.length; i++) {
-                        if (trs[i + 4]) continue;
+                        if (exportOnlyUntranslated && trs[i + 4]) continue;
                         content += this.exportLanguageItem(trs[0], trs[1]);
                         break;
                     }
                 } else {
-                    if (trs[pos + 4]) continue;
+                    if (exportOnlyUntranslated && trs[pos + 4]) continue;
                     content += this.exportLanguageItem(trs[0], trs[1]);
                 }
             }
