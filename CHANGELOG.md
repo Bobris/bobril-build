@@ -1,8 +1,10 @@
 CHANGELOG
 ===
 
-0.70.1
+0.71.0
 --
+
+Upgrade to TypeScript 2.4
 
 Added option -x to export all texts from translations, not just untranslated ones.
 
