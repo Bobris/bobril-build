@@ -25,7 +25,7 @@
         }
         Derived_lib.prototype.hello = function() {
             console.log("Derived");
-        }, Derived_lib;
+        };
     }(Base);
     new (function(_super) {
         __extends(Main_main, _super);
