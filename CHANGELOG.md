@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.71.1
+--
+
+Fixed failing to open file with error in VSCode when path was absolute.
+
 0.71.0
 --
 

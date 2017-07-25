@@ -24,7 +24,7 @@ class Client {
         connection.onMessage = (connection: longPollingServer.ILongPollingConnection, message: string, data: any) => {
             switch (message) {
                 case "focusPlace": {
-                    this.server.sendAll(message, { fn: path.join(this.server.dir, data.fn), pos: data.pos });
+                    this.server.sendAll(message, { fn: pathUtils.join(this.server.dir, data.fn), pos: data.pos });
                     break;
                 }
                 case "runAction": {

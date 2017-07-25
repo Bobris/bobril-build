@@ -18,7 +18,7 @@ class Client {
         connection.onMessage = (connection, message, data) => {
             switch (message) {
                 case "focusPlace": {
-                    this.server.sendAll(message, { fn: path.join(this.server.dir, data.fn), pos: data.pos });
+                    this.server.sendAll(message, { fn: pathUtils.join(this.server.dir, data.fn), pos: data.pos });
                     break;
                 }
                 case "runAction": {
