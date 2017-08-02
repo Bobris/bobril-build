@@ -14,7 +14,7 @@ __export(require("./translationCache"));
 __export(require("./pathUtils"));
 __export(require("./debounce"));
 __export(require("./compileProject"));
-__export(require("./phantomjsRunner"));
+__export(require("./chromeRunner"));
 __export(require("./testServer"));
 __export(require("./mainServer"));
 __export(require("./actions"));

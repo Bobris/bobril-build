@@ -366,7 +366,7 @@ class TranslationDb {
                 }
             }
             if (content.length > 0) {
-                fs.writeFileSync(filePath, content, 'utf-8');
+                fs.writeFileSync(filePath, content, { encoding: 'utf-8' });
             }
         }
         catch (ex) {
@@ -420,7 +420,7 @@ class TranslationDb {
             content += this.exportLanguageItem(data[key].source, data[key].hint);
         }
         if (content.length > 0) {
-            fs.writeFileSync(outputPath, content, 'utf-8');
+            fs.writeFileSync(outputPath, content, { encoding: 'utf-8' });
         }
     }
 }

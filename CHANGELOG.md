@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.72.0
+--
+
+PhantomJs replaced by Chrome headless. Make sure to have atleast Chrome 60!
+
 0.71.1
 --
 

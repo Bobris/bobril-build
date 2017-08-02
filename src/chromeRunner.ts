@@ -1,4 +1,4 @@
-import * as chromeLauncher from 'lighthouse/chrome-launcher/chrome-launcher';
+import * as chromeRunner from 'chrome-runner';
 
 export interface IChromeProcess {
     finish: Promise<number>;
@@ -8,7 +8,7 @@ export interface IChromeProcess {
 export function launchChrome(url) {
     let resolveFinish: (code: number) => void;
     let rejectFinish: (err: Error) => void;
-    let launchedChrome: chromeLauncher.LaunchedChrome;
+    let launchedChrome: any;
     let res: IChromeProcess = {
         finish: new Promise<number>((resolve, reject) => {
             resolveFinish = resolve;
@@ -20,15 +20,13 @@ export function launchChrome(url) {
         }
     };
 
-    chromeLauncher.launch({
-        chromeFlags: [
-            '--disable-gpu',
-            '--headless'
-        ],
-        startingUrl: url
+    chromeRunner.launchWithHeadless({
+        startupPage: url
     }).then(chrome => {
         launchedChrome = chrome;
-        resolveFinish(0);
+        chrome.chromeProcess.on("close", (code: number) => {
+            resolveFinish(code);
+        });
     }).catch(rejectFinish);
 
     return res;

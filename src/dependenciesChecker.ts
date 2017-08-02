@@ -97,14 +97,14 @@ class DependenciesChecker {
     private createYarnrcFile() {
         let filePath = path.join(this.project.dir, ".yarnrc");
         if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', "utf-8");
+            fs.writeFileSync(filePath, "registry " + '"' + this.project.npmRegistry + '"', { encoding: 'utf-8' });
         }
     }
 
     private createNpmrcFile() {
         let filePath = path.join(this.project.dir, ".npmrc");
         if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, "registry =" + this.project.npmRegistry, "utf-8");
+            fs.writeFileSync(filePath, "registry =" + this.project.npmRegistry, { encoding: 'utf-8' });
         }
     }
 
