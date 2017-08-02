@@ -18,10 +18,10 @@ const reUrlTest = /^test(?:$|\/)/;
 const distWebRoot = bb.bbDirRoot + "/distweb";
 const distWebtRoot = bb.bbDirRoot + "/distwebt";
 let server: http.Server = null;
-let phantomJsProcess: bb.IProcess = null;
+let chromeProcess: bb.IChromeProcess = null;
 
-function startTestsInPhantom() {
-    phantomJsProcess = bb.startPhantomJs([require.resolve('./phantomjsOpen.js'), `http://localhost:${server.address().port}/bb/test/`]);
+function startTestsInChrome() {
+    chromeProcess = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`)
 }
 
 function fileResponse(response: http.ServerResponse, name: string) {
@@ -244,8 +244,8 @@ export function forceInteractiveRecompile(): Promise<any> {
                     livereloadResolver = null;
                 }
                 if (v.hasTests) {
-                    if (phantomJsProcess == null)
-                        startTestsInPhantom();
+                    if (chromeProcess == null)
+                        startTestsInChrome();
                     bb.testServer.startTest('/test.html');
                     bb.testServer.waitForOneResult().then(v => {
                         console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"))
@@ -463,7 +463,7 @@ export function run() {
         });
     c
         .command("test")
-        .description("runs tests once in PhantomJs")
+        .description("runs tests once in Chrome")
         .option("-o, --out <name>", "filename for test result as JUnit XML")
         .action((c) => {
             commandRunning = true;
@@ -506,12 +506,12 @@ export function run() {
                     process.exit(1);
                 }
                 console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
-                startTestsInPhantom();
+                startTestsInChrome();
                 bb.testServer.startTest('/test.html');
-                return Promise.race<number | bb.TestResultsHolder>([phantomJsProcess.finish, bb.testServer.waitForOneResult()]);
+                return Promise.race<number | bb.TestResultsHolder>([chromeProcess.finish, bb.testServer.waitForOneResult()]);
             }).then((code: number | bb.TestResultsHolder) => {
                 if (typeof code === "number") {
-                    console.log('phantom result code:' + code);
+                    console.log('chrome result code:' + code);
                     process.exit(1);
                 } else if (code == null) {
                     console.log('test timeout on start');
