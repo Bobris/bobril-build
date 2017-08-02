@@ -376,6 +376,7 @@ export function run() {
         .option("-a, --addlang <lang>", "add new language")
         .option("-r, --removelang <lang>", "remove language")
         .option("-e, --export <path>", "export untranslated languages")
+        .option("-x, --exportAll <path>", "export all texts from all languages")
         .option("-i, --import <path>", "import translated language")
         .option("-p, --specificPath <path>", "specify path for export from / import to ")
         .option("-l, --lang <lang>", "specify language for export")
@@ -401,20 +402,27 @@ export function run() {
                 trDb.removeLang(c["removelang"]);
                 trDb.saveLangDbs(trDir);
             }
-            if (c["export"]) {
+            if (c["export"] || c["exportAll"]) {
+                let exportOnlyUntranslated = true;
+                let destFile = c["export"];
+                let db = (c["specificPath"] === undefined) ? trDb : trDbSingle;
+
+                if(c["exportAll"]){
+                    destFile = c["exportAll"]
+                    exportOnlyUntranslated = false;
+                }
+
                 if (c["specificPath"] === undefined) {
                     if (c["lang"] != undefined) {
-                        console.log("Export untranslated language " + c["lang"] + " into file " + c["export"])
+                        console.log("Export untranslated language " + c["lang"] + " into file " + destFile)
                     } else {
-                        console.log("Export untranslated languages into file " + c["export"]);
+                        console.log("Export untranslated languages into file " + destFile);
                     }
-                    if (!trDb.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
-                        process.exit(1);
-                    process.exit(0);
                 } else {
-                    console.log("Export file from " + c["specificPath"] + " into file " + c["export"]);
+                    console.log("Export file from " + c["specificPath"] + " into file " + destFile);
                 }
-                if (!trDbSingle.exportUntranslatedLanguages(c["export"], c["lang"], c["specificPath"]))
+
+                if (!db.exportLanguages(destFile, c["lang"], c["specificPath"], exportOnlyUntranslated))
                     process.exit(1);
                 process.exit(0);
             }

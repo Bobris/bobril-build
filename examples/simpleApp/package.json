@@ -6,11 +6,20 @@
     "main": "src/app.ts"
   },
   "bobril": {
-    "title": "Bobril Hello World"
+    "title": "Bobril Hello World",
+    "compilerOptions": {
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "strictNullChecks": true
+    }
   },
   "author": "keeema",
   "license": "ISC",
   "dependencies": {
-    "bobril": "^5.2.0"
+    "bobril": "^7.3.2"
   }
 }

@@ -1,6 +1,23 @@
 CHANGELOG
 ===
 
+0.71.1
+--
+
+Fixed failing to open file with error in VSCode when path was absolute.
+
+0.71.0
+--
+
+Upgrade to TypeScript 2.4
+
+Added option -x to export all texts from translations, not just untranslated ones.
+
+Usage:
+```
+bb t -x exported.txt
+```
+
 0.70.0
 --
 
