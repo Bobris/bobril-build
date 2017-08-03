@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.72.1
+--
+
+Added workaround for yarn unable to unbold on Windows.
+
 0.72.0
 --
 

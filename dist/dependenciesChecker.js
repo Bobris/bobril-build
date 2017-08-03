@@ -5,6 +5,7 @@ const path = require("path");
 const bb = require("./index");
 const pathUtils = require("./pathUtils");
 const processUtils = require("./processUtils");
+const chalk = require("chalk");
 class DependenciesChecker {
     constructor(project) {
         this.missingModules = [];
@@ -53,6 +54,7 @@ class DependenciesChecker {
                 this.npmInstalation();
             }
         }
+        process.stdout.write(chalk.reset("\r"));
     }
     ;
     npmInstalation() {

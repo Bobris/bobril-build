@@ -4,6 +4,7 @@ import * as bb from './index';
 import * as pathUtils from "./pathUtils"
 import * as processUtils from "./processUtils"
 import * as commander from 'commander';
+import * as chalk from 'chalk';
 
 class DependenciesChecker {
     missingModules: string[] = [];
@@ -57,6 +58,7 @@ class DependenciesChecker {
                 this.npmInstalation();
             }
         }
+        process.stdout.write(chalk.reset("\r"));
     };
     private npmInstalation() {
         let installCommand = "npm " + (this.isUpdate ? "up" : "i");
