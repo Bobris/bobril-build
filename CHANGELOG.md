@@ -1,6 +1,12 @@
 CHANGELOG
 ===
 
+0.73.0
+--
+
+Warn when import contains two slashes in row (import * from ".//file").
+When compiler options include "declaration":true it report all emit errors.
+
 0.72.1
 --
 

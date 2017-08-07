@@ -675,7 +675,9 @@ export class CompilationCache {
                         BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, project.prefixStyleDefs + sd.name);
                     }
                 }
-                program.emit(src);
+                var emitRes = program.emit(src);
+                if (project.options.declaration)
+                    this.reportDiagnostics(emitRes.diagnostics);
                 cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
                 for (let j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
@@ -1085,6 +1087,9 @@ export class CompilationCache {
 
         function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModuleFull {
             if (moduleName.substr(0, 1) === '.') {
+                if (/\/\//.test(moduleName)) {
+                    project.logCallback('Import ' + moduleName + ' contains two slashes in row in ' + containingFile);
+                }
                 let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
                 if (res == null) {
                     project.logCallback('Module ' + moduleName + ' is not valid in ' + containingFile);
