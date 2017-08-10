@@ -330,6 +330,9 @@ export function refreshProjectFromPackageJson(project: bb.IProject, allFiles: { 
             return false;
         }
     }
+    if (typeof bobrilSection.defaultLanguage === 'string') {
+        project.defaultLanguage = bobrilSection.defaultLanguage;
+    }
     if (typeof bobrilSection.additionalResourcesDirectory === 'string') {
         project.additionalResourcesDirectory = bobrilSection.additionalResourcesDirectory;
     }
@@ -360,8 +363,10 @@ export function emitTranslationsJs(project: bb.IProject, translationDb: bb.Trans
         version = parseInt(JSON.parse(fs.readFileSync(g11np, "utf-8")).version.split("."), 10);
     } catch (err) { };
     if (+version !== version) version = 3;
-    bb.writeTranslationFile(version, 'en-US', translationDb.getMessageArrayInLang('en-US'), prefix + 'en-US.js', project.writeFileCallback);
+    let language = project.defaultLanguage || 'en-US';
+    bb.writeTranslationFile(version, language, translationDb.getMessageArrayInLang(language), prefix + language + '.js', project.writeFileCallback);
     translationDb.langs.forEach(lang => {
+        if (lang == language) return;
         bb.writeTranslationFile(version, lang, translationDb.getMessageArrayInLang(lang), prefix + lang + '.js', project.writeFileCallback);
     });
 }

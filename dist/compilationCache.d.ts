@@ -52,6 +52,7 @@ export interface IProject {
         };
     };
     specGlob?: string;
+    defaultLanguage?: string;
     mainJsFile?: string;
     noBobrilJsx?: boolean;
     compilerOptions?: {

@@ -4,6 +4,8 @@ Mainly it will support copying sprites, building big sprites. support i18n. All 
 
 Changelog: https://github.com/Bobris/Bobril-build/blob/master/CHANGELOG.md
 
+Requires: Node version 8+ (needs to support async)
+
 How to use:
 
     npm install bobril-build -g
@@ -68,7 +70,8 @@ It reads `package.json` and understands:
                 "pluginName": {
                     "configKey": "configValue"
                 }
-            }
+            },
+            "defaultLanguage": "en-US" // default translation language
         }
     }
     

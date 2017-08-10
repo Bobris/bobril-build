@@ -161,6 +161,9 @@ function g11nInit(project) {
     let res = "<script>";
     if (project.localize) {
         res += `function g11nPath(s){return "./${project.outputSubDir ? (project.outputSubDir + "/") : ""}"+s+".js"};`;
+        if (project.defaultLanguage) {
+            res += `var g11nLoc="${project.defaultLanguage}";`;
+        }
     }
     if (project.bundlePng) {
         res += `var bobrilBPath="${project.bundlePng}"`;

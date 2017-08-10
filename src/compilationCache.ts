@@ -94,6 +94,7 @@ export interface IProject {
     htmlHead?: string;
     constantOverrides?: { [module: string]: { [exportName: string]: string | number | boolean } };
     specGlob?: string;
+    defaultLanguage?: string;
     mainJsFile?: string;
     // forbid support JSX - it will be slightly faster
     noBobrilJsx?: boolean;

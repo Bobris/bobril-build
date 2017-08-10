@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.74.0
+--
+
+Allow to specify default translation language. See README for details.
+
 0.73.0
 --
 
