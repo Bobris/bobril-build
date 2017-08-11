@@ -19,6 +19,17 @@ let server = null;
 let chromeProcess = null;
 function startTestsInChrome() {
     chromeProcess = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`);
+    process.on("exit", () => {
+        if (chromeProcess != null)
+            chromeProcess.kill();
+    });
+}
+function exitProcess(code) {
+    if (chromeProcess != null) {
+        chromeProcess.kill();
+        chromeProcess = null;
+    }
+    process.exit(code);
 }
 function fileResponse(response, name) {
     let contentStream = fs.createReadStream(name)
@@ -498,11 +509,11 @@ function run() {
         }).then((code) => {
             if (typeof code === "number") {
                 console.log('chrome result code:' + code);
-                process.exit(1);
+                exitProcess(1);
             }
             else if (code == null) {
                 console.log('test timeout on start');
-                process.exit(1);
+                exitProcess(1);
             }
             else {
                 if (c["out"]) {
@@ -510,16 +521,16 @@ function run() {
                 }
                 if (code.failure) {
                     console.log(chalk.red(code.totalTests + " tests finished with " + code.testsFailed + " failures."));
-                    process.exit(1);
+                    exitProcess(1);
                 }
                 else {
                     console.log(chalk.green(code.totalTests + " tests finished without failures."));
-                    process.exit(0);
+                    exitProcess(0);
                 }
             }
         }, (err) => {
             console.error(err);
-            process.exit(1);
+            exitProcess(1);
         });
     });
     c

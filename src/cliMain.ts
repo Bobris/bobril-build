@@ -21,7 +21,18 @@ let server: http.Server = null;
 let chromeProcess: bb.IChromeProcess = null;
 
 function startTestsInChrome() {
-    chromeProcess = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`)
+    chromeProcess = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`);
+    process.on("exit", () => {
+        if (chromeProcess != null) chromeProcess.kill();
+    });
+}
+
+function exitProcess(code: number) {
+    if (chromeProcess != null) {
+        chromeProcess.kill();
+        chromeProcess = null;
+    }
+    process.exit(code);
 }
 
 function fileResponse(response: http.ServerResponse, name: string) {
@@ -407,7 +418,7 @@ export function run() {
                 let destFile = c["export"];
                 let db = (c["specificPath"] === undefined) ? trDb : trDbSingle;
 
-                if(c["exportAll"]){
+                if (c["exportAll"]) {
                     destFile = c["exportAll"]
                     exportOnlyUntranslated = false;
                 }
@@ -512,26 +523,26 @@ export function run() {
             }).then((code: number | bb.TestResultsHolder) => {
                 if (typeof code === "number") {
                     console.log('chrome result code:' + code);
-                    process.exit(1);
+                    exitProcess(1);
                 } else if (code == null) {
                     console.log('test timeout on start');
-                    process.exit(1);
+                    exitProcess(1);
                 } else {
                     if (c["out"]) {
                         fs.writeFileSync(c["out"], bb.toJUnitXml(code));
                     }
                     if (code.failure) {
                         console.log(chalk.red(code.totalTests + " tests finished with " + code.testsFailed + " failures."));
-                        process.exit(1);
+                        exitProcess(1);
                     }
                     else {
                         console.log(chalk.green(code.totalTests + " tests finished without failures."));
-                        process.exit(0);
+                        exitProcess(0);
                     }
                 }
             }, (err) => {
                 console.error(err);
-                process.exit(1);
+                exitProcess(1);
             });
         });
     c

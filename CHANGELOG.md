@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.74.1
+--
+
+Kill chrome headless on process end.
+
 0.74.0
 --
 
