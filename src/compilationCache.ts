@@ -102,6 +102,8 @@ export interface IProject {
     compilerOptions?: { [name: string]: any };
     // default false
     localize?: boolean;
+    // default undefined = autodetect and the script that prevents click jacking always adds to the page, false = no adding script
+    clickjack?: boolean;
     // default undefined = autodetect if something added, true = remove unused, false = don't update
     updateTranslations?: boolean;
     // default false
