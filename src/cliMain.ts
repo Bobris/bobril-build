@@ -311,6 +311,7 @@ export function run() {
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .option("-u, --updateTranslations <1/0>", "update translations", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-v, --versiondir <name>", "store all resources except index.html in this directory")
+        .option("-j, --clickjack <1/0>", "prevent click jacking")
         .action((c) => {
             commandRunning = true;
             let start = Date.now();
@@ -353,6 +354,9 @@ export function run() {
             }
             if (c["localize"]) {
                 project.localize = humanTrue(c["localize"]);
+            }
+            if (c["clickjack"]) {
+                project.clickjack = humanTrue(c["clickjack"]);
             }
             if (c["versiondir"]) {
                 project.outputSubDir = c["versiondir"];

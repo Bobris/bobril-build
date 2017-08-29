@@ -141,7 +141,7 @@ export function systemJsBasedIndexHtml(project: compilationCache.IProject) {
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
-    <body>${g11nInit(project)}
+    <body>${defendClickjack(project)}${g11nInit(project)}
         <script type="text/javascript" src="system.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${globalDefines(project.defines)}
@@ -174,9 +174,27 @@ function g11nInit(project: compilationCache.IProject): string {
     return res;
 }
 
+function defendClickjack(project: compilationCache.IProject): string {
+    
+    if (project.clickjack === false)
+        return '';
+
+    let bodyNone = `<style id="antiClickjack">body{display:none !important;}</style>`;
+    let script = '<script>';
+    script += 
+        `if (self === top) {
+            var antiClickjack = document.getElementById("antiClickjack");
+            antiClickjack.parentNode.removeChild(antiClickjack);
+        } else {
+            top.location = self.location;
+        }`;
+    script += '</script>';
+    return bodyNone + script;
+}
+
 export function bundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
-    return `<!DOCTYPE html><html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${g11nInit(project)}<script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8">${project.htmlHeadExpanded}<title>${title}</title>${linkCss(project)}</head><body>${defendClickjack(project)}${g11nInit(project)}<script type="text/javascript" src="${project.bundleJs || "bundle.js"}" charset="utf-8"></script></body></html>`;
 }
 
 export function examplesListIndexHtml(fileNames: string[], project: compilationCache.IProject) {
@@ -237,7 +255,7 @@ export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
-    <body>${g11nInit(project)}${setupLivereload(project)}
+    <body>${defendClickjack(project)}${g11nInit(project)}${setupLivereload(project)}
         <script type="text/javascript" src="loader.js" charset="utf-8"></script>
         <script type="text/javascript">
             ${globalDefines(project.defines)}
@@ -260,7 +278,7 @@ export function fastBundleBasedTestHtml(project: compilationCache.IProject) {
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
-    <body>${g11nInit(project)}
+    <body>${defendClickjack(project)}${g11nInit(project)}
         <script type="text/javascript" src="bb/special/jasmine-core.js" charset="utf-8"></script>
         <script type="text/javascript" src="bb/special/jasmine-boot.js" charset="utf-8"></script>
         <script type="text/javascript" src="bb/special/loader.js" charset="utf-8"></script>
