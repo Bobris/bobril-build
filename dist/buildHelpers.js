@@ -162,16 +162,15 @@ function createNodeFromValue(value) {
         return nullNode;
     }
     if (value === undefined) {
-        let undefinedNode = ts.createNode(ts.SyntaxKind.Identifier);
-        undefinedNode.text = "undefined";
+        let undefinedNode = ts.createIdentifier("undefined");
         return undefinedNode;
     }
     if (value === true) {
-        let result = ts.createNode(ts.SyntaxKind.TrueKeyword);
+        let result = ts.createTrue();
         return result;
     }
     if (value === false) {
-        let result = ts.createNode(ts.SyntaxKind.FalseKeyword);
+        let result = ts.createFalse();
         return result;
     }
     if (typeof value === "string") {
@@ -198,8 +197,7 @@ function createNodeFromValue(value) {
         result.properties = createNodeArray(0);
         for (var key in value) {
             let pa = ts.createNode(ts.SyntaxKind.PropertyAssignment);
-            let name = ts.createNode(ts.SyntaxKind.Identifier);
-            name.text = key;
+            let name = ts.createIdentifier(key);
             pa.name = name;
             pa.initializer = createNodeFromValue(value[key]);
             result.properties.push(pa);
@@ -211,23 +209,23 @@ function createNodeFromValue(value) {
 exports.createNodeFromValue = createNodeFromValue;
 function setMethod(callExpression, name) {
     var ex = callExpression.expression;
-    let result = ts.createNode(ts.SyntaxKind.Identifier);
+    let result = ts.createIdentifier(name);
     result.flags = ex.name.flags;
-    result.text = name;
     result.parent = ex;
     ex.name = result;
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 exports.setMethod = setMethod;
 function setArgumentAst(callExpression, index, value) {
-    while (callExpression.arguments.length < index) {
-        callExpression.arguments.push(createNodeFromValue(null));
+    var a = callExpression.arguments;
+    while (a.length < index) {
+        a.push(createNodeFromValue(null));
     }
-    if (callExpression.arguments.length === index) {
-        callExpression.arguments.push(value);
+    if (a.length === index) {
+        a.push(value);
     }
     else {
-        callExpression.arguments[index] = value;
+        a[index] = value;
     }
 }
 exports.setArgumentAst = setArgumentAst;

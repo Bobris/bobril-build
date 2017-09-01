@@ -117,7 +117,7 @@ class TranslationDb {
         }
         fs.writeFileSync(filename, JSON.stringify(items, null, "\t"));
     }
-    pruneUnusedMesssages() {
+    pruneUnusedMessages() {
         let list = Object.keys(this.db);
         for (let i = 0; i < list.length; i++) {
             let tr = this.db[list[i]];

@@ -8,7 +8,8 @@
         "removeComments": false,
         "moduleResolution": "node",
         "noLib": false,
-        "outDir": "../dist"
+        "outDir": "../dist",
+        "types": []
     },
     "compileOnSave": true
 }

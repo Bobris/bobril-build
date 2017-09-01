@@ -196,16 +196,15 @@ export function createNodeFromValue(value: any): ts.Expression {
         return nullNode;
     }
     if (value === undefined) {
-        let undefinedNode = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
-        undefinedNode.text = "undefined";
+        let undefinedNode = ts.createIdentifier("undefined");
         return undefinedNode;
     }
     if (value === true) {
-        let result = <ts.Expression>ts.createNode(ts.SyntaxKind.TrueKeyword);
+        let result = ts.createTrue();
         return result;
     }
     if (value === false) {
-        let result = <ts.Expression>ts.createNode(ts.SyntaxKind.FalseKeyword);
+        let result = ts.createFalse();
         return result;
     }
     if (typeof value === "string") {
@@ -223,7 +222,7 @@ export function createNodeFromValue(value: any): ts.Expression {
         let result = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
         result.elements = createNodeArray<ts.Expression>(0);
         for (var i = 0; i < value.length; i++) {
-            result.elements.push(createNodeFromValue(value[i]));
+            (result.elements as any as ts.Expression[]).push(createNodeFromValue(value[i]));
         }
         return result;
     }
@@ -232,11 +231,10 @@ export function createNodeFromValue(value: any): ts.Expression {
         result.properties = createNodeArray<ts.ObjectLiteralElementLike>(0);
         for (var key in value) {
             let pa = <ts.PropertyAssignment>ts.createNode(ts.SyntaxKind.PropertyAssignment);
-            let name = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
-            name.text = key;
+            let name = ts.createIdentifier(key);
             pa.name = name;
             pa.initializer = createNodeFromValue(value[key]);
-            result.properties.push(pa);
+            (result.properties as any as ts.ObjectLiteralElementLike[]).push(pa);
         }
         return result;
     }
@@ -245,29 +243,29 @@ export function createNodeFromValue(value: any): ts.Expression {
 
 export function setMethod(callExpression: ts.CallExpression, name: string) {
     var ex = <ts.PropertyAccessExpression>callExpression.expression;
-    let result = <ts.Identifier>ts.createNode(ts.SyntaxKind.Identifier);
+    let result = ts.createIdentifier(name);
     result.flags = ex.name.flags;
-    result.text = name;
     result.parent = ex;
     ex.name = result;
     ex.pos = -1; // This is for correctly not wrap line after "b."
 }
 
 export function setArgumentAst(callExpression: ts.CallExpression, index: number, value: ts.Expression): void {
-    while (callExpression.arguments.length < index) {
-        callExpression.arguments.push(<ts.Expression>createNodeFromValue(null));
+    var a = callExpression.arguments as any as ts.Expression[];
+    while (a.length < index) {
+        a.push(createNodeFromValue(null));
     }
-    if (callExpression.arguments.length === index) {
-        callExpression.arguments.push(value);
+    if (a.length === index) {
+        a.push(value);
     } else {
-        callExpression.arguments[index] = value;
+        a[index] = value;
     }
 }
 
 function createNodeArray<T extends ts.Node>(len: number): ts.NodeArray<T> {
     let arr = [];
     while (len-- > 0) arr.push(null);
-    let res = <ts.NodeArray<T>>arr;
+    let res = arr as any as ts.NodeArray<T>;
     res.pos = 0;
     res.end = 0;
     return res;
@@ -281,7 +279,7 @@ export function buildLambdaReturningArray(values: ts.Expression[]): ts.Expressio
     fn.equalsGreaterThanToken = <ts.Token<ts.SyntaxKind.EqualsGreaterThanToken>>ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
     let body = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
     body.elements = createNodeArray<ts.Expression>(0);
-    body.elements.push(...values);
+    (body.elements as any as ts.Expression[]).push(...values);
     body.pos = pos;
     body.end = end;
     fn.body = body;
@@ -295,7 +293,7 @@ export function setArgument(callExpression: ts.CallExpression, index: number, va
 }
 
 export function setArgumentCount(callExpression: ts.CallExpression, count: number) {
-    var a = callExpression.arguments;
+    var a = callExpression.arguments as any as ts.Expression[];
     while (a.length < count) {
         a.push(createNodeFromValue(null));
     }

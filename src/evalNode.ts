@@ -103,8 +103,8 @@ export function evalNode(n: ts.Node, tc: ts.TypeChecker, resolveStringLiteral: (
                 if (decl.parent && decl.parent.parent && decl.parent.parent.parent && decl.parent.parent.parent.kind === ts.SyntaxKind.ImportDeclaration) {
                     let impdecl = <ts.ImportDeclaration>decl.parent.parent.parent;
                     let s2 = tc.getSymbolAtLocation(impdecl.moduleSpecifier);
-                    if (s2 && s2.exports.get(decl.propertyName.text)) {
-                        let s3 = s2.exports.get(decl.propertyName.text);
+                    if (s2 && s2.exports.get(decl.propertyName.escapedText)) {
+                        let s3 = s2.exports.get(decl.propertyName.escapedText);
                         let exportAssign = <ts.ExportAssignment>s3.declarations[0];
                         return evalNode(exportAssign, tc, resolveStringLiteral);
                     }

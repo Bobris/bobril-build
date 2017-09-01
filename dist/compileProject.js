@@ -105,7 +105,8 @@ function runUpdateTsConfig(compilerOptions, cwd, addJasmine, jsx) {
         "removeComments": false,
         "noLib": false,
         "preserveConstEnums": false,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "types": []
     });
     if (compilerOptions)
         Object.assign(tscfg.compilerOptions, compilerOptions);
@@ -451,7 +452,7 @@ function compileProject(project) {
             project.updateTranslations === true) {
             console.log("Writing translations");
             if (project.updateTranslations === true) {
-                translationDb.pruneUnusedMesssages();
+                translationDb.pruneUnusedMessages();
             }
             translationDb.saveLangDbs(trDir);
         }

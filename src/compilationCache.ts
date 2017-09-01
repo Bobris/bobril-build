@@ -339,6 +339,7 @@ export class CompilationCache {
         }
         project.options.experimentalDecorators = true;
         project.options.lib = defaultLibs();
+        project.options.types = [];
         if (project.compilerOptions) {
             Object.assign(project.options, project.compilerOptions);
         }

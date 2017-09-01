@@ -23,7 +23,7 @@ export declare class TranslationDb implements CompilationCache.ICompilationTrans
     removeLang(lang: string): void;
     saveLangDbs(dir: string): void;
     saveLangDb(filename: string, lang: string): void;
-    pruneUnusedMesssages(): void;
+    pruneUnusedMessages(): void;
     currentFileUsages: {
         [key: string]: boolean;
     };

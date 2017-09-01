@@ -3,14 +3,14 @@
 
 
 bobril-g11n@*:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-3.3.3.tgz#40c7cc6da94792932e94aa6b033856f6f45fc3f2"
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-3.3.4.tgz#af6e525b1112256f46c13f446dd2cfaa65d0b1df"
   dependencies:
     moment "^2.10.6"
 
 bobril@*:
-  version "7.3.0"
-  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.3.0.tgz#29e1e1e7abf9878ab9ec2ae72afba48e41a74de6"
+  version "7.6.1"
+  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.6.1.tgz#635add7376e2d5b074867f5a641633a33c2976b7"
 
 moment@^2.10.6:
   version "2.18.1"

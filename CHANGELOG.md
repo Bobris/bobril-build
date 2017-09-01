@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.75.0
+--
+
+Typescript 2.5.2+. Fixed problem with Timer error by setting TS compiler options by default to `types: []`.
+
 0.74.1
 --
 
