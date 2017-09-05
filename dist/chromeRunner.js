@@ -15,15 +15,14 @@ function launchChrome(url) {
                 launchedChrome.kill();
         }
     };
-    chromeRunner.launchWithHeadless({
-        startupPage: url
-    }).then(chrome => {
-        launchedChrome = chrome;
-        chrome.chromeProcess.on("close", (code) => {
-            resolveFinish(code);
-        });
-    }).catch(rejectFinish);
-    return res;
+    return [chromeRunner.launchWithHeadless({
+            startupPage: url
+        }).then(chrome => {
+            launchedChrome = chrome;
+            chrome.chromeProcess.on("close", (code) => {
+                resolveFinish(code);
+            });
+        }).catch(rejectFinish), res];
 }
 exports.launchChrome = launchChrome;
 //# sourceMappingURL=chromeRunner.js.map

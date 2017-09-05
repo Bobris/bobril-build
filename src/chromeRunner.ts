@@ -5,7 +5,7 @@ export interface IChromeProcess {
     kill(): void;
 }
 
-export function launchChrome(url) {
+export function launchChrome(url): [Promise<void>, IChromeProcess] {
     let resolveFinish: (code: number) => void;
     let rejectFinish: (err: Error) => void;
     let launchedChrome: any;
@@ -20,14 +20,12 @@ export function launchChrome(url) {
         }
     };
 
-    chromeRunner.launchWithHeadless({
+    return [chromeRunner.launchWithHeadless({
         startupPage: url
     }).then(chrome => {
         launchedChrome = chrome;
         chrome.chromeProcess.on("close", (code: number) => {
             resolveFinish(code);
         });
-    }).catch(rejectFinish);
-
-    return res;
+    }).catch(rejectFinish), res];
 }

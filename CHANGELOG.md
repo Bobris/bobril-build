@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.75.1
+--
+
+Fixed randomly leaking Chrome process with fast tests.
+
 0.75.0
 --
 

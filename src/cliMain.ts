@@ -20,11 +20,13 @@ const distWebtRoot = bb.bbDirRoot + "/distwebt";
 let server: http.Server = null;
 let chromeProcess: bb.IChromeProcess = null;
 
-function startTestsInChrome() {
-    chromeProcess = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`);
+function startTestsInChrome(): Promise<void> {
+    var chrome = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`);
+    chromeProcess = chrome[1];
     process.on("exit", () => {
         if (chromeProcess != null) chromeProcess.kill();
     });
+    return chrome[0];
 }
 
 function exitProcess(code: number) {
@@ -234,37 +236,34 @@ function buildWriter(): ((name: string, content: Buffer) => void) | undefined {
     return undefined;
 }
 
-export function forceInteractiveRecompile(): Promise<any> {
-    return compileProcess.compile(buildWriter()).then(v => {
-        compileProcess.setOptions({}).then(opts => {
-            mergeProjectFromServer(opts);
-            return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
-        }).then(() => {
-            if (v.errors != 0) {
-                if (v.hasTests) {
-                    console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
-                } else {
-                    console.log(chalk.red("Build failed with " + v.errors + " errors."));
-                }
-            } else {
-                console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
-            }
-            if (v.errors == 0) {
-                if (livereloadResolver) {
-                    livereloadResolver();
-                    livereloadResolver = null;
-                }
-                if (v.hasTests) {
-                    if (chromeProcess == null)
-                        startTestsInChrome();
-                    bb.testServer.startTest('/test.html');
-                    bb.testServer.waitForOneResult().then(v => {
-                        console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"))
-                    });
-                }
-            }
-        });
-    });
+export async function forceInteractiveRecompile(): Promise<void> {
+    let v = await compileProcess.compile(buildWriter());
+    let opts = await compileProcess.setOptions({});
+    mergeProjectFromServer(opts);
+    await Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
+    if (v.errors != 0) {
+        if (v.hasTests) {
+            console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
+        } else {
+            console.log(chalk.red("Build failed with " + v.errors + " errors."));
+        }
+    } else {
+        console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
+    }
+    if (v.errors == 0) {
+        if (livereloadResolver) {
+            livereloadResolver();
+            livereloadResolver = null;
+        }
+        if (v.hasTests) {
+            if (chromeProcess == null)
+                await startTestsInChrome();
+            bb.testServer.startTest('/test.html');
+            bb.testServer.waitForOneResult().then(v => {
+                console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"))
+            });
+        }
+    }
 }
 
 function interactiveCommand(port: number, installDependencies: boolean) {
@@ -476,19 +475,20 @@ export function run() {
         .command("test")
         .description("runs tests once in Chrome")
         .option("-o, --out <name>", "filename for test result as JUnit XML")
-        .action((c) => {
-            commandRunning = true;
-            startHttpServer(0);
-            console.time("compile");
-            let project = bb.createProjectFromDir(bb.getCurProjectDir());
-            project.logCallback = (text) => {
-                console.log(text);
-            }
-            if (!bb.refreshProjectFromPackageJson(project, null)) {
-                process.exit(1);
-            }
-            var compilationCache = new bb.CompilationCache();
-            bb.fillMainSpec(project).then(() => {
+        .action(async (c) => {
+            try {
+                commandRunning = true;
+                startHttpServer(0);
+                console.time("compile");
+                let project = bb.createProjectFromDir(bb.getCurProjectDir());
+                project.logCallback = (text) => {
+                    console.log(text);
+                }
+                if (!bb.refreshProjectFromPackageJson(project, null)) {
+                    process.exit(1);
+                }
+                var compilationCache = new bb.CompilationCache();
+                await bb.fillMainSpec(project);
                 bb.presetDebugProject(project);
                 project.updateTranslations = false;
                 project.options.sourceRoot = "/";
@@ -504,8 +504,7 @@ export function run() {
                 }
                 translationDb.clearBeforeCompilation();
                 compilationCache.clearFileTimeModifications();
-                return compilationCache.compile(project);
-            }).then(() => {
+                await compilationCache.compile(project);
                 if (project.localize) {
                     bb.emitTranslationsJs(project, project.compileTranslation as bb.TranslationDb);
                 }
@@ -517,10 +516,9 @@ export function run() {
                     process.exit(1);
                 }
                 console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
-                startTestsInChrome();
+                await startTestsInChrome();
                 bb.testServer.startTest('/test.html');
-                return Promise.race<number | bb.TestResultsHolder>([chromeProcess.finish, bb.testServer.waitForOneResult()]);
-            }).then((code: number | bb.TestResultsHolder) => {
+                var code: number | bb.TestResultsHolder = await Promise.race<number | bb.TestResultsHolder>([chromeProcess.finish, bb.testServer.waitForOneResult()]);
                 if (typeof code === "number") {
                     console.log('chrome result code:' + code);
                     exitProcess(1);
@@ -540,10 +538,11 @@ export function run() {
                         exitProcess(0);
                     }
                 }
-            }, (err) => {
+            }
+            catch (err) {
                 console.error(err);
                 exitProcess(1);
-            });
+            }
         });
     c
         .command("interactive")

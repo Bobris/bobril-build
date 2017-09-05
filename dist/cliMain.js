@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const c = require("commander");
 const bb = require("./index");
@@ -18,11 +26,13 @@ const distWebtRoot = bb.bbDirRoot + "/distwebt";
 let server = null;
 let chromeProcess = null;
 function startTestsInChrome() {
-    chromeProcess = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`);
+    var chrome = bb.launchChrome(`http://localhost:${server.address().port}/bb/test/`);
+    chromeProcess = chrome[1];
     process.on("exit", () => {
         if (chromeProcess != null)
             chromeProcess.kill();
     });
+    return chrome[0];
 }
 function exitProcess(code) {
     if (chromeProcess != null) {
@@ -218,37 +228,36 @@ function buildWriter() {
     return undefined;
 }
 function forceInteractiveRecompile() {
-    return compileProcess.compile(buildWriter()).then(v => {
-        compileProcess.setOptions({}).then(opts => {
-            mergeProjectFromServer(opts);
-            return Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
-        }).then(() => {
-            if (v.errors != 0) {
-                if (v.hasTests) {
-                    console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
-                }
-                else {
-                    console.log(chalk.red("Build failed with " + v.errors + " errors."));
-                }
+    return __awaiter(this, void 0, void 0, function* () {
+        let v = yield compileProcess.compile(buildWriter());
+        let opts = yield compileProcess.setOptions({});
+        mergeProjectFromServer(opts);
+        yield Promise.all(plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.afterInteractiveCompile, v));
+        if (v.errors != 0) {
+            if (v.hasTests) {
+                console.log(chalk.red("Skipping testing due to " + v.errors + " errors in build."));
             }
             else {
-                console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
+                console.log(chalk.red("Build failed with " + v.errors + " errors."));
             }
-            if (v.errors == 0) {
-                if (livereloadResolver) {
-                    livereloadResolver();
-                    livereloadResolver = null;
-                }
-                if (v.hasTests) {
-                    if (chromeProcess == null)
-                        startTestsInChrome();
-                    bb.testServer.startTest('/test.html');
-                    bb.testServer.waitForOneResult().then(v => {
-                        console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"));
-                    });
-                }
+        }
+        else {
+            console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
+        }
+        if (v.errors == 0) {
+            if (livereloadResolver) {
+                livereloadResolver();
+                livereloadResolver = null;
             }
-        });
+            if (v.hasTests) {
+                if (chromeProcess == null)
+                    yield startTestsInChrome();
+                bb.testServer.startTest('/test.html');
+                bb.testServer.waitForOneResult().then(v => {
+                    console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"));
+                });
+            }
+        }
     });
 }
 exports.forceInteractiveRecompile = forceInteractiveRecompile;
@@ -462,19 +471,20 @@ function run() {
         .command("test")
         .description("runs tests once in Chrome")
         .option("-o, --out <name>", "filename for test result as JUnit XML")
-        .action((c) => {
-        commandRunning = true;
-        startHttpServer(0);
-        console.time("compile");
-        let project = bb.createProjectFromDir(bb.getCurProjectDir());
-        project.logCallback = (text) => {
-            console.log(text);
-        };
-        if (!bb.refreshProjectFromPackageJson(project, null)) {
-            process.exit(1);
-        }
-        var compilationCache = new bb.CompilationCache();
-        bb.fillMainSpec(project).then(() => {
+        .action((c) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            commandRunning = true;
+            startHttpServer(0);
+            console.time("compile");
+            let project = bb.createProjectFromDir(bb.getCurProjectDir());
+            project.logCallback = (text) => {
+                console.log(text);
+            };
+            if (!bb.refreshProjectFromPackageJson(project, null)) {
+                process.exit(1);
+            }
+            var compilationCache = new bb.CompilationCache();
+            yield bb.fillMainSpec(project);
             bb.presetDebugProject(project);
             project.updateTranslations = false;
             project.options.sourceRoot = "/";
@@ -490,8 +500,7 @@ function run() {
             }
             translationDb.clearBeforeCompilation();
             compilationCache.clearFileTimeModifications();
-            return compilationCache.compile(project);
-        }).then(() => {
+            yield compilationCache.compile(project);
             if (project.localize) {
                 bb.emitTranslationsJs(project, project.compileTranslation);
             }
@@ -503,10 +512,9 @@ function run() {
                 process.exit(1);
             }
             console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
-            startTestsInChrome();
+            yield startTestsInChrome();
             bb.testServer.startTest('/test.html');
-            return Promise.race([chromeProcess.finish, bb.testServer.waitForOneResult()]);
-        }).then((code) => {
+            var code = yield Promise.race([chromeProcess.finish, bb.testServer.waitForOneResult()]);
             if (typeof code === "number") {
                 console.log('chrome result code:' + code);
                 exitProcess(1);
@@ -528,11 +536,12 @@ function run() {
                     exitProcess(0);
                 }
             }
-        }, (err) => {
+        }
+        catch (err) {
             console.error(err);
             exitProcess(1);
-        });
-    });
+        }
+    }));
     c
         .command("interactive")
         .alias("i")
