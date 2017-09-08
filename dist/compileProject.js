@@ -436,7 +436,7 @@ function compileProject(project) {
     return compilationCache.compile(project).then(() => {
         if (!project.totalBundle) {
             if (project.fastBundle) {
-                bb.updateLoaderJsByCC(compilationCache, project.writeFileCallback);
+                bb.updateLoaderJsByCC(compilationCache, project.writeFileCallback, project.outputSubDir ? project.outputSubDir + "/" : "");
             }
             else {
                 bb.updateSystemJsByCC(compilationCache, project.writeFileCallback);

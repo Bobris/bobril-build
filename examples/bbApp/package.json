@@ -7,7 +7,7 @@
   },
   "bobril": {
     "title": "Bobril Hello World",
-    "head": "<link rel=\"icon\" href=\"light.png\">",
+    "head": "<link rel=\"icon\" href=\"<<src/light.png>>\">",
     "additionalResourcesDirectory": "assets-app",
     "prefixStyleDefs": "pref1x",
     "dependencies": "upgrade",

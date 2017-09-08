@@ -232,13 +232,14 @@ function setupLivereload(project: compilationCache.IProject) {
 
 export function fastBundleBasedIndexHtml(project: compilationCache.IProject) {
     let title = project.htmlTitle || 'Bobril Application';
+    let loaderjs = (project.outputSubDir ? project.outputSubDir + "/" : "") + "loader.js";
     return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}${setupLivereload(project)}
-        <script type="text/javascript" src="loader.js" charset="utf-8"></script>
+        <script type="text/javascript" src="${loaderjs}" charset="utf-8"></script>
         <script type="text/javascript">
             ${globalDefines(project.defines)}
             ${getModuleMap(project)}
@@ -388,10 +389,10 @@ export function writeTranslationFile(g11nVersion: number, locale: string, transl
     write(filename, Buffer.concat(resbufs));
 }
 
-function writeDirFromCompilationCache(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void, dir: string, files: string[]) {
+function writeDirFromCompilationCache(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void, dir: string, files: string[], prependDestPath?: string) {
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
-        cc.copyToProjectIfChanged(f, dir, f, write);
+        cc.copyToProjectIfChanged(f, dir, (prependDestPath || "") + f, write);
     }
 }
 
@@ -399,6 +400,6 @@ export function updateSystemJsByCC(cc: compilationCache.CompilationCache, write:
     writeDirFromCompilationCache(cc, write, systemJsPath(), systemJsFiles());
 }
 
-export function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void) {
-    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
+export function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void, prependDestPath: string) {
+    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles(), prependDestPath);
 }

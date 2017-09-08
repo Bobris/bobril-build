@@ -9,8 +9,8 @@ bobril-g11n@*:
     moment "^2.10.6"
 
 bobril@*:
-  version "7.6.1"
-  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.6.1.tgz#635add7376e2d5b074867f5a641633a33c2976b7"
+  version "7.6.2"
+  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.6.2.tgz#86bfe18b4d2be7d0c25ed4deb9753866c514e7a2"
 
 moment@^2.10.6:
   version "2.18.1"

@@ -18,4 +18,4 @@ export declare function updateIndexHtml(project: compilationCache.IProject): voi
 export declare function updateTestHtml(project: compilationCache.IProject): void;
 export declare function writeTranslationFile(g11nVersion: number, locale: string, translationMessages: string[], filename: string, write: (fn: string, b: Buffer) => void): void;
 export declare function updateSystemJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void): void;
-export declare function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void): void;
+export declare function updateLoaderJsByCC(cc: compilationCache.CompilationCache, write: (fn: string, b: Buffer) => void, prependDestPath: string): void;

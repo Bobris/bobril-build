@@ -113,7 +113,7 @@ function compile(param) {
                 return cp.compilationCache.compile(cp.project).then(() => {
                     if (!cp.project.totalBundle) {
                         if (cp.project.fastBundle) {
-                            bb.updateLoaderJsByCC(cp.compilationCache, cp.project.writeFileCallback);
+                            bb.updateLoaderJsByCC(cp.compilationCache, cp.project.writeFileCallback, "");
                         }
                         else {
                             bb.updateSystemJsByCC(cp.compilationCache, cp.project.writeFileCallback);

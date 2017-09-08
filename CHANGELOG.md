@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.76.0
+--
+
+Allow to use --versionDir also with --fast 1.
+
 0.75.1
 --
 

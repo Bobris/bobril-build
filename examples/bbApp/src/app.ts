@@ -16,6 +16,8 @@ function dontDoThis(cn: string) {
 
 dontDoThis("try");
 
+let switchValue = false;
+
 let page = b.createVirtualComponent({
     init(ctx: IPageCtx) {
         ctx.counter = 0;
@@ -40,7 +42,7 @@ let page = b.createVirtualComponent({
             {
                 tag: 'img', attrs: { src: b.asset('light.png') }
             },
-            lightSwitch({ value: false, onChange: () => { } }),
+            lightSwitch({ value: switchValue, onChange: () => { switchValue = !switchValue; } }),
             {
                 tag: 'span', className: "glyphicon glyphicon-star", attrs: { "ariaHidden": true }
             },

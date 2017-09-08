@@ -228,13 +228,14 @@ function setupLivereload(project) {
 }
 function fastBundleBasedIndexHtml(project) {
     let title = project.htmlTitle || 'Bobril Application';
+    let loaderjs = (project.outputSubDir ? project.outputSubDir + "/" : "") + "loader.js";
     return `<!DOCTYPE html><html>
     <head>
         <meta charset="utf-8">${project.htmlHeadExpanded}
         <title>${title}</title>${linkCss(project)}
     </head>
     <body>${g11nInit(project)}${setupLivereload(project)}
-        <script type="text/javascript" src="loader.js" charset="utf-8"></script>
+        <script type="text/javascript" src="${loaderjs}" charset="utf-8"></script>
         <script type="text/javascript">
             ${simpleHelpers_1.globalDefines(project.defines)}
             ${getModuleMap(project)}
@@ -384,18 +385,18 @@ function writeTranslationFile(g11nVersion, locale, translationMessages, filename
     write(filename, Buffer.concat(resbufs));
 }
 exports.writeTranslationFile = writeTranslationFile;
-function writeDirFromCompilationCache(cc, write, dir, files) {
+function writeDirFromCompilationCache(cc, write, dir, files, prependDestPath) {
     for (let i = 0; i < files.length; i++) {
         let f = files[i];
-        cc.copyToProjectIfChanged(f, dir, f, write);
+        cc.copyToProjectIfChanged(f, dir, (prependDestPath || "") + f, write);
     }
 }
 function updateSystemJsByCC(cc, write) {
     writeDirFromCompilationCache(cc, write, systemJsPath(), systemJsFiles());
 }
 exports.updateSystemJsByCC = updateSystemJsByCC;
-function updateLoaderJsByCC(cc, write) {
-    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles());
+function updateLoaderJsByCC(cc, write, prependDestPath) {
+    writeDirFromCompilationCache(cc, write, loaderJsPath(), loaderJsFiles(), prependDestPath);
 }
 exports.updateLoaderJsByCC = updateLoaderJsByCC;
 //# sourceMappingURL=bobrilDepsHelpers.js.map

@@ -246,14 +246,17 @@ class CompilationCache {
         }
         let shortenFileName = (fn) => fn;
         let shortenFileNameAddPath = shortenFileName;
+        if (project.outputSubDir) {
+            shortenFileNameAddPath = (fn) => project.outputSubDir + "/" + fn;
+        }
         if (project.totalBundle) {
             shortenFileName = shortenFileName_1.createFileNameShortener();
             shortenFileNameAddPath = shortenFileName;
             if (project.outputSubDir) {
                 shortenFileNameAddPath = (fn) => project.outputSubDir + "/" + shortenFileName(fn);
             }
-            project.bundleJs = shortenFileNameAddPath(project.bundleJs);
         }
+        project.bundleJs = shortenFileNameAddPath(project.bundleJs);
         if (project.spriteMerge) {
             shortenFileName('bundle.png');
         }
@@ -458,7 +461,8 @@ class CompilationCache {
                         if (si.name == null)
                             continue;
                         let newname = si.name;
-                        project.depAssetFiles[si.name] = shortenFileNameAddPath(newname);
+                        newname = shortenFileNameAddPath(newname);
+                        project.depAssetFiles[si.name] = newname;
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
                         BuildHelpers.setArgument(si.callExpression, 0, newname);
                     }
@@ -598,7 +602,7 @@ class CompilationCache {
                                 cssToMerge.push({ source: cached.buffer.toString(), from: assetFile });
                             }
                             else {
-                                project.cssToLink.push(project.depAssetFiles[assetFile]);
+                                project.cssToLink.push(shortenFileNameAddPath(project.depAssetFiles[assetFile]));
                                 return cssHelpers.processCss(cached.buffer.toString(), assetFile, (url, from) => {
                                     let hi = url.lastIndexOf('#');
                                     let hi2 = url.lastIndexOf('?');
@@ -609,10 +613,11 @@ class CompilationCache {
                                     if (hi2 < hi)
                                         hi = hi2;
                                     let res = resolvePathString(project.dir, from + "/a", url.substr(0, hi));
-                                    project.depAssetFiles[res] = res;
+                                    let resres = shortenFileNameAddPath(res);
+                                    project.depAssetFiles[res] = resres;
                                     return url;
                                 }).then(v => {
-                                    project.writeFileCallback(project.depAssetFiles[assetFile], new Buffer(v.css));
+                                    project.writeFileCallback(shortenFileNameAddPath(project.depAssetFiles[assetFile]), new Buffer(v.css));
                                 }, (e) => {
                                     project.logCallback(e.toString());
                                 });
