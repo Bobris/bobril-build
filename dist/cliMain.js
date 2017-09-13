@@ -304,6 +304,7 @@ function run() {
         .option("-l, --localize <1/0>", "create localized resources (default autodetect)", /^(true|false|1|0|t|f|y|n)$/i, "")
         .option("-u, --updateTranslations <1/0>", "update translations", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-v, --versiondir <name>", "store all resources except index.html in this directory")
+        .option("-n, --noupdate", "do not start yarn/npm before build")
         .action((c) => {
         commandRunning = true;
         let start = Date.now();
@@ -361,8 +362,10 @@ function run() {
         if (project.fastBundle) {
             project.options.sourceRoot = path.relative(project.outputDir, ".");
         }
-        if (!depChecker.installMissingDependencies(project))
-            process.exit(1);
+        if (!c["noupdate"]) {
+            if (!depChecker.installMissingDependencies(project))
+                process.exit(1);
+        }
         bb.compileProject(project).then((result) => {
             if (result.errors == 0 && createAdditionalResources(project).copyFilesToOutputDir()) {
                 console.log(chalk.green("Build finished successfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));

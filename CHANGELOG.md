@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.77.0
+--
+
+Allow to disable running yarn/npm before build with -n parameter.
+
 0.76.0
 --
 
