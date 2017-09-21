@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.78.0
+--
+
+Allow d.ts import another d.ts without js.
+
 0.77.0
 --
 
