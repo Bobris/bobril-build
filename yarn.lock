@@ -155,14 +155,14 @@ bluebird@^2.9.34:
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-2.11.0.tgz#534b9033c022c9579c56ba3b3e5a5caafbb650e1"
 
 bobril-g11n@*:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-3.3.3.tgz#40c7cc6da94792932e94aa6b033856f6f45fc3f2"
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-3.3.4.tgz#af6e525b1112256f46c13f446dd2cfaa65d0b1df"
   dependencies:
     moment "^2.10.6"
 
 bobril@*:
-  version "7.6.1"
-  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.6.1.tgz#635add7376e2d5b074867f5a641633a33c2976b7"
+  version "7.6.2"
+  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.6.2.tgz#86bfe18b4d2be7d0c25ed4deb9753866c514e7a2"
 
 boom@2.x.x:
   version "2.10.1"
@@ -257,8 +257,8 @@ chrome-finder@^1.0.1:
   resolved "https://registry.yarnpkg.com/chrome-finder/-/chrome-finder-1.0.1.tgz#f8a9c34d13f87a2cabd400167c544e1087e47d28"
 
 chrome-runner@^1.3.3:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/chrome-runner/-/chrome-runner-1.3.3.tgz#b1647b1e1feb1b2bd0f38adb7146dd6f46455a07"
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/chrome-runner/-/chrome-runner-1.3.4.tgz#a65c39f91d46e874d8d78a784567d2f44138a8a2"
   dependencies:
     "@types/node" "^8.0.7"
     chrome-finder "^1.0.1"
