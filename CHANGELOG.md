@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.78.1
+--
+
+Removed tracing console.log from previous version.
+
 0.78.0
 --
 

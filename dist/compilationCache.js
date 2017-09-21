@@ -1061,7 +1061,7 @@ class CompilationCache {
             resolveModuleNames(moduleNames, containingFile) {
                 return moduleNames.map((n) => {
                     let r = resolveModuleName(n, containingFile);
-                    console.log(n, containingFile, r);
+                    // console.log(n, containingFile, r);
                     return r;
                 });
             }
