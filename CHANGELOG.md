@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.79.0
+--
+
+Added es2015.iterable and es2015.collection to default libs. It means that for example you can use Map because it is supported in IE11.
+
 0.78.1
 --
 

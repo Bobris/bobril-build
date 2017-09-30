@@ -25,7 +25,9 @@ export function defaultLibs() {
         "es5",
         "dom",
         "es2015.core",
-        "es2015.promise"
+        "es2015.promise",
+        "es2015.iterable",
+        "es2015.collection"
     ];
 }
 
