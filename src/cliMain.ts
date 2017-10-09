@@ -289,7 +289,9 @@ function interactiveCommand(port: number, installDependencies: boolean) {
 }
 
 function createAdditionalResources(project: bb.IProject) {
-    return new AdditionalResources(project);
+    if (project.additionalResources == null)
+        project.additionalResources = new AdditionalResources(project);
+    return project.additionalResources;
 }
 
 export function run() {
@@ -370,8 +372,9 @@ export function run() {
                 if (!depChecker.installMissingDependencies(project))
                     process.exit(1);
             }
+            createAdditionalResources(project);
             bb.compileProject(project).then((result: bb.CompilationResult) => {
-                if (result.errors == 0 && createAdditionalResources(project).copyFilesToOutputDir()) {
+                if (result.errors == 0 && project.additionalResources.copyFilesToOutputDir()) {
                     console.log(chalk.green("Build finished successfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
                     process.exit(0);
                 }

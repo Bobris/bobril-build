@@ -13,6 +13,7 @@ export declare class AdditionalResources {
     copyFilesToOutputDir(): boolean;
     private recursiveCopyFiles(directory, subDirPath);
     private getCachedFileExistence(filePath);
+    getCanUse(): (fn: string) => boolean;
     private getFileTimeStamp(filePath);
     private copyToProjectIfChanged(srcFilePath, destFilePath);
 }

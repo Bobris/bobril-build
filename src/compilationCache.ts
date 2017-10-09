@@ -139,6 +139,7 @@ export interface IProject {
     devDependencies?: string[];
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
+    additionalResources?: AdditionalResources;
     pluginsConfig?: { [name: string]: any };
     dependenciesUpdate?: string;
     liveReloadIdx?: number;
@@ -375,7 +376,7 @@ export class CompilationCache {
             shortenFileNameAddPath = (fn: string) => project.outputSubDir + "/" + fn;
         }
         if (project.totalBundle) {
-            shortenFileName = createFileNameShortener();
+            shortenFileName = createFileNameShortener(project.additionalResources.getCanUse());
             shortenFileNameAddPath = shortenFileName;
             if (project.outputSubDir) {
                 shortenFileNameAddPath = (fn: string) => project.outputSubDir + "/" + shortenFileName(fn);

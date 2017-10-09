@@ -77,6 +77,14 @@ class AdditionalResources {
         }
         return cached;
     }
+    getCanUse() {
+        return (fn) => {
+            if (this.project.additionalResourcesDirectory == null)
+                return true;
+            let filePath = path.join(this.project.dir, this.project.additionalResourcesDirectory, fn);
+            return !fs.existsSync(filePath);
+        };
+    }
     getFileTimeStamp(filePath) {
         try {
             return fs.statSync(filePath).mtime.getTime();

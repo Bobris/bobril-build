@@ -252,7 +252,7 @@ class CompilationCache {
             shortenFileNameAddPath = (fn) => project.outputSubDir + "/" + fn;
         }
         if (project.totalBundle) {
-            shortenFileName = shortenFileName_1.createFileNameShortener();
+            shortenFileName = shortenFileName_1.createFileNameShortener(project.additionalResources.getCanUse());
             shortenFileNameAddPath = shortenFileName;
             if (project.outputSubDir) {
                 shortenFileNameAddPath = (fn) => project.outputSubDir + "/" + shortenFileName(fn);

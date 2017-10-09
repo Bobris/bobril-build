@@ -284,7 +284,9 @@ function interactiveCommand(port, installDependencies) {
     });
 }
 function createAdditionalResources(project) {
-    return new additionalResources_1.AdditionalResources(project);
+    if (project.additionalResources == null)
+        project.additionalResources = new additionalResources_1.AdditionalResources(project);
+    return project.additionalResources;
 }
 function run() {
     let commandRunning = false;
@@ -366,8 +368,9 @@ function run() {
             if (!depChecker.installMissingDependencies(project))
                 process.exit(1);
         }
+        createAdditionalResources(project);
         bb.compileProject(project).then((result) => {
-            if (result.errors == 0 && createAdditionalResources(project).copyFilesToOutputDir()) {
+            if (result.errors == 0 && project.additionalResources.copyFilesToOutputDir()) {
                 console.log(chalk.green("Build finished successfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
                 process.exit(0);
             }

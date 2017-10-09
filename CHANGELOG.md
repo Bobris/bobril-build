@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.79.1
+--
+
+Fixed clash of shortened file names with application resources.
+
 0.79.0
 --
 

@@ -84,6 +84,14 @@ export class AdditionalResources {
         return cached;
     }
 
+    getCanUse() {
+        return (fn: string) => {
+            if (this.project.additionalResourcesDirectory == null) return true;
+            let filePath = path.join(this.project.dir, this.project.additionalResourcesDirectory, fn);
+            return !fs.existsSync(filePath);
+        };
+    }
+
     private getFileTimeStamp(filePath: string): number {
         try {
             return fs.statSync(filePath).mtime.getTime();

@@ -2,6 +2,7 @@ import * as ts from "typescript";
 import * as imgCache from "./imgCache";
 import * as BuildHelpers from './buildHelpers';
 import * as sourceMap from './sourceMap';
+import { AdditionalResources } from './additionalResources';
 import { CompilationResultMessage } from './defs';
 export declare function defaultLibs(): string[];
 export interface ICacheFile {
@@ -104,6 +105,7 @@ export interface IProject {
     devDependencies?: string[];
     npmRegistry?: string;
     additionalResourcesDirectory?: string;
+    additionalResources?: AdditionalResources;
     pluginsConfig?: {
         [name: string]: any;
     };

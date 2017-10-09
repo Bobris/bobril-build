@@ -1,1 +1,1 @@
-export declare function createFileNameShortener(): (fn: string) => string;
+export declare function createFileNameShortener(canUse: (fn: string) => boolean): (fn: string) => string;
