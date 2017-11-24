@@ -1,10 +1,10 @@
 /// <reference types="node" />
 import * as ts from "typescript";
 import * as imgCache from "./imgCache";
-import * as BuildHelpers from './buildHelpers';
-import * as sourceMap from './sourceMap';
-import { AdditionalResources } from './additionalResources';
-import { CompilationResultMessage } from './defs';
+import * as BuildHelpers from "./buildHelpers";
+import * as sourceMap from "./sourceMap";
+import { AdditionalResources } from "./additionalResources";
+import { CompilationResultMessage } from "./defs";
 export declare function defaultLibs(): string[];
 export interface ICacheFile {
     fullName: string;
@@ -134,7 +134,7 @@ export declare class CompilationCache {
     compilationResult: CompilationResult;
     addMessageFromBB(isError: boolean, code: number, message: string, source: ts.SourceFile, pos: number, end: number): void;
     reportDiagnostic(diagnostic: ts.Diagnostic): void;
-    reportDiagnostics(diagnostics: ts.Diagnostic[]): void;
+    reportDiagnostics(diagnostics: ReadonlyArray<ts.Diagnostic>): void;
     clearFileTimeModifications(): void;
     forceRebuildNextCompile(project?: IProject): void;
     overrides: {
