@@ -1,15 +1,17 @@
-import * as childProcess from 'child_process';
+import * as childProcess from "child_process";
 import * as pathPlatformDependent from "path";
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 import * as fs from "fs";
 import * as plugins from "./pluginsLoader";
-import * as Module from "module";
+var Module = require("module");
 
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 function printIntroLine() {
-    let pp = pathPlatformDependent.join(__dirname, '../package.json');
-    let bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
-    console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
+    let pp = pathPlatformDependent.join(__dirname, "../package.json");
+    let bbPackageJson = JSON.parse(fs.readFileSync(pp, "utf8"));
+    console.log(
+        "Bobril-build " + bbPackageJson.version + " - " + process.cwd()
+    );
 }
 
 function backgroundProcess() {
@@ -17,14 +19,15 @@ function backgroundProcess() {
     process.on("message", ({ command, param }) => {
         //console.log(command, param);
         if (commands[command]) {
-            require('./' + commands[command])[command](param);
-        }
-        else if (command == 'callPlugins') {
-            let methodName = param['method'];
-            require('./backgroundCompileCommands')['executePlugins'](param);
-        }
-        else {
-            process.send({ command: "error", param: "Unknown command " + command });
+            require("./" + commands[command])[command](param);
+        } else if (command == "callPlugins") {
+            let methodName = param["method"];
+            require("./backgroundCompileCommands")["executePlugins"](param);
+        } else {
+            process.send({
+                command: "error",
+                param: "Unknown command " + command
+            });
         }
     });
     function register(name: string, file: string) {
@@ -44,7 +47,7 @@ function backgroundProcess() {
 
 function run() {
     const originalLoader = Module._load;
-    (<any>Module)._load = function (request, parent) {
+    Module._load = function(request, parent) {
         if (request === "bobril-build") {
             return require("./index");
         }

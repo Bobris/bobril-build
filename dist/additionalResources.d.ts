@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as bb from './index';
 export interface ICacheFile {
     modifiedTime?: number;

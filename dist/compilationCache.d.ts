@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as ts from "typescript";
 import * as imgCache from "./imgCache";
 import * as BuildHelpers from './buildHelpers';

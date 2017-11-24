@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as http from 'http';
 export interface ILongPollingConnection {
     onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;

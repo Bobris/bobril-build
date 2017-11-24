@@ -3,10 +3,10 @@
 // Definitions by: Qubo <https://github.com/tkQubo>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-/// <reference path="../node/node.d.ts" />
+/// <reference types="node" />
 
 declare module "node-notifier" {
-    import NotificationCenter = require('node-notifier/notifiers/notificationcenter');
+    import NotificationCenter = require("node-notifier/notifiers/notificationcenter");
     import NotifySend = require("node-notifier/notifiers/notifysend");
     import WindowsToaster = require("node-notifier/notifiers/toaster");
     import WindowsBalloon = require("node-notifier/notifiers/balloon");
@@ -14,7 +14,10 @@ declare module "node-notifier" {
 
     namespace nodeNotifier {
         interface NodeNotifier extends NodeJS.EventEmitter {
-            notify(notification?: Notification, callback?: NotificationCallback): NodeNotifier;
+            notify(
+                notification?: Notification,
+                callback?: NotificationCallback
+            ): NodeNotifier;
             NotificationCenter: NotificationCenter;
             NotifySend: NotifySend;
             WindowsToaster: WindowsToaster;
@@ -51,11 +54,14 @@ declare module "node-notifier" {
 }
 
 declare module "node-notifier/notifiers/notificationcenter" {
-    import notifier = require('node-notifier');
+    import notifier = require("node-notifier");
 
     class NotificationCenter {
         constructor(option?: notifier.Option);
-        notify(notification?: NotificationCenter.Notification, callback?: notifier.NotificationCallback): NotificationCenter;
+        notify(
+            notification?: NotificationCenter.Notification,
+            callback?: notifier.NotificationCallback
+        ): NotificationCenter;
     }
 
     namespace NotificationCenter {
@@ -72,11 +78,14 @@ declare module "node-notifier/notifiers/notificationcenter" {
 }
 
 declare module "node-notifier/notifiers/notifysend" {
-    import notifier = require('node-notifier');
+    import notifier = require("node-notifier");
 
     class NotifySend {
         constructor(option?: notifier.Option);
-        notify(notification?: NotifySend.Notification, callback?: notifier.NotificationCallback): NotifySend;
+        notify(
+            notification?: NotifySend.Notification,
+            callback?: notifier.NotificationCallback
+        ): NotifySend;
     }
 
     namespace NotifySend {
@@ -99,22 +108,28 @@ declare module "node-notifier/notifiers/notifysend" {
 }
 
 declare module "node-notifier/notifiers/toaster" {
-    import notifier = require('node-notifier');
+    import notifier = require("node-notifier");
 
     class WindowsToaster {
         constructor(option?: notifier.Option);
-        notify(notification?: notifier.Notification, callback?: notifier.NotificationCallback): WindowsToaster;
+        notify(
+            notification?: notifier.Notification,
+            callback?: notifier.NotificationCallback
+        ): WindowsToaster;
     }
 
     export = WindowsToaster;
 }
 
 declare module "node-notifier/notifiers/growl" {
-    import notifier = require('node-notifier');
+    import notifier = require("node-notifier");
 
     class Growl {
         constructor(option?: Growl.Option);
-        notify(notification?: Growl.Notification, callback?: notifier.NotificationCallback): Growl;
+        notify(
+            notification?: Growl.Notification,
+            callback?: notifier.NotificationCallback
+        ): Growl;
     }
 
     namespace Growl {
@@ -132,7 +147,7 @@ declare module "node-notifier/notifiers/growl" {
             /** Wait with callback until user action is taken on notification */
             wait?: boolean;
             /** whether or not to sticky the notification (defaults to false) */
-             sticky?: boolean;
+            sticky?: boolean;
             /** type of notification to use (defaults to the first registered type) */
             label: string;
             /** the priority of the notification from lowest (-2) to highest (2) */
@@ -144,11 +159,14 @@ declare module "node-notifier/notifiers/growl" {
 }
 
 declare module "node-notifier/notifiers/balloon" {
-    import notifier = require('node-notifier');
+    import notifier = require("node-notifier");
 
     class WindowsBalloon {
         constructor(option?: notifier.Option);
-        notify(notification?: WindowsBalloon.Notification, callback?: notifier.NotificationCallback): WindowsBalloon;
+        notify(
+            notification?: WindowsBalloon.Notification,
+            callback?: notifier.NotificationCallback
+        ): WindowsBalloon;
     }
 
     namespace WindowsBalloon {

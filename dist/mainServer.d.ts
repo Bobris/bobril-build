@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as http from 'http';
 import * as longPollingServer from './longPollingServer';
 import * as testServer from './testServer';

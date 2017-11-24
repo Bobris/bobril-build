@@ -1,3 +1,4 @@
+/// <reference types="node" />
 export declare class XmlWritter {
     private humanReadable;
     private buf;

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 export declare const charToInteger: Buffer;
 export declare const integerToChar: Buffer;
 export declare class DynamicBuffer {

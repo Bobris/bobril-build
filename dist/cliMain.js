@@ -42,7 +42,8 @@ function exitProcess(code) {
     process.exit(code);
 }
 function fileResponse(response, name) {
-    let contentStream = fs.createReadStream(name)
+    let contentStream = fs
+        .createReadStream(name)
         .on("open", function handleContentReadStreamOpen() {
         contentStream.pipe(response);
     })
@@ -65,7 +66,7 @@ function fileResponse(response, name) {
 let specialFiles = Object.create(null);
 const pathUtils = require("./pathUtils");
 specialFiles["loader.js"] = require.resolve("./loader.js");
-specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), 'jasmine-core/jasmine.js');
+specialFiles["jasmine-core.js"] = path.join(pathUtils.dirOfNodeModule("jasmine-core"), "jasmine-core/jasmine.js");
 specialFiles["jasmine-boot.js"] = require.resolve("./jasmine-boot.js");
 let livereloadResolver;
 let livereloadPromise;
@@ -92,20 +93,20 @@ function handleRequest(request, response) {
             return;
         }
         let name = request.url.substr(4);
-        if (name === 'api/test') {
+        if (name === "api/test") {
             bb.testServer.handle(request, response);
             return;
         }
-        if (name === 'api/main') {
+        if (name === "api/main") {
             bb.mainServer.handle(request, response);
             return;
         }
-        if (name === 'api/projectdirectory') {
+        if (name === "api/projectdirectory") {
             let project = bb.getProject();
             response.end(project.dir);
             return;
         }
-        if (name.substr(0, 15) === 'api/livereload/') {
+        if (name.substr(0, 15) === "api/livereload/") {
             let idx = parseInt(name.substr(15), 10);
             let waitForReload = () => {
                 if (idx != bb.getProject().liveReloadIdx)
@@ -130,12 +131,12 @@ function handleRequest(request, response) {
             }
             name = name.substr(5);
             if (name.length === 0)
-                name = 'index.html';
+                name = "index.html";
             fileResponse(response, distWebtRoot + "/" + name);
             return;
         }
         if (name.length === 0)
-            name = 'index.html';
+            name = "index.html";
         if (/^base\//.test(name)) {
             let project = bb.getProject();
             fileResponse(response, path.join(bb.getCurProjectDir(), path.relative(project.realRootRel, ""), name.substr(4)));
@@ -149,8 +150,8 @@ function handleRequest(request, response) {
         fileResponse(response, distWebRoot + "/" + name);
         return;
     }
-    if (request.url === '/') {
-        response.end(bb.memoryFs['index.html']);
+    if (request.url === "/") {
+        response.end(bb.memoryFs["index.html"]);
         return;
     }
     let f = bb.memoryFs[request.url.substr(1).toLowerCase()];
@@ -180,7 +181,7 @@ function handleRequest(request, response) {
         return;
     }
     response.statusCode = 404;
-    response.end('Not found');
+    response.end("Not found");
 }
 function humanTrue(val) {
     return /^(true|1|t|y)$/i.test(val);
@@ -194,10 +195,11 @@ function startHttpServer(port) {
     server = http.createServer(handleRequest);
     server.on("listening", function () {
         bb.setInteractivePort(server.address().port);
-        console.log("Server listening on: " + chalk.cyan(" http://localhost:" + server.address().port));
+        console.log("Server listening on: " +
+            chalk.cyan(" http://localhost:" + server.address().port));
     });
-    server.on('error', function (e) {
-        if (e.code == 'EADDRINUSE') {
+    server.on("error", function (e) {
+        if (e.code == "EADDRINUSE") {
             setTimeout(function () {
                 server.close();
                 server.listen({ port: 0, exclusive: true });
@@ -242,7 +244,10 @@ function forceInteractiveRecompile() {
             }
         }
         else {
-            console.log(chalk.green("Build finished with " + v.warnings + " warnings." + (v.hasTests ? " Starting tests." : "")));
+            console.log(chalk.green("Build finished with " +
+                v.warnings +
+                " warnings." +
+                (v.hasTests ? " Starting tests." : "")));
         }
         if (v.errors == 0) {
             if (livereloadResolver) {
@@ -252,9 +257,15 @@ function forceInteractiveRecompile() {
             if (v.hasTests) {
                 if (chromeProcess == null)
                     yield startTestsInChrome();
-                bb.testServer.startTest('/test.html');
+                bb.testServer.startTest("/test.html");
                 bb.testServer.waitForOneResult().then(v => {
-                    console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " + v.testsFailed + " failed " + v.testsSkipped + " skipped " + v.testsFinished + " succeeded"));
+                    console.log((v.testsFailed > 0 ? chalk.red : chalk.green)("Tests: " +
+                        v.testsFailed +
+                        " failed " +
+                        v.testsSkipped +
+                        " skipped " +
+                        v.testsFinished +
+                        " succeeded"));
                 });
             }
         }
@@ -265,21 +276,29 @@ function interactiveCommand(port, installDependencies) {
     bb.mainServer.setProjectDir(bb.getCurProjectDir());
     startHttpServer(port);
     compileProcess = bb.startCompileProcess(bb.getCurProjectDir());
-    compileProcess.refresh(null).then(() => {
+    compileProcess
+        .refresh(null)
+        .then(() => {
         return compileProcess.setOptions(getDefaultDebugOptions());
-    }).then((opts) => {
+    })
+        .then(opts => {
         mergeProjectFromServer(opts);
         if (installDependencies)
             return compileProcess.installDependencies().then(() => opts);
         return opts;
-    }).then((opts) => {
+    })
+        .then(opts => {
         return compileProcess.callPlugins(plugins.EntryMethodType.afterStartCompileProcess);
-    }).then((opts) => {
+    })
+        .then(opts => {
         return compileProcess.loadTranslations();
-    }).then((opts) => {
+    })
+        .then(opts => {
         bb.startWatchProcess((allFiles) => {
             console.log(chalk.green("Starting compilation."));
-            return compileProcess.refresh(allFiles).then(forceInteractiveRecompile);
+            return compileProcess
+                .refresh(allFiles)
+                .then(forceInteractiveRecompile);
         });
     });
 }
@@ -307,11 +326,11 @@ function run() {
         .option("-u, --updateTranslations <1/0>", "update translations", /^(true|false|1|0|t|f|y|n)$/i, "0")
         .option("-v, --versiondir <name>", "store all resources except index.html in this directory")
         .option("-n, --noupdate", "do not start yarn/npm before build")
-        .action((c) => {
+        .action(c => {
         commandRunning = true;
         let start = Date.now();
         let project = bb.createProjectFromDir(bb.getCurProjectDir());
-        project.logCallback = (text) => {
+        project.logCallback = text => {
             console.log(text);
         };
         if (!bb.refreshProjectFromPackageJson(project, null)) {
@@ -370,13 +389,20 @@ function run() {
         }
         createAdditionalResources(project);
         bb.compileProject(project).then((result) => {
-            if (result.errors == 0 && project.additionalResources.copyFilesToOutputDir()) {
-                console.log(chalk.green("Build finished successfully with " + result.warnings + " warnings in " + (Date.now() - start).toFixed(0) + " ms"));
+            if (result.errors == 0 &&
+                project.additionalResources.copyFilesToOutputDir()) {
+                console.log(chalk.green("Build finished successfully with " +
+                    result.warnings +
+                    " warnings in " +
+                    (Date.now() - start).toFixed(0) +
+                    " ms"));
                 process.exit(0);
             }
-            console.error(chalk.red("There was " + result.errors + " errors during build"));
+            console.error(chalk.red("There was " +
+                result.errors +
+                " errors during build"));
             process.exit(1);
-        }, (err) => {
+        }, err => {
             console.error(err);
             process.exit(1);
         });
@@ -394,7 +420,7 @@ function run() {
         .option("-l, --lang <lang>", "specify language for export")
         .option("-u, --union <sourcePath1,sourcePath2,destinationPath>", "make union from paths")
         .option("-s, --subtract <sourcePath1,sourcePath2,destinationPath>", "make subtract of paths")
-        .action((c) => {
+        .action(c => {
         commandRunning = true;
         let project = bb.createProjectFromDir(bb.currentDirectory());
         let trDir = path.join(project.dir, "translations");
@@ -417,21 +443,28 @@ function run() {
         if (c["export"] || c["exportAll"]) {
             let exportOnlyUntranslated = true;
             let destFile = c["export"];
-            let db = (c["specificPath"] === undefined) ? trDb : trDbSingle;
+            let db = c["specificPath"] === undefined ? trDb : trDbSingle;
             if (c["exportAll"]) {
                 destFile = c["exportAll"];
                 exportOnlyUntranslated = false;
             }
             if (c["specificPath"] === undefined) {
                 if (c["lang"] != undefined) {
-                    console.log("Export untranslated language " + c["lang"] + " into file " + destFile);
+                    console.log("Export untranslated language " +
+                        c["lang"] +
+                        " into file " +
+                        destFile);
                 }
                 else {
-                    console.log("Export untranslated languages into file " + destFile);
+                    console.log("Export untranslated languages into file " +
+                        destFile);
                 }
             }
             else {
-                console.log("Export file from " + c["specificPath"] + " into file " + destFile);
+                console.log("Export file from " +
+                    c["specificPath"] +
+                    " into file " +
+                    destFile);
             }
             if (!db.exportLanguages(destFile, c["lang"], c["specificPath"], exportOnlyUntranslated))
                 process.exit(1);
@@ -440,13 +473,18 @@ function run() {
         if (c["import"]) {
             let langPath = c["specificPath"];
             if (langPath === undefined) {
-                console.log("Import translated language from file " + c["import"] + ".");
+                console.log("Import translated language from file " +
+                    c["import"] +
+                    ".");
                 if (!trDb.importTranslatedLanguage(c["import"], langPath))
                     process.exit(1);
                 trDb.saveLangDbs(trDir);
             }
             else {
-                console.log("Import translated language from file " + c["import"] + " to file " + langPath);
+                console.log("Import translated language from file " +
+                    c["import"] +
+                    " to file " +
+                    langPath);
                 if (!trDbSingle.importTranslatedLanguage(c["import"], langPath))
                     process.exit(1);
                 let lang = trDbSingle.getLanguageFromSpecificFile(langPath);
@@ -454,7 +492,7 @@ function run() {
             }
         }
         if (c["union"]) {
-            let uArgs = c["union"].split(',');
+            let uArgs = c["union"].split(",");
             if (uArgs.length != 3) {
                 console.log("Invalid count of parameters.");
                 process.exit(1);
@@ -463,7 +501,7 @@ function run() {
                 process.exit(1);
         }
         if (c["subtract"]) {
-            let uArgs = c["subtract"].split(',');
+            let uArgs = c["subtract"].split(",");
             if (uArgs.length != 3) {
                 console.log("Invalid count of parameters.");
                 process.exit(1);
@@ -483,7 +521,7 @@ function run() {
             startHttpServer(0);
             console.time("compile");
             let project = bb.createProjectFromDir(bb.getCurProjectDir());
-            project.logCallback = (text) => {
+            project.logCallback = text => {
                 console.log(text);
             };
             if (!bb.refreshProjectFromPackageJson(project, null)) {
@@ -514,19 +552,23 @@ function run() {
             console.timeEnd("compile");
             let result = compilationCache.getResult();
             if (result.errors != 0) {
-                console.log(chalk.red("Skipping testing due to " + result.errors + " errors in build."));
+                console.log(chalk.red("Skipping testing due to " +
+                    result.errors +
+                    " errors in build."));
                 process.exit(1);
             }
-            console.log(chalk.green("Build finished with " + result.warnings + " warnings. Starting tests."));
+            console.log(chalk.green("Build finished with " +
+                result.warnings +
+                " warnings. Starting tests."));
             yield startTestsInChrome();
-            bb.testServer.startTest('/test.html');
+            bb.testServer.startTest("/test.html");
             var code = yield Promise.race([chromeProcess.finish, bb.testServer.waitForOneResult()]);
             if (typeof code === "number") {
-                console.log('chrome result code:' + code);
+                console.log("chrome result code:" + code);
                 exitProcess(1);
             }
             else if (code == null) {
-                console.log('test timeout on start');
+                console.log("test timeout on start");
                 exitProcess(1);
             }
             else {
@@ -534,11 +576,15 @@ function run() {
                     fs.writeFileSync(c["out"], bb.toJUnitXml(code));
                 }
                 if (code.failure) {
-                    console.log(chalk.red(code.totalTests + " tests finished with " + code.testsFailed + " failures."));
+                    console.log(chalk.red(code.totalTests +
+                        " tests finished with " +
+                        code.testsFailed +
+                        " failures."));
                     exitProcess(1);
                 }
                 else {
-                    console.log(chalk.green(code.totalTests + " tests finished without failures."));
+                    console.log(chalk.green(code.totalTests +
+                        " tests finished without failures."));
                     exitProcess(0);
                 }
             }
@@ -553,7 +599,7 @@ function run() {
         .alias("i")
         .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
         .description("runs web controlled build ui")
-        .action((c) => {
+        .action(c => {
         commandRunning = true;
         interactiveCommand(c["port"], true);
     });
@@ -562,18 +608,22 @@ function run() {
         .alias("y")
         .option("-p, --port <port>", "set port for server to listen to (default 8080)", 8080)
         .description("runs web controlled build ui without updating dependencies")
-        .action((c) => {
+        .action(c => {
         commandRunning = true;
         interactiveCommand(c["port"], false);
     });
-    c.command('*', null, { noHelp: true }).action((com) => {
+    c.command("*", null, { noHelp: true }).action(com => {
         console.log("Invalid command " + com);
     });
-    plugins.pluginsLoader.registerCommands(c, function () { commandRunning = true; });
+    plugins.pluginsLoader.registerCommands(c, function () {
+        commandRunning = true;
+    });
     plugins.pluginsLoader.executeEntryMethod(plugins.EntryMethodType.registerCommands, c, bb, function () {
         commandRunning = true;
     });
-    depChecker.registerCommands(c, function () { commandRunning = true; });
+    depChecker.registerCommands(c, function () {
+        commandRunning = true;
+    });
     let res = c.parse(process.argv);
     if (!commandRunning) {
         interactiveCommand(8080, true);

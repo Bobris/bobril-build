@@ -3,10 +3,10 @@
 // Definitions by: Yuki KAN <https://github.com/kanreisa>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-/// <reference path="../node/node.d.ts" />
+/// <reference types="node" />
 
-declare module 'png-async' {
-    import * as stream from 'stream';
+declare module "png-async" {
+    import * as stream from "stream";
 
     export interface IImageOptions {
         width?: number;
@@ -24,7 +24,7 @@ declare module 'png-async' {
         FILTERED = 1,
         HUFFMAN_ONLY = 2,
         RLE = 3,
-        FIXED = 4,
+        FIXED = 4
     }
 
     export enum EFilterType {
@@ -33,7 +33,7 @@ declare module 'png-async' {
         Sub = 1,
         Up = 2,
         Average = 3,
-        Paeth = 4,
+        Paeth = 4
     }
 
     export function createImage(option?: IImageOptions): Image;
@@ -45,10 +45,21 @@ declare module 'png-async' {
         data: Buffer;
         constructor(option?: IImageOptions);
         pack(): Image;
-        parse(data: Buffer, callback?: (err: Error, image: Image) => void): Image;
+        parse(
+            data: Buffer,
+            callback?: (err: Error, image: Image) => void
+        ): Image;
         write(data: any, cb?: any): boolean;
         end(data?: any): void;
-        bitblt(dst: Image, sx: number, sy: number, w: number, h: number, dx: number, dy: number): Image;
+        bitblt(
+            dst: Image,
+            sx: number,
+            sy: number,
+            w: number,
+            h: number,
+            dx: number,
+            dy: number
+        ): Image;
 
         on(event: string, listener: Function): this;
         once(event: string, listener: Function): this;

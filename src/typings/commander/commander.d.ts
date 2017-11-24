@@ -3,9 +3,9 @@
 // Definitions by: Marcelo Dezem <http://github.com/mdezem>, vvakame <http://github.com/vvakame>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-/// <reference path="../node/node.d.ts" />
+/// <reference types="node" />
 
-declare module commander {
+declare namespace commander {
     interface ICommandStatic {
         /**
          * Initialize a new `Command`.
@@ -13,12 +13,12 @@ declare module commander {
          * @param {String} name
          * @api public
          */
-        new (name?:string):ICommand;
+        new (name?: string): ICommand;
     }
 
     interface ICommand extends NodeJS.EventEmitter {
         args: string[];
-        _args: { required:boolean; name: string; }[];
+        _args: { required: boolean; name: string }[];
 
         /**
          * Add command `name`.
@@ -68,7 +68,11 @@ declare module commander {
          * @return {Command} the new command
          * @api public
          */
-        command(name:string, desc?:string, opts?: { noHelp?: boolean }):ICommand;
+        command(
+            name: string,
+            desc?: string,
+            opts?: { noHelp?: boolean }
+        ): ICommand;
 
         /**
          * Add an implicit `help [cmd]` subcommand
@@ -76,7 +80,7 @@ declare module commander {
          *
          * @api private
          */
-        addImplicitHelpCommand():void;
+        addImplicitHelpCommand(): void;
 
         /**
          * Parse expected `args`.
@@ -87,7 +91,7 @@ declare module commander {
          * @return {Command} for chaining
          * @api public
          */
-        parseExpectedArgs(args:string[]):ICommand;
+        parseExpectedArgs(args: string[]): ICommand;
 
         /**
          * Register callback `fn` for the command.
@@ -105,7 +109,7 @@ declare module commander {
          * @return {Command} for chaining
          * @api public
          */
-        action(fn:(...args:any[])=>void):ICommand;
+        action(fn: (...args: any[]) => void): ICommand;
 
         /**
          * Define option with `flags`, `description` and optional
@@ -155,8 +159,17 @@ declare module commander {
          * @return {Command} for chaining
          * @api public
          */
-        option(flags:string, description?:string, fn?:((arg1:any, arg2:any)=>void)|RegExp, defaultValue?:any):ICommand;
-        option(flags:string, description?:string, defaultValue?:any):ICommand;
+        option(
+            flags: string,
+            description?: string,
+            fn?: ((arg1: any, arg2: any) => void) | RegExp,
+            defaultValue?: any
+        ): ICommand;
+        option(
+            flags: string,
+            description?: string,
+            defaultValue?: any
+        ): ICommand;
 
         /**
          * Allow unknown options on the command line.
@@ -165,7 +178,7 @@ declare module commander {
          * for unknown options.
          * @api public
          */
-        allowUnknownOption(arg?: boolean):ICommand;
+        allowUnknownOption(arg?: boolean): ICommand;
 
         /**
          * Parse `argv`, settings options and invoking commands when defined.
@@ -174,7 +187,7 @@ declare module commander {
          * @return {Command} for chaining
          * @api public
          */
-        parse(argv:string[]):ICommand;
+        parse(argv: string[]): ICommand;
 
         /**
          * Execute a sub-command executable.
@@ -184,7 +197,11 @@ declare module commander {
          * @param {Array} unknown
          * @api private
          */
-        executeSubCommand(argv:string[], args:string[], unknown:string[]):any; /* child_process.ChildProcess */
+        executeSubCommand(
+            argv: string[],
+            args: string[],
+            unknown: string[]
+        ): any /* child_process.ChildProcess */;
 
         /**
          * Normalize `args`, splitting joined short flags. For example
@@ -195,7 +212,7 @@ declare module commander {
          * @return {Array}
          * @api private
          */
-        normalize(args:string[]):string[];
+        normalize(args: string[]): string[];
 
         /**
          * Parse command `args`.
@@ -208,7 +225,7 @@ declare module commander {
          * @return {Command} for chaining
          * @api private
          */
-        parseArgs(args:string[], unknown:string[]):ICommand;
+        parseArgs(args: string[], unknown: string[]): ICommand;
 
         /**
          * Return an option matching `arg` if any.
@@ -217,7 +234,7 @@ declare module commander {
          * @return {Option}
          * @api private
          */
-        optionFor(arg:string):IOption;
+        optionFor(arg: string): IOption;
 
         /**
          * Parse options from `argv` returning `argv`
@@ -227,7 +244,7 @@ declare module commander {
          * @return {Array}
          * @api public
          */
-        parseOptions(argv:string[]): {args:string[]; unknown:string[];};
+        parseOptions(argv: string[]): { args: string[]; unknown: string[] };
 
         /**
          * Return an object containing options as key-value pairs
@@ -235,7 +252,7 @@ declare module commander {
          * @return {Object}
          * @api public
          */
-        opts():any;
+        opts(): any;
 
         /**
          * Argument `name` is missing.
@@ -243,7 +260,7 @@ declare module commander {
          * @param {String} name
          * @api private
          */
-        missingArgument(name:string):void;
+        missingArgument(name: string): void;
 
         /**
          * `Option` is missing an argument, but received `flag` or nothing.
@@ -252,7 +269,7 @@ declare module commander {
          * @param {String} flag
          * @api private
          */
-        optionMissingArgument(option:{flags:string;}, flag?:string):void;
+        optionMissingArgument(option: { flags: string }, flag?: string): void;
 
         /**
          * Unknown option `flag`.
@@ -260,7 +277,7 @@ declare module commander {
          * @param {String} flag
          * @api private
          */
-        unknownOption(flag:string):void;
+        unknownOption(flag: string): void;
 
         /**
          * Set the program version to `str`.
@@ -273,7 +290,7 @@ declare module commander {
          * @return {Command} for chaining
          * @api public
          */
-        version(str:string, flags?:string):ICommand;
+        version(str: string, flags?: string): ICommand;
 
         /**
          * Set the description to `str`.
@@ -282,8 +299,8 @@ declare module commander {
          * @return {String|Command}
          * @api public
          */
-        description(str:string):ICommand;
-        description():string;
+        description(str: string): ICommand;
+        description(): string;
 
         /**
          * Set an alias for the command
@@ -292,8 +309,8 @@ declare module commander {
          * @return {String|Command}
          * @api public
          */
-        alias(alias:string):ICommand;
-        alias():string;
+        alias(alias: string): ICommand;
+        alias(): string;
 
         /**
          * Set / get the command usage `str`.
@@ -302,8 +319,8 @@ declare module commander {
          * @return {String|Command}
          * @api public
          */
-        usage(str:string):ICommand;
-        usage():string;
+        usage(str: string): ICommand;
+        usage(): string;
 
         /**
          * Get the name of the command
@@ -312,7 +329,7 @@ declare module commander {
          * @return {String|Command}
          * @api public
          */
-        name():string;
+        name(): string;
 
         /**
          * Return the largest option length.
@@ -320,7 +337,7 @@ declare module commander {
          * @return {Number}
          * @api private
          */
-        largestOptionLength():number;
+        largestOptionLength(): number;
 
         /**
          * Return help for options.
@@ -328,7 +345,7 @@ declare module commander {
          * @return {String}
          * @api private
          */
-        optionHelp():string;
+        optionHelp(): string;
 
         /**
          * Return command help documentation.
@@ -336,7 +353,7 @@ declare module commander {
          * @return {String}
          * @api private
          */
-        commandHelp():string;
+        commandHelp(): string;
 
         /**
          * Return program help documentation.
@@ -344,21 +361,21 @@ declare module commander {
          * @return {String}
          * @api private
          */
-        helpInformation():string;
+        helpInformation(): string;
 
         /**
          * Output help information for this command
          *
          * @api public
          */
-        outputHelp():void;
+        outputHelp(): void;
 
         /**
          * Output help information and exit.
          *
          * @api public
          */
-        help():void;
+        help(): void;
     }
 
     interface IOptionStatic {
@@ -369,17 +386,17 @@ declare module commander {
          * @param {String} description
          * @api public
          */
-        new (flags:string, description?:string):IOption;
+        new (flags: string, description?: string): IOption;
     }
 
     interface IOption {
-        flags:string;
-        required:boolean;
-        optional:boolean;
-        bool:boolean;
-        short?:string;
-        long:string;
-        description:string;
+        flags: string;
+        required: boolean;
+        optional: boolean;
+        bool: boolean;
+        short?: string;
+        long: string;
+        description: string;
 
         /**
          * Return option name.
@@ -387,7 +404,7 @@ declare module commander {
          * @return {String}
          * @api private
          */
-        name():string;
+        name(): string;
 
         /**
          * Check if `arg` matches the short or long flag.
@@ -396,7 +413,7 @@ declare module commander {
          * @return {Boolean}
          * @api private
          */
-        is(arg:string):boolean;
+        is(arg: string): boolean;
     }
 
     interface IExportedCommand extends ICommand {
@@ -406,6 +423,6 @@ declare module commander {
 }
 
 declare module "commander" {
-    var _tmp:commander.IExportedCommand;
+    var _tmp: commander.IExportedCommand;
     export = _tmp;
 }

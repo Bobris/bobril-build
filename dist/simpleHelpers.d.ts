@@ -1,3 +1,4 @@
+/// <reference types="node" />
 export declare function globalDefines(defines: {
     [name: string]: any;
 }): string;

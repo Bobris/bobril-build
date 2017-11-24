@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { DynamicBuffer } from "./dynamicBuffer";
 export interface SourceMap {
     version: number;

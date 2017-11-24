@@ -4,26 +4,29 @@ const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const fs = require("fs");
 const plugins = require("./pluginsLoader");
-const Module = require("module");
+var Module = require("module");
 const bbDirRoot = path.dirname(__dirname.replace(/\\/g, "/"));
 function printIntroLine() {
-    let pp = pathPlatformDependent.join(__dirname, '../package.json');
-    let bbPackageJson = JSON.parse(fs.readFileSync(pp, 'utf8'));
-    console.log('Bobril-build ' + bbPackageJson.version + ' - ' + process.cwd());
+    let pp = pathPlatformDependent.join(__dirname, "../package.json");
+    let bbPackageJson = JSON.parse(fs.readFileSync(pp, "utf8"));
+    console.log("Bobril-build " + bbPackageJson.version + " - " + process.cwd());
 }
 function backgroundProcess() {
     let commands = Object.create(null);
     process.on("message", ({ command, param }) => {
         //console.log(command, param);
         if (commands[command]) {
-            require('./' + commands[command])[command](param);
+            require("./" + commands[command])[command](param);
         }
-        else if (command == 'callPlugins') {
-            let methodName = param['method'];
-            require('./backgroundCompileCommands')['executePlugins'](param);
+        else if (command == "callPlugins") {
+            let methodName = param["method"];
+            require("./backgroundCompileCommands")["executePlugins"](param);
         }
         else {
-            process.send({ command: "error", param: "Unknown command " + command });
+            process.send({
+                command: "error",
+                param: "Unknown command " + command
+            });
         }
     });
     function register(name, file) {

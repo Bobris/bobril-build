@@ -1,6 +1,11 @@
 CHANGELOG
 ===
 
+0.79.2
+--
+
+Replaced chrome-runner by chrome-launcher. Some small clean ups.
+
 0.79.1
 --
 

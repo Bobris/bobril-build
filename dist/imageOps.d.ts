@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as stream from 'stream';
 export interface IImageOptions {
     width?: number;

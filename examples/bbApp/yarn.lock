@@ -3,18 +3,18 @@
 
 
 bobril-g11n@*:
-  version "3.3.4"
-  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-3.3.4.tgz#af6e525b1112256f46c13f446dd2cfaa65d0b1df"
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/bobril-g11n/-/bobril-g11n-4.0.0.tgz#4cdb006738d5f59fed83d18afafc303f59c4b394"
   dependencies:
     moment "^2.10.6"
 
 bobril@*:
-  version "7.6.2"
-  resolved "https://registry.yarnpkg.com/bobril/-/bobril-7.6.2.tgz#86bfe18b4d2be7d0c25ed4deb9753866c514e7a2"
+  version "8.1.1"
+  resolved "https://registry.yarnpkg.com/bobril/-/bobril-8.1.1.tgz#1030bb89c65b0e18400d2fc566c4c84b6558f5a0"
 
 moment@^2.10.6:
-  version "2.18.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f"
+  version "2.19.2"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.19.2.tgz#8a7f774c95a64550b4c7ebd496683908f9419dbe"
 
 normalize.css@^3.0.3:
   version "3.0.3"

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as compilationCache from './compilationCache';
 export declare function tslibSource(): string;
 export declare function systemJsPath(): string;

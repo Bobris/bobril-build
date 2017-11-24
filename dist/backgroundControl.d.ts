@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import * as plugins from "./pluginsLoader";
 import * as bb from './index';
 export declare const bbDirRoot: string;
