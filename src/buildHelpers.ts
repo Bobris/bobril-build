@@ -6,7 +6,7 @@ import * as evalNode from "./evalNode";
 import * as spriter from "./spriter";
 import * as imageOps from "./imageOps";
 import * as imgCache from "./imgCache";
-require('bluebird');
+require("bluebird");
 
 export interface SourceInfo {
     sourceFile: ts.SourceFile;
@@ -55,12 +55,12 @@ export interface TranslationMessage {
 
 function isBobrilFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
     let text = callExpression.expression.getText();
-    return text === sourceInfo.bobrilNamespace + '.' + name || text === sourceInfo.bobrilImports[name];
+    return text === sourceInfo.bobrilNamespace + "." + name || text === sourceInfo.bobrilImports[name];
 }
 
 function isBobrilG11NFunction(name: string, callExpression: ts.CallExpression, sourceInfo: SourceInfo): boolean {
     let text = callExpression.expression.getText();
-    return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
+    return text === sourceInfo.bobrilG11NNamespace + "." + name || text === sourceInfo.bobrilG11NImports[name];
 }
 
 function extractBindings(bindings: ts.NamespaceImport | ts.NamedImports, ns: string, ims: Object): string {
@@ -76,7 +76,11 @@ function extractBindings(bindings: ts.NamespaceImport | ts.NamedImports, ns: str
     return ns;
 }
 
-export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, resolvePathStringLiteral: (sl: ts.StringLiteral) => string): SourceInfo {
+export function gatherSourceInfo(
+    source: ts.SourceFile,
+    tc: ts.TypeChecker,
+    resolvePathStringLiteral: (sl: ts.StringLiteral) => string
+): SourceInfo {
     let result: SourceInfo = {
         sourceFile: source,
         sourceDeps: [],
@@ -100,52 +104,63 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                 if (/bobriln?\/index\.ts/i.test(fn)) {
                     result.bobrilNamespace = extractBindings(bindings, result.bobrilNamespace, result.bobrilImports);
                 } else if (/bobril-g11n\/index\.ts/i.test(fn)) {
-                    result.bobrilG11NNamespace = extractBindings(bindings, result.bobrilG11NNamespace, result.bobrilG11NImports);
+                    result.bobrilG11NNamespace = extractBindings(
+                        bindings,
+                        result.bobrilG11NNamespace,
+                        result.bobrilG11NImports
+                    );
                 }
             }
             result.sourceDeps.push([moduleSymbol.name, fn]);
-        }
-        else if (n.kind === ts.SyntaxKind.ExportDeclaration) {
+        } else if (n.kind === ts.SyntaxKind.ExportDeclaration) {
             let ed = <ts.ExportDeclaration>n;
             if (ed.moduleSpecifier) {
                 let moduleSymbol = tc.getSymbolAtLocation(ed.moduleSpecifier);
                 if (moduleSymbol == null) return;
                 result.sourceDeps.push([moduleSymbol.name, moduleSymbol.valueDeclaration.getSourceFile().fileName]);
             }
-        }
-        else if (n.kind === ts.SyntaxKind.CallExpression) {
+        } else if (n.kind === ts.SyntaxKind.CallExpression) {
             let ce = <ts.CallExpression>n;
-            if (isBobrilFunction('asset', ce, result)) {
-                result.assets.push({ callExpression: ce, name: evalNode.evalNode(ce.arguments[0], tc, resolvePathStringLiteral) });
-            } else if (isBobrilFunction('sprite', ce, result)) {
+            if (isBobrilFunction("asset", ce, result)) {
+                result.assets.push({
+                    callExpression: ce,
+                    name: evalNode.evalNode(ce.arguments[0], tc, resolvePathStringLiteral)
+                });
+            } else if (isBobrilFunction("sprite", ce, result)) {
                 let si: SpriteInfo = { callExpression: ce };
                 for (let i = 0; i < ce.arguments.length; i++) {
                     let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? resolvePathStringLiteral : null); // first argument is path
-                    if (res !== undefined) switch (i) {
-                        case 0:
-                            if (typeof res === 'string') si.name = res;
-                            break;
-                        case 1:
-                            if (typeof res === 'string') si.color = res;
-                            break;
-                        case 2:
-                            if (typeof res === 'number') si.width = res;
-                            break;
-                        case 3:
-                            if (typeof res === 'number') si.height = res;
-                            break;
-                        case 4:
-                            if (typeof res === 'number') si.x = res;
-                            break;
-                        case 5:
-                            if (typeof res === 'number') si.y = res;
-                            break;
-                        default: throw new Error('b.sprite cannot have more than 6 parameters');
-                    }
+                    if (res !== undefined)
+                        switch (i) {
+                            case 0:
+                                if (typeof res === "string") si.name = res;
+                                break;
+                            case 1:
+                                if (typeof res === "string") si.color = res;
+                                break;
+                            case 2:
+                                if (typeof res === "number") si.width = res;
+                                break;
+                            case 3:
+                                if (typeof res === "number") si.height = res;
+                                break;
+                            case 4:
+                                if (typeof res === "number") si.x = res;
+                                break;
+                            case 5:
+                                if (typeof res === "number") si.y = res;
+                                break;
+                            default:
+                                throw new Error("b.sprite cannot have more than 6 parameters");
+                        }
                 }
                 result.sprites.push(si);
-            } else if (isBobrilFunction('styleDef', ce, result) || isBobrilFunction('styleDefEx', ce, result)) {
-                let item: StyleDefInfo = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result), userNamed: false };
+            } else if (isBobrilFunction("styleDef", ce, result) || isBobrilFunction("styleDefEx", ce, result)) {
+                let item: StyleDefInfo = {
+                    callExpression: ce,
+                    isEx: isBobrilFunction("styleDefEx", ce, result),
+                    userNamed: false
+                };
                 if (ce.arguments.length == 3 + (item.isEx ? 1 : 0)) {
                     item.name = evalNode.evalNode(ce.arguments[ce.arguments.length - 1], tc, null);
                     item.userNamed = true;
@@ -155,14 +170,26 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                         item.name = (<ts.Identifier>vd.name).text;
                     } else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         let be = <ts.BinaryExpression>ce.parent;
-                        if (be.operatorToken != null && be.left != null && be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                        if (
+                            be.operatorToken != null &&
+                            be.left != null &&
+                            be.operatorToken.kind === ts.SyntaxKind.FirstAssignment &&
+                            be.left.kind === ts.SyntaxKind.Identifier
+                        ) {
                             item.name = (<ts.Identifier>be.left).text;
                         }
                     }
                 }
                 result.styleDefs.push(item);
-            } else if (isBobrilG11NFunction('t', ce, result)) {
-                let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: false };
+            } else if (isBobrilG11NFunction("t", ce, result)) {
+                let item: TranslationMessage = {
+                    callExpression: ce,
+                    message: undefined,
+                    withParams: false,
+                    knownParams: undefined,
+                    hint: undefined,
+                    justFormat: false
+                };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
@@ -173,8 +200,15 @@ export function gatherSourceInfo(source: ts.SourceFile, tc: ts.TypeChecker, reso
                     item.hint = evalNode.evalNode(ce.arguments[2], tc, null);
                 }
                 result.trs.push(item);
-            } else if (isBobrilG11NFunction('f', ce, result)) {
-                let item: TranslationMessage = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: true };
+            } else if (isBobrilG11NFunction("f", ce, result)) {
+                let item: TranslationMessage = {
+                    callExpression: ce,
+                    message: undefined,
+                    withParams: false,
+                    knownParams: undefined,
+                    hint: undefined,
+                    justFormat: true
+                };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
@@ -222,7 +256,7 @@ export function createNodeFromValue(value: any): ts.Expression {
         let result = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
         result.elements = createNodeArray<ts.Expression>(0);
         for (var i = 0; i < value.length; i++) {
-            (result.elements as any as ts.Expression[]).push(createNodeFromValue(value[i]));
+            ((result.elements as any) as ts.Expression[]).push(createNodeFromValue(value[i]));
         }
         return result;
     }
@@ -234,11 +268,11 @@ export function createNodeFromValue(value: any): ts.Expression {
             let name = ts.createIdentifier(key);
             pa.name = name;
             pa.initializer = createNodeFromValue(value[key]);
-            (result.properties as any as ts.ObjectLiteralElementLike[]).push(pa);
+            ((result.properties as any) as ts.ObjectLiteralElementLike[]).push(pa);
         }
         return result;
     }
-    throw new Error('Don\'t know how to create node for ' + value);
+    throw new Error("Don't know how to create node for " + value);
 }
 
 export function setMethod(callExpression: ts.CallExpression, name: string) {
@@ -251,7 +285,7 @@ export function setMethod(callExpression: ts.CallExpression, name: string) {
 }
 
 export function setArgumentAst(callExpression: ts.CallExpression, index: number, value: ts.Expression): void {
-    var a = callExpression.arguments as any as ts.Expression[];
+    var a = (callExpression.arguments as any) as ts.Expression[];
     while (a.length < index) {
         a.push(createNodeFromValue(null));
     }
@@ -265,7 +299,7 @@ export function setArgumentAst(callExpression: ts.CallExpression, index: number,
 function createNodeArray<T extends ts.Node>(len: number): ts.NodeArray<T> {
     let arr = [];
     while (len-- > 0) arr.push(null);
-    let res = arr as any as ts.NodeArray<T>;
+    let res = (arr as any) as ts.NodeArray<T>;
     res.pos = 0;
     res.end = 0;
     return res;
@@ -276,10 +310,12 @@ export function buildLambdaReturningArray(values: ts.Expression[]): ts.Expressio
     let end = values[values.length - 1].end;
     let fn = <ts.ArrowFunction>ts.createNode(ts.SyntaxKind.ArrowFunction);
     fn.parameters = createNodeArray<ts.ParameterDeclaration>(0);
-    fn.equalsGreaterThanToken = <ts.Token<ts.SyntaxKind.EqualsGreaterThanToken>>ts.createNode(ts.SyntaxKind.EqualsGreaterThanToken);
+    fn.equalsGreaterThanToken = <ts.Token<ts.SyntaxKind.EqualsGreaterThanToken>>ts.createNode(
+        ts.SyntaxKind.EqualsGreaterThanToken
+    );
     let body = <ts.ArrayLiteralExpression>ts.createNode(ts.SyntaxKind.ArrayLiteralExpression);
     body.elements = createNodeArray<ts.Expression>(0);
-    (body.elements as any as ts.Expression[]).push(...values);
+    ((body.elements as any) as ts.Expression[]).push(...values);
     body.pos = pos;
     body.end = end;
     fn.body = body;
@@ -293,7 +329,7 @@ export function setArgument(callExpression: ts.CallExpression, index: number, va
 }
 
 export function setArgumentCount(callExpression: ts.CallExpression, count: number) {
-    var a = callExpression.arguments as any as ts.Expression[];
+    var a = (callExpression.arguments as any) as ts.Expression[];
     while (a.length < count) {
         a.push(createNodeFromValue(null));
     }
@@ -330,9 +366,11 @@ export function rememberCallExpression(callExpression: ts.CallExpression): () =>
     };
 }
 
-// ts.getSymbol crashes without setting parent, but if you set parent it will ignore content in emit, that's why there is also "Harder" version 
-export function applyOverrides(overrides: { varDecl: ts.VariableDeclaration, value: string | number | boolean }[]): () => void {
-    let restore: { varDecl: ts.VariableDeclaration, initializer: ts.Expression }[] = [];
+// ts.getSymbol crashes without setting parent, but if you set parent it will ignore content in emit, that's why there is also "Harder" version
+export function applyOverrides(
+    overrides: { varDecl: ts.VariableDeclaration; value: string | number | boolean }[]
+): () => void {
+    let restore: { varDecl: ts.VariableDeclaration; initializer: ts.Expression }[] = [];
     for (let i = 0; i < overrides.length; i++) {
         let o = overrides[i];
         restore.push({ varDecl: o.varDecl, initializer: o.varDecl.initializer });
@@ -340,17 +378,26 @@ export function applyOverrides(overrides: { varDecl: ts.VariableDeclaration, val
         o.varDecl.initializer.parent = o.varDecl;
     }
     return () => {
-        for (let i = restore.length; i-- > 0;) {
+        for (let i = restore.length; i-- > 0; ) {
             restore[i].varDecl.initializer = restore[i].initializer;
         }
-    }
+    };
 }
 
-export function applyOverridesHarder(overrides: { varDecl: ts.VariableDeclaration, value: string | number | boolean }[]) {
+export function applyOverridesHarder(
+    overrides: { varDecl: ts.VariableDeclaration; value: string | number | boolean }[]
+) {
     for (let i = 0; i < overrides.length; i++) {
         let o = overrides[i];
         o.varDecl.initializer = <ts.Expression>createNodeFromValue(o.value);
     }
+}
+
+export function rememberParent(expression: ts.Expression): () => void {
+    let originalParent = expression.parent;
+    return () => {
+        expression.parent = originalParent;
+    };
 }
 
 export function concat(left: ts.Expression, right: ts.Expression): ts.Expression {

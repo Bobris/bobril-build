@@ -58,4 +58,5 @@ export declare function applyOverridesHarder(overrides: {
     varDecl: ts.VariableDeclaration;
     value: string | number | boolean;
 }[]): void;
+export declare function rememberParent(expression: ts.Expression): () => void;
 export declare function concat(left: ts.Expression, right: ts.Expression): ts.Expression;

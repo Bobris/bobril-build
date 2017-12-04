@@ -4,14 +4,14 @@ const ts = require("typescript");
 const pathPlatformDependent = require("path");
 const path = pathPlatformDependent.posix; // This works everywhere, just use forward slashes
 const evalNode = require("./evalNode");
-require('bluebird');
+require("bluebird");
 function isBobrilFunction(name, callExpression, sourceInfo) {
     let text = callExpression.expression.getText();
-    return text === sourceInfo.bobrilNamespace + '.' + name || text === sourceInfo.bobrilImports[name];
+    return text === sourceInfo.bobrilNamespace + "." + name || text === sourceInfo.bobrilImports[name];
 }
 function isBobrilG11NFunction(name, callExpression, sourceInfo) {
     let text = callExpression.expression.getText();
-    return text === sourceInfo.bobrilG11NNamespace + '.' + name || text === sourceInfo.bobrilG11NImports[name];
+    return text === sourceInfo.bobrilG11NNamespace + "." + name || text === sourceInfo.bobrilG11NImports[name];
 }
 function extractBindings(bindings, ns, ims) {
     if (bindings.kind === ts.SyntaxKind.NamedImports) {
@@ -68,46 +68,54 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
         }
         else if (n.kind === ts.SyntaxKind.CallExpression) {
             let ce = n;
-            if (isBobrilFunction('asset', ce, result)) {
-                result.assets.push({ callExpression: ce, name: evalNode.evalNode(ce.arguments[0], tc, resolvePathStringLiteral) });
+            if (isBobrilFunction("asset", ce, result)) {
+                result.assets.push({
+                    callExpression: ce,
+                    name: evalNode.evalNode(ce.arguments[0], tc, resolvePathStringLiteral)
+                });
             }
-            else if (isBobrilFunction('sprite', ce, result)) {
+            else if (isBobrilFunction("sprite", ce, result)) {
                 let si = { callExpression: ce };
                 for (let i = 0; i < ce.arguments.length; i++) {
                     let res = evalNode.evalNode(ce.arguments[i], tc, i === 0 ? resolvePathStringLiteral : null); // first argument is path
                     if (res !== undefined)
                         switch (i) {
                             case 0:
-                                if (typeof res === 'string')
+                                if (typeof res === "string")
                                     si.name = res;
                                 break;
                             case 1:
-                                if (typeof res === 'string')
+                                if (typeof res === "string")
                                     si.color = res;
                                 break;
                             case 2:
-                                if (typeof res === 'number')
+                                if (typeof res === "number")
                                     si.width = res;
                                 break;
                             case 3:
-                                if (typeof res === 'number')
+                                if (typeof res === "number")
                                     si.height = res;
                                 break;
                             case 4:
-                                if (typeof res === 'number')
+                                if (typeof res === "number")
                                     si.x = res;
                                 break;
                             case 5:
-                                if (typeof res === 'number')
+                                if (typeof res === "number")
                                     si.y = res;
                                 break;
-                            default: throw new Error('b.sprite cannot have more than 6 parameters');
+                            default:
+                                throw new Error("b.sprite cannot have more than 6 parameters");
                         }
                 }
                 result.sprites.push(si);
             }
-            else if (isBobrilFunction('styleDef', ce, result) || isBobrilFunction('styleDefEx', ce, result)) {
-                let item = { callExpression: ce, isEx: isBobrilFunction('styleDefEx', ce, result), userNamed: false };
+            else if (isBobrilFunction("styleDef", ce, result) || isBobrilFunction("styleDefEx", ce, result)) {
+                let item = {
+                    callExpression: ce,
+                    isEx: isBobrilFunction("styleDefEx", ce, result),
+                    userNamed: false
+                };
                 if (ce.arguments.length == 3 + (item.isEx ? 1 : 0)) {
                     item.name = evalNode.evalNode(ce.arguments[ce.arguments.length - 1], tc, null);
                     item.userNamed = true;
@@ -119,15 +127,25 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                     }
                     else if (ce.parent.kind === ts.SyntaxKind.BinaryExpression) {
                         let be = ce.parent;
-                        if (be.operatorToken != null && be.left != null && be.operatorToken.kind === ts.SyntaxKind.FirstAssignment && be.left.kind === ts.SyntaxKind.Identifier) {
+                        if (be.operatorToken != null &&
+                            be.left != null &&
+                            be.operatorToken.kind === ts.SyntaxKind.FirstAssignment &&
+                            be.left.kind === ts.SyntaxKind.Identifier) {
                             item.name = be.left.text;
                         }
                     }
                 }
                 result.styleDefs.push(item);
             }
-            else if (isBobrilG11NFunction('t', ce, result)) {
-                let item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: false };
+            else if (isBobrilG11NFunction("t", ce, result)) {
+                let item = {
+                    callExpression: ce,
+                    message: undefined,
+                    withParams: false,
+                    knownParams: undefined,
+                    hint: undefined,
+                    justFormat: false
+                };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
@@ -139,8 +157,15 @@ function gatherSourceInfo(source, tc, resolvePathStringLiteral) {
                 }
                 result.trs.push(item);
             }
-            else if (isBobrilG11NFunction('f', ce, result)) {
-                let item = { callExpression: ce, message: undefined, withParams: false, knownParams: undefined, hint: undefined, justFormat: true };
+            else if (isBobrilG11NFunction("f", ce, result)) {
+                let item = {
+                    callExpression: ce,
+                    message: undefined,
+                    withParams: false,
+                    knownParams: undefined,
+                    hint: undefined,
+                    justFormat: true
+                };
                 item.message = evalNode.evalNode(ce.arguments[0], tc, null);
                 if (ce.arguments.length >= 2) {
                     item.withParams = true;
@@ -204,7 +229,7 @@ function createNodeFromValue(value) {
         }
         return result;
     }
-    throw new Error('Don\'t know how to create node for ' + value);
+    throw new Error("Don't know how to create node for " + value);
 }
 exports.createNodeFromValue = createNodeFromValue;
 function setMethod(callExpression, name) {
@@ -297,7 +322,7 @@ function rememberCallExpression(callExpression) {
     };
 }
 exports.rememberCallExpression = rememberCallExpression;
-// ts.getSymbol crashes without setting parent, but if you set parent it will ignore content in emit, that's why there is also "Harder" version 
+// ts.getSymbol crashes without setting parent, but if you set parent it will ignore content in emit, that's why there is also "Harder" version
 function applyOverrides(overrides) {
     let restore = [];
     for (let i = 0; i < overrides.length; i++) {
@@ -320,6 +345,13 @@ function applyOverridesHarder(overrides) {
     }
 }
 exports.applyOverridesHarder = applyOverridesHarder;
+function rememberParent(expression) {
+    let originalParent = expression.parent;
+    return () => {
+        expression.parent = originalParent;
+    };
+}
+exports.rememberParent = rememberParent;
 function concat(left, right) {
     let res = ts.createNode(ts.SyntaxKind.BinaryExpression);
     res.operatorToken = ts.createNode(ts.SyntaxKind.PlusToken);

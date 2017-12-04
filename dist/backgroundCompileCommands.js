@@ -22,7 +22,7 @@ function createProject(param) {
             translationDirty: false
         };
         cps[param.id] = cp;
-        cp.project.logCallback = (text) => {
+        cp.project.logCallback = text => {
             process.send({ command: "log", param: text });
         };
         cp.project.writeFileCallback = function write(fn, b) {
@@ -36,7 +36,10 @@ function refreshProject(param) {
     let cp = cps[param.id];
     if (cp) {
         cp.promise = cp.promise.then(() => {
-            process.send({ command: "refreshed", param: bb.refreshProjectFromPackageJson(cp.project, param.allFiles) });
+            process.send({
+                command: "refreshed",
+                param: bb.refreshProjectFromPackageJson(cp.project, param.allFiles)
+            });
         });
     }
     else {
@@ -99,7 +102,8 @@ function compile(param) {
     let cp = cps[param];
     if (cp) {
         cp.promise = new Promise((resolve, reject) => {
-            cp.promise.then(() => {
+            cp.promise
+                .then(() => {
                 bb.defineTranslationReporter(cp.project);
                 if (cp.project.localize) {
                     cp.translationDb.clearBeforeCompilation();
@@ -130,12 +134,25 @@ function compile(param) {
                         cp.translationDirty = true;
                     }
                 });
-            }).then(() => {
+            })
+                .then(() => {
                 let result = cp.compilationCache.getResult();
-                process.send({ command: "compileOk", param: { errors: result.errors, warnings: result.warnings, messages: result.messages, hasTests: cp.project.mainSpec != null } });
+                process.send({
+                    command: "compileOk",
+                    param: {
+                        errors: result.errors,
+                        warnings: result.warnings,
+                        messages: result.messages,
+                        hasTests: cp.project.mainSpec != null
+                    }
+                });
             }, (err) => {
-                process.send({ command: "compileFailed", param: err.toString() });
-            }).then(() => resolve(null), () => resolve(null));
+                process.send({
+                    command: "compileFailed",
+                    param: err.message + " " + err.stack
+                });
+            })
+                .then(() => resolve(null), () => resolve(null));
         });
     }
     else {
