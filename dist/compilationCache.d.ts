@@ -102,6 +102,7 @@ export interface IProject {
     bundleJs?: string;
     bundlePng?: string;
     realRootRel?: string;
+    realRootAbs?: string;
     dependencies?: string[];
     devDependencies?: string[];
     npmRegistry?: string;

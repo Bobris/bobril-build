@@ -1,7 +1,6 @@
-import * as uglify from 'uglify-js';
+import * as uglify from "uglify-js";
 export interface IFileForBundle {
     name: string;
-    astTime: number;
     ast: uglify.IAstToplevel;
     requires: string[];
     difficult: boolean;
@@ -18,7 +17,7 @@ export interface IFileForBundle {
     };
 }
 export interface IBundleProject {
-    checkFileModification(name: string): number;
+    fileExists(name: string): boolean;
     readContent(name: string): string;
     getMainFiles(): string[];
     writeBundle(content: string): any;

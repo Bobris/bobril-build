@@ -18,7 +18,14 @@ const cssHelpers = require("./cssHelpers");
 const shortenFileName_1 = require("./shortenFileName");
 const plugins = require("./pluginsLoader");
 function defaultLibs() {
-    return ["es5", "dom", "es2015.core", "es2015.promise", "es2015.iterable", "es2015.collection"];
+    return [
+        "es5",
+        "dom",
+        "es2015.core",
+        "es2015.promise",
+        "es2015.iterable",
+        "es2015.collection"
+    ];
 }
 exports.defaultLibs = defaultLibs;
 function addLibPrefixPostfix(names) {
@@ -74,7 +81,8 @@ class CompilationCache {
         let text = `BB${code}: ${message}`;
         var locStart = source.getLineAndCharacterOfPosition(pos);
         var locEnd = source.getLineAndCharacterOfPosition(end);
-        output += `${source.fileName}(${locStart.line + 1},${locStart.character + 1}): `;
+        output += `${source.fileName}(${locStart.line +
+            1},${locStart.character + 1}): `;
         this.compilationResult.addMessage(isError, source.fileName, text, [
             locStart.line + 1,
             locStart.character + 1,
@@ -91,8 +99,14 @@ class CompilationCache {
         if (diagnostic.file) {
             var locStart = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
             var locEnd = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start + diagnostic.length);
-            output += `${diagnostic.file.fileName}(${locStart.line + 1},${locStart.character + 1}): `;
-            this.compilationResult.addMessage(diagnostic.category === ts.DiagnosticCategory.Error, diagnostic.file.fileName, text, [locStart.line + 1, locStart.character + 1, locEnd.line + 1, locEnd.character + 1]);
+            output += `${diagnostic.file.fileName}(${locStart.line +
+                1},${locStart.character + 1}): `;
+            this.compilationResult.addMessage(diagnostic.category === ts.DiagnosticCategory.Error, diagnostic.file.fileName, text, [
+                locStart.line + 1,
+                locStart.character + 1,
+                locEnd.line + 1,
+                locEnd.character + 1
+            ]);
         }
         var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
         output += `${category} ${text}${ts.sys.newLine}`;
@@ -135,7 +149,9 @@ class CompilationCache {
         let tc = program.getTypeChecker();
         let symb = exports.find(v => v.name == expName);
         if (symb == null) {
-            project.logCallback(`Cannot find export ${expName} in ${exports.map(v => v.name).join(",")}`);
+            project.logCallback(`Cannot find export ${expName} in ${exports
+                .map(v => v.name)
+                .join(",")}`);
             return null;
         }
         let decls = symb.getDeclarations();
@@ -183,12 +199,16 @@ class CompilationCache {
     }
     compile(project) {
         project.liveReloadIdx = project.liveReloadIdx | 1;
-        let mainList = (Array.isArray(project.main) ? project.main : [project.main]);
+        let mainList = (Array.isArray(project.main)
+            ? project.main
+            : [project.main]);
         mainList = mainList.map(p => path.normalize(p));
-        project.logCallback = project.logCallback || ((text) => console.log(text));
+        project.logCallback =
+            project.logCallback || ((text) => console.log(text));
         this.logCallback = project.logCallback;
         project.writeFileCallback =
-            project.writeFileCallback || ((filename, content) => fs.writeFileSync(filename, content));
+            project.writeFileCallback ||
+                ((filename, content) => fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
         let ndir = project.dir.toLowerCase() + "/";
         function relativizeToProject(p) {
@@ -198,9 +218,12 @@ class CompilationCache {
             }
             return p;
         }
-        let resolvePathString = project.resolvePathString || project.resourcesAreRelativeToProjectDir
+        let resolvePathString = project.resolvePathString ||
+            project.resourcesAreRelativeToProjectDir
             ? (p, s, t) => relativizeToProject(pathUtils.join(p, t))
-            : (p, s, t) => relativizeToProject(/^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t));
+            : (p, s, t) => relativizeToProject(/^node_modules\//.test(t)
+                ? pathUtils.join(p, t)
+                : pathUtils.join(path.dirname(s), t));
         this.resolvePathStringLiteral = (nn) => resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text);
         if (project.totalBundle) {
             project.options.sourceMap = false;
@@ -252,7 +275,9 @@ class CompilationCache {
             shortenFileNameAddPath = (fn) => project.outputSubDir + "/" + fn;
         }
         if (project.totalBundle) {
-            shortenFileName = shortenFileName_1.createFileNameShortener(project.additionalResources ? project.additionalResources.getCanUse() : fn => true);
+            shortenFileName = shortenFileName_1.createFileNameShortener(project.additionalResources
+                ? project.additionalResources.getCanUse()
+                : fn => true);
             shortenFileNameAddPath = shortenFileName;
             if (project.outputSubDir) {
                 shortenFileNameAddPath = (fn) => project.outputSubDir + "/" + shortenFileName(fn);
@@ -410,9 +435,13 @@ class CompilationCache {
             this.calcMaxTimeForDeps(sourceFiles[i].fileName, project.dir, true);
         }
         prom = prom.then(() => {
+            project.realRootAbs = program.getCommonSourceDirectory();
             project.realRootRel = path.relative(program.getCommonSourceDirectory(), project.dir);
             if (project.realRootRel !== "") {
                 project.realRootRel = project.realRootRel + "/";
+            }
+            else {
+                project.realRootAbs = project.dir;
             }
             for (let i = 0; i < sourceFiles.length; i++) {
                 let src = sourceFiles[i];
@@ -440,7 +469,8 @@ class CompilationCache {
                             continue;
                         let bundlePos = bundleCache.query(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
                         restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
-                        if (si.callExpression.arguments.length >= 2 && si.color === undefined) {
+                        if (si.callExpression.arguments.length >= 2 &&
+                            si.color === undefined) {
                             BuildHelpers.setMethod(si.callExpression, "spritebc");
                             BuildHelpers.setArgumentAst(si.callExpression, 0, si.callExpression.arguments[1]);
                             BuildHelpers.setArgument(si.callExpression, 1, bundlePos.width);
@@ -485,7 +515,8 @@ class CompilationCache {
                     let trs = info.trs;
                     for (let j = 0; j < trs.length; j++) {
                         let message = trs[j].message;
-                        if (typeof message === "string" && trs[j].justFormat != true) {
+                        if (typeof message === "string" &&
+                            trs[j].justFormat != true) {
                             let id = project.compileTranslation.addUsageOfMessage(trs[j]);
                             let ce = trs[j].callExpression;
                             restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
@@ -512,7 +543,8 @@ class CompilationCache {
                         if (project.prefixStyleDefs) {
                             name = sd.name;
                             if (!name) {
-                                if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                if (sd.callExpression.arguments.length >=
+                                    3 + skipEx) {
                                     if (!remembered) {
                                         restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                                     }
@@ -546,7 +578,8 @@ class CompilationCache {
                     }
                     else if (project.prefixStyleDefs) {
                         if (!sd.name) {
-                            if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                            if (sd.callExpression.arguments.length >=
+                                3 + skipEx) {
                                 if (!remembered) {
                                     restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
                                 }
@@ -577,7 +610,8 @@ class CompilationCache {
                     project.logCallback("Error: Dependent " + jsFile + " not found");
                     continue;
                 }
-                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                if (cached.outputTime == null ||
+                    cached.curTime > cached.outputTime) {
                     this.updateCachedFileContent(cached);
                     if (cached.textTime !== cached.curTime) {
                         project.logCallback("Error: Dependent " + jsFile + " failed to load");
@@ -598,7 +632,8 @@ class CompilationCache {
                         project.logCallback("Error: Dependent " + assetFile + " not found");
                         return;
                     }
-                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    if (cached.outputTime == null ||
+                        cached.curTime > cached.outputTime) {
                         this.updateCachedFileBuffer(cached);
                         if (cached.bufferTime !== cached.curTime) {
                             return;
@@ -670,10 +705,13 @@ class CompilationCache {
                         project.logCallback("Error: Dependent " + assetFile + " not found");
                         continue;
                     }
-                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    if (cached.outputTime == null ||
+                        cached.curTime > cached.outputTime) {
                         this.updateCachedFileBuffer(cached);
                         if (cached.bufferTime !== cached.curTime) {
-                            project.logCallback("Error: Dependent " + assetFile + " failed to load");
+                            project.logCallback("Error: Dependent " +
+                                assetFile +
+                                " failed to load");
                             continue;
                         }
                         if (!isCssByExt(assetFile) && !isJsByExt(assetFile)) {
@@ -699,27 +737,25 @@ class CompilationCache {
                         beautify: project.beautify,
                         defines: project.defines,
                         getMainFiles() {
-                            return mainJsList;
+                            return mainJsList.map(f => project.realRootRel + f);
                         },
-                        checkFileModification(name) {
-                            if (/\.js$/i.test(name)) {
-                                let cached = that.getCachedFileContent(name.replace(/\.js$/i, ".ts"), project.dir);
-                                if (cached.curTime != null)
-                                    return cached.outputTime;
-                                cached = that.getCachedFileContent(name.replace(/\.js$/i, ".tsx"), project.dir);
-                                if (cached.curTime != null)
-                                    return cached.outputTime;
-                            }
-                            let cached = that.getCachedFileContent(name, project.dir);
-                            return cached.curTime;
+                        fileExists(name) {
+                            if (project.commonJsTemp[name.toLowerCase()] !==
+                                undefined)
+                                return true;
+                            let cached = that.getCachedFileContent(name, project.realRootAbs);
+                            return cached.textTime != null;
                         },
                         readContent(name) {
                             let jsout = project.commonJsTemp[name.toLowerCase()];
                             if (jsout !== undefined)
                                 return jsout.toString("utf-8");
-                            let cached = that.getCachedFileContent(name, project.dir);
+                            let cached = that.getCachedFileContent(name, project.realRootAbs);
                             if (cached.textTime == null) {
-                                project.logCallback("Cannot read content of " + name + " in dir " + project.dir);
+                                project.logCallback("Cannot read content of " +
+                                    name +
+                                    " in dir " +
+                                    project.realRootAbs);
                                 return "";
                             }
                             return cached.text;
@@ -731,7 +767,8 @@ class CompilationCache {
                                 if (!isJsByExt(assetFile))
                                     continue;
                                 let cached = that.getCachedFileExistence(assetFile, project.dir);
-                                if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
+                                if (cached.curTime == null ||
+                                    cached.bufferTime !== cached.curTime) {
                                     continue;
                                 }
                                 res.addBuffer(cached.buffer);
@@ -752,7 +789,8 @@ class CompilationCache {
                         if (!isJsByExt(assetFile))
                             continue;
                         let cached = this.getCachedFileExistence(assetFile, project.dir);
-                        if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
+                        if (cached.curTime == null ||
+                            cached.bufferTime !== cached.curTime) {
                             continue;
                         }
                         res.addSource(cached.buffer);
@@ -762,11 +800,15 @@ class CompilationCache {
                         let nameWOExt = name.replace(/\.js$/i, "");
                         let sm = project.sourceMapMap[nameWOExt];
                         let content = project.commonJsTemp[name];
-                        res.addLine("R('" + nameWOExt + "',function(require, module, exports, global){");
+                        res.addLine("R('" +
+                            nameWOExt +
+                            "',function(require, module, exports, global){");
                         res.addSource(content, sm);
                         res.addLine("});");
                     }
-                    res.addLine("//# sourceMappingURL=" + shortenFileName("bundle.js") + ".map");
+                    res.addLine("//# sourceMappingURL=" +
+                        shortenFileName("bundle.js") +
+                        ".map");
                     project.writeFileCallback(project.bundleJs + ".map", res.toSourceMapBuffer(project.options.sourceRoot));
                     project.writeFileCallback(project.bundleJs, res.toContent());
                 }
@@ -784,7 +826,13 @@ class CompilationCache {
     copyToProjectIfChanged(name, dir, outName, write) {
         let cache = this.getCachedFileExistence(name, dir);
         if (cache.curTime == null) {
-            this.logCallback("Cannot copy " + name + " from " + dir + " to " + outName + " because it does not exist");
+            this.logCallback("Cannot copy " +
+                name +
+                " from " +
+                dir +
+                " to " +
+                outName +
+                " because it does not exist");
             return;
         }
         if (cache.outputTime == null || cache.curTime > cache.outputTime) {
@@ -804,7 +852,9 @@ class CompilationCache {
         }
     }
     getCachedFileExistence(fileName, baseDir) {
-        let resolvedName = pathUtils.isAbsolutePath(fileName) ? fileName : path.join(baseDir, fileName);
+        let resolvedName = pathUtils.isAbsolutePath(fileName)
+            ? fileName
+            : path.join(baseDir, fileName);
         let resolvedNameLowerCased = resolvedName.toLowerCase();
         let cached = this.cacheFiles[resolvedNameLowerCased];
         if (cached === undefined) {
@@ -925,7 +975,10 @@ class CompilationCache {
                 }
                 catch (er) {
                     if (onError)
-                        onError("Opening " + cc.defaultLibFilename + " failed with " + er);
+                        onError("Opening " +
+                            cc.defaultLibFilename +
+                            " failed with " +
+                            er);
                     return null;
                 }
                 cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
@@ -1023,11 +1076,17 @@ class CompilationCache {
         function resolveModuleName(moduleName, containingFile) {
             if (moduleName.substr(0, 1) === ".") {
                 if (/\/\//.test(moduleName)) {
-                    project.logCallback("Import " + moduleName + " contains two slashes in row in " + containingFile);
+                    project.logCallback("Import " +
+                        moduleName +
+                        " contains two slashes in row in " +
+                        containingFile);
                 }
                 let res = resolveModuleExtension(path.join(path.dirname(containingFile), moduleName), path.join(path.dirname(containingFile), moduleName), true);
                 if (res == null) {
-                    project.logCallback("Module " + moduleName + " is not valid in " + containingFile);
+                    project.logCallback("Module " +
+                        moduleName +
+                        " is not valid in " +
+                        containingFile);
                     return null;
                 }
                 return res;
@@ -1066,7 +1125,10 @@ class CompilationCache {
             let mainWithoutExt = main.replace(/\.[^/.]+$/, "");
             let res = resolveModuleExtension(moduleName, path.join("node_modules/" + moduleName, mainWithoutExt), false);
             if (res == null) {
-                project.logCallback("Module " + moduleName + " is not valid in " + containingFile);
+                project.logCallback("Module " +
+                    moduleName +
+                    " is not valid in " +
+                    containingFile);
                 return null;
             }
             return res;

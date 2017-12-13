@@ -204,7 +204,7 @@ export function getModuleMap(project: compilationCache.IProject) {
         let name = moduleNames[i];
         if (project.moduleMap[name].internalModule)
             continue;
-        moduleMap[name] = project.moduleMap[name].jsFile.replace(/\.js$/i, "");
+        moduleMap[name] = path.join(project.realRootRel, project.moduleMap[name].jsFile.replace(/\.js$/i, ""));
     }
     return `R.map = ${JSON.stringify(moduleMap)};`;
 }

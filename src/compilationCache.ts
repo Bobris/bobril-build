@@ -21,7 +21,14 @@ import { CompilationResultMessage } from "./defs";
 import * as plugins from "./pluginsLoader";
 
 export function defaultLibs() {
-    return ["es5", "dom", "es2015.core", "es2015.promise", "es2015.iterable", "es2015.collection"];
+    return [
+        "es5",
+        "dom",
+        "es2015.core",
+        "es2015.promise",
+        "es2015.iterable",
+        "es2015.collection"
+    ];
 }
 
 function addLibPrefixPostfix(names: string[]) {
@@ -81,7 +88,11 @@ export interface IProject {
     prefixStyleDefs?: string;
     spriteMerge?: boolean;
     resourcesAreRelativeToProjectDir?: boolean;
-    resolvePathString?: (projectDir: string, sourcePath: string, text: string) => string;
+    resolvePathString?: (
+        projectDir: string,
+        sourcePath: string,
+        text: string
+    ) => string;
     textForTranslationReporter?: (
         message: BuildHelpers.TranslationMessage,
         compilationResult: CompilationResult
@@ -140,6 +151,7 @@ export interface IProject {
     bundleJs?: string;
     bundlePng?: string;
     realRootRel?: string;
+    realRootAbs?: string;
     dependencies?: string[];
     devDependencies?: string[];
     npmRegistry?: string;
@@ -173,7 +185,12 @@ export class CompilationResult {
         }
     }
 
-    addMessage(isError: boolean, fn: string, text: string, pos: [number, number, number, number]) {
+    addMessage(
+        isError: boolean,
+        fn: string,
+        text: string,
+        pos: [number, number, number, number]
+    ) {
         if (isError) this.errors++;
         else this.warnings++;
         this.messages.push({ fileName: fn, isError, text, pos });
@@ -199,12 +216,20 @@ export class CompilationCache {
     logCallback: (text: string) => void;
     compilationResult: CompilationResult;
 
-    addMessageFromBB(isError: boolean, code: number, message: string, source: ts.SourceFile, pos: number, end: number) {
+    addMessageFromBB(
+        isError: boolean,
+        code: number,
+        message: string,
+        source: ts.SourceFile,
+        pos: number,
+        end: number
+    ) {
         var output = "";
         let text = `BB${code}: ${message}`;
         var locStart = source.getLineAndCharacterOfPosition(pos);
         var locEnd = source.getLineAndCharacterOfPosition(end);
-        output += `${source.fileName}(${locStart.line + 1},${locStart.character + 1}): `;
+        output += `${source.fileName}(${locStart.line +
+            1},${locStart.character + 1}): `;
         this.compilationResult.addMessage(isError, source.fileName, text, [
             locStart.line + 1,
             locStart.character + 1,
@@ -218,16 +243,29 @@ export class CompilationCache {
 
     reportDiagnostic(diagnostic: ts.Diagnostic) {
         var output = "";
-        let text = `TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
+        let text = `TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(
+            diagnostic.messageText,
+            "\n"
+        )}`;
         if (diagnostic.file) {
-            var locStart = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
-            var locEnd = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start + diagnostic.length);
-            output += `${diagnostic.file.fileName}(${locStart.line + 1},${locStart.character + 1}): `;
+            var locStart = diagnostic.file.getLineAndCharacterOfPosition(
+                diagnostic.start
+            );
+            var locEnd = diagnostic.file.getLineAndCharacterOfPosition(
+                diagnostic.start + diagnostic.length
+            );
+            output += `${diagnostic.file.fileName}(${locStart.line +
+                1},${locStart.character + 1}): `;
             this.compilationResult.addMessage(
                 diagnostic.category === ts.DiagnosticCategory.Error,
                 diagnostic.file.fileName,
                 text,
-                [locStart.line + 1, locStart.character + 1, locEnd.line + 1, locEnd.character + 1]
+                [
+                    locStart.line + 1,
+                    locStart.character + 1,
+                    locEnd.line + 1,
+                    locEnd.character + 1
+                ]
             );
         }
         var category = ts.DiagnosticCategory[diagnostic.category].toLowerCase();
@@ -270,7 +308,11 @@ export class CompilationCache {
         }[];
     };
 
-    addOverride(fn: string, varDecl: ts.VariableDeclaration, value: string | number | boolean) {
+    addOverride(
+        fn: string,
+        varDecl: ts.VariableDeclaration,
+        value: string | number | boolean
+    ) {
         let o = this.overrides[fn];
         if (o == null) {
             o = [];
@@ -279,11 +321,20 @@ export class CompilationCache {
         o.push({ varDecl, value });
     }
 
-    findVarDecl(project: IProject, program: ts.Program, exports: ts.Symbol[], expName: string): ts.VariableDeclaration {
+    findVarDecl(
+        project: IProject,
+        program: ts.Program,
+        exports: ts.Symbol[],
+        expName: string
+    ): ts.VariableDeclaration {
         let tc = program.getTypeChecker();
         let symb = exports.find(v => v.name == expName);
         if (symb == null) {
-            project.logCallback(`Cannot find export ${expName} in ${exports.map(v => v.name).join(",")}`);
+            project.logCallback(
+                `Cannot find export ${expName} in ${exports
+                    .map(v => v.name)
+                    .join(",")}`
+            );
             return null;
         }
         let decls = symb.getDeclarations();
@@ -294,7 +345,9 @@ export class CompilationCache {
         let decl = decls[0];
         if (decl.kind === ts.SyntaxKind.ExportSpecifier) {
             let exports2 = tc.getExportsOfModule(
-                tc.getSymbolAtLocation((decl.parent.parent as ts.ExportDeclaration).moduleSpecifier)
+                tc.getSymbolAtLocation(
+                    (decl.parent.parent as ts.ExportDeclaration).moduleSpecifier
+                )
             );
             let expName2 = (decl as ts.ExportSpecifier).propertyName.text;
             return this.findVarDecl(project, program, exports2, expName2);
@@ -302,7 +355,11 @@ export class CompilationCache {
         if (decl.kind === ts.SyntaxKind.VariableDeclaration) {
             return decl as ts.VariableDeclaration;
         }
-        project.logCallback(`Don't know how to override ${expName} in ${(<any>ts).SyntaxKind[decl.kind]}`);
+        project.logCallback(
+            `Don't know how to override ${expName} in ${
+                (<any>ts).SyntaxKind[decl.kind]
+            }`
+        );
         return null;
     }
 
@@ -314,17 +371,25 @@ export class CompilationCache {
             let moduleName = moduleList[i];
             let moduleInfo = project.moduleMap[moduleName];
             if (moduleInfo == null) {
-                project.logCallback(`Defined module override not found (${moduleName})`);
+                project.logCallback(
+                    `Defined module override not found (${moduleName})`
+                );
                 continue;
             }
-            let exports = tc.getExportsOfModule((program.getSourceFile(moduleInfo.defFile) as any).symbol as ts.Symbol);
+            let exports = tc.getExportsOfModule((program.getSourceFile(
+                moduleInfo.defFile
+            ) as any).symbol as ts.Symbol);
             let overridesModule = overrides[moduleName];
             let overridesNames = Object.keys(overridesModule);
             for (let j = 0; j < overridesNames.length; j++) {
                 let expName = overridesNames[j];
                 let decl = this.findVarDecl(project, program, exports, expName);
                 if (decl) {
-                    this.addOverride(decl.getSourceFile().fileName, decl, overridesModule[expName]);
+                    this.addOverride(
+                        decl.getSourceFile().fileName,
+                        decl,
+                        overridesModule[expName]
+                    );
                 }
             }
         }
@@ -336,12 +401,17 @@ export class CompilationCache {
 
     compile(project: IProject): Promise<any> {
         project.liveReloadIdx = project.liveReloadIdx | 1;
-        let mainList = <string[]>(Array.isArray(project.main) ? project.main : [<string>project.main]);
+        let mainList = <string[]>(Array.isArray(project.main)
+            ? project.main
+            : [<string>project.main]);
         mainList = mainList.map(p => path.normalize(p));
-        project.logCallback = project.logCallback || ((text: string) => console.log(text));
+        project.logCallback =
+            project.logCallback || ((text: string) => console.log(text));
         this.logCallback = project.logCallback;
         project.writeFileCallback =
-            project.writeFileCallback || ((filename: string, content: Buffer) => fs.writeFileSync(filename, content));
+            project.writeFileCallback ||
+            ((filename: string, content: Buffer) =>
+                fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
 
         let ndir = project.dir.toLowerCase() + "/";
@@ -354,14 +424,21 @@ export class CompilationCache {
         }
 
         let resolvePathString =
-            project.resolvePathString || project.resourcesAreRelativeToProjectDir
+            project.resolvePathString ||
+            project.resourcesAreRelativeToProjectDir
                 ? (p, s, t) => relativizeToProject(pathUtils.join(p, t))
                 : (p, s, t) =>
                       relativizeToProject(
-                          /^node_modules\//.test(t) ? pathUtils.join(p, t) : pathUtils.join(path.dirname(s), t)
+                          /^node_modules\//.test(t)
+                              ? pathUtils.join(p, t)
+                              : pathUtils.join(path.dirname(s), t)
                       );
         this.resolvePathStringLiteral = (nn: ts.StringLiteral) =>
-            resolvePathString(project.dir, nn.getSourceFile().fileName, nn.text);
+            resolvePathString(
+                project.dir,
+                nn.getSourceFile().fileName,
+                nn.text
+            );
         if (project.totalBundle) {
             project.options.sourceMap = false;
             project.options.removeComments = false;
@@ -390,7 +467,9 @@ export class CompilationCache {
             jsWriteFileCallback = (filename: string, content: Buffer) => {
                 if (/\.js\.map$/i.test(filename)) {
                     let sm = sourceMap.parseSourceMap(content);
-                    project.sourceMapMap[filename.replace(/\.js\.map$/i, "").toLowerCase()] = sm;
+                    project.sourceMapMap[
+                        filename.replace(/\.js\.map$/i, "").toLowerCase()
+                    ] = sm;
                 } else if (/\.js$/i.test(filename)) {
                     content = simpleHelpers.removeLinkToSourceMap(content);
                     project.commonJsTemp[filename.toLowerCase()] = content;
@@ -405,15 +484,19 @@ export class CompilationCache {
         let shortenFileName = (fn: string) => fn;
         let shortenFileNameAddPath = shortenFileName;
         if (project.outputSubDir) {
-            shortenFileNameAddPath = (fn: string) => project.outputSubDir + "/" + fn;
+            shortenFileNameAddPath = (fn: string) =>
+                project.outputSubDir + "/" + fn;
         }
         if (project.totalBundle) {
             shortenFileName = createFileNameShortener(
-                project.additionalResources ? project.additionalResources.getCanUse() : fn => true
+                project.additionalResources
+                    ? project.additionalResources.getCanUse()
+                    : fn => true
             );
             shortenFileNameAddPath = shortenFileName;
             if (project.outputSubDir) {
-                shortenFileNameAddPath = (fn: string) => project.outputSubDir + "/" + shortenFileName(fn);
+                shortenFileNameAddPath = (fn: string) =>
+                    project.outputSubDir + "/" + shortenFileName(fn);
             }
         }
         project.bundleJs = shortenFileNameAddPath(project.bundleJs);
@@ -423,7 +506,10 @@ export class CompilationCache {
         }
         let jsWriteFileCallbackUnnormalized = jsWriteFileCallback;
         jsWriteFileCallback = (filename: string, content: Buffer) => {
-            jsWriteFileCallbackUnnormalized(relativizeToProject(filename), content);
+            jsWriteFileCallbackUnnormalized(
+                relativizeToProject(filename),
+                content
+            );
         };
         project.moduleMap = project.moduleMap || Object.create(null);
         project.depJsFiles = project.depJsFiles || Object.create(null);
@@ -498,7 +584,11 @@ export class CompilationCache {
             }
             let cached = this.getCachedFileExistence(src.fileName, project.dir);
             if (cached.sourceTime !== cached.infoTime) {
-                cached.info = BuildHelpers.gatherSourceInfo(src, tc, this.resolvePathStringLiteral);
+                cached.info = BuildHelpers.gatherSourceInfo(
+                    src,
+                    tc,
+                    this.resolvePathStringLiteral
+                );
                 cached.infoTime = cached.sourceTime;
             }
             let info = cached.info;
@@ -506,14 +596,25 @@ export class CompilationCache {
                 for (let j = 0; j < info.sprites.length; j++) {
                     let si = info.sprites[j];
                     if (si.name == null) continue;
-                    bundleCache.add(pathUtils.join(project.dir, si.name), si.color, si.width, si.height, si.x, si.y);
+                    bundleCache.add(
+                        pathUtils.join(project.dir, si.name),
+                        si.color,
+                        si.width,
+                        si.height,
+                        si.x,
+                        si.y
+                    );
                 }
             }
             if (project.textForTranslationReporter) {
                 let trs = info.trs;
                 for (let j = 0; j < trs.length; j++) {
                     let message = trs[j].message;
-                    if (typeof message === "string") project.textForTranslationReporter(trs[j], this.compilationResult);
+                    if (typeof message === "string")
+                        project.textForTranslationReporter(
+                            trs[j],
+                            this.compilationResult
+                        );
                 }
             }
             for (let j = 0; j < info.assets.length; j++) {
@@ -588,12 +689,15 @@ export class CompilationCache {
             }
         }
 
-        project.htmlHeadExpanded = (project.htmlHead || "").replace(/<<[^>]+>>/g, s => {
-            s = s.substr(2, s.length - 4);
-            let shortened = shortenFileNameAddPath(s);
-            project.depAssetFiles[s] = shortened;
-            return shortened;
-        });
+        project.htmlHeadExpanded = (project.htmlHead || "").replace(
+            /<<[^>]+>>/g,
+            s => {
+                s = s.substr(2, s.length - 4);
+                let shortened = shortenFileNameAddPath(s);
+                project.depAssetFiles[s] = shortened;
+                return shortened;
+            }
+        );
 
         // Recalculate freshness of all files
         this.clearMaxTimeForDeps();
@@ -602,9 +706,15 @@ export class CompilationCache {
         }
 
         prom = prom.then(() => {
-            project.realRootRel = path.relative((<any>program).getCommonSourceDirectory(), project.dir);
+            project.realRootAbs = (<any>program).getCommonSourceDirectory();
+            project.realRootRel = path.relative(
+                (<any>program).getCommonSourceDirectory(),
+                project.dir
+            );
             if (project.realRootRel !== "") {
                 project.realRootRel = project.realRootRel + "/";
+            } else {
+                project.realRootAbs = project.dir;
             }
             for (let i = 0; i < sourceFiles.length; i++) {
                 let src = sourceFiles[i];
@@ -613,7 +723,10 @@ export class CompilationCache {
                 if (overr != null) {
                     BuildHelpers.applyOverridesHarder(overr);
                 }
-                let cached = this.getCachedFileExistence(src.fileName, project.dir);
+                let cached = this.getCachedFileExistence(
+                    src.fileName,
+                    project.dir
+                );
                 if (
                     cached.maxTimeForDeps !== null &&
                     cached.outputTime != null &&
@@ -642,21 +755,70 @@ export class CompilationCache {
                             si.x,
                             si.y
                         );
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
-                        if (si.callExpression.arguments.length >= 2 && si.color === undefined) {
-                            BuildHelpers.setMethod(si.callExpression, "spritebc");
-                            BuildHelpers.setArgumentAst(si.callExpression, 0, si.callExpression.arguments[1]);
-                            BuildHelpers.setArgument(si.callExpression, 1, bundlePos.width);
-                            BuildHelpers.setArgument(si.callExpression, 2, bundlePos.height);
-                            BuildHelpers.setArgument(si.callExpression, 3, bundlePos.x);
-                            BuildHelpers.setArgument(si.callExpression, 4, bundlePos.y);
+                        restorationMemory.push(
+                            BuildHelpers.rememberCallExpression(
+                                si.callExpression
+                            )
+                        );
+                        if (
+                            si.callExpression.arguments.length >= 2 &&
+                            si.color === undefined
+                        ) {
+                            BuildHelpers.setMethod(
+                                si.callExpression,
+                                "spritebc"
+                            );
+                            BuildHelpers.setArgumentAst(
+                                si.callExpression,
+                                0,
+                                si.callExpression.arguments[1]
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                1,
+                                bundlePos.width
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                2,
+                                bundlePos.height
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                3,
+                                bundlePos.x
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                4,
+                                bundlePos.y
+                            );
                             BuildHelpers.setArgumentCount(si.callExpression, 5);
                         } else {
-                            BuildHelpers.setMethod(si.callExpression, "spriteb");
-                            BuildHelpers.setArgument(si.callExpression, 0, bundlePos.width);
-                            BuildHelpers.setArgument(si.callExpression, 1, bundlePos.height);
-                            BuildHelpers.setArgument(si.callExpression, 2, bundlePos.x);
-                            BuildHelpers.setArgument(si.callExpression, 3, bundlePos.y);
+                            BuildHelpers.setMethod(
+                                si.callExpression,
+                                "spriteb"
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                0,
+                                bundlePos.width
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                1,
+                                bundlePos.height
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                2,
+                                bundlePos.x
+                            );
+                            BuildHelpers.setArgument(
+                                si.callExpression,
+                                3,
+                                bundlePos.y
+                            );
                             BuildHelpers.setArgumentCount(si.callExpression, 4);
                         }
                     }
@@ -667,7 +829,11 @@ export class CompilationCache {
                         let newname = si.name;
                         newname = shortenFileNameAddPath(newname);
                         project.depAssetFiles[si.name] = newname;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(si.callExpression));
+                        restorationMemory.push(
+                            BuildHelpers.rememberCallExpression(
+                                si.callExpression
+                            )
+                        );
                         BuildHelpers.setArgument(si.callExpression, 0, newname);
                     }
                 }
@@ -677,18 +843,31 @@ export class CompilationCache {
                         continue;
                     }
                     let assetName = sa.name;
-                    restorationMemory.push(BuildHelpers.rememberCallExpression(sa.callExpression));
-                    BuildHelpers.setArgument(sa.callExpression, 0, assetMap[assetName]);
+                    restorationMemory.push(
+                        BuildHelpers.rememberCallExpression(sa.callExpression)
+                    );
+                    BuildHelpers.setArgument(
+                        sa.callExpression,
+                        0,
+                        assetMap[assetName]
+                    );
                 }
                 if (project.compileTranslation) {
                     project.compileTranslation.startCompileFile(src.fileName);
                     let trs = info.trs;
                     for (let j = 0; j < trs.length; j++) {
                         let message = trs[j].message;
-                        if (typeof message === "string" && trs[j].justFormat != true) {
-                            let id = project.compileTranslation.addUsageOfMessage(trs[j]);
+                        if (
+                            typeof message === "string" &&
+                            trs[j].justFormat != true
+                        ) {
+                            let id = project.compileTranslation.addUsageOfMessage(
+                                trs[j]
+                            );
                             let ce = trs[j].callExpression;
-                            restorationMemory.push(BuildHelpers.rememberCallExpression(ce));
+                            restorationMemory.push(
+                                BuildHelpers.rememberCallExpression(ce)
+                            );
                             BuildHelpers.setArgument(ce, 0, id);
                             if (ce.arguments.length > 2) {
                                 BuildHelpers.setArgumentCount(ce, 2);
@@ -703,34 +882,60 @@ export class CompilationCache {
                     let skipEx = sd.isEx ? 1 : 0;
                     if (project.liveReloadStyleDefs) {
                         remembered = true;
-                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                        restorationMemory.push(
+                            BuildHelpers.rememberCallExpression(
+                                sd.callExpression
+                            )
+                        );
                         BuildHelpers.setArgumentAst(
                             sd.callExpression,
                             skipEx,
                             BuildHelpers.buildLambdaReturningArray(
-                                sd.callExpression.arguments.slice(skipEx, 2 + skipEx)
+                                sd.callExpression.arguments.slice(
+                                    skipEx,
+                                    2 + skipEx
+                                )
                             )
                         );
-                        BuildHelpers.setArgument(sd.callExpression, 1 + skipEx, null);
+                        BuildHelpers.setArgument(
+                            sd.callExpression,
+                            1 + skipEx,
+                            null
+                        );
                     }
                     if (project.debugStyleDefs) {
                         let name: string;
                         if (project.prefixStyleDefs) {
                             name = sd.name;
                             if (!name) {
-                                if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                                if (
+                                    sd.callExpression.arguments.length >=
+                                    3 + skipEx
+                                ) {
                                     if (!remembered) {
-                                        restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                        restorationMemory.push(
+                                            BuildHelpers.rememberCallExpression(
+                                                sd.callExpression
+                                            )
+                                        );
                                     }
                                     restorationMemory.push(
-                                        BuildHelpers.rememberParent(sd.callExpression.arguments[2 + skipEx])
+                                        BuildHelpers.rememberParent(
+                                            sd.callExpression.arguments[
+                                                2 + skipEx
+                                            ]
+                                        )
                                     );
                                     BuildHelpers.setArgumentAst(
                                         sd.callExpression,
                                         2 + skipEx,
                                         BuildHelpers.concat(
-                                            BuildHelpers.createNodeFromValue(project.prefixStyleDefs),
-                                            sd.callExpression.arguments[2 + skipEx]
+                                            BuildHelpers.createNodeFromValue(
+                                                project.prefixStyleDefs
+                                            ),
+                                            sd.callExpression.arguments[
+                                                2 + skipEx
+                                            ]
                                         )
                                     );
                                 }
@@ -743,30 +948,60 @@ export class CompilationCache {
                             if (!name) continue;
                         }
                         if (!remembered) {
-                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                            restorationMemory.push(
+                                BuildHelpers.rememberCallExpression(
+                                    sd.callExpression
+                                )
+                            );
                         }
-                        BuildHelpers.setArgumentCount(sd.callExpression, 3 + skipEx);
-                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, name);
+                        BuildHelpers.setArgumentCount(
+                            sd.callExpression,
+                            3 + skipEx
+                        );
+                        BuildHelpers.setArgument(
+                            sd.callExpression,
+                            2 + skipEx,
+                            name
+                        );
                     } else if (project.releaseStyleDefs) {
-                        if (sd.callExpression.arguments.length <= 2 + skipEx) continue;
+                        if (sd.callExpression.arguments.length <= 2 + skipEx)
+                            continue;
                         if (!remembered) {
-                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                            restorationMemory.push(
+                                BuildHelpers.rememberCallExpression(
+                                    sd.callExpression
+                                )
+                            );
                         }
-                        BuildHelpers.setArgumentCount(sd.callExpression, 2 + skipEx);
+                        BuildHelpers.setArgumentCount(
+                            sd.callExpression,
+                            2 + skipEx
+                        );
                     } else if (project.prefixStyleDefs) {
                         if (!sd.name) {
-                            if (sd.callExpression.arguments.length >= 3 + skipEx) {
+                            if (
+                                sd.callExpression.arguments.length >=
+                                3 + skipEx
+                            ) {
                                 if (!remembered) {
-                                    restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                                    restorationMemory.push(
+                                        BuildHelpers.rememberCallExpression(
+                                            sd.callExpression
+                                        )
+                                    );
                                 }
                                 restorationMemory.push(
-                                    BuildHelpers.rememberParent(sd.callExpression.arguments[2 + skipEx])
+                                    BuildHelpers.rememberParent(
+                                        sd.callExpression.arguments[2 + skipEx]
+                                    )
                                 );
                                 BuildHelpers.setArgumentAst(
                                     sd.callExpression,
                                     2 + skipEx,
                                     BuildHelpers.concat(
-                                        BuildHelpers.createNodeFromValue(project.prefixStyleDefs),
+                                        BuildHelpers.createNodeFromValue(
+                                            project.prefixStyleDefs
+                                        ),
                                         sd.callExpression.arguments[2 + skipEx]
                                     )
                                 );
@@ -774,13 +1009,22 @@ export class CompilationCache {
                             continue;
                         }
                         if (!remembered) {
-                            restorationMemory.push(BuildHelpers.rememberCallExpression(sd.callExpression));
+                            restorationMemory.push(
+                                BuildHelpers.rememberCallExpression(
+                                    sd.callExpression
+                                )
+                            );
                         }
-                        BuildHelpers.setArgument(sd.callExpression, 2 + skipEx, project.prefixStyleDefs + sd.name);
+                        BuildHelpers.setArgument(
+                            sd.callExpression,
+                            2 + skipEx,
+                            project.prefixStyleDefs + sd.name
+                        );
                     }
                 }
                 var emitRes = program.emit(src);
-                if (project.options.declaration) this.reportDiagnostics(emitRes.diagnostics);
+                if (project.options.declaration)
+                    this.reportDiagnostics(emitRes.diagnostics);
                 cached.outputTime = cached.maxTimeForDeps || cached.sourceTime;
                 for (let j = restorationMemory.length - 1; j >= 0; j--) {
                     restorationMemory[j]();
@@ -792,16 +1036,26 @@ export class CompilationCache {
                 let jsFile = jsFiles[i];
                 let cached = this.getCachedFileExistence(jsFile, project.dir);
                 if (cached.curTime == null) {
-                    project.logCallback("Error: Dependent " + jsFile + " not found");
+                    project.logCallback(
+                        "Error: Dependent " + jsFile + " not found"
+                    );
                     continue;
                 }
-                if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                if (
+                    cached.outputTime == null ||
+                    cached.curTime > cached.outputTime
+                ) {
                     this.updateCachedFileContent(cached);
                     if (cached.textTime !== cached.curTime) {
-                        project.logCallback("Error: Dependent " + jsFile + " failed to load");
+                        project.logCallback(
+                            "Error: Dependent " + jsFile + " failed to load"
+                        );
                         continue;
                     }
-                    jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, "utf-8"));
+                    jsWriteFileCallback(
+                        project.depJsFiles[jsFile],
+                        new Buffer(cached.text, "utf-8")
+                    );
                     cached.outputTime = cached.textTime;
                 }
             }
@@ -813,12 +1067,20 @@ export class CompilationCache {
                 prom = prom.then(v =>
                     (i => {
                         let assetFile = assetFiles[i];
-                        let cached = this.getCachedFileExistence(assetFile, project.dir);
+                        let cached = this.getCachedFileExistence(
+                            assetFile,
+                            project.dir
+                        );
                         if (cached.curTime == null) {
-                            project.logCallback("Error: Dependent " + assetFile + " not found");
+                            project.logCallback(
+                                "Error: Dependent " + assetFile + " not found"
+                            );
                             return;
                         }
-                        if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                        if (
+                            cached.outputTime == null ||
+                            cached.curTime > cached.outputTime
+                        ) {
                             this.updateCachedFileBuffer(cached);
                             if (cached.bufferTime !== cached.curTime) {
                                 return;
@@ -830,7 +1092,11 @@ export class CompilationCache {
                                         from: assetFile
                                     });
                                 } else {
-                                    project.cssToLink.push(shortenFileNameAddPath(project.depAssetFiles[assetFile]));
+                                    project.cssToLink.push(
+                                        shortenFileNameAddPath(
+                                            project.depAssetFiles[assetFile]
+                                        )
+                                    );
                                     return cssHelpers
                                         .processCss(
                                             cached.buffer.toString(),
@@ -846,20 +1112,30 @@ export class CompilationCache {
                                                     from + "/a",
                                                     url.substr(0, hi)
                                                 );
-                                                let resres = shortenFileNameAddPath(res);
-                                                project.depAssetFiles[res] = resres;
+                                                let resres = shortenFileNameAddPath(
+                                                    res
+                                                );
+                                                project.depAssetFiles[
+                                                    res
+                                                ] = resres;
                                                 return url;
                                             }
                                         )
                                         .then(
                                             v => {
                                                 project.writeFileCallback(
-                                                    shortenFileNameAddPath(project.depAssetFiles[assetFile]),
+                                                    shortenFileNameAddPath(
+                                                        project.depAssetFiles[
+                                                            assetFile
+                                                        ]
+                                                    ),
                                                     new Buffer(v.css)
                                                 );
                                             },
                                             e => {
-                                                project.logCallback(e.toString());
+                                                project.logCallback(
+                                                    e.toString()
+                                                );
                                             }
                                         );
                                 }
@@ -871,21 +1147,33 @@ export class CompilationCache {
             prom = prom.then(() => {
                 if (cssToMerge.length > 0) {
                     return cssHelpers
-                        .concatenateCssAndMinify(cssToMerge, (url: string, from: string) => {
-                            let hi = url.lastIndexOf("#");
-                            let hi2 = url.lastIndexOf("?");
-                            if (hi < 0) hi = url.length;
-                            if (hi2 < 0) hi2 = url.length;
-                            if (hi2 < hi) hi = hi2;
-                            let res = resolvePathString(project.dir, from + "/a", url.substr(0, hi));
-                            let resres = shortenFileNameAddPath(res);
-                            project.depAssetFiles[res] = resres;
-                            return shortenFileName(res) + url.substr(hi);
-                        })
+                        .concatenateCssAndMinify(
+                            cssToMerge,
+                            (url: string, from: string) => {
+                                let hi = url.lastIndexOf("#");
+                                let hi2 = url.lastIndexOf("?");
+                                if (hi < 0) hi = url.length;
+                                if (hi2 < 0) hi2 = url.length;
+                                if (hi2 < hi) hi = hi2;
+                                let res = resolvePathString(
+                                    project.dir,
+                                    from + "/a",
+                                    url.substr(0, hi)
+                                );
+                                let resres = shortenFileNameAddPath(res);
+                                project.depAssetFiles[res] = resres;
+                                return shortenFileName(res) + url.substr(hi);
+                            }
+                        )
                         .then(v => {
-                            let bundleCss = shortenFileNameAddPath("bundle.css");
+                            let bundleCss = shortenFileNameAddPath(
+                                "bundle.css"
+                            );
                             project.cssToLink.push(bundleCss);
-                            project.writeFileCallback(bundleCss, new Buffer(v.css));
+                            project.writeFileCallback(
+                                bundleCss,
+                                new Buffer(v.css)
+                            );
                         });
                 }
             });
@@ -894,19 +1182,34 @@ export class CompilationCache {
                 let assetFiles = Object.keys(project.depAssetFiles);
                 for (let i = 0; i < assetFiles.length; i++) {
                     let assetFile = assetFiles[i];
-                    let cached = this.getCachedFileExistence(assetFile, project.dir);
+                    let cached = this.getCachedFileExistence(
+                        assetFile,
+                        project.dir
+                    );
                     if (cached.curTime == null) {
-                        project.logCallback("Error: Dependent " + assetFile + " not found");
+                        project.logCallback(
+                            "Error: Dependent " + assetFile + " not found"
+                        );
                         continue;
                     }
-                    if (cached.outputTime == null || cached.curTime > cached.outputTime) {
+                    if (
+                        cached.outputTime == null ||
+                        cached.curTime > cached.outputTime
+                    ) {
                         this.updateCachedFileBuffer(cached);
                         if (cached.bufferTime !== cached.curTime) {
-                            project.logCallback("Error: Dependent " + assetFile + " failed to load");
+                            project.logCallback(
+                                "Error: Dependent " +
+                                    assetFile +
+                                    " failed to load"
+                            );
                             continue;
                         }
                         if (!isCssByExt(assetFile) && !isJsByExt(assetFile)) {
-                            project.writeFileCallback(project.depAssetFiles[assetFile], cached.buffer);
+                            project.writeFileCallback(
+                                project.depAssetFiles[assetFile],
+                                cached.buffer
+                            );
                         }
                         cached.outputTime = cached.textTime;
                     }
@@ -918,7 +1221,11 @@ export class CompilationCache {
                         .map(nn => nn.replace(/\.tsx?$/, ".js"));
                     let allJsFiles = Object.keys(project.commonJsTemp);
                     if (allJsFiles.some(n => /\/bobriln\/index/.test(n)))
-                        mainJsList.splice(0, 0, "node_modules/bobriln/index.js");
+                        mainJsList.splice(
+                            0,
+                            0,
+                            "node_modules/bobriln/index.js"
+                        );
                     else if (allJsFiles.some(n => /\/bobril\/index/.test(n))) {
                         mainJsList.splice(0, 0, "node_modules/bobril/index.js");
                     }
@@ -929,24 +1236,36 @@ export class CompilationCache {
                         beautify: project.beautify,
                         defines: project.defines,
                         getMainFiles() {
-                            return mainJsList;
+                            return mainJsList.map(f => project.realRootRel + f);
                         },
-                        checkFileModification(name: string): number {
-                            if (/\.js$/i.test(name)) {
-                                let cached = that.getCachedFileContent(name.replace(/\.js$/i, ".ts"), project.dir);
-                                if (cached.curTime != null) return cached.outputTime;
-                                cached = that.getCachedFileContent(name.replace(/\.js$/i, ".tsx"), project.dir);
-                                if (cached.curTime != null) return cached.outputTime;
-                            }
-                            let cached = that.getCachedFileContent(name, project.dir);
-                            return cached.curTime;
+                        fileExists(name: string): boolean {
+                            if (
+                                project.commonJsTemp[name.toLowerCase()] !==
+                                undefined
+                            )
+                                return true;
+                            let cached = that.getCachedFileContent(
+                                name,
+                                project.realRootAbs
+                            );
+                            return cached.textTime != null;
                         },
                         readContent(name: string) {
-                            let jsout = project.commonJsTemp[name.toLowerCase()];
-                            if (jsout !== undefined) return jsout.toString("utf-8");
-                            let cached = that.getCachedFileContent(name, project.dir);
+                            let jsout =
+                                project.commonJsTemp[name.toLowerCase()];
+                            if (jsout !== undefined)
+                                return jsout.toString("utf-8");
+                            let cached = that.getCachedFileContent(
+                                name,
+                                project.realRootAbs
+                            );
                             if (cached.textTime == null) {
-                                project.logCallback("Cannot read content of " + name + " in dir " + project.dir);
+                                project.logCallback(
+                                    "Cannot read content of " +
+                                        name +
+                                        " in dir " +
+                                        project.realRootAbs
+                                );
                                 return "";
                             }
                             return cached.text;
@@ -956,15 +1275,24 @@ export class CompilationCache {
                             for (let i = 0; i < assetFiles.length; i++) {
                                 let assetFile = assetFiles[i];
                                 if (!isJsByExt(assetFile)) continue;
-                                let cached = that.getCachedFileExistence(assetFile, project.dir);
-                                if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
+                                let cached = that.getCachedFileExistence(
+                                    assetFile,
+                                    project.dir
+                                );
+                                if (
+                                    cached.curTime == null ||
+                                    cached.bufferTime !== cached.curTime
+                                ) {
                                     continue;
                                 }
                                 res.addBuffer(cached.buffer);
                                 res.addByte(10);
                             }
                             res.addString(content);
-                            project.writeFileCallback(project.bundleJs, res.toBuffer());
+                            project.writeFileCallback(
+                                project.bundleJs,
+                                res.toBuffer()
+                            );
                         }
                     };
                     bundler.bundle(bp);
@@ -975,8 +1303,14 @@ export class CompilationCache {
                     for (let i = 0; i < assetFiles.length; i++) {
                         let assetFile = assetFiles[i];
                         if (!isJsByExt(assetFile)) continue;
-                        let cached = this.getCachedFileExistence(assetFile, project.dir);
-                        if (cached.curTime == null || cached.bufferTime !== cached.curTime) {
+                        let cached = this.getCachedFileExistence(
+                            assetFile,
+                            project.dir
+                        );
+                        if (
+                            cached.curTime == null ||
+                            cached.bufferTime !== cached.curTime
+                        ) {
                             continue;
                         }
                         res.addSource(cached.buffer);
@@ -986,16 +1320,27 @@ export class CompilationCache {
                         let nameWOExt = name.replace(/\.js$/i, "");
                         let sm = project.sourceMapMap[nameWOExt];
                         let content = project.commonJsTemp[name];
-                        res.addLine("R('" + nameWOExt + "',function(require, module, exports, global){");
+                        res.addLine(
+                            "R('" +
+                                nameWOExt +
+                                "',function(require, module, exports, global){"
+                        );
                         res.addSource(content, sm);
                         res.addLine("});");
                     }
-                    res.addLine("//# sourceMappingURL=" + shortenFileName("bundle.js") + ".map");
+                    res.addLine(
+                        "//# sourceMappingURL=" +
+                            shortenFileName("bundle.js") +
+                            ".map"
+                    );
                     project.writeFileCallback(
                         project.bundleJs + ".map",
                         res.toSourceMapBuffer(project.options.sourceRoot)
                     );
-                    project.writeFileCallback(project.bundleJs, res.toContent());
+                    project.writeFileCallback(
+                        project.bundleJs,
+                        res.toContent()
+                    );
                 }
 
                 if (project.spriteMerge) {
@@ -1018,7 +1363,15 @@ export class CompilationCache {
     ) {
         let cache = this.getCachedFileExistence(name, dir);
         if (cache.curTime == null) {
-            this.logCallback("Cannot copy " + name + " from " + dir + " to " + outName + " because it does not exist");
+            this.logCallback(
+                "Cannot copy " +
+                    name +
+                    " from " +
+                    dir +
+                    " to " +
+                    outName +
+                    " because it does not exist"
+            );
             return;
         }
         if (cache.outputTime == null || cache.curTime > cache.outputTime) {
@@ -1040,8 +1393,13 @@ export class CompilationCache {
         }
     }
 
-    private getCachedFileExistence(fileName: string, baseDir: string): ICacheFile {
-        let resolvedName: string = pathUtils.isAbsolutePath(fileName) ? fileName : path.join(baseDir, fileName);
+    private getCachedFileExistence(
+        fileName: string,
+        baseDir: string
+    ): ICacheFile {
+        let resolvedName: string = pathUtils.isAbsolutePath(fileName)
+            ? fileName
+            : path.join(baseDir, fileName);
         let resolvedNameLowerCased = resolvedName.toLowerCase();
         let cached = this.cacheFiles[resolvedNameLowerCased];
         if (cached === undefined) {
@@ -1090,7 +1448,10 @@ export class CompilationCache {
         }
     }
 
-    private getCachedFileContent(fileName: string, baseDir: string): ICacheFile {
+    private getCachedFileContent(
+        fileName: string,
+        baseDir: string
+    ): ICacheFile {
         let cached = this.getCachedFileExistence(fileName, baseDir);
         if (cached.curTime === null) {
             cached.textTime = null;
@@ -1110,7 +1471,11 @@ export class CompilationCache {
         return cached;
     }
 
-    private calcMaxTimeForDeps(name: string, baseDir: string, ignoreOutputTime: boolean): ICacheFile {
+    private calcMaxTimeForDeps(
+        name: string,
+        baseDir: string,
+        ignoreOutputTime: boolean
+    ): ICacheFile {
         let cached = this.getCachedFileExistence(name, baseDir);
         if (cached.maxTimeForDeps !== undefined)
             // It was already calculated or is being calculated
@@ -1128,7 +1493,11 @@ export class CompilationCache {
             // If info is fresh
             let deps = cached.info.sourceDeps;
             for (let i = 0; i < deps.length; i++) {
-                let depCached = this.calcMaxTimeForDeps(deps[i][1], baseDir, ignoreOutputTime);
+                let depCached = this.calcMaxTimeForDeps(
+                    deps[i][1],
+                    baseDir,
+                    ignoreOutputTime
+                );
                 if (depCached.maxTimeForDeps === null) {
                     // dependency does not exist -> rebuild to show error
                     cached.maxTimeForDeps = null;
@@ -1174,10 +1543,21 @@ export class CompilationCache {
                 try {
                     text = fs.readFileSync(cc.defaultLibFilename).toString();
                 } catch (er) {
-                    if (onError) onError("Opening " + cc.defaultLibFilename + " failed with " + er);
+                    if (onError)
+                        onError(
+                            "Opening " +
+                                cc.defaultLibFilename +
+                                " failed with " +
+                                er
+                        );
                     return null;
                 }
-                cc.defLibPrecompiled = ts.createSourceFile(fileName, text, languageVersion, true);
+                cc.defLibPrecompiled = ts.createSourceFile(
+                    fileName,
+                    text,
+                    languageVersion,
+                    true
+                );
                 return cc.defLibPrecompiled;
             }
             let cached = getCachedFileContent(fileName);
@@ -1185,7 +1565,12 @@ export class CompilationCache {
                 return null;
             }
             if (cached.sourceTime !== cached.textTime) {
-                cached.sourceFile = ts.createSourceFile(fileName, cached.text, languageVersion, true);
+                cached.sourceFile = ts.createSourceFile(
+                    fileName,
+                    cached.text,
+                    languageVersion,
+                    true
+                );
                 cached.sourceTime = cached.textTime;
             }
             return cached.sourceFile;
@@ -1193,7 +1578,10 @@ export class CompilationCache {
 
         function writeFile(fileName, data, writeByteOrderMark, onError) {
             try {
-                fileName = fileName.replace(new RegExp("^" + project.options.outDir), "");
+                fileName = fileName.replace(
+                    new RegExp("^" + project.options.outDir),
+                    ""
+                );
                 writeFileCallback(fileName, new Buffer(data));
             } catch (e) {
                 if (onError) {
@@ -1237,7 +1625,11 @@ export class CompilationCache {
             if (cached.curTime !== null) {
                 cached = getCachedFileExistence(nameWithoutExtension + ".js");
                 if (cached.curTime !== null) {
-                    cc.addDepJsToOutput(project, ".", nameWithoutExtension + ".js");
+                    cc.addDepJsToOutput(
+                        project,
+                        ".",
+                        nameWithoutExtension + ".js"
+                    );
                     project.moduleMap[moduleName] = {
                         defFile: nameWithoutExtension + ".d.ts",
                         jsFile: nameWithoutExtension + ".js",
@@ -1274,10 +1666,18 @@ export class CompilationCache {
             return null;
         }
 
-        function resolveModuleName(moduleName: string, containingFile: string): ts.ResolvedModuleFull {
+        function resolveModuleName(
+            moduleName: string,
+            containingFile: string
+        ): ts.ResolvedModuleFull {
             if (moduleName.substr(0, 1) === ".") {
                 if (/\/\//.test(moduleName)) {
-                    project.logCallback("Import " + moduleName + " contains two slashes in row in " + containingFile);
+                    project.logCallback(
+                        "Import " +
+                            moduleName +
+                            " contains two slashes in row in " +
+                            containingFile
+                    );
                 }
                 let res = resolveModuleExtension(
                     path.join(path.dirname(containingFile), moduleName),
@@ -1285,7 +1685,12 @@ export class CompilationCache {
                     true
                 );
                 if (res == null) {
-                    project.logCallback("Module " + moduleName + " is not valid in " + containingFile);
+                    project.logCallback(
+                        "Module " +
+                            moduleName +
+                            " is not valid in " +
+                            containingFile
+                    );
                     return null;
                 }
                 return res;
@@ -1293,7 +1698,11 @@ export class CompilationCache {
             // support for deprecated import * as b from 'node_modules/bobril/index';
             let curDir = path.dirname(containingFile);
             do {
-                let res = resolveModuleExtension(moduleName, path.join(curDir, moduleName), false);
+                let res = resolveModuleExtension(
+                    moduleName,
+                    path.join(curDir, moduleName),
+                    false
+                );
                 if (res != null) {
                     if (!/^node_modules\//i.test(moduleName)) {
                         //logCallback(`Wrong import '${moduleName}' in ${containingFile}. You must use relative path.`)
@@ -1325,7 +1734,12 @@ export class CompilationCache {
                 false
             );
             if (res == null) {
-                project.logCallback("Module " + moduleName + " is not valid in " + containingFile);
+                project.logCallback(
+                    "Module " +
+                        moduleName +
+                        " is not valid in " +
+                        containingFile
+                );
                 return null;
             }
             return res;
@@ -1377,7 +1791,10 @@ export class CompilationCache {
                 if (cached.textTime == null) return null;
                 return cached.text;
             },
-            resolveModuleNames(moduleNames: string[], containingFile: string): ts.ResolvedModuleFull[] {
+            resolveModuleNames(
+                moduleNames: string[],
+                containingFile: string
+            ): ts.ResolvedModuleFull[] {
                 return moduleNames.map(n => {
                     let r = resolveModuleName(n, containingFile);
                     // console.log(n, containingFile, r);

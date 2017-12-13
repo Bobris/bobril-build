@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.80.2
+
+Fixed importing of modules when importing code outside of project root.
+
 ## 0.80.1
 
 Fixed "Debug Failure. False expression." in specific combination of features. See #48 on GitHub.
@@ -297,7 +301,7 @@ Additional resources works again.
 
 ## New features
 
-Bundler deduplicates __extend TypeScript helper for smaller bundles.
+Bundler deduplicates \_\_extend TypeScript helper for smaller bundles.
 
 ## Fixed
 
