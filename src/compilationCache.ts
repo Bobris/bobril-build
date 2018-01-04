@@ -357,7 +357,7 @@ export class CompilationCache {
         }
         project.logCallback(
             `Don't know how to override ${expName} in ${
-                (<any>ts).SyntaxKind[decl.kind]
+            (<any>ts).SyntaxKind[decl.kind]
             }`
         );
         return null;
@@ -425,14 +425,14 @@ export class CompilationCache {
 
         let resolvePathString =
             project.resolvePathString ||
-            project.resourcesAreRelativeToProjectDir
+                project.resourcesAreRelativeToProjectDir
                 ? (p, s, t) => relativizeToProject(pathUtils.join(p, t))
                 : (p, s, t) =>
-                      relativizeToProject(
-                          /^node_modules\//.test(t)
-                              ? pathUtils.join(p, t)
-                              : pathUtils.join(path.dirname(s), t)
-                      );
+                    relativizeToProject(
+                        /^node_modules\//.test(t)
+                            ? pathUtils.join(p, t)
+                            : pathUtils.join(path.dirname(s), t)
+                    );
         this.resolvePathStringLiteral = (nn: ts.StringLiteral) =>
             resolvePathString(
                 project.dir,
@@ -735,13 +735,6 @@ export class CompilationCache {
                 ) {
                     continue;
                 }
-                if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
-                    this.addDepJsToOutput(
-                        project,
-                        bobrilDepsHelpers.momentJsPath(),
-                        bobrilDepsHelpers.momentJsFiles()[0]
-                    );
-                }
                 let info = cached.info;
                 if (project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
@@ -922,7 +915,7 @@ export class CompilationCache {
                                     restorationMemory.push(
                                         BuildHelpers.rememberParent(
                                             sd.callExpression.arguments[
-                                                2 + skipEx
+                                            2 + skipEx
                                             ]
                                         )
                                     );
@@ -934,7 +927,7 @@ export class CompilationCache {
                                                 project.prefixStyleDefs
                                             ),
                                             sd.callExpression.arguments[
-                                                2 + skipEx
+                                            2 + skipEx
                                             ]
                                         )
                                     );
@@ -1053,7 +1046,7 @@ export class CompilationCache {
                         continue;
                     }
                     jsWriteFileCallback(
-                        project.depJsFiles[jsFile],
+                        project.realRootRel + project.depJsFiles[jsFile],
                         new Buffer(cached.text, "utf-8")
                     );
                     cached.outputTime = cached.textTime;
@@ -1099,44 +1092,44 @@ export class CompilationCache {
                                     );
                                     return cssHelpers
                                         .processCss(
-                                            cached.buffer.toString(),
-                                            assetFile,
-                                            (url: string, from: string) => {
-                                                let hi = url.lastIndexOf("#");
-                                                let hi2 = url.lastIndexOf("?");
-                                                if (hi < 0) hi = url.length;
-                                                if (hi2 < 0) hi2 = url.length;
-                                                if (hi2 < hi) hi = hi2;
-                                                let res = resolvePathString(
-                                                    project.dir,
-                                                    from + "/a",
-                                                    url.substr(0, hi)
-                                                );
-                                                let resres = shortenFileNameAddPath(
-                                                    res
-                                                );
-                                                project.depAssetFiles[
-                                                    res
-                                                ] = resres;
-                                                return url;
-                                            }
+                                        cached.buffer.toString(),
+                                        assetFile,
+                                        (url: string, from: string) => {
+                                            let hi = url.lastIndexOf("#");
+                                            let hi2 = url.lastIndexOf("?");
+                                            if (hi < 0) hi = url.length;
+                                            if (hi2 < 0) hi2 = url.length;
+                                            if (hi2 < hi) hi = hi2;
+                                            let res = resolvePathString(
+                                                project.dir,
+                                                from + "/a",
+                                                url.substr(0, hi)
+                                            );
+                                            let resres = shortenFileNameAddPath(
+                                                res
+                                            );
+                                            project.depAssetFiles[
+                                                res
+                                            ] = resres;
+                                            return url;
+                                        }
                                         )
                                         .then(
-                                            v => {
-                                                project.writeFileCallback(
-                                                    shortenFileNameAddPath(
-                                                        project.depAssetFiles[
-                                                            assetFile
-                                                        ]
-                                                    ),
-                                                    new Buffer(v.css)
-                                                );
-                                            },
-                                            e => {
-                                                project.logCallback(
-                                                    e.toString()
-                                                );
-                                            }
+                                        v => {
+                                            project.writeFileCallback(
+                                                shortenFileNameAddPath(
+                                                    project.depAssetFiles[
+                                                    assetFile
+                                                    ]
+                                                ),
+                                                new Buffer(v.css)
+                                            );
+                                        },
+                                        e => {
+                                            project.logCallback(
+                                                e.toString()
+                                            );
+                                        }
                                         );
                                 }
                             }
@@ -1148,22 +1141,22 @@ export class CompilationCache {
                 if (cssToMerge.length > 0) {
                     return cssHelpers
                         .concatenateCssAndMinify(
-                            cssToMerge,
-                            (url: string, from: string) => {
-                                let hi = url.lastIndexOf("#");
-                                let hi2 = url.lastIndexOf("?");
-                                if (hi < 0) hi = url.length;
-                                if (hi2 < 0) hi2 = url.length;
-                                if (hi2 < hi) hi = hi2;
-                                let res = resolvePathString(
-                                    project.dir,
-                                    from + "/a",
-                                    url.substr(0, hi)
-                                );
-                                let resres = shortenFileNameAddPath(res);
-                                project.depAssetFiles[res] = resres;
-                                return shortenFileName(res) + url.substr(hi);
-                            }
+                        cssToMerge,
+                        (url: string, from: string) => {
+                            let hi = url.lastIndexOf("#");
+                            let hi2 = url.lastIndexOf("?");
+                            if (hi < 0) hi = url.length;
+                            if (hi2 < 0) hi2 = url.length;
+                            if (hi2 < hi) hi = hi2;
+                            let res = resolvePathString(
+                                project.dir,
+                                from + "/a",
+                                url.substr(0, hi)
+                            );
+                            let resres = shortenFileNameAddPath(res);
+                            project.depAssetFiles[res] = resres;
+                            return shortenFileName(res) + url.substr(hi);
+                        }
                         )
                         .then(v => {
                             let bundleCss = shortenFileNameAddPath(
@@ -1200,8 +1193,8 @@ export class CompilationCache {
                         if (cached.bufferTime !== cached.curTime) {
                             project.logCallback(
                                 "Error: Dependent " +
-                                    assetFile +
-                                    " failed to load"
+                                assetFile +
+                                " failed to load"
                             );
                             continue;
                         }
@@ -1262,9 +1255,9 @@ export class CompilationCache {
                             if (cached.textTime == null) {
                                 project.logCallback(
                                     "Cannot read content of " +
-                                        name +
-                                        " in dir " +
-                                        project.realRootAbs
+                                    name +
+                                    " in dir " +
+                                    project.realRootAbs
                                 );
                                 return "";
                             }
@@ -1322,16 +1315,16 @@ export class CompilationCache {
                         let content = project.commonJsTemp[name];
                         res.addLine(
                             "R('" +
-                                nameWOExt +
-                                "',function(require, module, exports, global){"
+                            nameWOExt +
+                            "',function(require, module, exports, global){"
                         );
                         res.addSource(content, sm);
                         res.addLine("});");
                     }
                     res.addLine(
                         "//# sourceMappingURL=" +
-                            shortenFileName("bundle.js") +
-                            ".map"
+                        shortenFileName("bundle.js") +
+                        ".map"
                     );
                     project.writeFileCallback(
                         project.bundleJs + ".map",
@@ -1365,12 +1358,12 @@ export class CompilationCache {
         if (cache.curTime == null) {
             this.logCallback(
                 "Cannot copy " +
-                    name +
-                    " from " +
-                    dir +
-                    " to " +
-                    outName +
-                    " because it does not exist"
+                name +
+                " from " +
+                dir +
+                " to " +
+                outName +
+                " because it does not exist"
             );
             return;
         }
@@ -1546,9 +1539,9 @@ export class CompilationCache {
                     if (onError)
                         onError(
                             "Opening " +
-                                cc.defaultLibFilename +
-                                " failed with " +
-                                er
+                            cc.defaultLibFilename +
+                            " failed with " +
+                            er
                         );
                     return null;
                 }
@@ -1674,9 +1667,9 @@ export class CompilationCache {
                 if (/\/\//.test(moduleName)) {
                     project.logCallback(
                         "Import " +
-                            moduleName +
-                            " contains two slashes in row in " +
-                            containingFile
+                        moduleName +
+                        " contains two slashes in row in " +
+                        containingFile
                     );
                 }
                 let res = resolveModuleExtension(
@@ -1687,9 +1680,9 @@ export class CompilationCache {
                 if (res == null) {
                     project.logCallback(
                         "Module " +
-                            moduleName +
-                            " is not valid in " +
-                            containingFile
+                        moduleName +
+                        " is not valid in " +
+                        containingFile
                     );
                     return null;
                 }
@@ -1736,9 +1729,9 @@ export class CompilationCache {
             if (res == null) {
                 project.logCallback(
                     "Module " +
-                        moduleName +
-                        " is not valid in " +
-                        containingFile
+                    moduleName +
+                    " is not valid in " +
+                    containingFile
                 );
                 return null;
             }
@@ -1747,18 +1740,18 @@ export class CompilationCache {
 
         return {
             getSourceFile: getSourceFile,
-            getDefaultLibFileName: function(options) {
+            getDefaultLibFileName: function (options) {
                 return cc.defaultLibFilename;
             },
             writeFile: writeFile,
-            getCurrentDirectory: function() {
+            getCurrentDirectory: function () {
                 return currentDirectory;
             },
-            useCaseSensitiveFileNames: function() {
+            useCaseSensitiveFileNames: function () {
                 return ts.sys.useCaseSensitiveFileNames;
             },
             getCanonicalFileName: getCanonicalFileName,
-            getNewLine: function() {
+            getNewLine: function () {
                 return "\n";
             },
             getDirectories(name: string): string[] {
@@ -1766,7 +1759,7 @@ export class CompilationCache {
                     var stat: fs.Stats | undefined = undefined;
                     try {
                         stat = fs.statSync(path.join(name, v));
-                    } catch (err) {}
+                    } catch (err) { }
                     return stat && stat.isDirectory();
                 });
                 //console.log("getDir " + name + " ", res);
@@ -1776,7 +1769,7 @@ export class CompilationCache {
                 var stat: fs.Stats | undefined = undefined;
                 try {
                     stat = fs.statSync(name);
-                } catch (err) {}
+                } catch (err) { }
                 //console.log("dirExists " + name + " " + (stat && stat.isDirectory()));
                 return stat && stat.isDirectory();
             },

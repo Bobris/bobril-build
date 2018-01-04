@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.80.3
+
+Another bug killed when importing of modules when importing code outside of project root.
+
 ## 0.80.2
 
 Fixed importing of modules when importing code outside of project root.

@@ -458,9 +458,6 @@ class CompilationCache {
                     !project.spriteMerge) {
                     continue;
                 }
-                if (/\/bobril-g11n\/index.ts$/.test(src.fileName)) {
-                    this.addDepJsToOutput(project, bobrilDepsHelpers.momentJsPath(), bobrilDepsHelpers.momentJsFiles()[0]);
-                }
                 let info = cached.info;
                 if (project.spriteMerge) {
                     for (let j = 0; j < info.sprites.length; j++) {
@@ -617,7 +614,7 @@ class CompilationCache {
                         project.logCallback("Error: Dependent " + jsFile + " failed to load");
                         continue;
                     }
-                    jsWriteFileCallback(project.depJsFiles[jsFile], new Buffer(cached.text, "utf-8"));
+                    jsWriteFileCallback(project.realRootRel + project.depJsFiles[jsFile], new Buffer(cached.text, "utf-8"));
                     cached.outputTime = cached.textTime;
                 }
             }
