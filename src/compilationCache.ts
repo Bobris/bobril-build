@@ -413,7 +413,6 @@ export class CompilationCache {
             ((filename: string, content: Buffer) =>
                 fs.writeFileSync(filename, content));
         let jsWriteFileCallback = project.writeFileCallback;
-
         let ndir = project.dir.toLowerCase() + "/";
         function relativizeToProject(p: string): string {
             let nfn = p.toLowerCase();
@@ -422,6 +421,10 @@ export class CompilationCache {
             }
             return p;
         }
+
+        // This is just to have some sane defaults
+        project.realRootRel = "";
+        project.realRootAbs = project.dir;
 
         let resolvePathString =
             project.resolvePathString ||

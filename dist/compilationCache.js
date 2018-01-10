@@ -218,6 +218,9 @@ class CompilationCache {
             }
             return p;
         }
+        // This is just to have some sane defaults
+        project.realRootRel = "";
+        project.realRootAbs = project.dir;
         let resolvePathString = project.resolvePathString ||
             project.resourcesAreRelativeToProjectDir
             ? (p, s, t) => relativizeToProject(pathUtils.join(p, t))

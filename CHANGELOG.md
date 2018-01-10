@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.80.4
+
+Attempt to fix random compilation crashes due to recent changes.
+
 ## 0.80.3
 
 Another bug killed when importing of modules when importing code outside of project root.
