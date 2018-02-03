@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.80.5
+
+One more bug, now in bundler, fixed with files outside of project root.
+
 ## 0.80.4
 
 Attempt to fix random compilation crashes due to recent changes.
@@ -328,7 +332,7 @@ Disabled one UglifyJs compression flag, to fix wrong bundle generated.
 * Removed useless --localize parameter in interactive mode - it didn't do anything.
 * Made plugin linking platform independent.
 
-  ## 0.44.0
+    ## 0.44.0
 
 ## New features
 

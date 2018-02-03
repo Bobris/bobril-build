@@ -6,46 +6,6 @@ import * as uglify from "uglify-js";
 import { globalDefines } from "./simpleHelpers";
 import * as bobrilDepsHelpers from "./bobrilDepsHelpers";
 
-if (!Object.assign) {
-    Object.defineProperty(Object, "assign", {
-        enumerable: false,
-        configurable: true,
-        writable: true,
-        value: function(target) {
-            "use strict";
-            if (target === undefined || target === null) {
-                throw new TypeError("Cannot convert first argument to object");
-            }
-
-            var to = Object(target);
-            for (var i = 1; i < arguments.length; i++) {
-                var nextSource = arguments[i];
-                if (nextSource === undefined || nextSource === null) {
-                    continue;
-                }
-                nextSource = Object(nextSource);
-
-                var keysArray = Object.keys(nextSource);
-                for (
-                    var nextIndex = 0, len = keysArray.length;
-                    nextIndex < len;
-                    nextIndex++
-                ) {
-                    var nextKey = keysArray[nextIndex];
-                    var desc = Object.getOwnPropertyDescriptor(
-                        nextSource,
-                        nextKey
-                    );
-                    if (desc !== undefined && desc.enumerable) {
-                        to[nextKey] = nextSource[nextKey];
-                    }
-                }
-            }
-            return to;
-        }
-    });
-}
-
 export interface IFileForBundle {
     name: string;
     ast: uglify.IAstToplevel;
@@ -61,6 +21,7 @@ export interface IBundleProject {
     fileExists(name: string): boolean;
     readContent(name: string): string;
     getMainFiles(): string[];
+    projectRoot?: string;
     writeBundle(content: string);
     resolveRequire?(
         name: string,
@@ -85,7 +46,7 @@ interface ISymbolDef extends uglify.ISymbolDef {
     bbAlwaysClone?: boolean;
 }
 
-function buildCachedResolveRequire() {
+function buildCachedResolveRequire(projectRoot?: string) {
     var cache: { [name: string]: string } = Object.create(null);
     return (
         name: string,
@@ -94,12 +55,24 @@ function buildCachedResolveRequire() {
         readFile: (name: string) => string
     ) => {
         if (name[0] === ".") {
-            return defaultResolveRequire(name, from, fileExists, readFile);
+            return defaultResolveRequire(
+                name,
+                from,
+                fileExists,
+                readFile,
+                projectRoot
+            );
         }
         if (cache[name] != null) {
             return cache[name];
         }
-        var res = defaultResolveRequire(name, from, fileExists, readFile);
+        var res = defaultResolveRequire(
+            name,
+            from,
+            fileExists,
+            readFile,
+            projectRoot
+        );
         if (res != null) {
             cache[name] = res;
         }
@@ -111,7 +84,8 @@ function defaultResolveRequire(
     name: string,
     from: string,
     fileExists: (name: string) => boolean,
-    readFile: (name: string) => string
+    readFile: (name: string) => string,
+    projectRoot?: string
 ): string {
     if (name[0] === ".") {
         let res = path.join(path.dirname(from), name);
@@ -120,7 +94,7 @@ function defaultResolveRequire(
         return null;
     }
     let oldDir = null;
-    let curDir = path.dirname(from);
+    let curDir = projectRoot || path.dirname(from);
     while (oldDir != curDir) {
         let tryName = path.join(curDir, "node_modules", name, "package.json");
         if (fileExists(tryName)) {
@@ -563,7 +537,8 @@ export function bundle(project: IBundleProject) {
     let fileExists = (name: string) => project.fileExists(name);
     let readFile = (name: string) => project.readContent(name);
     let lowResolveRequire =
-        project.resolveRequire || buildCachedResolveRequire();
+        project.resolveRequire ||
+        buildCachedResolveRequire(project.projectRoot);
     let resolveRequire = (name: string, from: string): string => {
         return lowResolveRequire(name, from, fileExists, readFile);
     };

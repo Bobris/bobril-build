@@ -20,6 +20,7 @@ export interface IBundleProject {
     fileExists(name: string): boolean;
     readContent(name: string): string;
     getMainFiles(): string[];
+    projectRoot?: string;
     writeBundle(content: string): any;
     resolveRequire?(name: string, from: string, fileExists: (name: string) => boolean, readFile: (name: string) => string): string;
     compress?: boolean;

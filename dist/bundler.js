@@ -5,53 +5,23 @@ const path = pathPlatformDependent.posix; // This works everywhere, just use for
 const uglify = require("uglify-js");
 const simpleHelpers_1 = require("./simpleHelpers");
 const bobrilDepsHelpers = require("./bobrilDepsHelpers");
-if (!Object.assign) {
-    Object.defineProperty(Object, "assign", {
-        enumerable: false,
-        configurable: true,
-        writable: true,
-        value: function (target) {
-            "use strict";
-            if (target === undefined || target === null) {
-                throw new TypeError("Cannot convert first argument to object");
-            }
-            var to = Object(target);
-            for (var i = 1; i < arguments.length; i++) {
-                var nextSource = arguments[i];
-                if (nextSource === undefined || nextSource === null) {
-                    continue;
-                }
-                nextSource = Object(nextSource);
-                var keysArray = Object.keys(nextSource);
-                for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
-                    var nextKey = keysArray[nextIndex];
-                    var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
-                    if (desc !== undefined && desc.enumerable) {
-                        to[nextKey] = nextSource[nextKey];
-                    }
-                }
-            }
-            return to;
-        }
-    });
-}
-function buildCachedResolveRequire() {
+function buildCachedResolveRequire(projectRoot) {
     var cache = Object.create(null);
     return (name, from, fileExists, readFile) => {
         if (name[0] === ".") {
-            return defaultResolveRequire(name, from, fileExists, readFile);
+            return defaultResolveRequire(name, from, fileExists, readFile, projectRoot);
         }
         if (cache[name] != null) {
             return cache[name];
         }
-        var res = defaultResolveRequire(name, from, fileExists, readFile);
+        var res = defaultResolveRequire(name, from, fileExists, readFile, projectRoot);
         if (res != null) {
             cache[name] = res;
         }
         return res;
     };
 }
-function defaultResolveRequire(name, from, fileExists, readFile) {
+function defaultResolveRequire(name, from, fileExists, readFile, projectRoot) {
     if (name[0] === ".") {
         let res = path.join(path.dirname(from), name);
         if (fileExists(res + ".js"))
@@ -61,7 +31,7 @@ function defaultResolveRequire(name, from, fileExists, readFile) {
         return null;
     }
     let oldDir = null;
-    let curDir = path.dirname(from);
+    let curDir = projectRoot || path.dirname(from);
     while (oldDir != curDir) {
         let tryName = path.join(curDir, "node_modules", name, "package.json");
         if (fileExists(tryName)) {
@@ -449,7 +419,8 @@ function bundle(project) {
     project.cache = project.cache || Object.create(null);
     let fileExists = (name) => project.fileExists(name);
     let readFile = (name) => project.readContent(name);
-    let lowResolveRequire = project.resolveRequire || buildCachedResolveRequire();
+    let lowResolveRequire = project.resolveRequire ||
+        buildCachedResolveRequire(project.projectRoot);
     let resolveRequire = (name, from) => {
         return lowResolveRequire(name, from, fileExists, readFile);
     };

@@ -736,6 +736,7 @@ class CompilationCache {
                         mangle: project.mangle,
                         beautify: project.beautify,
                         defines: project.defines,
+                        projectRoot: project.realRootRel,
                         getMainFiles() {
                             return mainJsList.map(f => project.realRootRel + f);
                         },
