@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.81.0
+
+Update embedded jasmine.d.ts.
+
 ## 0.80.5
 
 One more bug, now in bundler, fixed with files outside of project root.
