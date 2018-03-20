@@ -517,6 +517,7 @@ function run() {
         .option("-o, --out <name>", "filename for test result as JUnit XML")
         .action((c) => __awaiter(this, void 0, void 0, function* () {
         try {
+            var startTime = Date.now();
             commandRunning = true;
             startHttpServer(0);
             console.time("compile");
@@ -579,12 +580,16 @@ function run() {
                     console.log(chalk.red(code.totalTests +
                         " tests finished with " +
                         code.testsFailed +
-                        " failures."));
+                        " failures. Total time " +
+                        (Date.now() - startTime).toFixed(0) +
+                        "ms"));
                     exitProcess(1);
                 }
                 else {
                     console.log(chalk.green(code.totalTests +
-                        " tests finished without failures."));
+                        " tests finished without failures. Total time " +
+                        (Date.now() - startTime).toFixed(0) +
+                        "ms"));
                     exitProcess(0);
                 }
             }

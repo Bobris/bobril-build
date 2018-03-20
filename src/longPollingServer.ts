@@ -1,8 +1,12 @@
-import * as http from 'http';
-import * as crypto from 'crypto';
+import * as http from "http";
+import * as crypto from "crypto";
 
 export interface ILongPollingConnection {
-    onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;
+    onMessage: (
+        connection: ILongPollingConnection,
+        message: string,
+        data: any
+    ) => void;
     onClose: (connection: ILongPollingConnection) => void;
     userAgent: string;
     send(message: string, data: any): void;
@@ -14,7 +18,11 @@ function newRandomId(): string {
 }
 
 export class Connection implements ILongPollingConnection {
-    onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;
+    onMessage: (
+        connection: ILongPollingConnection,
+        message: string,
+        data: any
+    ) => void;
     onClose: (connection: ILongPollingConnection) => void;
     userAgent: string;
 
@@ -23,7 +31,9 @@ export class Connection implements ILongPollingConnection {
     closed: boolean;
     response: http.ServerResponse;
     timeOut: NodeJS.Timer;
-    toSend: { m: string, d: any }[];
+    toSend: { m: string; d: any }[];
+
+    messagesToDeliver: { m: string; d: any }[];
 
     constructor(owner: LongPollingServer) {
         this.owner = owner;
@@ -32,12 +42,12 @@ export class Connection implements ILongPollingConnection {
         this.timeOut = null;
         this.toSend = [];
         this.userAgent = "";
+        this.messagesToDeliver = [];
         this.reTimeout();
     }
 
     reTimeout() {
-        if (this.timeOut !== null)
-            clearTimeout(this.timeOut);
+        if (this.timeOut !== null) clearTimeout(this.timeOut);
         this.timeOut = setTimeout(this.handleTimeOut, 15000, this);
     }
 
@@ -50,12 +60,12 @@ export class Connection implements ILongPollingConnection {
 
     send(message: string, data: any): void {
         this.toSend.push({ m: message, d: data });
-        if (this.response != null && this.toSend.length === 1) setImmediate(this.sendResponse, this);
+        if (this.response != null && this.toSend.length === 1)
+            setImmediate(this.sendResponse, this);
     }
 
     receivedMessage(message: string, data: any) {
-        if (this.onMessage != null)
-            this.onMessage(this, message, data);
+        if (this.onMessage != null) this.onMessage(this, message, data);
     }
 
     close(): void {
@@ -64,8 +74,7 @@ export class Connection implements ILongPollingConnection {
             this.timeOut = null;
         }
         if (this.closed == false) {
-            if (this.onClose != null)
-                this.onClose(this);
+            if (this.onClose != null) this.onClose(this);
         }
         this.closed = true;
         if (this.response != null) {
@@ -77,6 +86,16 @@ export class Connection implements ILongPollingConnection {
     sendResponse(that: Connection) {
         if (that.response != null) {
             that.pollResponse(that.response, false);
+        }
+    }
+
+    deliverMessage(that: Connection) {
+        if (that.messagesToDeliver.length > 0) {
+            let m = that.messagesToDeliver.shift();
+            that.receivedMessage(m.m, m.d);
+            if (that.messagesToDeliver.length > 0) {
+                setTimeout(that.deliverMessage, 0, that);
+            }
         }
     }
 
@@ -120,18 +139,18 @@ export class LongPollingServer {
     }
 
     handle(request: http.ServerRequest, response: http.ServerResponse) {
-        if (request.method != 'POST') {
+        if (request.method != "POST") {
             response.writeHead(405, "Only POST allowed");
             response.end();
             return;
         }
-        var jsonString = '';
-        request.on('data', function (data) {
+        var jsonString = "";
+        request.on("data", function(data) {
             if (jsonString.length + data.length > 1e6)
                 request.connection.destroy();
             jsonString += data;
         });
-        request.on('end', () => {
+        request.on("end", () => {
             var data;
             try {
                 data = JSON.parse(jsonString);
@@ -151,7 +170,7 @@ export class LongPollingServer {
                 this.onConnect(c);
                 waitAllowed = false;
             }
-            let ua = request.headers['user-agent'];
+            let ua = request.headers["user-agent"];
             if (ua) c.userAgent = ua;
             if (data.close) {
                 c.close();
@@ -160,18 +179,13 @@ export class LongPollingServer {
             if (Array.isArray(data.m)) {
                 waitAllowed = false;
                 let ms = data.m as any[];
-                setTimeout(() => {
-                    for (let i = 0; i < ms.length; i++) {
-                        if (c.closed) break;
-                        c.receivedMessage(ms[i].m, ms[i].d);
-                    }
-                }, 0);
+                c.messagesToDeliver.push(...ms);
+                setTimeout(c.deliverMessage, 0, c);
             }
             c.pollResponse(response, waitAllowed);
-            request.on('close', () => {
+            request.on("close", () => {
                 c.closeResponse(response);
             });
-
         });
     }
 }

@@ -121,11 +121,11 @@ function handleRequest(
                     response.end("reload");
                 else {
                     if (!livereloadResolver) {
-                        livereloadPromise = new Promise<
-                            void
-                        >((resolve, reject) => {
-                            livereloadResolver = resolve;
-                        });
+                        livereloadPromise = new Promise<void>(
+                            (resolve, reject) => {
+                                livereloadResolver = resolve;
+                            }
+                        );
                     }
                     livereloadPromise.then(waitForReload);
                 }
@@ -658,6 +658,7 @@ export function run() {
         .option("-o, --out <name>", "filename for test result as JUnit XML")
         .action(async c => {
             try {
+                var startTime = Date.now();
                 commandRunning = true;
                 startHttpServer(0);
                 console.time("compile");
@@ -733,7 +734,9 @@ export function run() {
                                 code.totalTests +
                                     " tests finished with " +
                                     code.testsFailed +
-                                    " failures."
+                                    " failures. Total time " +
+                                    (Date.now() - startTime).toFixed(0) +
+                                    "ms"
                             )
                         );
                         exitProcess(1);
@@ -741,7 +744,9 @@ export function run() {
                         console.log(
                             chalk.green(
                                 code.totalTests +
-                                    " tests finished without failures."
+                                    " tests finished without failures. Total time " +
+                                    (Date.now() - startTime).toFixed(0) +
+                                    "ms"
                             )
                         );
                         exitProcess(0);

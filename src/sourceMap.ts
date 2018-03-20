@@ -10,7 +10,11 @@ export interface SourceMap {
     mappings: string | Buffer;
 }
 
-const emptySourceMap: SourceMap = { version: 3, sources: [], mappings: new Buffer(0) }
+const emptySourceMap: SourceMap = {
+    version: 3,
+    sources: [],
+    mappings: new Buffer(0)
+};
 
 function countNL(b: Buffer): number {
     let res = 0;
@@ -40,7 +44,7 @@ export class SourceMapBuilder {
     }
 
     addLines(text: string) {
-        let lines = text.split('\n');
+        let lines = text.split("\n");
         for (let i = 0; i < lines.length; i++) {
             this.addLine(lines[i]);
         }
@@ -55,7 +59,7 @@ export class SourceMapBuilder {
             this.outputBuffer.addByte(10);
         }
         let sourceRemap = [];
-        sourceMap.sources.forEach((v) => {
+        sourceMap.sources.forEach(v => {
             let pos = this.sources.indexOf(v);
             if (pos < 0) {
                 pos = this.sources.length;
@@ -64,7 +68,10 @@ export class SourceMapBuilder {
             sourceRemap.push(pos);
         });
         let lastOutputCol = 0;
-        let inputMappings = (typeof sourceMap.mappings === "string") ? new Buffer(<string>sourceMap.mappings) : <Buffer>sourceMap.mappings;
+        let inputMappings =
+            typeof sourceMap.mappings === "string"
+                ? new Buffer(<string>sourceMap.mappings)
+                : <Buffer>sourceMap.mappings;
         let outputLine = 0;
         let ip = 0;
         let inOutputCol = 0;
@@ -90,16 +97,18 @@ export class SourceMapBuilder {
             this.mappings.addVLQ(inSourceCol - this.lastSourceCol);
             this.lastSourceCol = inSourceCol;
             valpos = 0;
-        }
+        };
         while (ip < inputMappings.length) {
             let b = inputMappings[ip++];
-            if (b === 59) { // ;
+            if (b === 59) {
+                // ;
                 commit();
                 this.mappings.addByte(59);
                 inOutputCol = 0;
                 lastOutputCol = 0;
                 outputLine++;
-            } else if (b === 44) { // ,
+            } else if (b === 44) {
+                // ,
                 commit();
                 this.mappings.addByte(44);
             } else {
@@ -113,10 +122,18 @@ export class SourceMapBuilder {
                     value >>= 1;
                     if (shouldNegate) value = -value;
                     switch (valpos) {
-                        case 0: inOutputCol += value; break;
-                        case 1: inSourceIndex += value; break;
-                        case 2: inSourceLine += value; break;
-                        case 3: inSourceCol += value; break;
+                        case 0:
+                            inOutputCol += value;
+                            break;
+                        case 1:
+                            inSourceIndex += value;
+                            break;
+                        case 2:
+                            inSourceLine += value;
+                            break;
+                        case 3:
+                            inSourceCol += value;
+                            break;
                     }
                     valpos++;
                     value = shift = 0;
@@ -135,27 +152,46 @@ export class SourceMapBuilder {
     }
 
     toSourceMapBuffer(sourceRoot?: string): Buffer {
-        return new Buffer(JSON.stringify({ version: 3, sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer().toString() }));
+        return new Buffer(
+            JSON.stringify({
+                version: 3,
+                sourceRoot,
+                sources: this.sources,
+                mappings: this.mappings.toBuffer().toString()
+            })
+        );
     }
 
     toSourceMap(sourceRoot?: string): SourceMap {
-        return { version: 3, sourceRoot, sources: this.sources, mappings: this.mappings.toBuffer() };
+        return {
+            version: 3,
+            sourceRoot,
+            sources: this.sources,
+            mappings: this.mappings.toBuffer()
+        };
     }
 }
 
 export function parseSourceMap(content: Buffer): SourceMap {
     let sm = JSON.parse(content.toString()) as SourceMap;
     if (sm.version !== 3) {
-        throw Error('Unsupported version of SourceMap');
+        throw Error("Unsupported version of SourceMap");
     }
     sm.mappings = new Buffer(<string>sm.mappings);
     return sm;
 }
 
-export type Position = { sourceName?: string, line?: number, col?: number };
+export type Position = { sourceName?: string; line?: number; col?: number };
 
-export function findPosition(sourceMap: SourceMap, line: number, col?: number): Position {
-    let inputMappings = (typeof sourceMap.mappings === "string") ? new Buffer(<string>sourceMap.mappings) : <Buffer>sourceMap.mappings;
+export function findPosition(
+    sourceMap: SourceMap,
+    line: number,
+    col?: number
+): Position {
+    let inputMappings =
+        typeof sourceMap.mappings === "string"
+            ? new Buffer(<string>sourceMap.mappings)
+            : <Buffer>sourceMap.mappings;
     let outputLine = 1;
     let ip = 0;
     let inOutputCol = 0;
@@ -170,14 +206,15 @@ export function findPosition(sourceMap: SourceMap, line: number, col?: number): 
     let lastSourceLine = 0;
     let lastSourceCol = 0;
     let res = { sourceName: null, line: null, col: null };
-    const commit = () => {
-        if (valpos === 0) return;
+    const commit: () => boolean = () => {
+        if (outputLine > line) return true;
+        if (valpos === 0) return false;
         if (outputLine === line && lastOutputCol <= col && col <= inOutputCol) {
-            if (lastSourceIndex < 0) return res;
-            res.sourceName = sourceMap.sources[inSourceIndex];
+            if (lastSourceIndex < 0) return true;
+            res.sourceName = sourceMap.sources[lastSourceIndex];
             res.line = lastSourceLine + 1;
             res.col = lastSourceCol + col - lastOutputCol;
-            return res;
+            return true;
         }
         if (valpos === 1) {
             lastSourceIndex = -1;
@@ -189,20 +226,23 @@ export function findPosition(sourceMap: SourceMap, line: number, col?: number): 
                 res.sourceName = sourceMap.sources[inSourceIndex];
                 res.line = inSourceLine + 1;
                 res.col = inSourceCol;
-                return res;
+                return true;
             }
         }
         lastOutputCol = inOutputCol;
         valpos = 0;
-    }
+        return false;
+    };
     while (ip < inputMappings.length) {
         let b = inputMappings[ip++];
-        if (b === 59) { // ;
-            commit();
+        if (b === 59) {
+            // ;
+            if (commit()) return res;
             inOutputCol = 0;
             outputLine++;
-        } else if (b === 44) { // ,
-            commit();
+        } else if (b === 44) {
+            // ,
+            if (commit()) return res;
         } else {
             b = charToInteger[b];
             if (b === 255) throw new Error("Invalid sourceMap");
@@ -214,10 +254,18 @@ export function findPosition(sourceMap: SourceMap, line: number, col?: number): 
                 value >>= 1;
                 if (shouldNegate) value = -value;
                 switch (valpos) {
-                    case 0: inOutputCol += value; break;
-                    case 1: inSourceIndex += value; break;
-                    case 2: inSourceLine += value; break;
-                    case 3: inSourceCol += value; break;
+                    case 0:
+                        inOutputCol += value;
+                        break;
+                    case 1:
+                        inSourceIndex += value;
+                        break;
+                    case 2:
+                        inSourceLine += value;
+                        break;
+                    case 3:
+                        inSourceCol += value;
+                        break;
                 }
                 valpos++;
                 value = shift = 0;

@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import * as http from 'http';
+import * as http from "http";
 export interface ILongPollingConnection {
     onMessage: (connection: ILongPollingConnection, message: string, data: any) => void;
     onClose: (connection: ILongPollingConnection) => void;
@@ -20,6 +20,10 @@ export declare class Connection implements ILongPollingConnection {
         m: string;
         d: any;
     }[];
+    messagesToDeliver: {
+        m: string;
+        d: any;
+    }[];
     constructor(owner: LongPollingServer);
     reTimeout(): void;
     handleTimeOut(that: Connection): void;
@@ -27,6 +31,7 @@ export declare class Connection implements ILongPollingConnection {
     receivedMessage(message: string, data: any): void;
     close(): void;
     sendResponse(that: Connection): void;
+    deliverMessage(that: Connection): void;
     pollResponse(response: http.ServerResponse, waitAllowed: boolean): void;
     closeResponse(response: http.ServerResponse): void;
 }

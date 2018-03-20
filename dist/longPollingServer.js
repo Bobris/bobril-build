@@ -12,6 +12,7 @@ class Connection {
         this.timeOut = null;
         this.toSend = [];
         this.userAgent = "";
+        this.messagesToDeliver = [];
         this.reTimeout();
     }
     reTimeout() {
@@ -54,6 +55,15 @@ class Connection {
             that.pollResponse(that.response, false);
         }
     }
+    deliverMessage(that) {
+        if (that.messagesToDeliver.length > 0) {
+            let m = that.messagesToDeliver.shift();
+            that.receivedMessage(m.m, m.d);
+            if (that.messagesToDeliver.length > 0) {
+                setTimeout(that.deliverMessage, 0, that);
+            }
+        }
+    }
     pollResponse(response, waitAllowed) {
         if (this.closed) {
             response.end(JSON.stringify({ id: this.id, close: true }));
@@ -92,18 +102,18 @@ class LongPollingServer {
         this.cs = Object.create(null);
     }
     handle(request, response) {
-        if (request.method != 'POST') {
+        if (request.method != "POST") {
             response.writeHead(405, "Only POST allowed");
             response.end();
             return;
         }
-        var jsonString = '';
-        request.on('data', function (data) {
+        var jsonString = "";
+        request.on("data", function (data) {
             if (jsonString.length + data.length > 1e6)
                 request.connection.destroy();
             jsonString += data;
         });
-        request.on('end', () => {
+        request.on("end", () => {
             var data;
             try {
                 data = JSON.parse(jsonString);
@@ -124,7 +134,7 @@ class LongPollingServer {
                 this.onConnect(c);
                 waitAllowed = false;
             }
-            let ua = request.headers['user-agent'];
+            let ua = request.headers["user-agent"];
             if (ua)
                 c.userAgent = ua;
             if (data.close) {
@@ -134,16 +144,11 @@ class LongPollingServer {
             if (Array.isArray(data.m)) {
                 waitAllowed = false;
                 let ms = data.m;
-                setTimeout(() => {
-                    for (let i = 0; i < ms.length; i++) {
-                        if (c.closed)
-                            break;
-                        c.receivedMessage(ms[i].m, ms[i].d);
-                    }
-                }, 0);
+                c.messagesToDeliver.push(...ms);
+                setTimeout(c.deliverMessage, 0, c);
             }
             c.pollResponse(response, waitAllowed);
-            request.on('close', () => {
+            request.on("close", () => {
                 c.closeResponse(response);
             });
         });

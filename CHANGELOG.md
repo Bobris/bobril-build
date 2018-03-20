@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.82.0
+
+Fixed random crash with bb test when there was a lot of tests.
+Speed up SourceMap resolving.
+
 ## 0.81.0
 
 Update embedded jasmine.d.ts.
@@ -327,14 +332,14 @@ Disabled one UglifyJs compression flag, to fix wrong bundle generated.
 
 ## New features
 
-* Imported translations are checked for errors and wrong entries are skipped.
-* Plugins could `require('bobril-build')` and they will get main bobril-build instance.
+*   Imported translations are checked for errors and wrong entries are skipped.
+*   Plugins could `require('bobril-build')` and they will get main bobril-build instance.
 
 ## Fixed
 
-* Wrong removing all translations after import
-* Removed useless --localize parameter in interactive mode - it didn't do anything.
-* Made plugin linking platform independent.
+*   Wrong removing all translations after import
+*   Removed useless --localize parameter in interactive mode - it didn't do anything.
+*   Made plugin linking platform independent.
 
     ## 0.44.0
 
