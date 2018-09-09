@@ -1,19 +1,20 @@
 # bobril-build
+
 Helper tool to build Bobril applications
 Mainly it will support copying sprites, building big sprites. support i18n. All this during optimal TypeScript compilation.
 
-Changelog: https://github.com/Bobris/Bobril-build/blob/master/CHANGELOG.md
+This bobril-build implementation was relaced by bobril-build-core in C# for faster bundling.
 
-Requires: Node version 8+ (needs to support async)
+All future development is happening here: https://github.com/bobril/bbcore
 
 How to use:
 
     npm install bobril-build -g
-    
+
 Then create package.json with typescript.main or name your main ts file as index.ts or app.ts and start:
 
     bb
-    
+
 This will start bobril build in interactive mode. It will watch changes of your application, recompile and host in on http://localhost:8080.
 It uses latest Typescript to compile and prefer Node moduleResolution. Compilation for maximum speed enables skipDefaultLibCheck.
 
@@ -25,13 +26,7 @@ There is also command line single build option. Start to learn all options:
 
     bb -h
 
-For development of bobril-build check out this project and start:
-
-    npm link
-
-Compile using tasks in VSCode or running `tsc` (in directories `src`, `srcHelpers`, `spec`). Web and Webt dirs are compiled by itself `bb b`.
-
-Use bobril.asset(path) to include asset to compilation. *.css files are automatically linked in index.html head. *.js files are automatically prepended to bundle.js.
+Use bobril.asset(path) to include asset to compilation. _.css files are automatically linked in index.html head. _.js files are automatically prepended to bundle.js.
 
 Jenkins integration (in memory compile, run tests in Chrome Headless, write result in JUnit xml format):
 
@@ -74,5 +69,15 @@ It reads `package.json` and understands:
             "defaultLanguage": "en-US" // default translation language
         }
     }
-    
-It is currently not selfhosting but it will come...
+
+## Obsolete info
+
+Changelog: https://github.com/Bobris/Bobril-build/blob/master/CHANGELOG.md
+
+Requires: Node version 8+ (needs to support async)
+
+For development of bobril-build check out this project and start:
+
+    npm link
+
+Compile using tasks in VSCode or running `tsc` (in directories `src`, `srcHelpers`, `spec`). Web and Webt dirs are compiled by itself `bb b`.
